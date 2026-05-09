@@ -3,7 +3,5 @@
     <include
         domain="file"
         path="address_book/." />
-    <include
-        domain="file"
-        path="metadata/." />
+    <!-- metadata excluded: may contain sensitive transaction/contact info -->
 </full-backup-content>

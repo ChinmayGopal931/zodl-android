@@ -240,7 +240,7 @@ fun HomeMessage(
                 normalizedState = null
             }
 
-            normalizedState!!::class == state::class -> {
+            normalizedState != null && normalizedState?.let { it::class } == state::class -> {
                 normalizedState = state
                 isVisible = true
             }

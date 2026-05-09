@@ -23,7 +23,9 @@ sealed interface WalletAccount : Comparable<WalletAccount> {
     val icon: Int
 
     val hdAccountIndex: Zip32AccountIndex
-        get() = sdkAccount.hdAccountIndex!!
+        get() = requireNotNull(sdkAccount.hdAccountIndex) {
+            "hdAccountIndex must not be null for WalletAccount (account=${sdkAccount})"
+        }
 
     /**
      * Total transparent + total shielded balance.
