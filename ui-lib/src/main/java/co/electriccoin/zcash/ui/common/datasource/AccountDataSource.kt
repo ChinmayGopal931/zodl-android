@@ -119,7 +119,7 @@ class AccountDataSourceImpl(
                                                 sdkAccount = sdkAccount,
                                                 unified = unified,
                                                 transparent = transparent,
-                                                sapling = sapling!!,
+                                                sapling = sapling ?: return@combine null,
                                                 isSelected = isSelected,
                                             )
                                         }
@@ -128,7 +128,7 @@ class AccountDataSourceImpl(
                             }.combineToFlow()
                     }
                     ?: flowOf(null)
-            }.map { it?.sortedDescending() }
+            }.map { it?.filterNotNull()?.sortedDescending() }
             .stateIn(
                 scope = scope,
                 started = SharingStarted.Eagerly,

@@ -264,7 +264,7 @@ fun ChatIdentitySetupView(
 
     if (showSeedPhraseDialog && exportedSeedPhrase != null) {
         SeedPhraseBackupDialog(
-            seedPhrase = exportedSeedPhrase!!,
+            seedPhrase = exportedSeedPhrase ?: return,
             onDismiss = {
                 showSeedPhraseDialog = false
                 onSetupComplete()
