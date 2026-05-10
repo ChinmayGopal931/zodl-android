@@ -373,7 +373,7 @@ class ChatViewModel(
             try {
                 val wallet = persistableWalletProvider.persistableWallet.first { it != null }
                     ?: error("Wallet unavailable")
-                val seedWords = wallet.seedPhrase.joinToString()
+                val seedWords = wallet.seedPhrase.split.joinToString(" ")
                 val zmIdentity = sdk.restoreFromSeedPhrase(seedWords, displayName)
                 _identity.value = ChatIdentity.from(zmIdentity)
                 Twig.info { "Identity initialized from wallet seed" }
