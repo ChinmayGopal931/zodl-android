@@ -1,4 +1,4 @@
-# Blind Peer Wire-Up & Relay Investigation — 2026-05-13
+# Blind Peer Wire-Up & Relay Investigation
 
 > **Purpose**: Onboarding doc for whoever picks up this debugging next.
 > Reading this top-to-bottom should be enough to reproduce the test setup,
@@ -10,25 +10,41 @@
 > repo; this repo only carries this doc + the gitignored `local.properties`
 > entry.
 
+> **Sessions in this doc**: 2026-05-13 (initial wire-up + cross-NAT test)
+> and 2026-05-14 (re-verified wiring + diagnosed why "phone1 works but
+> phone2 doesn't" + concrete local-test plan via home-router port-forward).
+
 ---
 
-## TL;DR
+## TL;DR (state as of 2026-05-14)
 
-1. **Wiring works end-to-end.** Blind-peer key flows
-   `local.properties` → `BuildConfig` → Bare worklet `argv` →
-   `core/lib/config.js` → `BlindMirror`. Confirmed with `BlindMirror ready
-   with 1 blind peer(s)` on both phones, and Hypercore replication from
-   phone1 to blind-peer (`Core activity ... 14/14, 1 peers`).
-2. **Same-LAN works.** Phone1 (192.168.0.247) connects to the Mac's
-   blind-peer (192.168.0.110) via DHT discovery + LAN.
-3. **Cross-NAT does not.** Phone2 on iOS Personal Hotspot
-   (172.20.10.0/28, cellular CGNAT) cannot reach the Mac's blind-peer at
-   all. Phone2 *can* ping the Mac's home public IP (4.5 ms — same ISP),
-   but UDP/49737 from phone2's NAT mapping is dropped at the home router.
-4. **The blocker is the Mac being behind a residential NAT**, not the
-   code. The single fix that makes "any two zapp users globally" work is a
-   **public-IP host** for the blind-peer (port-forward home router OR
-   VPS).
+1. **Wiring works end-to-end. Confirmed twice now.** `local.properties` →
+   `BuildConfig.BLIND_PEER_KEYS` → worklet `argv` → `core/lib/config.js` →
+   `BlindMirror` → `BlindPeering` → `BlindPeerClient.dht.connect(...)`.
+   Phone1 (66683dca…) sustained `connected=true rpc=true` for 9+ minutes
+   straight and replicated 18 Hypercore blocks to the Mac blind-peer (15
+   from previous sessions plus 3 new appends). Logged in our new
+   `blind-mirror-diag.log` STATE dump and in `/tmp/blind-peer.log`.
+2. **The remaining blocker is host reachability, not code.** The Mac is
+   behind residential NAT. The DHT can't announce a stable public address
+   for it. From a fresh DHT client (even on the Mac itself!) `findPeer(blindPeerKey)`
+   returns 0 responders. Phone1 succeeds via lucky DHT-keyspace placement
+   or a cached route; phone2 — with a different ephemeral DHT keypair —
+   never finds the blind-peer for ~10 minutes of `PEER_NOT_FOUND` retries.
+   Same code, same network, same time — different DHT-keyspace luck.
+3. **WireGuard on the Mac silently breaks everything.** Re-confirmed
+   Finding #8 from session 1: when WG is on, the blind-peer announces the
+   WG provider's exit IP (e.g. `34.0.35.179` in Google Cloud) as its
+   public address. Lookups return that GCP IP, phones try to send UDP
+   there, the GCP edge has no NAT rule and drops the packet. **Always
+   disable WG before starting the blind-peer for testing.**
+4. **The deterministic fix for local dev** is a 3-minute home-router
+   port-forward (UDP/49737 → 192.168.0.110:49737). After that, the
+   blind-peer's announced public IP is directly reachable, no DHT-discovery
+   roulette. Step-by-step under "Local testing setup" below.
+5. **The deterministic fix for production** is a public-IP VPS (or better,
+   a fleet of 2-3 of them — the Keet pattern). Step-by-step under
+   "Production deployment plan" below.
 
 ---
 
@@ -322,6 +338,68 @@ NAT-traversal fails for phone2.
 
 ---
 
+## Instrumentation added in session 2
+
+These are uncommitted patches to `../zappMessaging` on
+`debug/blind-peer-relay-investigation`. They change behavior only by
+adding diag logs — no logic changes.
+
+### `core/lib/blind-mirror.js`
+
+1. **Identity vs ephemeral keypair dump** at BlindMirror init. Logs
+   both `swarm.keyPair.publicKey` (the user's identity) and
+   `swarm.dht.defaultKeyPair.publicKey` (the ephemeral DHT key that
+   will appear as `remotePublicKey` at the blind-peer). Gives you a
+   way to map "Opened connection to <z32>" lines in
+   `/tmp/blind-peer.log` back to a specific phone.
+2. **Wrapped `BlindPeering._getBlindPeer`** to log every new
+   `BlindPeerClient` creation, plus the lifecycle of each underlying
+   ProtomuxRPC stream (open/error/close), with the error code on
+   failure (`PEER_NOT_FOUND` was the culprit in our case).
+3. **Periodic STATE dump every 10s** showing
+   `connected/opened/rpc/cores/refs` for each blind peer. Definitive
+   way to see whether a phone has a working RPC session right now.
+4. **`_b4aHex` helper** for portable Buffer→hex without `toString`
+   (works under Bare).
+
+Output goes to `files/zappmessaging/blind-mirror-diag.log` on the
+device.
+
+### `core/lib/p2p-manager.js`
+
+- **Wrapped the always-on relay function** to log how often
+  `relayThrough()` is invoked by hyperswarm. Counts every connect
+  attempt that's about to be relay-routed. Logs the first 5 invocations
+  then every 10th, so you don't drown.
+- **Added a clear log** when `BLIND_PEER_KEYS` is empty (`NO blind
+  peer keys — relay disabled`). Catches the C1 regression silently
+  without needing to diff bundles.
+
+Output goes to `files/zappmessaging/p2p-diag.log` on the device.
+
+### How to verify the patches are live
+
+```bash
+# md5 of the bundle should match host:
+md5 -q ../zappMessaging/android/src/main/assets/worklet.bundle
+adb -s <serial> shell "run-as xyz.justzappit.zapp.testnet.debug md5sum files/bare/worklet.bundle"
+
+# A working install will show this on app launch:
+adb -s <serial> exec-out "run-as xyz.justzappit.zapp.testnet.debug \
+  cat files/zappmessaging/blind-mirror-diag.log" | grep -E "Identity|Ephemeral|NEW BlindPeerClient"
+```
+
+If you don't see the `Identity (...)` and `Ephemeral (...)` lines on
+init, the device is running an old bundle — wipe `files/bare/worklet.bundle`
+and force-stop/relaunch.
+
+These patches should be **kept in the branch but reverted before the
+relay-through change ships to main**, since they're noisy in
+production. Or keep just the STATE dump and drop the per-attempt
+logs.
+
+---
+
 ## Diagnostic data (where to look)
 
 ### On the Mac
@@ -387,6 +465,9 @@ SWARM conns=0 peers=0 addr=none dhtReady=true bootstrapped=true
 
 ## Findings (confirmed)
 
+> **New findings from session 2 (2026-05-14)** are tagged `[S2]`. Old
+> findings from session 1 are unchanged unless explicitly superseded.
+
 1. **The `0922f9c` audit commit silently disabled blind-mirroring on
    Android.** Item C1 ("Extract hardcoded blind peer key to config.js")
    moved `DEFAULT_BLIND_PEER_KEYS` from `blind-mirror.js` to `config.js`
@@ -429,6 +510,54 @@ SWARM conns=0 peers=0 addr=none dhtReady=true bootstrapped=true
    `() => relayKey` to force relay use. **Revert to static form when a
    real public-IP blind-peer is available**, so direct holepunching wins
    when it can.
+10. **`[S2]` BlindPeerClient connects with the DHT *default* keypair, not
+    the user's identity keypair.** Hyperswarm's constructor creates the
+    DHT *without* passing its own `keyPair` (see hyperswarm/index.js:38),
+    so `dht.defaultKeyPair = createKeyPair()` is a freshly-random keypair
+    generated at app startup. `BlindPeerClient.connect()` calls
+    `dht.connect(blindPeerKey, { keyPair: this.keyPair })` with
+    `this.keyPair = null`, falling through to `dht.defaultKeyPair`. So at
+    the blind-peer's noise layer, `stream.remotePublicKey` is this
+    ephemeral DHT key — *not* the identity. **This answers session-1
+    Open Question #3**: every z32 prefix in `/tmp/blind-peer.log` like
+    `e6pgdq…`, `obgnshpih…`, `1mijeo5f…` is phone1's *DHT default
+    keypair* for that specific app session, regenerated on every app
+    process boot.
+11. **`[S2]` The blind-peer's `--trusted-peer` flag is unusable as-is
+    for our model.** `_isTrustedPeer(stream.remotePublicKey)` (in
+    `blind-peer/index.js:539`) checks the connecting client's noise
+    pubkey, which (per #10) is the ephemeral DHT key. We can't
+    pre-trust *identity* z32s because identity isn't what shows up.
+    Two ways to fix: (a) wrap `BlindPeering._getBlindPeer` to pass
+    `keyPair: identity.keyPair` to `BlindPeerClient` (so the noise
+    handshake uses identity, then identity z32s in `--trusted-peer`
+    actually match), or (b) fork blind-peer to gate on something else.
+    Until one of these, every connection logs `Downgraded announce
+    because the peer is not trusted` and the blind-peer stores the core
+    but won't republish its discovery key on the DHT — which means a
+    second peer can't *find* the first peer's core via the blind-peer
+    even after both are connected. Combined with finding #7 from
+    session 1, this is a structural limit on how the relay path can
+    deliver, not a configuration thing.
+12. **`[S2]` Behind residential NAT, the blind-peer's DHT announce
+    fails for fresh DHT clients.** Reproduced from a node script *on
+    the Mac itself*: `dht.findPeer(blindPeerKey)` returned 0 responders
+    even immediately after `Announced all initial cores` and even after
+    blind-peer restart. `dht.connect()` from the Mac succeeded only
+    because hyperdht has a same-process / same-socket fast-path
+    (`firewall` callback in connect.js can claim incoming UDP from any
+    source). Phones don't have that fast-path. Phone1's success
+    appears to be either DHT-keyspace luck (its ephemeral keypair
+    happened to land close enough to the announce target) or stale
+    `_socketPool.routes` cache from a previous successful connect.
+    Phone2 — different ephemeral keypair, fresh `_socketPool` — never
+    succeeded across 10+ minutes of `PEER_NOT_FOUND` retries.
+13. **`[S2]` WireGuard re-bit us.** The Mac's default route was via
+    `utun4 → 10.8.0.3` (WG provider, exit IP `34.0.35.179` Google
+    Cloud) at the start of session 2. Re-confirmed Finding #8: blind-peer
+    announced the GCP IP, every phone lookup tried that IP, GCP
+    dropped. After turning WG off and restarting blind-peer, phone1
+    (which had been retrying for ~30 min) connected within ~30 seconds.
 
 ---
 
@@ -436,69 +565,301 @@ SWARM conns=0 peers=0 addr=none dhtReady=true bootstrapped=true
 
 1. **What address does hyperdht actually announce for the blind-peer?**
    blind-peer-cli logs `Blind peer listening, local address is …` but
-   that's the bound socket, not the DHT-announced address. To inspect
-   the announce, we'd need to either monkey-patch hyperdht or add a
-   `dht.remoteAddress()` log line to blind-peer-cli.
+   that's the bound socket, not the DHT-announced address. `[S2]
+   partially answered`: we observed empirically (via fresh DHT lookup
+   from the Mac) that whatever it announces, fresh public DHT clients
+   can't find it. To inspect the announce content directly you still
+   need a hyperdht monkey-patch.
 2. **What NAT type is the home router?** Cone vs symmetric determines
    whether hole-punching from arbitrary phones can ever succeed without
    port forwarding. STUN-style NAT-type detection (e.g. `pystun3`) would
-   answer this.
-3. **Are `e6pgdq…`, `obgnshpih…`, `zwnt1sf51qx…` (z32) all phone1's
-   identity?** Their hex equivalent should be `66683dca…`. We never
-   verified by decoding z32 → hex on the Mac side. If they're different
-   pubkeys, then either the phone keypair rotates per session or
-   BlindPeering uses a separate key pair we missed.
+   answer this. `[S2]` Indirect evidence: if the home router were a
+   well-behaved cone NAT, phone2 should also have been findable; the
+   fact that phone1 succeeds and phone2 doesn't *under identical
+   conditions* is suggestive of either symmetric NAT, port-preservation
+   conflicts when 2 LAN clients try to map the same external port, or
+   no hairpin support.
+3. **`[S2] ANSWERED`** — see Finding #10. The z32s are phone1's DHT
+   *default* keypair (ephemeral per app boot), not its identity. Phone1
+   identity hex `66683dca…` decodes to z32
+   `c3wd51ubewc4qwe9cjscu4djhtxa3t6xay93p9gqgyfcfi6ekwio`, which never
+   appears in `/tmp/blind-peer.log` because the connecting client uses
+   the DHT-default keypair, not identity.
 4. **Why does phone2 ↔ Mac ICMP ping take only 4.5 ms?** That's
    suspiciously fast for cellular → public internet → home ISP. Likely
    same-ISP local routing in this region. Unrelated to the bug, but
    worth noting if performance characteristics differ in production.
+5. **`[S2]` Why does phone1 succeed and phone2 fail under identical
+   conditions?** Best hypothesis is one of:
+   (a) Phone1's ephemeral DHT keypair happens to be close in keyspace
+       to the blind-peer's announce target, so it queries the right
+       neighborhood; phone2 doesn't.
+   (b) Phone1 has a `_socketPool.routes` cache entry from a previous
+       successful connect (back when WG was off briefly) that bypasses
+       findPeer; phone2 has none.
+   (c) The home router can only sustain one concurrent hole-punch
+       mapping to the Mac's UDP/49737, and phone1 won that race.
+   We didn't pin which one; port-forward (next steps) makes the
+   distinction moot since findPeer stops being the gate.
 
 ---
 
-## Next steps (prioritized)
+## Local testing setup (Mac as blind-peer host) — recommended dev path
 
-### A. Make the Mac blind-peer reachable from anywhere — *3 minutes, free*
+This is what to do *right now* to get phone↔phone messaging working
+locally with a Mac. The plan validated in session 2.
 
-Open the home router admin UI (`http://192.168.0.1`), find Port
-Forwarding (sometimes "Virtual Server" / "NAT Forwarding"), and add:
+### Prereqs (one-time)
+
+1. **Confirm you're not behind CGNAT.** If you are, no amount of
+   port-forwarding on your home router helps because your "public IP"
+   isn't actually globally routable.
+   ```bash
+   curl -s https://api.ipify.org   # what the world sees
+   # Then log into your router admin and check the WAN IP.
+   # If they MATCH, you're fine. If they DIFFER (router shows
+   # 100.x.x.x or some other private range), you're behind CGNAT —
+   # skip to "Production deployment plan" instead.
+   ```
+2. **Install blind-peer-cli with Node 20+.** Node 18 will crash on
+   `bare-addon-resolve`.
+   ```bash
+   nvm use 22
+   npm install -g blind-peer-cli
+   ```
+3. **Make sure WireGuard / any VPN is OFF on the Mac.** Re-check every
+   time you start the blind-peer. See Finding #13. Quick check:
+   ```bash
+   route -n get default | grep interface   # must say en0 (or eth),
+                                            # NOT utun*
+   ```
+
+### Step 1 — Add a static DHCP lease for the Mac (one-time)
+
+The blind-peer's DHT announce includes the Mac's address. If your
+router reassigns the Mac a different LAN IP later, the port-forward
+rule (next step) starts pointing at the wrong machine. Pin the Mac to
+`192.168.0.110` permanently.
+
+In your router admin (Asus example, varies by brand):
+
+1. Open **LAN → DHCP Server** (or "DHCP Reservation" / "Address
+   Reservation" depending on firmware).
+2. Find the Mac in the connected-clients list (look for hostname or
+   the en0 MAC).
+3. Click **Add** / lock icon, set IP to `192.168.0.110`, save.
+
+### Step 2 — Add the port-forward rule (one-time)
+
+In your router admin, find the section called any of: **WAN → Virtual
+Server** / **Port Forwarding** / **NAT Forwarding**. Add:
 
 | Field | Value |
 |---|---|
-| Protocol | UDP |
-| External port | 49737 |
-| Internal IP | 192.168.0.110 (your Mac's LAN IP) |
-| Internal port | 49737 |
+| Service Name (label) | `blind-peer` |
+| Protocol | **UDP** (not TCP, not both — UDP only) |
+| External Port | `49737` |
+| Internal IP | `192.168.0.110` |
+| Internal Port | `49737` |
+| Source IP | leave blank / "any" |
 
-Then restart blind-peer. The DHT will detect the new direct reachability
-and announce your public IP unmodified. Phone2 (and any phone anywhere)
-should then connect within ~30 sec.
+Click **Apply**. Some firmwares need a reboot; most don't.
 
-### B. Free public-IP VPS — *10 minutes, free forever*
+### Step 3 — Verify the forward is actually open
 
-[Oracle Cloud Always-Free](https://signup.cloud.oracle.com) gives a
-forever-free Ampere VM with a public IPv4. Steps:
+From outside your network (e.g. tether your phone to cellular and run
+this from a Termux-ish app, or use https://canyouseeme.org with
+"Custom Port Probe" UDP):
 
 ```bash
-# On a fresh Ubuntu 22.04 VPS:
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+# from any machine NOT on your home network:
+nc -u -v -w 3 <your_public_ip> 49737    # connection should not refuse
+```
+
+You can also just send a single UDP packet and look for it on the Mac:
+
+```bash
+# on the Mac, in one terminal:
+sudo tcpdump -i en0 udp port 49737
+
+# from outside the network, send a packet:
+echo TEST | nc -u -w 1 <your_public_ip> 49737
+
+# if tcpdump shows the packet, port-forward is working.
+```
+
+### Step 4 — Start blind-peer, install instrumented build, observe
+
+```bash
+# On the Mac:
+cd /Users/chinmaygopal/dev/zapp/zappMessaging
+nvm use 22
+nohup blind-peer --storage ./data --port 49737 --max-storage 10gb \
+  --debug >> /tmp/blind-peer.log 2>&1 &
+tail -f /tmp/blind-peer.log
+# Wait for "Listening at t41ora..." line. Note the z32 pubkey.
+
+# In zodl-android repo:
+cd /Users/chinmaygopal/dev/zapp/zodl-android
+# (BLIND_PEER_KEYS in local.properties already points at this z32)
+./gradlew :app:assembleZcashtestnetStoreDebug
+
+# Install on each device (the install task can't pick a target with multiple devices):
+adb -s 3B15B401SNR00000 install -r app/build/outputs/apk/zcashtestnetStore/debug/app-zcashtestnet-store-debug.apk
+adb -s 914652c5         install -r app/build/outputs/apk/zcashtestnetStore/debug/app-zcashtestnet-store-debug.apk
+
+# Wipe cached worklet bundle + force-restart the app on each device
+PKG=xyz.justzappit.zapp.testnet.debug
+for s in 3B15B401SNR00000 914652c5; do
+  adb -s $s shell run-as $PKG rm -f files/bare/worklet.bundle
+  adb -s $s shell am force-stop $PKG
+  adb -s $s shell monkey -p $PKG -c android.intent.category.LAUNCHER 1
+done
+```
+
+### Step 5 — Verify both phones connected
+
+In `/tmp/blind-peer.log` you should see TWO distinct ephemeral z32
+pubkeys opening connections (not just one — that was the bug before
+the port-forward). Each phone's identity-vs-ephemeral mapping is
+logged in the new instrumentation:
+
+```bash
+PKG=xyz.justzappit.zapp.testnet.debug
+for s in 3B15B401SNR00000 914652c5; do
+  echo "=== $s ==="
+  adb -s $s exec-out "run-as $PKG cat files/zappmessaging/blind-mirror-diag.log" \
+    | grep -E "Identity|Ephemeral|connected=true" | tail -5
+done
+```
+
+Expected:
+- `connected=true rpc=true` STATE lines for *both* phones
+- `Opened connection to <z32>` for both phones' ephemerals in
+  `/tmp/blind-peer.log`
+- `Core activity for Discovery key …` showing growing block counts
+  when you send messages in either direction
+
+If only one phone connects after port-forward, see Open Question #5
+and check that `--max-storage` isn't choking, that the router didn't
+silently drop the rule on reboot, and that the static DHCP lease held.
+
+---
+
+## Production deployment plan
+
+### Long-term: VPS fleet (the Keet pattern)
+
+Keet (Holepunch's reference messaging app) doesn't rely on a single
+blind-peer. They run a *fleet* of public blind-peers behind well-known
+pubkeys, ship the pubkey list in the client, and have BlindPeering
+pick the closest 2-3. If one is down, others serve. We should do the
+same.
+
+Targets:
+
+1. **Two free VPSes.** Oracle Cloud Always-Free gives an Ampere VM
+   forever; pair it with a tiny $5/mo Hetzner / Linode / DO instance
+   for redundancy. Both need:
+   - A public IPv4 (CGNAT-free)
+   - UDP/49737 open inbound (Oracle: Security List rule; AWS: SG
+     rule; Hetzner: ufw or hcloud firewall)
+   - SSH key auth, password auth disabled
+   - `blind-peer` running as a non-root user via systemd
+2. **Persistent identity.** The blind-peer's pubkey is derived from
+   `<storage>/IDENTITY`. **Back this file up.** If you nuke storage you
+   rotate the key and every existing client breaks until they get the
+   new key in an app update.
+3. **Bounded storage.** Always pass `--max-storage 10gb` (or whatever
+   the disk allows). The blind-peer accepts add-core requests from any
+   peer; without a cap, anyone can fill your disk.
+4. **Ship multiple keys.** `BlindMirror` accepts an array. After both
+   VPSes are up:
+   - Move from `local.properties` → committed `gradle.properties`:
+     ```properties
+     BLIND_PEER_KEYS=<vps1_z32>,<vps2_z32>
+     ```
+   - In `BlindMirror`, set `mirrors: 2` (or more if you have more
+     keys) so each core gets registered with N blind peers.
+
+### Setup script for a fresh VPS
+
+```bash
+# On a fresh Ubuntu 22.04+ VPS, as a non-root user with sudo:
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 sudo npm install -g blind-peer-cli
 mkdir -p ~/blind-peer-data
 
-# Foreground first to capture pubkey:
-blind-peer --storage ~/blind-peer-data --port 49737 --max-storage 10gb
-# → copy the "Listening at <z32>" line, paste into local.properties.
-# Then run as a service via the systemd unit at zappMessaging/scripts/blind-peer.service.
+# Foreground first to capture pubkey + verify:
+blind-peer --storage ~/blind-peer-data --port 49737 --max-storage 10gb \
+  --debug
+# Note "Listening at <z32>" — copy that. Ctrl-C.
+
+# Open UDP/49737 inbound on the cloud firewall (Oracle, AWS, Hetzner, etc.)
+# Then run as a service:
+sudo tee /etc/systemd/system/blind-peer.service <<EOF
+[Unit]
+Description=Zapp blind-peer
+After=network-online.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$HOME
+ExecStart=/usr/bin/blind-peer --storage $HOME/blind-peer-data \\
+  --port 49737 --max-storage 10gb --debug
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now blind-peer
+sudo journalctl -u blind-peer -f      # tail logs
 ```
 
-VPS firewall: open UDP/49737 inbound. On Oracle Cloud that's a Security
-List rule. On most other providers it's a checkbox.
+### Is opening UDP/49737 to the world dangerous?
 
-This is the production answer. Ship the VPS pubkey via
-`gradle.properties` (committed) so release builds pick it up
-automatically.
+No, with the standard caveats:
 
-### C. After A or B — code cleanup
+- **It's UDP, not TCP.** Most off-the-shelf exploit kits target TCP.
+- **The blind-peer protocol requires a Noise handshake.** Random
+  scanners get a TLS-like rejection, not a shell.
+- **The blind-peer can't read uploaded data.** Cores are encrypted by
+  discovery key; the peer is a dumb storage backend by design. Worst
+  case is someone fills storage — that's why `--max-storage` is
+  mandatory.
+
+Hardening checklist on the VPS:
+
+- Open ONLY UDP/49737 inbound on the cloud firewall. Block everything
+  else.
+- Run blind-peer as a non-root user (the systemd unit above).
+- Disable SSH password auth (`PasswordAuthentication no`).
+- Set `--max-storage` to less than the disk size with margin.
+
+### Why not ship just the home-router port-forward solution?
+
+- Bottlenecked by your home upload bandwidth (~10-50 Mbps on most
+  residential connections, vs. 1 Gbps+ on most VPSes).
+- Down whenever your power, ISP, or router blips.
+- Stuck on a dynamic IP that the ISP can rotate without warning,
+  silently breaking every client.
+- You're routing every other Zapp user's encrypted traffic through
+  your home connection.
+
+Port-forwarding is **fine for development and your own personal
+testing**, terrible as the production answer for "every Zapp user
+globally."
+
+---
+
+## Other follow-ups
+
+### Code cleanup once production blind-peer is up
 
 1. **Revert `relayThrough` to the static form** in
    `core/lib/p2p-manager.js`:
@@ -513,16 +874,14 @@ automatically.
    into a committed `gradle.properties` line (or Gradle build flavour),
    so devs don't each have to add it to their machine and so release
    builds always have it.
+4. **`[S2]` Decide what to do about the trust-gate / identity-keypair
+   issue (Finding #11).** Recommended: wrap
+   `BlindPeering._getBlindPeer` to pass `keyPair: identity.keyPair`
+   into `BlindPeerClient`. Then the noise pubkey at the blind-peer
+   matches the identity, identity-z32s in `--trusted-peer` actually
+   work, and we can stop seeing the `Downgraded announce` warning.
 
-### D. Tailscale — *test-only escape hatch, NOT production*
-
-If you want to validate cross-network without setting up port-forwarding
-or a VPS, install Tailscale on Mac + both phones. All three get
-`100.x.x.x` IPs on a virtual mesh. The Mac's blind-peer will then be
-reachable to the phones via Tailscale's NAT-traversal magic. **Don't
-ship this** — every Zapp user would need a Tailscale account.
-
-### E. Wider architectural improvement
+### Wider architectural improvement
 
 Even with a public-IP blind-peer, the **invite handshake** still flows
 over direct swarm sockets (see `sendInvite` in
@@ -531,6 +890,22 @@ other directly, the invite never lands and blind-peer can't help — it
 only mirrors existing conversations. Consider moving invite delivery
 into Hypercore so it also benefits from blind-peer relay (Autobase
 pattern).
+
+The same applies to the `__core_keys` exchange in `handleConnection`
+(`p2p-manager.js:413`). Two peers learn each other's Hypercore keys
+*only* over a live direct socket. Without that, even when both phones
+are connected to the blind-peer and the blind-peer holds both their
+encrypted cores, neither phone knows what core key to ask for. Lifting
+that exchange into a Hypercore-based metadata channel is the real
+production fix.
+
+### Tailscale — *test-only escape hatch, NOT production*
+
+If you want to validate cross-network without setting up port-forwarding
+or a VPS, install Tailscale on Mac + both phones. All three get
+`100.x.x.x` IPs on a virtual mesh. The Mac's blind-peer will then be
+reachable to the phones via Tailscale's NAT-traversal magic. **Don't
+ship this** — every Zapp user would need a Tailscale account.
 
 ---
 
