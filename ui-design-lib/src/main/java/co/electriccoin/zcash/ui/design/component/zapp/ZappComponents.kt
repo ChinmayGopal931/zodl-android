@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -64,6 +67,7 @@ fun ZappScreenHeader(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
+    onTitleClick: (() -> Unit)? = null,
     right: (@Composable () -> Unit)? = null,
     left: (@Composable () -> Unit)? = null,
 ) {
@@ -72,12 +76,27 @@ fun ZappScreenHeader(
         modifier = modifier
             .fillMaxWidth()
             .background(c.surface)
+            // Respect horizontal display cutouts (camera punch-holes) so the right-side chip
+            // is never obscured behind the camera or a system overlay.
+            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
             .padding(horizontal = 18.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (left != null) left()
-        Column(modifier = Modifier.weight(1f)) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .then(
+                    if (onTitleClick != null) {
+                        Modifier.clickable(
+                            indication = ripple(bounded = true),
+                            interactionSource = remember { MutableInteractionSource() },
+                            onClick = onTitleClick,
+                        )
+                    } else Modifier,
+                ),
+        ) {
             BasicText(
                 text = title,
                 style = ZappTheme.typography.screenTitle.copy(color = c.text),

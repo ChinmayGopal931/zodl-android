@@ -1,7 +1,12 @@
 package co.electriccoin.zcash.ui.screen.chat.view
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
@@ -28,13 +35,20 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappChipVariant
@@ -51,6 +65,8 @@ import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 @Composable
 fun ChatListView(
@@ -68,6 +84,7 @@ fun ChatListView(
     val dhtHealth by viewModel.dhtHealth.collectAsState()
     val connectionDetails by viewModel.connectionDetails.collectAsState()
     var showNetworkSheet by remember { mutableStateOf(false) }
+    var leaveTargetConversation by remember { mutableStateOf<ChatConversation?>(null) }
 
     val sortedConversations =
         remember(conversations) {
@@ -134,10 +151,16 @@ fun ChatListView(
                         items = sortedConversations,
                         key = { it.id },
                     ) { conversation ->
-                        ConversationItem(
+                        // SwipeToLeaveRow wraps only the row content; the divider stays fixed.
+                        SwipeToLeaveRow(
                             conversation = conversation,
-                            onClick = { onConversationClick(conversation) },
-                        )
+                            onLeave = { leaveTargetConversation = conversation },
+                        ) {
+                            ConversationItem(
+                                conversation = conversation,
+                                onClick = { onConversationClick(conversation) },
+                            )
+                        }
                         ZappRowDivider(inset = true)
                     }
                 }
@@ -156,7 +179,6 @@ fun ChatListView(
                 ),
         )
 
-        // Back button floats bottom-left, horizontally aligned with the FAB.
         if (showBackButton) {
             ZappBackButton(
                 onClick = onNavigateBack,
@@ -166,6 +188,18 @@ fun ChatListView(
                         start = 20.dp,
                         bottom = (ZappNavBar.CLEARANCE_DP + 12).dp,
                     ),
+            )
+        }
+
+        // Leave confirmation dialog — overlays everything within this Box
+        leaveTargetConversation?.let { conv ->
+            LeaveConfirmationDialog(
+                conversationName = conv.displayName,
+                onDismiss = { leaveTargetConversation = null },
+                onConfirm = {
+                    viewModel.leaveConversation(conv.id)
+                    leaveTargetConversation = null
+                },
             )
         }
     }
@@ -178,6 +212,217 @@ fun ChatListView(
             connectionDetails = connectionDetails,
             onDismiss = { showNetworkSheet = false },
         )
+    }
+}
+
+/**
+ * Swipe-to-reveal container for conversation rows.
+ *
+ * The pointerInput sits on the outer Box (parent of ConversationItem in the layout tree).
+ * Using PointerEventPass.Initial means we intercept MOVE events before the inner clickable
+ * sees them. Once left-swipe is confirmed:
+ *   - change.consume() marks the event consumed → clickable's waitForUpOrCancellation
+ *     sees isConsumed = true and cancels tap tracking, preventing phantom taps.
+ *   - Delta is always read as (change.position - change.previousPosition) rather than
+ *     positionChange(), which returns Offset.Zero when positionChangeConsumed is true.
+ *   - rawOffset is a local var updated synchronously — no coroutine race condition.
+ */
+@Composable
+private fun SwipeToLeaveRow(
+    conversation: ChatConversation,
+    onLeave: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val c = ZappTheme.colors
+    val scope = rememberCoroutineScope()
+    // mutableFloatStateOf: plain state, no suspend needed — avoids restricted-scope errors.
+    // Animatable is only created on release for the snap-back animation.
+    var offsetX by remember { mutableFloatStateOf(0f) }
+    val revealThresholdPx = with(LocalDensity.current) { 80.dp.toPx() }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
+            // Gesture on the outer Box — parent of content's clickable in the layout tree.
+            // Initial pass processes parent before child, giving us first access to events.
+            .pointerInput(conversation.id) {
+                awaitEachGesture {
+                    // DOWN: nothing consumes this before us, so Main pass (default) is fine.
+                    awaitFirstDown(requireUnconsumed = false)
+
+                    var rawOffset = 0f
+                    var hAccum = 0f
+                    var vAccum = 0f
+                    var isHorizontalDrag = false
+
+                    while (true) {
+                        // Initial pass: we see MOVE before the inner clickable does.
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        val change = event.changes.firstOrNull() ?: break
+
+                        if (!change.pressed) {
+                            if (isHorizontalDrag) {
+                                val capturedOffset = rawOffset
+                                scope.launch {
+                                    if (-capturedOffset >= revealThresholdPx) onLeave()
+                                    // Fresh Animatable for release animation — unrestricted scope.
+                                    Animatable(capturedOffset).animateTo(0f, tween(200)) {
+                                        offsetX = value
+                                    }
+                                }
+                            }
+                            break
+                        }
+
+                        // Raw positional delta — immune to positionChangeConsumed flag.
+                        val dx = (change.position - change.previousPosition).x
+                        val dy = (change.position - change.previousPosition).y
+
+                        if (!isHorizontalDrag) {
+                            hAccum += dx
+                            vAccum += dy
+                            val absH = kotlin.math.abs(hAccum)
+                            val absV = kotlin.math.abs(vAccum)
+                            val slop = viewConfiguration.touchSlop
+
+                            when {
+                                // Left-swipe with at least as much horizontal as vertical
+                                absH > slop && absH >= absV && hAccum < 0f -> {
+                                    isHorizontalDrag = true
+                                    rawOffset = hAccum.coerceIn(-revealThresholdPx * 2f, 0f)
+                                    offsetX = rawOffset  // direct state write — no suspend
+                                    change.consume()
+                                }
+                                // Vertical scroll or rightward — yield to LazyColumn
+                                absV > slop || (absH > slop && hAccum >= 0f) -> break
+                                // Still within slop — keep watching
+                            }
+                        } else {
+                            // Active drag: consume so LazyColumn doesn't scroll vertically
+                            change.consume()
+                            rawOffset = (rawOffset + dx).coerceIn(-revealThresholdPx * 2f, 0f)
+                            offsetX = rawOffset  // direct state write — no suspend
+                        }
+                    }
+                }
+            },
+    ) {
+        // Reveal layer — always behind the sliding row
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(c.danger, RectangleShape)
+                .padding(end = 20.dp),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            BasicText(
+                text = "Leave",
+                style = ZappTheme.typography.button.copy(
+                    color = c.bg,
+                    fontWeight = FontWeight.Black,
+                ),
+            )
+        }
+
+        // Foreground content — slides left on drag
+        Box(
+            modifier = Modifier
+                .offset { IntOffset(offsetX.roundToInt(), 0) }
+                .background(c.bg)
+                .fillMaxWidth(),
+        ) {
+            content()
+        }
+    }
+}
+
+/**
+ * Full-screen confirmation overlay — no MaterialTheme AlertDialog,
+ * pure Box + BasicText + clickable per the Zapp design system.
+ */
+@Composable
+private fun LeaveConfirmationDialog(
+    conversationName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    val c = ZappTheme.colors
+
+    // Scrim — tapping it dismisses
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(c.overlay)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() },
+                onClick = onDismiss,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        // Dialog card — absorbs clicks so they don't fall through to the scrim
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 28.dp)
+                .background(c.surface, RectangleShape)
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = {},
+                )
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            BasicText(
+                text = "Leave conversation?",
+                style = ZappTheme.typography.rowTitle.copy(color = c.text),
+            )
+            BasicText(
+                text = "You'll leave \"$conversationName\" and stop receiving its messages.",
+                style = ZappTheme.typography.body.copy(color = c.textMuted),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                // Cancel
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .background(c.surfaceAlt, RectangleShape)
+                        .clickable(onClick = onDismiss),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = "Cancel",
+                        style = ZappTheme.typography.button.copy(
+                            color = c.text,
+                            fontWeight = FontWeight.Black,
+                        ),
+                    )
+                }
+                // Leave — danger
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .background(c.danger, RectangleShape)
+                        .clickable(onClick = onConfirm),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = "Leave",
+                        style = ZappTheme.typography.button.copy(
+                            color = c.bg,
+                            fontWeight = FontWeight.Black,
+                        ),
+                    )
+                }
+            }
+        }
     }
 }
 

@@ -39,10 +39,15 @@ import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -57,6 +62,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -67,6 +73,7 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappChipVariant
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.media.rememberCameraCaptureState
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
+import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.model.MessageStatus
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.FileBubble
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.LocationBubble
@@ -112,6 +119,7 @@ fun ChatRoomView(
     var showAttachmentSheet by remember { mutableStateOf(false) }
     var showMediaSheet by remember { mutableStateOf(false) }
     var showNetworkSheet by remember { mutableStateOf(false) }
+    var showEditContact by remember { mutableStateOf(false) }
     val connectionDetails by viewModel.connectionDetails.collectAsState()
 
     val mediaPickerLauncher = rememberLauncherForActivityResult(
@@ -189,6 +197,9 @@ fun ChatRoomView(
             ZappScreenHeader(
                 title = currentConversation?.displayName ?: "Chat",
                 subtitle = subtitleText,
+                onTitleClick = if (currentConversation?.type == ConversationType.DIRECT) {
+                    { showEditContact = true }
+                } else null,
                 left = { ZappBackButton(onClick = onNavigateBack) },
                 right = {
                     ZappStatusChip(
@@ -364,6 +375,20 @@ fun ChatRoomView(
         )
     }
 
+    if (showEditContact) {
+        val peerPublicKey = currentConversation?.participantIds?.firstOrNull() ?: ""
+        ContactEditSheet(
+            currentName = currentConversation?.displayName ?: "",
+            onDismiss = { showEditContact = false },
+            onSave = { newName ->
+                if (peerPublicKey.isNotEmpty()) {
+                    viewModel.updateContact(peerPublicKey, newName)
+                }
+                showEditContact = false
+            },
+        )
+    }
+
     if (showMediaSheet) {
         MediaAttachmentSheet(
             onChooseMedia = {
@@ -402,6 +427,83 @@ fun ChatRoomView(
             },
             onDismiss = { showMediaSheet = false },
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ContactEditSheet(
+    currentName: String,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+) {
+    val c = ZappTheme.colors
+    var nameInput by remember { mutableStateOf(TextFieldValue(currentName)) }
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        containerColor = c.surface,
+        shape = RectangleShape,
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            BasicText(
+                text = "Edit Contact",
+                style = ZappTheme.typography.rowTitle.copy(color = c.text),
+            )
+            OutlinedTextField(
+                value = nameInput,
+                onValueChange = { nameInput = it },
+                label = { Text("Name") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .background(c.surfaceAlt, RectangleShape)
+                        .clickable(onClick = onDismiss),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = "Cancel",
+                        style = ZappTheme.typography.button.copy(
+                            color = c.text,
+                            fontWeight = FontWeight.Black,
+                        ),
+                    )
+                }
+                val canSave = nameInput.text.isNotBlank()
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .background(if (canSave) c.accent else c.surfaceAlt, RectangleShape)
+                        .clickable(enabled = canSave, onClick = { onSave(nameInput.text.trim()) }),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = "Save",
+                        style = ZappTheme.typography.button.copy(
+                            color = if (canSave) c.onAccent else c.textMuted,
+                            fontWeight = FontWeight.Black,
+                        ),
+                    )
+                }
+            }
+        }
     }
 }
 
