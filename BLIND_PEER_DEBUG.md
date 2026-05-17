@@ -10,13 +10,45 @@
 > repo; this repo only carries this doc + the gitignored `local.properties`
 > entry.
 
-> **Sessions in this doc**: 2026-05-13 (initial wire-up + cross-NAT test)
-> and 2026-05-14 (re-verified wiring + diagnosed why "phone1 works but
-> phone2 doesn't" + concrete local-test plan via home-router port-forward).
+> **Sessions in this doc**: 2026-05-13 (initial wire-up + cross-NAT test),
+> 2026-05-14 (re-verified wiring + diagnosed why "phone1 works but
+> phone2 doesn't" + concrete local-test plan via home-router port-forward),
+> and 2026-05-15 (production VPS deployed; phone2 keyspace-luck hypothesis
+> disproven).
 
 ---
 
-## TL;DR (state as of 2026-05-14)
+## TL;DR (state as of 2026-05-16)
+
+**Session 3 outcome**: Production blind-peer is now live on an Oracle Cloud
+Always-Free VPS (Ubuntu 24.04, `140.245.193.100`, systemd-managed, pubkey
+`5ccrwsgqfg1hawwcbckmisww4sy3qns5scsntxfztgx7pt4eps5o`). Phone1 replicates
+its conversation cores reliably (28 blocks → 23/23 + 9/9 verified). The VPS
+deployment goal is complete and the path from `local.properties` →
+`BuildConfig.BLIND_PEER_KEYS` → worklet `argv` → `BlindMirror` → live VPS
+connection is end-to-end working on a fresh install.
+
+**Two confirmed blockers remain** — both downstream of the VPS deployment
+and both empirically reproduced in S3:
+
+1. **Phone2 (OnePlus 8T KB2005) is structurally `PEER_NOT_FOUND`** even when
+   phone1 connects fine to the same VPS from the same home Wi-Fi at the
+   same moment. Rules out: keyspace luck (4 ephemerals tried), VPS
+   reachability (phone1 proves it works), network NAT (same `/24` as
+   phone1), and identity/cache state (full clean wipe + reinstall). Most
+   likely device-specific: OxygenOS UDP-socket lifecycle, IPv6 routing
+   quirk, or the structural trust-gate from Finding #11. See Finding #17
+   for full method, Finding #11 for the trust-gate angle.
+2. **Invite handshake over cross-NAT is dead in current code.** Demonstrated
+   live: two fresh apps in different rooms each created their own solo
+   chat — neither received the other's invite even with active
+   `inviteTopics=1`. The blind-peer does not (and cannot) help here
+   because `sendInvite`/`__core_keys` flows over direct Hyperswarm sockets,
+   not via blind-peer relay. Same-LAN bootstrap works (mDNS-ish + DHT-LAN
+   hint); once paired, separation is fine and blind-peer keeps them in
+   sync. But "two strangers globally" can never form a NEW chat until
+   invite delivery moves into Hypercore (doc's "Wider architectural
+   improvement"). See Finding #18.
 
 1. **Wiring works end-to-end. Confirmed twice now.** `local.properties` →
    `BuildConfig.BLIND_PEER_KEYS` → worklet `argv` → `core/lib/config.js` →
@@ -45,6 +77,87 @@
 5. **The deterministic fix for production** is a public-IP VPS (or better,
    a fleet of 2-3 of them — the Keet pattern). Step-by-step under
    "Production deployment plan" below.
+
+---
+
+## ▶ Resume Here (Session 4 onboarding)
+
+If you're picking up after a context clear or a new session, start here.
+
+**The state of the world right now (2026-05-16):**
+
+- VPS blind-peer is deployed and healthy. SSH: `ssh ubuntu@140.245.193.100`.
+  systemd unit `blind-peer.service` is enabled+active.
+  Logs: `tail -f /var/log/blind-peer.log`.
+- `local.properties` points the app at the VPS pubkey already.
+- `debug/blind-peer-relay-investigation` branch in BOTH `zodl-android` and
+  `../zappMessaging` has the S2+S3 instrumentation + always-on relay patch.
+- The latest commit in this branch is doc-only (memory/findings 14-18 above).
+  The code changes (instrumentation) are unchanged from S2.
+
+**What works right now:**
+
+- Fresh-install phone1 reaches the VPS, registers its local conversation
+  core, replicates blocks. `STATE registered=1 peers=1 connected=true
+  rpc=true cores=1` in `files/zappmessaging/blind-mirror-diag.log`.
+- Same conversation core from before the wipe (`h5fcnwg…` discovery key,
+  23 blocks) replicates cleanly to the VPS.
+
+**What's broken:**
+
+- Phone2 (OnePlus 8T KB2005, serial `914652c5`): persistent
+  `PEER_NOT_FOUND` on every connect attempt against the VPS, regardless
+  of network / ephemeral / clean install. See Finding #17.
+- Invite delivery from one fresh phone to another never lands cross-NAT.
+  See Finding #18.
+
+**Two concrete next-step tracks (pick one):**
+
+A. **Diagnose phone2.** Add finer instrumentation to
+   `../zappMessaging/core/lib/blind-mirror.js` around the wrapped
+   `BlindPeering._getBlindPeer` to log which specific RPC call returns
+   `PEER_NOT_FOUND` (look for `findPeer` vs `addCore` in the BlindPeering
+   protocol). If it's a findPeer for the conversation peer, the root
+   cause is Finding #11 (blind-peer downgrades announce → discovery key
+   not republished → findPeer fails). Fix is to wrap `_getBlindPeer` to
+   pass `keyPair: identity.keyPair` so the trust-gate matches identity.
+   Try also installing the app on a third Android (non-OnePlus) to
+   confirm "OnePlus-specific" vs "this app's-DHT-state on phone2".
+
+B. **Architectural fix for invite delivery.** Move `sendInvite` and the
+   `__core_keys` exchange in `core/lib/p2p-manager.js:413` off the direct
+   swarm socket and onto a Hypercore-based metadata channel that the
+   blind-peer can mirror. This unblocks "two strangers globally" without
+   solving phone2 specifically. See doc's "Wider architectural
+   improvement" section for the design sketch.
+
+**Don't waste time on (already ruled out in S3):**
+
+- Phone2's "DHT keyspace luck" — disproven across 4 ephemerals.
+- "VPS isn't reachable" — phone1 connects to it from the same network.
+- "Bad cached worklet/build state" — full clean wipe + uninstall + rebuild
+  + `--no-build-cache` reproduces the same phone2 failure.
+- "Phone2 is in Doze" — `mState=ACTIVE mLightState=ACTIVE` while failing.
+- "iOS hotspot symmetric NAT" — phone2 fails on home Wi-Fi too, with
+  phone1 succeeding on the same Wi-Fi at the same moment.
+
+**Quick verification commands to confirm things still work:**
+
+```bash
+# Confirm VPS is healthy
+ssh ubuntu@140.245.193.100 'sudo systemctl is-active blind-peer && tail -3 /var/log/blind-peer.log'
+
+# Confirm app's BLIND_PEER_KEYS is the VPS pubkey
+grep BLIND_PEER_KEYS /Users/chinmaygopal/dev/zapp/zodl-android/local.properties
+
+# Confirm phone1 is connected to VPS (should show connected=true)
+adb -s 3B15B401SNR00000 exec-out "run-as xyz.justzappit.zapp.testnet.debug \
+  cat files/zappmessaging/blind-mirror-diag.log" | grep STATE | tail -1
+
+# Confirm phone2's still failing (should show PEER_NOT_FOUND)
+adb -s 914652c5 exec-out "run-as xyz.justzappit.zapp.testnet.debug \
+  cat files/zappmessaging/blind-mirror-diag.log" | grep -E "STATE|PEER_NOT" | tail -5
+```
 
 ---
 
@@ -558,6 +671,72 @@ SWARM conns=0 peers=0 addr=none dhtReady=true bootstrapped=true
     announced the GCP IP, every phone lookup tried that IP, GCP
     dropped. After turning WG off and restarting blind-peer, phone1
     (which had been retrying for ~30 min) connected within ~30 seconds.
+14. **`[S3]` Production blind-peer deployed on Oracle Cloud Always-Free
+    VPS** (`140.245.193.100`, Ubuntu 24.04 Minimal, x86_64,
+    VM.Standard.E2.1.Micro = 1 OCPU / 1 GB RAM + 2 GB swap, ap-hyderabad-1
+    AD-1). systemd unit at `/etc/systemd/system/blind-peer.service`
+    auto-restarts on crash/reboot. Logs to `/var/log/blind-peer.log`.
+    Pubkey `5ccrwsgqfg1hawwcbckmisww4sy3qns5scsntxfztgx7pt4eps5o`,
+    encryption pubkey `wkgj383rnwcdqgzrgoqc36toeg8b51kxyg67bh8y58jdkkfpty1o`.
+    Phone1 (ephemeral `36677bab…`) connects and replicates all 28 blocks
+    (9 + 19) in seconds — same conversation cores that wouldn't reliably
+    reach the residential-NAT Mac blind-peer.
+15. **`[S3]` First attempt on Oracle Linux 9 failed at C++ ABI level.**
+    OL9 ships `GLIBCXX_3.4.29` (GCC 11.5); blind-peer-cli's
+    `rocksdb-native` prebuilds require `GLIBCXX_3.4.30` (GCC 12+).
+    `gcc-toolset-13` does *not* ship a runtime libstdc++ that satisfies
+    this (only `-devel` headers). **Lesson: for any future Holepunch
+    deployment, pick Ubuntu 22.04+, NOT enterprise distros (RHEL/Rocky/OL).**
+    The prebuilds assume modern glibc/GLIBCXX and patching enterprise
+    distros around this is a dead end.
+16. **`[S3]` Phone2 ephemeral-rotation does NOT fix `PEER_NOT_FOUND`.**
+    Force-stopping phone2's app and relaunching rotated its DHT default
+    keypair from `7a27362c…` to `d1ecb9af…`. Both ephemerals failed
+    identically against the public-IP VPS — three `PEER_NOT_FOUND` retries
+    in 90 seconds post-restart. **This disproves Open Question #5a from
+    session 2** ("phone2's ephemeral landed in unlucky DHT keyspace"):
+    the unluck is persistent across ephemerals on the same device, so
+    it's a device/network property, not a keyspace coincidence.
+17. **`[S3]` Phone2 fails even on the same Wi-Fi as a working phone1.**
+    Did a full clean wipe (`gradlew --stop`, removed `build-cache-1`,
+    `transforms-*`, `build-conventions-secant/{build,.gradle,.kotlin}`,
+    `.gradle`, `app/build`, `ui-lib/build`), uninstalled the app from
+    both phones, rebuilt with `--no-build-cache`, fresh-installed and
+    re-onboarded both devices. Then put both phones on the same home
+    Wi-Fi (confirmed via `ip addr`: 192.168.0.247 / 192.168.0.163, same
+    `/24`). **Phone1 connected to the VPS within 15s** (`STATE
+    registered=1 peers=1 connected=true rpc=true`) on its third
+    ephemeral keypair this session. **Phone2 still PEER_NOT_FOUND**
+    (4+ retries observed) even while phone1 was actively connected to
+    the same VPS from the same network at the same moment. This
+    eliminates: (a) keyspace luck, (b) VPS reachability, (c) network
+    NAT, (d) app/identity/cache state. Phone2's `deviceidle` is
+    `mState=ACTIVE mLightState=ACTIVE` (not in Doze). The remaining
+    candidates are: a OnePlus 8T (KB2005) specific UDP-socket behaviour,
+    OxygenOS battery management killing UDX before RPC completes, or
+    an IPv6 routing quirk on phone2 that confuses hyperdht's
+    Kademlia walk. **Working hypothesis for next session**: instrument
+    `BlindPeering._getBlindPeer` / the BlindPeerClient RPC layer in
+    `../zappMessaging/core/lib/blind-mirror.js` to log which RPC method
+    returned `PEER_NOT_FOUND` (e.g. `addCore` vs an internal `findPeer`
+    walk), and capture phone2's UDX socket close reason when the
+    PEER_NOT_FOUND fires. If it's `findPeer`-on-the-blind-peer that's
+    erroring, the underlying issue is the trust-gate / unannounced
+    discovery key (Finding #11).
+18. **`[S3]` Invite handshake confirmed dead over cross-NAT (live demo).**
+    After fresh installs, phone1 (`convs=0 inviteTopics=0`) and phone2
+    (`convs=1 inviteTopics=1`, message sent into the void) both ended up
+    with their own solo chats — phone1 never received phone2's invite
+    even though both apps were running and the inviter was actively
+    listening on its invite topic. Confirms doc's "Wider architectural
+    improvement" empirically: blind-peer can't help bootstrap NEW chats,
+    only mirror existing ones whose `__core_keys` exchange already
+    happened over a direct socket. Same-LAN puts them on the same
+    Hyperswarm broadcast and the invite can land — once paired, they
+    can separate and blind-peer keeps them synced. But the bootstrap
+    requires LAN/holepunchable contact at least once, which is the
+    architectural blocker for "any two Zapp users globally" until
+    invite-via-Hypercore (or invite-via-blind-peer-RPC) ships.
 
 ---
 
@@ -782,43 +961,61 @@ Targets:
    - In `BlindMirror`, set `mirrors: 2` (or more if you have more
      keys) so each core gets registered with N blind peers.
 
-### Setup script for a fresh VPS
+### Setup script for a fresh VPS (verified 2026-05-15 on Oracle Cloud)
+
+**Important pre-requisites** (learned the hard way in `[S3]`):
+- Use **Ubuntu 22.04+**, not Oracle Linux / RHEL / Rocky. Enterprise distros
+  ship `GLIBCXX_3.4.29` (GCC 11) but Holepunch prebuilds need
+  `GLIBCXX_3.4.30+` (GCC 12+). `gcc-toolset-13` does NOT provide a runtime
+  fix — it only ships `-devel` headers.
+- If you're on Oracle Cloud's E2.1.Micro (1 GB RAM), **add 2 GB swap first** —
+  `npm install` of blind-peer-cli's deps OOMs the kernel without it (we
+  burned an instance on this).
+- Open UDP/49737 in **both** layers: the cloud firewall (Oracle Security
+  List + any attached NSG) AND the in-instance firewall (`iptables`/`ufw`).
+  Ubuntu's Oracle image pre-loads iptables INPUT rules that block non-22
+  traffic — `iptables -I INPUT 6 -p udp --dport 49737 -j ACCEPT &&
+  netfilter-persistent save`.
+
+**Install (Ubuntu 24.04 Minimal, what we shipped on)**:
 
 ```bash
-# On a fresh Ubuntu 22.04+ VPS, as a non-root user with sudo:
+# 0. Add swap if instance has <2 GB RAM
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && \
+  sudo mkswap /swapfile && sudo swapon /swapfile && \
+  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+
+# 1. Node 22 + build tools
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt-get install -y nodejs
-sudo npm install -g blind-peer-cli
+sudo apt-get install -y nodejs build-essential iptables-persistent
+
+# 2. Open in-instance firewall
+sudo iptables -I INPUT 6 -p udp --dport 49737 -j ACCEPT
+sudo netfilter-persistent save
+
+# 3. Install blind-peer-cli **locally** (NOT globally — require-addon's
+#    path resolution misbehaves with global npm installs)
+mkdir -p ~/blind-peer-app && cd ~/blind-peer-app
+npm init -y
+npm install blind-peer-cli
 mkdir -p ~/blind-peer-data
 
-# Foreground first to capture pubkey + verify:
-blind-peer --storage ~/blind-peer-data --port 49737 --max-storage 10gb \
-  --debug
+# 4. Foreground first to capture pubkey + verify
+./node_modules/.bin/blind-peer --storage ~/blind-peer-data --port 49737 \
+  --max-storage 10gb --debug
 # Note "Listening at <z32>" — copy that. Ctrl-C.
 
-# Open UDP/49737 inbound on the cloud firewall (Oracle, AWS, Hetzner, etc.)
-# Then run as a service:
-sudo tee /etc/systemd/system/blind-peer.service <<EOF
-[Unit]
-Description=Zapp blind-peer
-After=network-online.target
+# Open UDP/49737 inbound on the cloud firewall (Oracle Security List + any
+# attached NSG; AWS SG; Hetzner ufw/hcloud firewall).
+# 5. systemd unit. NOTE: avoid heredocs over SSH — terminals often mangle
+# long lines. Use `printf` with embedded \n or a base64-decode trick.
+sudo bash -c 'printf "[Unit]\nDescription=Zapp blind-peer relay\nAfter=network-online.target\nWants=network-online.target\n\n[Service]\nType=simple\nUser=ubuntu\nWorkingDirectory=/home/ubuntu/blind-peer-app\nExecStart=/home/ubuntu/blind-peer-app/node_modules/.bin/blind-peer --storage /home/ubuntu/blind-peer-data --port 49737 --max-storage 10gb --debug\nRestart=on-failure\nRestartSec=10s\nStandardOutput=append:/var/log/blind-peer.log\nStandardError=append:/var/log/blind-peer.log\n\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/blind-peer.service'
 
-[Service]
-Type=simple
-User=$USER
-WorkingDirectory=$HOME
-ExecStart=/usr/bin/blind-peer --storage $HOME/blind-peer-data \\
-  --port 49737 --max-storage 10gb --debug
-Restart=on-failure
-RestartSec=10s
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
+sudo touch /var/log/blind-peer.log
+sudo chown ubuntu:ubuntu /var/log/blind-peer.log
 sudo systemctl daemon-reload
 sudo systemctl enable --now blind-peer
-sudo journalctl -u blind-peer -f      # tail logs
+tail -f /var/log/blind-peer.log
 ```
 
 ### Is opening UDP/49737 to the world dangerous?
