@@ -13,8 +13,10 @@
 > **Sessions in this doc**: 2026-05-13 (initial wire-up + cross-NAT test),
 > 2026-05-14 (re-verified wiring + diagnosed why "phone1 works but
 > phone2 doesn't" + concrete local-test plan via home-router port-forward),
-> and 2026-05-15 (production VPS deployed; phone2 keyspace-luck hypothesis
-> disproven).
+> 2026-05-15 (production VPS deployed; phone2 keyspace-luck hypothesis
+> disproven), and 2026-05-16 (AP isolation on home Wi-Fi exposed as a
+> blocker for phone↔phone LAN bootstrap + new instrumentation isolating
+> PEER_NOT_FOUND to fresh-findPeer-returning-0-on-both-phones).
 
 ---
 
@@ -23,32 +25,46 @@
 **Session 3 outcome**: Production blind-peer is now live on an Oracle Cloud
 Always-Free VPS (Ubuntu 24.04, `140.245.193.100`, systemd-managed, pubkey
 `5ccrwsgqfg1hawwcbckmisww4sy3qns5scsntxfztgx7pt4eps5o`). Phone1 replicates
-its conversation cores reliably (28 blocks → 23/23 + 9/9 verified). The VPS
-deployment goal is complete and the path from `local.properties` →
-`BuildConfig.BLIND_PEER_KEYS` → worklet `argv` → `BlindMirror` → live VPS
+its conversation cores reliably to the VPS. The path from `local.properties`
+→ `BuildConfig.BLIND_PEER_KEYS` → worklet `argv` → `BlindMirror` → live VPS
 connection is end-to-end working on a fresh install.
 
-**Two confirmed blockers remain** — both downstream of the VPS deployment
-and both empirically reproduced in S3:
+**Session 3+ debugging (2026-05-16) added three big diagnostic results,
+each of which narrows the search for the actual fix:**
 
-1. **Phone2 (OnePlus 8T KB2005) is structurally `PEER_NOT_FOUND`** even when
-   phone1 connects fine to the same VPS from the same home Wi-Fi at the
-   same moment. Rules out: keyspace luck (4 ephemerals tried), VPS
-   reachability (phone1 proves it works), network NAT (same `/24` as
-   phone1), and identity/cache state (full clean wipe + reinstall). Most
-   likely device-specific: OxygenOS UDP-socket lifecycle, IPv6 routing
-   quirk, or the structural trust-gate from Finding #11. See Finding #17
-   for full method, Finding #11 for the trust-gate angle.
-2. **Invite handshake over cross-NAT is dead in current code.** Demonstrated
-   live: two fresh apps in different rooms each created their own solo
-   chat — neither received the other's invite even with active
-   `inviteTopics=1`. The blind-peer does not (and cannot) help here
-   because `sendInvite`/`__core_keys` flows over direct Hyperswarm sockets,
-   not via blind-peer relay. Same-LAN bootstrap works (mDNS-ish + DHT-LAN
-   hint); once paired, separation is fine and blind-peer keeps them in
-   sync. But "two strangers globally" can never form a NEW chat until
-   invite delivery moves into Hypercore (doc's "Wider architectural
-   improvement"). See Finding #18.
+1. **Phone↔phone direct LAN connection is blocked by AP isolation on the
+   home Wi-Fi.** ICMP ping between phone1 (192.168.0.247) and phone2
+   (192.168.0.163) returns `Destination Host Unreachable` despite both
+   being on `/24`. Mobile hotspot fallback didn't help (Android's hotspot
+   has its own client isolation by default). This is the root cause of
+   `conns=0 inviteTopics=1` SWARM state: both phones can't see each
+   other's Hyperswarm broadcasts. **Fix is router-side or network-side,
+   not code-side**. See Finding #19.
+2. **`PEER_NOT_FOUND` originates in hyperdht/connect.js:382** when
+   `dht.findPeer()` returns zero responders for the target key. Confirmed
+   by adding `_probeFindPeer()` to BlindMirror that runs `findPeer(blindPeerKey)`
+   every 20s and logs responder count. **Fresh findPeer returns 0
+   responders on BOTH phones** — including phone1 *while it has a live
+   `connected=true rpc=true` session to the VPS*. So phone1's connection
+   uses a different code path than fresh findPeer (most likely
+   `_socketPool.routes` cache populated during some other DHT activity
+   we haven't isolated yet). See Finding #20.
+3. **Both phones are in the same conversation `dm_3ddc00c17`** with
+   distinct local cores (phone1=`f875ed4f3357`, phone2=`8bd3c243b824`).
+   Phone1's core appends reach VPS (8 blocks observed mirrored). Phone2
+   never receives them because (a) phone2 can't reach VPS, (b) AP
+   isolation blocks direct phone↔phone fallback, (c) even if phone2
+   could reach VPS, the trust-gate in Finding #11 means the blind-peer
+   won't republish phone1's discovery key (we see "Downgraded announce
+   for peer ... because the peer is not trusted" in `/var/log/blind-peer.log`
+   on every connect). See Finding #21.
+
+**The user-facing symptom "I texted but it doesn't work" therefore has THREE
+overlapping causes**, any one of which would be enough to break delivery:
+
+- Network: AP isolation prevents phone↔phone direct sync (Finding #19)
+- Device: phone2 can't reach VPS for unknown reason (Finding #17, #20)
+- Code: trust-gate prevents blind-peer relay even when both connected (Finding #11)
 
 1. **Wiring works end-to-end. Confirmed twice now.** `local.properties` →
    `BuildConfig.BLIND_PEER_KEYS` → worklet `argv` → `core/lib/config.js` →
@@ -80,7 +96,7 @@ and both empirically reproduced in S3:
 
 ---
 
-## ▶ Resume Here (Session 4 onboarding)
+## ▶ Resume Here (Session 5 onboarding, 2026-05-16 evening)
 
 If you're picking up after a context clear or a new session, start here.
 
@@ -90,56 +106,104 @@ If you're picking up after a context clear or a new session, start here.
   systemd unit `blind-peer.service` is enabled+active.
   Logs: `tail -f /var/log/blind-peer.log`.
 - `local.properties` points the app at the VPS pubkey already.
-- `debug/blind-peer-relay-investigation` branch in BOTH `zodl-android` and
-  `../zappMessaging` has the S2+S3 instrumentation + always-on relay patch.
-- The latest commit in this branch is doc-only (memory/findings 14-18 above).
-  The code changes (instrumentation) are unchanged from S2.
+- `debug/blind-peer-relay-investigation` branch in `zodl-android` has the
+  full doc; the S3 doc commit also lives on the side branch
+  `debug/blind-peer-session-3-vps` on the GitHub remote (`justzappit`).
+- `../zappMessaging` companion branch has S2 instrumentation + always-on
+  relay patch + S4 new `_probeFindPeer` method in `core/lib/blind-mirror.js`.
+  The probe-A (findPeer responder count) is live and producing data; the
+  probe-B (`_socketPool.routes` cache inspection) was added in code but
+  **was NOT rebuilt/redeployed yet** — needs a `npm run build:android`
+  in `../zappMessaging` + a fresh APK build + reinstall before its data
+  will appear.
 
-**What works right now:**
+**The user's actual problem (what kicked off S4):**
 
-- Fresh-install phone1 reaches the VPS, registers its local conversation
-  core, replicates blocks. `STATE registered=1 peers=1 connected=true
-  rpc=true cores=1` in `files/zappmessaging/blind-mirror-diag.log`.
-- Same conversation core from before the wipe (`h5fcnwg…` discovery key,
-  23 blocks) replicates cleanly to the VPS.
+- Both phones are paired in the same conversation `dm_3ddc00c17`. Phone1
+  appends messages (8 blocks observed). Phone2 doesn't receive them.
+  Phone1 successfully replicates to the VPS. Phone2 can't reach the VPS
+  AND phones can't reach each other directly.
 
-**What's broken:**
+**What's now confirmed working:**
 
-- Phone2 (OnePlus 8T KB2005, serial `914652c5`): persistent
-  `PEER_NOT_FOUND` on every connect attempt against the VPS, regardless
-  of network / ephemeral / clean install. See Finding #17.
-- Invite delivery from one fresh phone to another never lands cross-NAT.
-  See Finding #18.
+- Fresh-install phone1 reaches the VPS, registers its local core, replicates
+  blocks. `STATE registered=1 peers=1 connected=true rpc=true` in
+  `files/zappmessaging/blind-mirror-diag.log`.
+- VPS log shows phone1's messages landing (`hpzxspnofs1j` discovery key,
+  block count growing as user types).
 
-**Two concrete next-step tracks (pick one):**
+**What's now confirmed broken (in priority order for "fix the user's
+problem"):**
 
-A. **Diagnose phone2.** Add finer instrumentation to
-   `../zappMessaging/core/lib/blind-mirror.js` around the wrapped
-   `BlindPeering._getBlindPeer` to log which specific RPC call returns
-   `PEER_NOT_FOUND` (look for `findPeer` vs `addCore` in the BlindPeering
-   protocol). If it's a findPeer for the conversation peer, the root
-   cause is Finding #11 (blind-peer downgrades announce → discovery key
-   not republished → findPeer fails). Fix is to wrap `_getBlindPeer` to
-   pass `keyPair: identity.keyPair` so the trust-gate matches identity.
-   Try also installing the app on a third Android (non-OnePlus) to
-   confirm "OnePlus-specific" vs "this app's-DHT-state on phone2".
+1. **AP isolation on home Wi-Fi blocks phone↔phone LAN bootstrap**
+   (Finding #19). ICMP `ping` between phones fails on same `/24`. Mobile
+   hotspot fallback also fails (Android hotspot has its own client
+   isolation). **This means even fixing phone2's VPS connection alone
+   wouldn't fully solve the user's case** because phones can't exchange
+   `__core_keys` over LAN to begin with — but they ALREADY did so at
+   some point (they're in `dm_3ddc00c17` together with each other's
+   cores known), so phone2 *would* be able to request phone1's core
+   from the VPS if it could just reach the VPS.
+2. **Phone2 → VPS still PEER_NOT_FOUND** (Finding #17, #20). New
+   instrumentation showed that fresh `findPeer(blindPeerKey)` returns
+   0 responders **on BOTH phones**, yet phone1 connects fine. The
+   differentiator is somewhere else — most likely `_socketPool.routes`
+   cache that's populated on phone1 by an early DHT side-effect we
+   haven't traced. **Probe-B was added but needs rebuild+redeploy.**
+3. **Trust-gate prevents blind-peer relay** (Finding #11, re-confirmed
+   in VPS log on every connect: "Downgraded announce for peer ...
+   because the peer is not trusted"). The blind-peer accepts cores but
+   doesn't republish discovery keys on DHT, so even when both phones
+   connect, the blind-peer can't bridge them at the DHT level.
 
-B. **Architectural fix for invite delivery.** Move `sendInvite` and the
-   `__core_keys` exchange in `core/lib/p2p-manager.js:413` off the direct
-   swarm socket and onto a Hypercore-based metadata channel that the
-   blind-peer can mirror. This unblocks "two strangers globally" without
-   solving phone2 specifically. See doc's "Wider architectural
-   improvement" section for the design sketch.
+**Three concrete next-step tracks (pick the one matching priority):**
 
-**Don't waste time on (already ruled out in S3):**
+A. **Fastest user-facing fix: bypass AP isolation.** Have the user disable
+   AP isolation on their home router (admin panel, look for "AP Isolation"
+   / "Client Isolation" / "Privacy Separator" / "Wireless Isolation").
+   Once that's off, the phones may directly sync over LAN even with
+   phone2's VPS connection still broken. This is the fastest path to
+   "messages flow between phones" but doesn't help anyone on different
+   networks.
 
-- Phone2's "DHT keyspace luck" — disproven across 4 ephemerals.
+B. **Finish the probe + diagnose phone2's `_socketPool.routes`.** Run:
+   ```bash
+   cd /Users/chinmaygopal/dev/zapp/zappMessaging && \
+     source ~/.nvm/nvm.sh && nvm use 22 && npm run build:android
+   cd /Users/chinmaygopal/dev/zapp/zodl-android && \
+     ./gradlew :app:assembleZcashtestnetStoreDebug
+   ```
+   then install on both phones, wipe `files/bare/worklet.bundle` on each,
+   force-stop + relaunch, wait ~30s for first `PROBE dht rtNodes=...
+   totalRoutes=... routesByTarget=...` line in each phone's
+   `files/zappmessaging/blind-mirror-diag.log`. Compare. If phone1's
+   `routesByTarget[<vps>]>0` and phone2's `=0`, the next fix is to
+   manually seed phone2's routes cache or fix whatever DHT-side-effect
+   populates phone1's cache.
+
+C. **Architectural fix: trust-gate + invite-via-Hypercore.** See
+   Findings #11 and #18, "Wider architectural improvement" section.
+   Wrap `BlindPeering._getBlindPeer` in `core/lib/blind-mirror.js` to
+   pass `keyPair: identity.keyPair` so the blind-peer's trust-gate
+   matches identity. Then move `sendInvite` and `__core_keys` exchange
+   out of direct swarm sockets and into a Hypercore-based metadata
+   channel that the blind-peer mirrors. This unblocks all of "two
+   strangers globally" cleanly.
+
+**Don't waste time on (already ruled out by S3 + S4):**
+
+- Phone2's "DHT keyspace luck" — disproven across 4+ ephemerals.
 - "VPS isn't reachable" — phone1 connects to it from the same network.
 - "Bad cached worklet/build state" — full clean wipe + uninstall + rebuild
   + `--no-build-cache` reproduces the same phone2 failure.
 - "Phone2 is in Doze" — `mState=ACTIVE mLightState=ACTIVE` while failing.
 - "iOS hotspot symmetric NAT" — phone2 fails on home Wi-Fi too, with
   phone1 succeeding on the same Wi-Fi at the same moment.
+- "Mobile hotspot will route around AP isolation" — Android hotspot has
+  its own client isolation. Doesn't help. Need router-level fix.
+- "PEER_NOT_FOUND must be RPC-layer error like findPeer-for-other-peer"
+  — actually it's hyperdht/connect.js:382 firing when the DHT walk for
+  the blind-peer itself returns 0 responders. Probe-A confirmed.
 
 **Quick verification commands to confirm things still work:**
 
@@ -157,6 +221,16 @@ adb -s 3B15B401SNR00000 exec-out "run-as xyz.justzappit.zapp.testnet.debug \
 # Confirm phone2's still failing (should show PEER_NOT_FOUND)
 adb -s 914652c5 exec-out "run-as xyz.justzappit.zapp.testnet.debug \
   cat files/zappmessaging/blind-mirror-diag.log" | grep -E "STATE|PEER_NOT" | tail -5
+
+# Compare PROBE findPeer responder counts (currently 0 on both phones)
+for s in 3B15B401SNR00000 914652c5; do echo "=== $s ==="; \
+  adb -s $s exec-out "run-as xyz.justzappit.zapp.testnet.debug \
+    cat files/zappmessaging/blind-mirror-diag.log" | grep PROBE | tail -3; done
+
+# Confirm AP isolation on the local Wi-Fi (both must be on Wi-Fi for this test)
+adb -s 3B15B401SNR00000 shell ping -c 2 -W 2 192.168.0.163   # phone1 → phone2
+adb -s 914652c5         shell ping -c 2 -W 2 192.168.0.247   # phone2 → phone1
+# Expect "Destination Host Unreachable" on both → AP isolation present.
 ```
 
 ---
@@ -737,6 +811,63 @@ SWARM conns=0 peers=0 addr=none dhtReady=true bootstrapped=true
     requires LAN/holepunchable contact at least once, which is the
     architectural blocker for "any two Zapp users globally" until
     invite-via-Hypercore (or invite-via-blind-peer-RPC) ships.
+19. **`[S4]` AP isolation on the user's home Wi-Fi blocks
+    phone↔phone direct LAN sync entirely.** ICMP ping from phone1
+    (`192.168.0.247`) → phone2 (`192.168.0.163`) returns `Destination
+    Host Unreachable`, and the reverse direction same. Both phones on
+    the same `/24`, same router, same SSID. This means: Hyperswarm's
+    LAN-discovery / same-LAN holepunching cannot succeed regardless of
+    code changes, because the router's layer-2 forwarding refuses
+    client-to-client traffic. SWARM dumps on both phones show `conns=0
+    peers=0 addr=none` — they literally can't see each other on the
+    wire. **Mobile hotspot fallback also fails**: Android's built-in
+    hotspot has its own client isolation by default; both phones on
+    phone1's hotspot still showed `conns=0`. Fix is router-config-only
+    ("AP Isolation" / "Client Isolation" / "Privacy Separator" off in
+    the admin panel), OR move both phones to a network that doesn't
+    isolate, OR don't depend on direct LAN at all (i.e. land the
+    invite-via-Hypercore architectural fix). For test setups: most
+    coffee-shop/office Wi-Fi has isolation ON; most consumer home Wi-Fi
+    has it OFF by default but some routers (Eero in "Privacy Mode",
+    older Asus with "AP Isolated", any "guest network") have it ON.
+20. **`[S4]` `PEER_NOT_FOUND` traced to hyperdht's findPeer returning 0
+    responders, on BOTH phones.** Added `_probeFindPeer()` to
+    `BlindMirror.ready()` (in `core/lib/blind-mirror.js`) that runs
+    `swarm.dht.findPeer(blindPeerKey, { hash: false, retries: 3 })`
+    every 20s and logs `PROBE findPeer(<keyHex>) responders=<N>
+    first=<nodeIdHex> ms=<elapsed>`. Result: **both phone1 and phone2
+    log `responders=0 first=n/a`**, despite phone1 simultaneously
+    being in `connected=true rpc=true` state with the VPS. So fresh
+    findPeer-from-zero-cache returns nothing on either phone — yet
+    phone1's BlindPeerClient connect succeeds anyway. The
+    differentiator must be the alternate-path in `hyperdht/lib/connect.js`
+    starting at line 326: when `peer._socketPool.routes` has a cached
+    route for the target, hyperdht uses it with
+    `onlyClosestNodes:true, retries:1` instead of a full walk.
+    **Hypothesis to test next**: phone1 has entries in
+    `_socketPool.routes` for the VPS key while phone2 doesn't, and the
+    entries get populated by some side effect of swarm/topic joins
+    that happens reliably on phone1 but not on phone2. A probe-B was
+    coded to inspect `dht.io.serverSocket._socketPool.routes` per-key
+    sizes but is not yet rebuilt/redeployed (see Track B in Resume Here).
+21. **`[S4]` Both phones are already paired in conversation `dm_3ddc00c17`
+    with distinct local cores; phone1's appends reach VPS but phone2
+    can't pull them.** Per-phone hypercore-diag:
+    - Phone1 local core `f875ed4f3357…`, currently at `newLen=8` (8 messages)
+    - Phone2 local core `8bd3c243b824…`, currently at `newLen=7`
+    Both reference `conv=dm_3ddc00c17`. So the pairing happened at
+    some earlier point (same-LAN previously, before AP isolation became
+    an issue or before this Wi-Fi was the test network), the
+    `__core_keys` exchange ran, and they have each other's core keys
+    locally. Phone1's blocks land on the VPS (VPS log shows discovery
+    key `hpzxspnofs1j…` going 1→2→3→4→5 blocks as user types). Phone2
+    can't pull them because phone2 can't reach the VPS. **AND** even
+    if phone2 connected, the trust-gate from Finding #11 means the
+    blind-peer won't republish phone1's discovery key on DHT
+    ("Downgraded announce for peer ... because the peer is not
+    trusted" fires on every VPS connection log line). So the trust-gate
+    fix is necessary not just for invite delivery but for ongoing-chat
+    delivery too whenever both peers are NAT-blocked from each other.
 
 ---
 
