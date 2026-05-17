@@ -8,9 +8,11 @@ import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
 import co.electriccoin.zcash.ui.common.model.WalletAccount
 import co.electriccoin.zcash.ui.common.model.ZashiAccount
+import co.electriccoin.zcash.ui.common.repository.AddressBookRepository
 import co.electriccoin.zcash.ui.common.repository.EnhancedABContact
 import co.electriccoin.zcash.ui.common.usecase.GetABContactsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetWalletAccountsUseCase
+import co.electriccoin.zcash.ui.common.usecase.NavigateToScanPublicKeyUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveABContactPickedUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.listitem.ContactListItemState
@@ -18,44 +20,59 @@ import co.electriccoin.zcash.ui.design.util.ImageResource
 import co.electriccoin.zcash.ui.design.util.imageRes
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.design.util.stringResByAddress
-import co.electriccoin.zcash.ui.screen.contact.AddZashiABContactArgs
 import co.electriccoin.zcash.ui.screen.scan.ScanArgs
 import co.electriccoin.zcash.ui.screen.scan.ScanFlow
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 class SelectABRecipientVM(
     getAddressBookContacts: GetABContactsUseCase,
     getWalletAccountsUseCase: GetWalletAccountsUseCase,
     private val observeContactPicked: ObserveABContactPickedUseCase,
-    private val navigationRouter: NavigationRouter
+    private val navigationRouter: NavigationRouter,
+    private val addressBookRepository: AddressBookRepository,
+    private val navigateToScanPublicKeyUseCase: NavigateToScanPublicKeyUseCase,
+    private val sdk: ZappMessagingSDK,
 ) : ViewModel() {
+
+    private val scannedAddress = MutableStateFlow<String?>(null)
+    private val scannedMessagingKey = MutableStateFlow<String?>(null)
+
     val state =
         combine(
             getAddressBookContacts.observe(zcashContactsOnly = true),
-            getWalletAccountsUseCase.observe()
-        ) { contacts, accounts ->
+            getWalletAccountsUseCase.observe(),
+            scannedAddress,
+            scannedMessagingKey,
+        ) { contacts, accounts, scannedAddr, scannedKey ->
             if (accounts != null && accounts.size > 1) {
-                createStateWithAccounts(contacts, accounts)
+                createStateWithAccounts(contacts, accounts, scannedAddr, scannedKey)
             } else {
-                createStateWithoutAccounts(contacts)
+                createStateWithoutAccounts(contacts, scannedAddr, scannedKey)
             }
         }.flowOn(Dispatchers.Default)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-                initialValue = createStateWithoutAccounts(contacts = null)
+                initialValue = createStateWithoutAccounts(
+                    contacts = null, scannedAddress = null, scannedMessagingKey = null
+                )
             )
 
     @Suppress("SpreadOperator")
     private fun createStateWithAccounts(
         contacts: List<EnhancedABContact>?,
-        accounts: List<WalletAccount>
+        accounts: List<WalletAccount>,
+        scannedAddress: String?,
+        scannedMessagingKey: String?,
     ): AddressBookState {
         val accountItems =
             listOf(
@@ -118,20 +135,31 @@ class SelectABRecipientVM(
             onBack = ::onBack,
             manualButton =
                 ButtonState(
-                    onClick = ::onAddContactManuallyClick,
+                    onClick = {},
                     text = stringRes(R.string.address_book_manual_btn)
                 ),
             scanButton =
                 ButtonState(
-                    onClick = ::onScanContactClick,
+                    onClick = {},
                     text = stringRes(R.string.address_book_scan_btn)
                 ),
             title = stringRes(R.string.address_book_select_recipient_title),
-            info = null
+            info = null,
+            onSaveNewContact = ::onSaveNewContact,
+            onScanMessagingKey = ::onScanMessagingKey,
+            scannedMessagingKey = scannedMessagingKey,
+            onConsumeScannedMessagingKey = ::onConsumeScannedMessagingKey,
+            onScanQr = ::onScanQr,
+            scannedAddress = scannedAddress,
+            onConsumeScannedAddress = ::onConsumeScannedAddress,
         )
     }
 
-    private fun createStateWithoutAccounts(contacts: List<EnhancedABContact>?): AddressBookState =
+    private fun createStateWithoutAccounts(
+        contacts: List<EnhancedABContact>?,
+        scannedAddress: String?,
+        scannedMessagingKey: String?,
+    ): AddressBookState =
         AddressBookState(
             isLoading = contacts == null,
             items =
@@ -151,16 +179,23 @@ class SelectABRecipientVM(
             onBack = ::onBack,
             manualButton =
                 ButtonState(
-                    onClick = ::onAddContactManuallyClick,
+                    onClick = {},
                     text = stringRes(R.string.address_book_manual_btn)
                 ),
             scanButton =
                 ButtonState(
-                    onClick = ::onScanContactClick,
+                    onClick = {},
                     text = stringRes(R.string.address_book_scan_btn)
                 ),
             title = stringRes(R.string.address_book_select_recipient_title),
-            info = null
+            info = null,
+            onSaveNewContact = ::onSaveNewContact,
+            onScanMessagingKey = ::onScanMessagingKey,
+            scannedMessagingKey = scannedMessagingKey,
+            onConsumeScannedMessagingKey = ::onConsumeScannedMessagingKey,
+            onScanQr = ::onScanQr,
+            scannedAddress = scannedAddress,
+            onConsumeScannedAddress = ::onConsumeScannedAddress,
         )
 
     private fun onWalletAccountClick(account: WalletAccount) =
@@ -187,7 +222,42 @@ class SelectABRecipientVM(
             navigationRouter.back()
         }
 
-    private fun onAddContactManuallyClick() = navigationRouter.forward(AddZashiABContactArgs(null))
+    @Suppress("LongParameterList")
+    private fun onSaveNewContact(name: String, messagingKey: String, walletAddress: String, walletAddresses: Map<String, String>) {
+        if (walletAddress.isNotEmpty() || walletAddresses.isNotEmpty()) {
+            addressBookRepository.saveContact(
+                name = name,
+                address = walletAddress,
+                chain = null,
+                walletAddresses = walletAddresses,
+            )
+        }
+        if (messagingKey.isNotEmpty()) {
+            viewModelScope.launch {
+                try {
+                    sdk.addContact(messagingKey, name)
+                } catch (_: Exception) {
+                    // Messaging key save is best-effort
+                }
+            }
+        }
+    }
 
-    private fun onScanContactClick() = navigationRouter.forward(ScanArgs(ScanFlow.ADDRESS_BOOK))
+    private fun onScanMessagingKey() =
+        viewModelScope.launch {
+            val key = navigateToScanPublicKeyUseCase()
+            if (key != null) {
+                scannedMessagingKey.update { key }
+            }
+        }
+
+    private fun onConsumeScannedMessagingKey() {
+        scannedMessagingKey.update { null }
+    }
+
+    private fun onScanQr() = navigationRouter.forward(ScanArgs(ScanFlow.ADDRESS_BOOK))
+
+    private fun onConsumeScannedAddress() {
+        scannedAddress.update { null }
+    }
 }

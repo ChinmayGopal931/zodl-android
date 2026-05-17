@@ -1,6 +1,6 @@
 # Android Auto Backup
 
-- The Zashi app uses the Android Auto Backup feature to back up the encrypted address book file securely on the 
+- The Zapp app uses the Android Auto Backup feature to back up the encrypted address book file securely on the 
   user's Google Drive cloud  
 
 ## Android Auto Backup testing

@@ -270,7 +270,7 @@ private fun SuccessPreview() =
                         listOf(
                             SwapQuoteInfoItem(
                                 description = stringRes("Pay from"),
-                                title = stringRes("Zodl").withStyle(),
+                                title = stringRes("Zapp").withStyle(),
                                 subtitle = null
                             ),
                             SwapQuoteInfoItem(

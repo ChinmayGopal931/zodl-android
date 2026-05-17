@@ -1,8 +1,11 @@
 package co.electriccoin.zcash.ui.common.usecase
 
+import cash.z.ecc.android.sdk.ext.convertZatoshiToZec
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
+import co.electriccoin.zcash.ui.common.datasource.SendTransactionProposal
 import co.electriccoin.zcash.ui.common.datasource.SwapTransactionProposal
 import co.electriccoin.zcash.ui.common.datasource.TransactionProposal
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
@@ -22,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 class SubmitProposalUseCase(
     private val navigationRouter: NavigationRouter,
@@ -33,6 +37,8 @@ class SubmitProposalUseCase(
     private val metadataRepository: MetadataRepository,
     private val processSwapTransaction: ProcessSwapTransactionUseCase,
     private val prefillSend: PrefillSendUseCase,
+    private val chatSendContext: ChatSendContext,
+    private val messagingSDK: ZappMessagingSDK,
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
@@ -83,17 +89,30 @@ class SubmitProposalUseCase(
     }
 
     private fun submitZashiProposal(proposal: TransactionProposal) {
+        val pendingChatConversationId = chatSendContext.consume()
         scope.launch {
             try {
                 val result = zashiProposalRepository.submit()
                 if (proposal is SwapTransactionProposal) {
                     processSwapTransaction(proposal, result)
                 }
+                if (pendingChatConversationId != null && proposal is SendTransactionProposal) {
+                    notifyChatPeer(pendingChatConversationId, proposal)
+                }
             } catch (_: Exception) {
                 // do nothing
             } finally {
                 prefillSend.clear()
             }
+        }
+    }
+
+    private suspend fun notifyChatPeer(conversationId: String, proposal: SendTransactionProposal) {
+        try {
+            val zecAmount = proposal.amount.convertZatoshiToZec().stripTrailingZeros().toPlainString()
+            messagingSDK.sendMessage(conversationId, "Sent $zecAmount ZEC \uD83D\uDCB8")
+        } catch (e: Exception) {
+            Twig.warn(e) { "Failed to send chat payment notification" }
         }
     }
 }

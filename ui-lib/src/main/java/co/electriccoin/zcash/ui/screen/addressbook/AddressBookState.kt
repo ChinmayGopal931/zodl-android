@@ -13,7 +13,26 @@ data class AddressBookState(
     val isLoading: Boolean,
     val onBack: () -> Unit,
     val scanButton: ButtonState,
-    val manualButton: ButtonState
+    val manualButton: ButtonState,
+    val onSaveNewContact: ((name: String, messagingKey: String, walletAddress: String, walletAddresses: Map<String, String>) -> Unit)? = null,
+    val onScanMessagingKey: (() -> Unit)? = null,
+    val scannedMessagingKey: String? = null,
+    val onConsumeScannedMessagingKey: (() -> Unit)? = null,
+    val onScanQr: (() -> Unit)? = null,
+    val scannedAddress: String? = null,
+    val onConsumeScannedAddress: (() -> Unit)? = null,
+    val editingContact: EditContactData? = null,
+    val onUpdateContact: ((name: String, walletAddress: String, walletAddresses: Map<String, String>) -> Unit)? = null,
+    val onDeleteContact: (() -> Unit)? = null,
+    val onDismissEdit: (() -> Unit)? = null,
+    val onScanWalletAddress: (() -> Unit)? = null,
+)
+
+data class EditContactData(
+    val originalName: String,
+    val originalAddress: String,
+    val messagingKey: String?,
+    val walletAddresses: Map<String, String> = emptyMap(),
 )
 
 sealed interface AddressBookItem : Itemizable {

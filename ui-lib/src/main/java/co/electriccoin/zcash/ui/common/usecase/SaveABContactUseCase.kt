@@ -11,8 +11,14 @@ class SaveABContactUseCase(
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String> = emptyMap(),
     ) {
-        addressBookRepository.saveContact(name = name, address = address, chain = chain)
+        addressBookRepository.saveContact(
+            name = name,
+            address = address,
+            chain = chain,
+            walletAddresses = walletAddresses,
+        )
         navigationRouter.back()
     }
 }

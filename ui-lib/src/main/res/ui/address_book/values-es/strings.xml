@@ -9,4 +9,21 @@
     <string name="address_book_multiple_wallets_title">Tus Wallets</string>
     <string name="address_book_multiple_wallets_contacts_title">Contactos de la Libreta de Direcciones</string>
     <string name="address_book_select_recipient_title">Seleccionar destinatario</string>
+    <string name="address_book_edit_contact_title">Editar Contacto</string>
+    <string name="address_book_edit_save_btn">Guardar Cambios</string>
+    <string name="address_book_edit_delete_btn">Eliminar Contacto</string>
+    <string name="address_book_edit_delete_confirm_title">¿Eliminar contacto?</string>
+    <string name="address_book_edit_delete_confirm_message">Esta acción no se puede deshacer.</string>
+    <string name="address_book_edit_delete_confirm_yes">Eliminar</string>
+    <string name="address_book_edit_delete_confirm_no">Cancelar</string>
+
+    <string name="address_book_additional_addresses">Direcciones Adicionales</string>
+    <string name="address_book_addr_unified">Dirección Unificada (Zcash)</string>
+    <string name="address_book_addr_unified_hint">Ingrese dirección unificada…</string>
+    <string name="address_book_addr_transparent">Dirección Transparente (Zcash)</string>
+    <string name="address_book_addr_transparent_hint">Ingrese dirección transparente…</string>
+    <string name="address_book_addr_evm">Dirección EVM (ETH, Polygon, etc.)</string>
+    <string name="address_book_addr_evm_hint">Ingrese dirección 0x…</string>
+    <string name="address_book_addr_solana">Dirección Solana</string>
+    <string name="address_book_addr_solana_hint">Ingrese dirección Solana…</string>
 </resources>

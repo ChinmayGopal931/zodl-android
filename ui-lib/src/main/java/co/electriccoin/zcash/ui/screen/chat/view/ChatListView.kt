@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -85,10 +86,23 @@ fun ChatListView(
     val connectionDetails by viewModel.connectionDetails.collectAsState()
     var showNetworkSheet by remember { mutableStateOf(false) }
     var leaveTargetConversation by remember { mutableStateOf<ChatConversation?>(null) }
+    val showChatTosDialog by viewModel.showChatTosDialog.collectAsState()
 
+    // Check ToS acceptance on first view
+    LaunchedEffect(Unit) {
+        viewModel.checkChatTosAccepted()
+    }
+
+    val blockedKeys by viewModel.blockedKeys.collectAsState()
     val sortedConversations =
-        remember(conversations) {
-            conversations.sortedByDescending { it.lastMessageTimestamp ?: 0L }
+        remember(conversations, blockedKeys) {
+            conversations
+                .filter { conv ->
+                    // Hide direct conversations with blocked users
+                    conv.type != co.electriccoin.zcash.ui.screen.chat.model.ConversationType.DIRECT ||
+                        conv.participantIds.none { it in blockedKeys }
+                }
+                .sortedByDescending { it.lastMessageTimestamp ?: 0L }
         }
 
     Box(
@@ -211,6 +225,16 @@ fun ChatListView(
             dhtHealth = dhtHealth,
             connectionDetails = connectionDetails,
             onDismiss = { showNetworkSheet = false },
+        )
+    }
+
+    if (showChatTosDialog) {
+        ChatTermsDialog(
+            onAccept = { viewModel.acceptChatTos() },
+            onDecline = {
+                viewModel.declineChatTos()
+                onNavigateBack()
+            },
         )
     }
 }

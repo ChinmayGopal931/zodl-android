@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea for the Zashi wallet.
+about: Suggest an idea for the Zapp wallet.
 title: ''
 labels: 'use case'
 assignees: ''

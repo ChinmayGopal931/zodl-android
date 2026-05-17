@@ -88,8 +88,8 @@ private fun Content(
         Text(
             modifier = Modifier.fillMaxWidth(),
             text =
-                "Zodl uses temporary addresses during swaps and payments to protect your privacy. If too many " +
-                    "remain unused, Zodl hits a limit and can’t create new ones.",
+                "Zapp uses temporary addresses during swaps and payments to protect your privacy. If too many " +
+                    "remain unused, Zapp hits a limit and can’t create new ones.",
             style = ZashiTypography.textSm,
             color = ZashiColors.Text.textTertiary,
         )

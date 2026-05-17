@@ -176,7 +176,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.1 (1470)] - 2026-03-02
 
 ### Cambiado:
-- Actualización de la marca Zashi -> Zodl: cambiamos la marca de Zashi a Zodl, sin afectar la experiencia del usuario.
+- Actualización de la marca Zapp -> Zodl: cambiamos la marca de Zapp a Zodl, sin afectar la experiencia del usuario.
 - Implementamos mejoras en la experiencia de usuario (UX/UI) de Swap/Pago.
 
 ### Corregido:
@@ -185,7 +185,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.1 (1469)] - 2026-02-27
 
 ### Cambiado:
-- Actualización de la marca Zashi -> Zodl: cambiamos la marca de Zashi a Zodl, sin afectar la experiencia del usuario.
+- Actualización de la marca Zapp -> Zodl: cambiamos la marca de Zapp a Zodl, sin afectar la experiencia del usuario.
 - Implementamos mejoras en la experiencia de usuario (UX/UI) de Swap/Pago.
 
 ### Corregido:
@@ -194,7 +194,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.0 (1468)] - 2026-02-26
 
 ### Cambiado:
-- Actualización de la marca Zashi -> Zodl: cambiamos la marca de Zashi a Zodl, sin afectar la experiencia del usuario.
+- Actualización de la marca Zapp -> Zodl: cambiamos la marca de Zapp a Zodl, sin afectar la experiencia del usuario.
 - Implementamos mejoras en la experiencia de usuario (UX/UI) de Swap/Pago.
 
 ### Corregido:
@@ -203,7 +203,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.0 (1467)] - 2026-02-25
 
 ### Cambiado:
-- Actualización de la marca Zashi -> Zodl: cambiamos la marca de Zashi a Zodl, sin afectar la experiencia del usuario.
+- Actualización de la marca Zapp -> Zodl: cambiamos la marca de Zapp a Zodl, sin afectar la experiencia del usuario.
 - Implementamos mejoras en la experiencia de usuario (UX/UI) de Swap/Pago.
 
 ### Corregido:
@@ -212,7 +212,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.0 (1466)] - 2026-02-25
 
 ### Cambiado:
-- Actualización de la marca Zashi -> Zodl: cambiamos la marca de Zashi a Zodl, sin afectar la experiencia del usuario.
+- Actualización de la marca Zapp -> Zodl: cambiamos la marca de Zapp a Zodl, sin afectar la experiencia del usuario.
 - Implementamos mejoras en la experiencia de usuario (UX/UI) de Swap/Pago.
 
 ### Corregido:
@@ -329,7 +329,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Mejoramos el rendimiento de Conversión de Moneda.
 - Movimos la función Pagar con Flexa a Más opciones.
 - Eliminamos la integración de Coinbase Onramp.
-- Mejoramos la experiencia de Restablecer Zashi.
+- Mejoramos la experiencia de Restablecer Zapp.
 
 ### Corregido:
 - Solucionamos problemas reportados por los usuarios.
@@ -347,7 +347,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Mejoramos el rendimiento de Conversión de Moneda.
 - Movimos la función Pagar con Flexa a Más opciones.
 - Eliminamos la integración de Coinbase Onramp.
-- Mejoramos la experiencia de Restablecer Zashi.
+- Mejoramos la experiencia de Restablecer Zapp.
 
 ### Corregido:
 - Solucionamos problemas reportados por los usuarios.
@@ -376,7 +376,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Añadimos retroalimentación háptica para acciones importantes del usuario.
 
 ### Cambiado:
-- Añadimos un nuevo servidor a la lista de servidores de Zashi.
+- Añadimos un nuevo servidor a la lista de servidores de Zapp.
 - Aumentamos el plazo para realizar intercambios y evitar reembolsos anticipados.
 
 ### Corregido:
@@ -430,9 +430,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Añadido:
 - ¡La función de swap hacia ZEC que estaban esperando! Con el apoyo de Near Intents.
-- Usa Zashi para intercambiar cualquier criptomoneda compatible hacia Zcash.
+- Usa Zapp para intercambiar cualquier criptomoneda compatible hacia Zcash.
 - Deposita fondos con cualquiera de tus billeteras favoritas.
-- Recibe ZEC en Zashi y protégelos.
+- Recibe ZEC en Zapp y protégelos.
 - Consulta las transacciones entrantes más rápido con la detección de mempool.
 - Confirma tu cambio más rápido con 3 confirmaciones
 - Más correcciones de errores y actualizaciones de diseño
@@ -441,9 +441,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Añadido:
 - ¡La función de swap hacia ZEC que estaban esperando! Con el apoyo de Near Intents.
-- Usa Zashi para intercambiar cualquier criptomoneda compatible hacia Zcash.
+- Usa Zapp para intercambiar cualquier criptomoneda compatible hacia Zcash.
 - Deposita fondos con cualquiera de tus billeteras favoritas.
-- Recibe ZEC en Zashi y protégelos.
+- Recibe ZEC en Zapp y protégelos.
 - Consulta las transacciones entrantes más rápido con la detección de mempool.
 - Confirma tu cambio más rápido con 3 confirmaciones
 - Más correcciones de errores y actualizaciones de diseño
@@ -452,9 +452,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Añadido:
 - ¡La función de swap hacia ZEC que estaban esperando! Con el apoyo de Near Intents.
-- Usa Zashi para intercambiar cualquier criptomoneda compatible hacia Zcash.
+- Usa Zapp para intercambiar cualquier criptomoneda compatible hacia Zcash.
 - Deposita fondos con cualquiera de tus billeteras favoritas.
-- Recibe ZEC en Zashi y protégelos.
+- Recibe ZEC en Zapp y protégelos.
 - Consulta las transacciones entrantes más rápido con la detección de mempool.
 - Confirma tu cambio más rápido con 3 confirmaciones
 
@@ -463,9 +463,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Añadido:
 - ¡La función de swap hacia ZEC que estaban esperando! Con el apoyo de Near Intents.
-- Usa Zashi para intercambiar cualquier criptomoneda compatible hacia Zcash.
+- Usa Zapp para intercambiar cualquier criptomoneda compatible hacia Zcash.
 - Deposita fondos con cualquiera de tus billeteras favoritas.
-- Recibe ZEC en Zashi y protégelos.
+- Recibe ZEC en Zapp y protégelos.
 - Consulta las transacciones entrantes más rápido con la detección de mempool.
 - Confirma tu cambio más rápido con 3 confirmaciones
 
@@ -473,34 +473,34 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Añadido:
 - CrossPay con Near Intents
-- Utiliza ZEC protegido para realizar pagos entre cadenas con Zashi y Near Intents.
+- Utiliza ZEC protegido para realizar pagos entre cadenas con Zapp y Near Intents.
 - Accesible a través del nuevo botón Pagar en la pantalla de inicio.
 
 ## [2.3.0 (1159)] - 2025-09-15
 
 ### Añadido:
 - CrossPay con Near Intents
-- Utiliza ZEC protegido para realizar pagos entre cadenas con Zashi y Near Intents.
+- Utiliza ZEC protegido para realizar pagos entre cadenas con Zapp y Near Intents.
 - Accesible a través del nuevo botón Pagar en la pantalla de inicio.
 
 ## [2.2.1 (1121)] - 2025-08-29
 
 ### Añadido:
-- Swap ZEC con Zashi:
+- Swap ZEC con Zapp:
 - Swap ZEC protegidos por cualquier criptomoneda compatible con la integración de Near Intents.
-- Zashi es una billetera exclusiva para ZEC, por lo que necesitarás una dirección de billetera válida para el activo al que vas a intercambiar.
+- Zapp es una billetera exclusiva para ZEC, por lo que necesitarás una dirección de billetera válida para el activo al que vas a intercambiar.
 
 ## [2.2.0 (1120)] - 2025-08-27
 
 ### Añadido:
-- Swap ZEC con Zashi:
+- Swap ZEC con Zapp:
 - Swap ZEC protegidos por cualquier criptomoneda compatible con la integración de Near Intents.
-- Zashi es una billetera exclusiva para ZEC, por lo que necesitarás una dirección de billetera válida para el activo al que vas a intercambiar.
+- Zapp es una billetera exclusiva para ZEC, por lo que necesitarás una dirección de billetera válida para el activo al que vas a intercambiar.
 
 ## [2.1.0 (999)] - 2025-08-06
 
 ### Añadido:
-- El cliente Tor de Zashi ahora puede utilizarse para:
+- El cliente Tor de Zapp ahora puede utilizarse para:
 - Enviar transacciones ZEC
 - Obtener datos de transacciones
 - Conectarse a APIs de terceros (ej. NEAR, pronto!)
@@ -515,7 +515,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.1.0 (997)] - 2025-07-30
 
 ### Añadido:
-- El cliente Tor de Zashi ahora puede utilizarse para:
+- El cliente Tor de Zapp ahora puede utilizarse para:
 - Enviar transacciones ZEC
 - Obtener datos de transacciones
 - Conectarse a APIs de terceros (ej. NEAR)
@@ -532,7 +532,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.1.0 (996)] - 2025-07-29
 
 ### Añadido:
-- El cliente Tor de Zashi ahora puede utilizarse para:
+- El cliente Tor de Zapp ahora puede utilizarse para:
 - Enviar transacciones ZEC
 - Obtener datos de transacciones
 - Conectarse a APIs de terceros (ej. NEAR)
@@ -567,7 +567,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.0.3 (965)] - 2025-05-19
 
 ### Cambiado:
-- Zashi ya no incluye receptores transparentes en las Direcciones Unificadas.
+- Zapp ya no incluye receptores transparentes en las Direcciones Unificadas.
 - La pantalla Recibir ahora muestra una DU rotativa y solo protegida, que se genera cada vez que se abre la pantalla Recibir.
 - Todas las transacciones enviadas a tus diferentes Direcciones Unificadas rotativas se mantendrán como parte del saldo de una billetera con la misma frase de recuperación.
 - Las billeteras y plataformas de intercambio que no admitan el envío de fondos a receptores protegidos requerirán una dirección transparente.
@@ -588,7 +588,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.0.1 (941)] - 2025-04-29
 
 ### Añadido:
-- Un widget de estado de la billetera te ayuda a navegar por Zashi y a obtener información con un click.
+- Un widget de estado de la billetera te ayuda a navegar por Zapp y a obtener información con un click.
 
 ### Cambiado:
 - Pantalla de inicio rediseñada y navegación optimizada.
@@ -596,12 +596,12 @@ directly impact users rather than highlighting other key architectural updates.*
 - Flujo de restauración renovado.
 - ¡Crea tu billetera facil! Un nuevo proceso de backup que se traslado a cuando recibes los primeros fondos.
 - Firebase Crashlytics es totalmente opcional.
-- ¡Escanear un código QR ZIP 321 abre Zashi!
+- ¡Escanear un código QR ZIP 321 abre Zapp!
 
 ## [2.0.0 (934)] - 2025-04-25
 
 ### Añadido:
-- Un widget de estado de la billetera te ayuda a navegar por Zashi y a obtener información con un click.
+- Un widget de estado de la billetera te ayuda a navegar por Zapp y a obtener información con un click.
 
 ### Cambiado:
 - Pantalla de inicio rediseñada y navegación optimizada.
@@ -609,7 +609,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Flujo de restauración renovado.
 - ¡Crea tu billetera facil! Un nuevo proceso de backup que se traslado a cuando recibes los primeros fondos.
 - Firebase Crashlytics es totalmente opcional.
-- ¡Escanear un código QR ZIP 321 abre Zashi!
+- ¡Escanear un código QR ZIP 321 abre Zapp!
 
 ## [1.5.2 (932)] - 2025-04-23
 
@@ -622,7 +622,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - ¡Corrección de errores 1.5!
 - Solucionamos un problema de migración que afectaba a algunos usuarios de la versión 1.5 de la app.
 - También eliminamos la pantalla de Advertencia de Seguridad redundante que informaba incorrectamente al usuario 
-  sobre informes de fallas no incluidos en la versión Zashi Android FOSS.
+  sobre informes de fallas no incluidos en la versión Zapp Android FOSS.
 
 ## [1.5.2 (926)] - 2025-04-03
 
@@ -633,18 +633,18 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [1.5.1 (925)] - 2025-03-31
 
 ### Añadido:
-- Zashi ahora puede ayudarte a recuperar fondos desde billeteras completamente transparentes como Ledger. Recomendamos importar la frase de recuperación de tu billetera hardware transparente en una billetera Keystone y luego emparejarla con Zashi usando la integración con Keystone.
+- Zapp ahora puede ayudarte a recuperar fondos desde billeteras completamente transparentes como Ledger. Recomendamos importar la frase de recuperación de tu billetera hardware transparente en una billetera Keystone y luego emparejarla con Zapp usando la integración con Keystone.
 
 ### Corregido:
-- Solucionamos un problema de larga data con el árbol de compromisos de notas que afectaba a un pequeño número de usuarios. Ahora Zashi permite gastar fondos que estaban atascados.
+- Solucionamos un problema de larga data con el árbol de compromisos de notas que afectaba a un pequeño número de usuarios. Ahora Zapp permite gastar fondos que estaban atascados.
 
 ## [1.5 (923)] - 2025-03-27
 
 ### Añadido:
-- Zashi ahora puede ayudarte a recuperar fondos desde billeteras completamente transparentes como Ledger. Recomendamos importar la frase de recuperación de tu billetera hardware transparente en una billetera Keystone y luego emparejarla con Zashi usando la integración con Keystone.
+- Zapp ahora puede ayudarte a recuperar fondos desde billeteras completamente transparentes como Ledger. Recomendamos importar la frase de recuperación de tu billetera hardware transparente en una billetera Keystone y luego emparejarla con Zapp usando la integración con Keystone.
 
 ### Corregido:
-- Solucionamos un problema de larga data con el árbol de compromisos de notas que afectaba a un pequeño número de usuarios. Ahora Zashi permite gastar fondos que estaban atascados.
+- Solucionamos un problema de larga data con el árbol de compromisos de notas que afectaba a un pequeño número de usuarios. Ahora Zapp permite gastar fondos que estaban atascados.
 
 ## [1.4 (876)] - 2025-03-04
 
@@ -652,7 +652,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Nueva funcionalidad ”Exporta Archivo de Impuestos”.
 - Transacciones Favoritas y notas personalizadas.
 - Filtros para transacciones.
-- Descarga Zashi desde F-Droid y GitHub.
+- Descarga Zapp desde F-Droid y GitHub.
 
 ### Cambiado
 - Rediseño total del Historial de Transacciones.
@@ -669,7 +669,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Nueva funcionalidad “Exporta Archivo de Impuestos”.
 - Transacciones Favoritas y notas personalizadas.
 - Filtros para transacciones recibidas, enviadas, favoritas y personalizadas.
-- Descarga Zashi Android desde F-Droid y GitHub.
+- Descarga Zapp Android desde F-Droid y GitHub.
 
 ### Cambiado
 - Rediseño total del Historial de Transacciones. 
@@ -682,7 +682,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [1.3.3 (839)] - 2025-01-23
 
 ### Cambiado
-- Refactorizamos la lógica de la imagen del código QR para que funcione con el nuevo componente ZashiQr.
+- Refactorizamos la lógica de la imagen del código QR para que funcione con el nuevo componente ZappQr.
 - Ahora, los colores de la imagen del código QR en la pantalla de SignTransaction son los mismos en ambos temas de 
   color, mejorando el escaneo por parte del dispositivo Keystone.
 - Mejoramos la lógica del progreso de sincronización de bloques para devolver un porcentaje incompleto en caso de que 
@@ -698,25 +698,25 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [1.3.2 (829)] - 2025-01-10
 
 ### Cambiado
-- Zashi ahora muestra la versión oscura de los códigos QR en el tema oscuro.
+- Zapp ahora muestra la versión oscura de los códigos QR en el tema oscuro.
 - Mejoramos el escáner de códigos QR para que sea más rápido.
 - Reestructuramos las pantallas de Enviar para optimizar su funcionamiento.
 
 ### Corregido
-- Solucionamos la manera en que Zashi procesa las direcciones contenidas en los códigos QR.
+- Solucionamos la manera en que Zapp procesa las direcciones contenidas en los códigos QR.
 
 ## [1.3.1 (822)] - 2025-01-07
 
 ### Corregido
 - Hemos corregido un bug en Coinbase Onramp que había impactando a nuestros usuarios cuando hacen compras con sus 
   cuentas de Coinbase. Ahora pasamos la dirección pública correcta a Coinbase y tus ZEC son enviados directamente a 
-  tu Billetera Zashi en lugar de tu cuenta de Coinbase.
+  tu Billetera Zapp en lugar de tu cuenta de Coinbase.
 
 ## [1.3 (812)] - 2024-12-19
 
 ### Añadido
-La integración de Zashi con la Billetera Física Keystone esta ya disponible!
-- Conecta to Billetera Fisica Keystone con Zashi.
+La integración de Zapp con la Billetera Física Keystone esta ya disponible!
+- Conecta to Billetera Fisica Keystone con Zapp.
 - Firma tus transacciones con tu Billetera Keystone.
 - Incluye soporte para ambos ZEC transparentes y protegidos. 
 
@@ -725,12 +725,12 @@ La integración de Zashi con la Billetera Física Keystone esta ya disponible!
 ### Añadido
 - ¡Finalmente está aquí! ¡La integración de Flexa a tu servicio!
 - Paga con Flexa en comercios compatibles en Estados Unidos, Canadá y El Salvador.
-- Te está esperando en la configuración de Zashi.
+- Te está esperando en la configuración de Zapp.
 
 ## [1.2.2 (789)] - 2024-11-18
 
 ### Añadido
-- ¡Hola!, Zashi aprendió Español.
+- ¡Hola!, Zapp aprendió Español.
 - Nuevo manejo de transacciones de baja denominación, esto hace transacciones más rápidas y uso eficiente del saldo.
 - Implementación de encriptado  y almacenamiento remoto de información en agenda.
 - Se agrego una barra de progreso y nuevas pantallas de éxito y falla.

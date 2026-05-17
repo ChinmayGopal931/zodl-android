@@ -112,4 +112,14 @@ object StandardPreferenceKeys {
             PreferenceKey("auth_method"),
             "none"
         )
+
+    /**
+     * True once the user has accepted the chat/messaging Terms of Service and
+     * Community Guidelines. Required before first message send (Google Play UGC policy).
+     */
+    val IS_CHAT_TOS_ACCEPTED =
+        BooleanPreferenceDefault(
+            PreferenceKey("is_chat_tos_accepted"),
+            false
+        )
 }

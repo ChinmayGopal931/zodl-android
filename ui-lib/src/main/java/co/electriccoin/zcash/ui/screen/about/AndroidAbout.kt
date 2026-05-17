@@ -28,8 +28,8 @@ internal fun AboutScreen() {
         onBack = { navigationRouter.back() },
         configInfo = configInfo,
         versionInfo = versionInfo,
-        onPrivacyPolicy = { navigationRouter.forward(ExternalUrl("https://zodl.com/privacy-policy/#policy")) },
-        onTermsOfUse = { navigationRouter.forward(ExternalUrl("https://zodl.com/privacy-policy/")) }
+        onPrivacyPolicy = { navigationRouter.forward(ExternalUrl("https://justzappit.xyz/privacy")) },
+        onTermsOfUse = { navigationRouter.forward(ExternalUrl("https://justzappit.xyz/terms")) }
     )
 }
 

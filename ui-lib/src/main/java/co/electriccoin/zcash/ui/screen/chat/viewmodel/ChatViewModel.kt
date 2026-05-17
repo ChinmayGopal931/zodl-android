@@ -14,18 +14,24 @@ import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
 import co.electriccoin.zcash.ui.common.security.PinAuthGate
 import co.electriccoin.zcash.ui.common.usecase.GetZashiAccountUseCase
+import co.electriccoin.zcash.ui.common.repository.AddressBookRepository
+import co.electriccoin.zcash.ui.common.usecase.NavigateToScanGenericAddressUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanPublicKeyUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
 import co.electriccoin.zcash.ui.screen.chat.media.FileUtils
 import co.electriccoin.zcash.ui.screen.chat.media.ImageProcessor
+import co.electriccoin.zcash.ui.screen.chat.model.BlockedUser
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ChatIdentity
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
+import co.electriccoin.zcash.ui.screen.chat.model.ContentReport
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.model.MessageStatus
+import co.electriccoin.zcash.ui.screen.chat.model.ReportCategory
+import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,10 +54,13 @@ class ChatViewModel(
     private val sdk: ZappMessagingSDK,
     private val persistableWalletProvider: PersistableWalletProvider,
     private val navigateToScanPublicKey: NavigateToScanPublicKeyUseCase,
+    private val navigateToScanGenericAddress: NavigateToScanGenericAddressUseCase,
+    private val addressBookRepository: AddressBookRepository,
     private val getZashiAccount: GetZashiAccountUseCase,
     private val biometricRepository: BiometricRepository,
     private val standardPreferenceProvider: StandardPreferenceProvider,
     private val encryptedPreferenceProvider: EncryptedPreferenceProvider,
+    private val moderationRepository: ChatModerationRepository,
 ) : AndroidViewModel(application) {
 
     sealed class PinVerifyState {
@@ -126,6 +135,9 @@ class ChatViewModel(
     private val _scannedPublicKey = MutableStateFlow<String?>(null)
     val scannedPublicKey: StateFlow<String?> = _scannedPublicKey.asStateFlow()
 
+    private val _scannedWalletAddress = MutableStateFlow<String?>(null)
+    val scannedWalletAddress: StateFlow<String?> = _scannedWalletAddress.asStateFlow()
+
     enum class ConnectionStatus {
         CONNECTED, CONNECTING, DISCONNECTED, ERROR
     }
@@ -187,6 +199,9 @@ class ChatViewModel(
         // Incoming messages
         viewModelScope.launch {
             sdk.messageReceived.collect { (conversationId, zmMessage) ->
+                // Filter messages from blocked users
+                if (moderationRepository.isBlocked(zmMessage.senderId)) return@collect
+
                 val msg = ChatMessage.from(zmMessage)
 
                 if (!zmMessage.isFromMe) {
@@ -886,6 +901,28 @@ class ChatViewModel(
         viewModelScope.launch { shareWalletAddressInternal(conversationId, address) }
     }
 
+    /**
+     * Resolve the peer's wallet address for a conversation.
+     * Checks: 1) contact walletAddress, 2) most recent incoming wallet-address message.
+     */
+    fun getPeerWalletAddress(conversationId: String): String? {
+        val conv = _currentConversation.value?.takeIf { it.id == conversationId }
+            ?: _conversations.value.find { it.id == conversationId }
+        val peerKey = conv?.participantIds?.firstOrNull()
+
+        // 1. Contact's stored wallet address
+        val contactAddress = peerKey?.let { key ->
+            _contacts.value.firstOrNull { it.publicKey == key }?.walletAddress
+        }
+        if (!contactAddress.isNullOrBlank()) return contactAddress
+
+        // 2. Most recent wallet-address message from the peer in this conversation
+        val msgs = messagesCache[conversationId]?.second ?: _messages.value
+        return msgs.lastOrNull { msg ->
+            msg.contentType == "application/wallet-address" && !msg.isFromMe
+        }?.content?.takeIf { it.isNotBlank() }
+    }
+
     private fun mediaLastMessagePreview(contentType: String, caption: String): String {
         if (caption.isNotBlank()) return caption
         return when {
@@ -935,11 +972,26 @@ class ChatViewModel(
         }
     }
 
-    fun addContact(publicKey: String, name: String) {
+    fun addContact(
+        publicKey: String,
+        name: String,
+        walletAddress: String = "",
+        walletAddresses: Map<String, String> = emptyMap(),
+    ) {
         val cleanedKey = publicKey.trim().removePrefix("0x")
         viewModelScope.launch {
             try {
                 sdk.addContact(cleanedKey, name)
+                // Also save to the address book if a wallet address was provided
+                val wallet = walletAddress.trim()
+                if (wallet.isNotEmpty() || walletAddresses.isNotEmpty()) {
+                    addressBookRepository.saveContact(
+                        name = name,
+                        address = wallet,
+                        chain = null,
+                        walletAddresses = walletAddresses,
+                    )
+                }
                 contactsCacheTimestamp = 0L
                 loadContacts()
             } catch (e: Exception) {
@@ -948,10 +1000,25 @@ class ChatViewModel(
         }
     }
 
-    fun updateContact(publicKey: String, name: String) {
+    fun updateContact(
+        publicKey: String,
+        name: String,
+        walletAddress: String = "",
+        walletAddresses: Map<String, String> = emptyMap(),
+    ) {
         viewModelScope.launch {
             try {
                 sdk.updateContact(publicKey, name)
+                // Update address book entry if wallet data provided
+                val wallet = walletAddress.trim()
+                if (wallet.isNotEmpty() || walletAddresses.isNotEmpty()) {
+                    addressBookRepository.saveContact(
+                        name = name,
+                        address = wallet,
+                        chain = null,
+                        walletAddresses = walletAddresses,
+                    )
+                }
                 contactsCacheTimestamp = 0L
                 loadContacts()
             } catch (e: Exception) {
@@ -1013,6 +1080,18 @@ class ChatViewModel(
         _scannedPublicKey.value = null
     }
 
+    fun scanWalletAddress() {
+        viewModelScope.launch {
+            navigateToScanGenericAddress()?.let { result ->
+                _scannedWalletAddress.value = result.address
+            }
+        }
+    }
+
+    fun consumeScannedWalletAddress() {
+        _scannedWalletAddress.value = null
+    }
+
     private fun autoAddUnknownSender(senderId: String, senderName: String?) {
         val name = senderName?.takeIf { it.isNotBlank() } ?: return
         if (!isValidPublicKey(senderId)) return
@@ -1053,6 +1132,78 @@ class ChatViewModel(
         val cleaned = key.trim().removePrefix("0x")
         if (cleaned.length != PUBLIC_KEY_HEX_LENGTH) return false
         return cleaned.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+    }
+
+    // ── Chat Terms of Service ──────────────────────────────────────────
+
+    private val _isChatTosAccepted = MutableStateFlow(false)
+    val isChatTosAccepted: StateFlow<Boolean> = _isChatTosAccepted.asStateFlow()
+
+    private val _showChatTosDialog = MutableStateFlow(false)
+    val showChatTosDialog: StateFlow<Boolean> = _showChatTosDialog.asStateFlow()
+
+    fun checkChatTosAccepted() {
+        viewModelScope.launch {
+            val accepted = StandardPreferenceKeys.IS_CHAT_TOS_ACCEPTED
+                .getValue(standardPreferenceProvider())
+            _isChatTosAccepted.value = accepted
+            if (!accepted) {
+                _showChatTosDialog.value = true
+            }
+        }
+    }
+
+    fun acceptChatTos() {
+        viewModelScope.launch {
+            StandardPreferenceKeys.IS_CHAT_TOS_ACCEPTED
+                .putValue(standardPreferenceProvider(), true)
+            _isChatTosAccepted.value = true
+            _showChatTosDialog.value = false
+        }
+    }
+
+    fun declineChatTos() {
+        _showChatTosDialog.value = false
+    }
+
+    // ── Moderation (Block & Report) ────────────────────────────────────
+
+    val blockedUsers: StateFlow<Set<BlockedUser>> = moderationRepository.blockedUsers
+    val blockedKeys: StateFlow<Set<String>> = moderationRepository.blockedKeys
+
+    fun isUserBlocked(publicKey: String): Boolean = moderationRepository.isBlocked(publicKey)
+
+    fun blockUser(publicKey: String, displayName: String?) {
+        moderationRepository.blockUser(publicKey, displayName)
+        // Remove conversations from blocked user from the visible list
+        _conversations.value = _conversations.value.filter { conv ->
+            conv.type != ConversationType.DIRECT ||
+                conv.participantIds.none { it == publicKey }
+        }
+    }
+
+    fun unblockUser(publicKey: String) {
+        moderationRepository.unblockUser(publicKey)
+        // Refresh to potentially re-show unblocked conversations
+        refreshConversations()
+    }
+
+    fun reportUser(
+        publicKey: String,
+        displayName: String?,
+        category: ReportCategory,
+        details: String = "",
+        conversationId: String? = null,
+        messageId: String? = null,
+    ): ContentReport {
+        return moderationRepository.submitReport(
+            reportedPublicKey = publicKey,
+            reportedDisplayName = displayName,
+            category = category,
+            details = details,
+            conversationId = conversationId,
+            messageId = messageId,
+        )
     }
 
     companion object {

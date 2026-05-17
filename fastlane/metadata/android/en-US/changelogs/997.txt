@@ -1,4 +1,4 @@
-Zashi’s built-in Tor client can now be used to:
+Zapp’s built-in Tor client can now be used to:
 - Submit ZEC transactions
 - Fetch transaction data
 - Connect to third-party APIs (e.g. NEAR)

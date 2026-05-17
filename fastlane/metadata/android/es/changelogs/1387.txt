@@ -6,7 +6,7 @@ Cambiado:
 - Mejoramos el rendimiento de Conversión de Moneda.
 - Movimos la función Pagar con Flexa a Más opciones.
 - Eliminamos la integración de Coinbase Onramp.
-- Mejoramos la experiencia de Restablecer Zashi.
+- Mejoramos la experiencia de Restablecer Zapp.
 Corregido:
 - Solucionamos problemas reportados por los usuarios.
 - Implementamos una función para recuperar los datos de las transacciones.

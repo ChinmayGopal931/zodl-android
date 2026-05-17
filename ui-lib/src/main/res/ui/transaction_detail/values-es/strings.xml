@@ -32,7 +32,7 @@
     <string name="transaction_detail_info_realized_slippage">Slippage realizado</string>
     <string name="transaction_detail_info_max_slippage">Slippage máximo</string>
     <string name="transaction_detail_info_timestamp">Marca de tiempo</string>
-    <string name="transaction_detail_info_refunded_message">Tu depósito fue detectado pero el swap no pudo completarse. Tus fondos han sido devueltos, descontando las comisiones de transacción. Si aún no los recibiste, contacta al equipo de soporte de Zodl.</string>
+    <string name="transaction_detail_info_refunded_message">Tu depósito fue detectado pero el swap no pudo completarse. Tus fondos han sido devueltos, descontando las comisiones de transacción. Si aún no los recibiste, contacta al equipo de soporte de Zapp.</string>
     <string name="transaction_detail_info_refunded_title">Fondos devueltos</string>
     <string name="transaction_detail_info_pending_deposit_message">Tu swap se ha demorado. Los swaps generalmente se completan en minutos, pero pueden tardar más según las condiciones del mercado.</string>
     <string name="transaction_detail_info_pending_deposit_title">Procesando swap</string>
@@ -43,7 +43,7 @@
     <string name="transaction_detail_contact_support">Contactar soporte</string>
     <string name="transaction_detail_report_issue">Reportar problema</string>
     <string name="transaction_detail_support_disclaimer_title">Reportar problema con swap</string>
-    <string name="transaction_detail_support_disclaimer_message">Al tocar el botón de abajo, se enviarán detalles de este swap (como la dirección de depósito y el activo destino) al equipo de soporte de Zodl para que puedan ayudarte a resolver tu problema. La información de la transacción se incluye automáticamente.</string>
+    <string name="transaction_detail_support_disclaimer_message">Al tocar el botón de abajo, se enviarán detalles de este swap (como la dirección de depósito y el activo destino) al equipo de soporte de Zapp para que puedan ayudarte a resolver tu problema. La información de la transacción se incluye automáticamente.</string>
     <string name="transaction_detail_support_email_subject">Problema con transacción de swap</string>
     <string name="transaction_detail_support_email_body">Por favor describe tu problema aquí:\n\n\n\nDetalles del swap:\nDirección de depósito: %1$s\nActivo de origen: %2$s\nActivo destino: %3$s</string>
     <string name="transaction_detail_info_pending">Los depósitos pueden tardar varios minutos en confirmarse.</string>

@@ -1,4 +1,4 @@
-El cliente Tor de Zashi ahora puede utilizarse para:
+El cliente Tor de Zapp ahora puede utilizarse para:
 - Enviar transacciones ZEC
 - Obtener datos de transacciones
 - Conectarse a APIs de terceros (ej. NEAR)

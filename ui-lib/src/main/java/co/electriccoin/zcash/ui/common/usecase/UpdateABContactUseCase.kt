@@ -13,8 +13,15 @@ class UpdateABContactUseCase(
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String> = emptyMap(),
     ) {
-        addressBookRepository.updateContact(contact = contact, name = name, address = address, chain = chain)
+        addressBookRepository.updateContact(
+            contact = contact,
+            name = name,
+            address = address,
+            chain = chain,
+            walletAddresses = walletAddresses,
+        )
         navigationRouter.back()
     }
 }

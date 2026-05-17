@@ -2,7 +2,7 @@ Añadido:
 - Añadimos retroalimentación háptica para acciones importantes del usuario.
 
 Cambiado:
-- Añadimos un nuevo servidor a la lista de servidores de Zashi.
+- Añadimos un nuevo servidor a la lista de servidores de Zapp.
 - Aumentamos el plazo para realizar intercambios y evitar reembolsos anticipados.
 
 Corregido:

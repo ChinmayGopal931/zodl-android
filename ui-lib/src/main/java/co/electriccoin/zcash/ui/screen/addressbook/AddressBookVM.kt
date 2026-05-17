@@ -5,41 +5,72 @@ import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.repository.AddressBookRepository
 import co.electriccoin.zcash.ui.common.repository.EnhancedABContact
 import co.electriccoin.zcash.ui.common.usecase.GetABContactsUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanGenericAddressUseCase
+import co.electriccoin.zcash.ui.common.usecase.NavigateToScanPublicKeyUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.listitem.ContactListItemState
 import co.electriccoin.zcash.ui.design.util.imageRes
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.design.util.stringResByAddress
-import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactArgs
-import co.electriccoin.zcash.ui.screen.contact.UpdateGenericABContactArgs
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 class AddressBookVM(
     getAddressBookContacts: GetABContactsUseCase,
     private val navigationRouter: NavigationRouter,
-    private val navigateToScanGenericAddressUseCase: NavigateToScanGenericAddressUseCase
+    private val navigateToScanGenericAddressUseCase: NavigateToScanGenericAddressUseCase,
+    private val navigateToScanPublicKeyUseCase: NavigateToScanPublicKeyUseCase,
+    private val addressBookRepository: AddressBookRepository,
+    private val sdk: ZappMessagingSDK,
 ) : ViewModel() {
+
+    private val scannedAddress = MutableStateFlow<String?>(null)
+    private val scannedMessagingKey = MutableStateFlow<String?>(null)
+    private val editingContact = MutableStateFlow<EnhancedABContact?>(null)
+
     val state =
-        getAddressBookContacts
-            .observe(zcashContactsOnly = false)
-            .map { contacts -> createState(contacts = contacts) }
+        combine(
+            getAddressBookContacts.observe(zcashContactsOnly = false),
+            scannedAddress,
+            scannedMessagingKey,
+            editingContact,
+        ) { contacts, scannedAddr, scannedKey, editing ->
+            createState(
+                contacts = contacts,
+                scannedAddress = scannedAddr,
+                scannedMessagingKey = scannedKey,
+                editingContact = editing,
+            )
+        }
             .flowOn(Dispatchers.Default)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-                initialValue = createState(contacts = null)
+                initialValue = createState(
+                    contacts = null,
+                    scannedAddress = null,
+                    scannedMessagingKey = null,
+                    editingContact = null,
+                )
             )
 
-    private fun createState(contacts: List<EnhancedABContact>?) =
+    private fun createState(
+        contacts: List<EnhancedABContact>?,
+        scannedAddress: String?,
+        scannedMessagingKey: String?,
+        editingContact: EnhancedABContact?,
+    ) =
         AddressBookState(
             isLoading = contacts == null,
             items =
@@ -59,16 +90,34 @@ class AddressBookVM(
             onBack = ::onBack,
             manualButton =
                 ButtonState(
-                    onClick = ::onAddContactManuallyClick,
+                    onClick = {},
                     text = stringRes(R.string.address_book_manual_btn)
                 ),
             scanButton =
                 ButtonState(
-                    onClick = ::onScanContactClick,
+                    onClick = {},
                     text = stringRes(R.string.address_book_scan_btn)
                 ),
             title = stringRes(R.string.address_book_title),
-            info = null
+            info = null,
+            onSaveNewContact = ::onSaveNewContact,
+            onScanMessagingKey = ::onScanMessagingKey,
+            scannedMessagingKey = scannedMessagingKey,
+            onConsumeScannedMessagingKey = ::onConsumeScannedMessagingKey,
+            onScanQr = ::onScanQr,
+            scannedAddress = scannedAddress,
+            onConsumeScannedAddress = ::onConsumeScannedAddress,
+            editingContact = editingContact?.let {
+                EditContactData(
+                    originalName = it.name,
+                    originalAddress = it.address,
+                    messagingKey = null,
+                    walletAddresses = it.walletAddresses,
+                )
+            },
+            onUpdateContact = ::onUpdateContact,
+            onDeleteContact = ::onDeleteContact,
+            onDismissEdit = ::onDismissEdit,
         )
 
     private fun getContactInitials(contact: EnhancedABContact) =
@@ -84,23 +133,75 @@ class AddressBookVM(
     private fun onBack() = navigationRouter.back()
 
     private fun onContactClick(contact: EnhancedABContact) {
-        navigationRouter.forward(
-            UpdateGenericABContactArgs(
-                address = contact.address,
-                chain = contact.blockchain?.chainTicker
-            )
-        )
+        editingContact.update { contact }
     }
 
-    private fun onAddContactManuallyClick() = navigationRouter.forward(AddGenericABContactArgs(null))
+    private fun onDismissEdit() {
+        editingContact.update { null }
+    }
 
-    private fun onScanContactClick() =
-        viewModelScope.launch {
-            val contact = navigateToScanGenericAddressUseCase()
-            if (contact != null) {
-                navigationRouter.replace(AddGenericABContactArgs(address = contact.address))
+    private fun onUpdateContact(name: String, walletAddress: String, walletAddresses: Map<String, String>) {
+        val contact = editingContact.value ?: return
+        addressBookRepository.updateContact(
+            contact = contact,
+            name = name,
+            address = walletAddress,
+            chain = contact.blockchain?.chainTicker,
+            walletAddresses = walletAddresses,
+        )
+        editingContact.update { null }
+    }
+
+    private fun onDeleteContact() {
+        val contact = editingContact.value ?: return
+        addressBookRepository.deleteContact(contact)
+        editingContact.update { null }
+    }
+
+    @Suppress("LongParameterList")
+    private fun onSaveNewContact(name: String, messagingKey: String, walletAddress: String, walletAddresses: Map<String, String>) {
+        if (walletAddress.isNotEmpty() || walletAddresses.isNotEmpty()) {
+            addressBookRepository.saveContact(
+                name = name,
+                address = walletAddress,
+                chain = null,
+                walletAddresses = walletAddresses,
+            )
+        }
+        if (messagingKey.isNotEmpty()) {
+            viewModelScope.launch {
+                try {
+                    sdk.addContact(messagingKey, name)
+                } catch (_: Exception) {
+                    // Messaging key save is best-effort
+                }
             }
         }
+    }
+
+    private fun onScanMessagingKey() =
+        viewModelScope.launch {
+            val key = navigateToScanPublicKeyUseCase()
+            if (key != null) {
+                scannedMessagingKey.update { key }
+            }
+        }
+
+    private fun onConsumeScannedMessagingKey() {
+        scannedMessagingKey.update { null }
+    }
+
+    private fun onScanQr() =
+        viewModelScope.launch {
+            val result = navigateToScanGenericAddressUseCase()
+            if (result != null) {
+                scannedAddress.update { result.address }
+            }
+        }
+
+    private fun onConsumeScannedAddress() {
+        scannedAddress.update { null }
+    }
 }
 
 internal const val ADDRESS_MAX_LENGTH = 20

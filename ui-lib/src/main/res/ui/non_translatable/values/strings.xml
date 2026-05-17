@@ -3,7 +3,7 @@
     <string translatable="false" name="support_email_address">support@justzappit.xyz</string>
 
     <!-- These are replaced by resource overlaying via app/build.gradle.kts -->
-    <string translatable="false" name="app_name">zashi-ui</string>
+    <string translatable="false" name="app_name">Zapp</string>
     <string translatable="false" name="zashi_wallet_name">Zapp</string>
     <string translatable="false" name="keystone_wallet_name">Keystone</string>
 </resources>

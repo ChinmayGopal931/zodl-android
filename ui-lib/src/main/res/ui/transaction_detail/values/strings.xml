@@ -32,7 +32,7 @@
     <string name="transaction_detail_info_realized_slippage">Realized slippage</string>
     <string name="transaction_detail_info_max_slippage">Max slippage</string>
     <string name="transaction_detail_info_timestamp">Timestamp</string>
-    <string name="transaction_detail_info_refunded_message">Your deposit was detected but the swap could not be completed. Your funds have been returned, minus transaction fees. If you haven\'t received them, contact the Zodl support team.</string>
+    <string name="transaction_detail_info_refunded_message">Your deposit was detected but the swap could not be completed. Your funds have been returned, minus transaction fees. If you haven\'t received them, contact the Zapp support team.</string>
     <string name="transaction_detail_info_refunded_title">Funds Returned</string>
     <string name="transaction_detail_info_pending_deposit_message">Your swap has been delayed. Swaps typically complete in minutes but may take longer depending on market conditions.</string>
     <string name="transaction_detail_info_pending_deposit_title">Swap processing</string>
@@ -43,7 +43,7 @@
     <string name="transaction_detail_contact_support">Contact Support</string>
     <string name="transaction_detail_report_issue">Report Issue</string>
     <string name="transaction_detail_support_disclaimer_title">Report Swap Issue</string>
-    <string name="transaction_detail_support_disclaimer_message">Tapping the button below will send details about this swap (like the deposit address and target asset) to the Zodl support team so they can help resolve your issue. The transaction info is included automatically.</string>
+    <string name="transaction_detail_support_disclaimer_message">Tapping the button below will send details about this swap (like the deposit address and target asset) to the Zapp support team so they can help resolve your issue. The transaction info is included automatically.</string>
     <string name="transaction_detail_support_email_subject">Swap Transaction Issue</string>
     <string name="transaction_detail_support_email_body">Please describe your issue here:\n\n\n\nSwap Details:\nDeposit Address: %1$s\nSource Asset: %2$s\nTarget Asset: %3$s</string>
     <string name="transaction_detail_info_pending">Deposits may take several minutes to confirm.</string>

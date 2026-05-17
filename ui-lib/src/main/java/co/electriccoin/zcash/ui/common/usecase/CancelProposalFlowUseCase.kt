@@ -18,7 +18,8 @@ class CancelProposalFlowUseCase(
     private val navigationRouter: NavigationRouter,
     private val observeClearSend: ObserveClearSendUseCase,
     private val accountDataSource: AccountDataSource,
-    private val swapRepository: SwapRepository
+    private val swapRepository: SwapRepository,
+    private val chatSendContext: ChatSendContext,
 ) {
     suspend operator fun invoke(clearSendForm: Boolean = true) {
         val proposal =
@@ -29,6 +30,7 @@ class CancelProposalFlowUseCase(
 
         zashiProposalRepository.clear()
         keystoneProposalRepository.clear()
+        chatSendContext.clear()
 
         when (proposal) {
             is ExactInputSwapTransactionProposal -> {
