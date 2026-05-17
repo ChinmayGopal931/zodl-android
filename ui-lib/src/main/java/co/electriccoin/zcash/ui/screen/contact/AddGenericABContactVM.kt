@@ -46,6 +46,7 @@ class AddGenericABContactVM(
     private val contactAddress = MutableStateFlow(args.address.orEmpty())
     private val contactName = MutableStateFlow("")
     private val selectedBlockchain = MutableStateFlow<SwapBlockchain?>(null)
+    private val walletAddressInputs = MutableStateFlow<Map<String, String>>(emptyMap())
     private val isSavingContact = MutableStateFlow(false)
 
     private val addressZashiValidation =
@@ -222,7 +223,8 @@ class AddGenericABContactVM(
             saveABContact(
                 name = contactName.value,
                 address = contactAddress.value,
-                chain = selectedBlockchain.value?.takeIf { it != zcashBlockchain }?.chainTicker
+                chain = selectedBlockchain.value?.takeIf { it != zcashBlockchain }?.chainTicker,
+                walletAddresses = walletAddressInputs.value,
             )
             isSavingContact.update { false }
         }

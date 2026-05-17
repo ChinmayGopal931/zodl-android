@@ -102,7 +102,7 @@ class NearSwapDataSourceImpl(
                             fee = AFFILIATE_FEE_BPS
                         )
                     ),
-                referral = "zodl"
+                referral = "zapp"
             )
 
         return try {

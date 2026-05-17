@@ -37,6 +37,7 @@ interface AddressBookRepository {
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String> = emptyMap(),
     )
 
     fun updateContact(
@@ -44,6 +45,7 @@ interface AddressBookRepository {
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String> = emptyMap(),
     )
 
     fun deleteContact(contact: EnhancedABContact)
@@ -60,6 +62,7 @@ data class EnhancedABContact(
     val name = contact.name
     val address = contact.address
     val lastUpdated = contact.lastUpdated
+    val walletAddresses = contact.walletAddresses
 }
 
 class AddressBookRepositoryImpl(
@@ -106,12 +109,14 @@ class AddressBookRepositoryImpl(
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String>,
     ) = updateAB {
         Twig.info { "Address Book: saving a contact" }
         addressBookDataSource.saveContact(
             name = name,
             address = address,
             chain = chain,
+            walletAddresses = walletAddresses,
             key = it
         )
     }
@@ -121,12 +126,14 @@ class AddressBookRepositoryImpl(
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String>,
     ) = updateAB {
         addressBookDataSource.updateContact(
             contact = contact.contact,
             name = name,
             address = address,
             chain = chain,
+            walletAddresses = walletAddresses,
             key = it
         )
     }

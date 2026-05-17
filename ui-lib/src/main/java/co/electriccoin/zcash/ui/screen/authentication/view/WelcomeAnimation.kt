@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -151,11 +152,11 @@ private fun WelcomeContent(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
-            // Big Swiss "Hi." — Black weight, tight letter spacing, near-black on yellow.
+            // Big Swiss "Hi." — Black weight, tight letter spacing, white on yellow.
             BasicText(
                 text = "Hi.",
                 style = ZappTheme.typography.display.copy(
-                    color = c.text,
+                    color = Color.White,
                     fontSize = 140.sp,
                     lineHeight = 130.sp,
                     letterSpacing = (-6).sp,

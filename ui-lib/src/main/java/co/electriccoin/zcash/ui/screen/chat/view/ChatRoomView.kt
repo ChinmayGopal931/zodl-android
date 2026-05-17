@@ -120,6 +120,8 @@ fun ChatRoomView(
     var showMediaSheet by remember { mutableStateOf(false) }
     var showNetworkSheet by remember { mutableStateOf(false) }
     var showEditContact by remember { mutableStateOf(false) }
+    var showBlockDialog by remember { mutableStateOf(false) }
+    var showReportDialog by remember { mutableStateOf(false) }
     val connectionDetails by viewModel.connectionDetails.collectAsState()
 
     val mediaPickerLauncher = rememberLauncherForActivityResult(
@@ -386,6 +388,14 @@ fun ChatRoomView(
                 }
                 showEditContact = false
             },
+            onBlock = {
+                showEditContact = false
+                showBlockDialog = true
+            },
+            onReport = {
+                showEditContact = false
+                showReportDialog = true
+            },
         )
     }
 
@@ -428,6 +438,48 @@ fun ChatRoomView(
             onDismiss = { showMediaSheet = false },
         )
     }
+
+    // Block user confirmation dialog
+    if (showBlockDialog) {
+        val peerName = currentConversation?.displayName ?: ""
+        val peerKey = currentConversation?.participantIds?.firstOrNull().orEmpty()
+        if (peerKey.isNotEmpty()) {
+            BlockUserDialog(
+                displayName = peerName,
+                onConfirm = {
+                    viewModel.blockUser(peerKey, peerName)
+                    showBlockDialog = false
+                    onNavigateBack()
+                },
+                onDismiss = { showBlockDialog = false },
+            )
+        }
+    }
+
+    // Report user dialog
+    if (showReportDialog) {
+        val peerName = currentConversation?.displayName ?: ""
+        val peerKey = currentConversation?.participantIds?.firstOrNull().orEmpty()
+        if (peerKey.isNotEmpty()) {
+            ReportAndBlockDialog(
+                displayName = peerName,
+                onReport = { category, details ->
+                    viewModel.reportUser(
+                        publicKey = peerKey,
+                        displayName = peerName,
+                        category = category,
+                        details = details,
+                        conversationId = conversationId,
+                    )
+                },
+                onBlock = {
+                    viewModel.blockUser(peerKey, peerName)
+                    onNavigateBack()
+                },
+                onDismiss = { showReportDialog = false },
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -436,6 +488,8 @@ private fun ContactEditSheet(
     currentName: String,
     onDismiss: () -> Unit,
     onSave: (String) -> Unit,
+    onBlock: () -> Unit,
+    onReport: () -> Unit,
 ) {
     val c = ZappTheme.colors
     var nameInput by remember { mutableStateOf(TextFieldValue(currentName)) }
@@ -498,6 +552,55 @@ private fun ContactEditSheet(
                         text = "Save",
                         style = ZappTheme.typography.button.copy(
                             color = if (canSave) c.onAccent else c.textMuted,
+                            fontWeight = FontWeight.Black,
+                        ),
+                    )
+                }
+            }
+
+            // Safety actions divider
+            Spacer(modifier = Modifier.height(4.dp))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(c.border),
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Block and Report actions
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .background(c.surfaceAlt, RectangleShape)
+                        .clickable(onClick = onReport),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = "Report",
+                        style = ZappTheme.typography.button.copy(
+                            color = c.text,
+                            fontWeight = FontWeight.Black,
+                        ),
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp)
+                        .background(ZappTheme.colors.danger.copy(alpha = 0.1f), RectangleShape)
+                        .clickable(onClick = onBlock),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    BasicText(
+                        text = "Block User",
+                        style = ZappTheme.typography.button.copy(
+                            color = ZappTheme.colors.danger,
                             fontWeight = FontWeight.Black,
                         ),
                     )

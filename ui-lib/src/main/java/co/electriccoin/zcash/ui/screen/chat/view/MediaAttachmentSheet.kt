@@ -18,7 +18,6 @@ import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,7 +25,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +39,11 @@ fun MediaAttachmentSheet(
     onShareLocation: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = ZappTheme.colors.surface,
+        scrimColor = ZappTheme.colors.overlay,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -47,8 +53,9 @@ fun MediaAttachmentSheet(
         ) {
             Text(
                 "Attach",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ZappTheme.colors.text
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -104,8 +111,8 @@ private fun MediaOption(
     Surface(
         onClick = onClick,
         modifier = modifier.height(80.dp),
-        shape = RoundedCornerShape(0.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        shape = RoundedCornerShape(12.dp),
+        color = ZappTheme.colors.surfaceAlt
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -115,14 +122,15 @@ private fun MediaOption(
             Icon(
                 icon,
                 contentDescription = label,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = ZappTheme.colors.accent,
                 modifier = Modifier.size(28.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 label,
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = ZappTheme.colors.text
             )
         }
     }

@@ -240,7 +240,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [2.4.9 (1387)] - 2025-12-09
 
 ### Added:
-- We added error handling improvements for the most frequent Zashi errors to help you understand and troubleshoot.
+- We added error handling improvements for the most frequent Zapp errors to help you understand and troubleshoot.
 - We added an option to allow you to turn on Tor IP protection in the Restore flow.
 
 ### Changed:
@@ -248,7 +248,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 - We improved Currency Conversion performance.
 - We moved Pay with Flexa feature to More options.
 - We removed Coinbase Onramp integration.
-- We also improved Reset Zashi experience.
+- We also improved Reset Zapp experience.
 
 ### Fixed:
 - We caught and fixed a number of user-reported issues.
@@ -258,7 +258,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [2.4.9 (1386)] - 2025-12-04
 
 ### Added:
-- We added error handling improvements for the most frequent Zashi errors to help you understand and troubleshoot.
+- We added error handling improvements for the most frequent Zapp errors to help you understand and troubleshoot.
 - We added an option to allow you to turn on Tor IP protection in the Restore flow.
 
 ### Changed:
@@ -266,7 +266,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 - We improved Currency Conversion performance.
 - We moved Pay with Flexa feature to More options.
 - We removed Coinbase Onramp integration.
-- We also improved Reset Zashi experience.
+- We also improved Reset Zapp experience.
 
 ### Fixed:
 - We caught and fixed a number of user-reported issues.
@@ -295,7 +295,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 - We added haptic feedback for important user actions.
 
 ### Changed:
-- We added a new server to the Zashi server list.
+- We added a new server to the Zapp server list.
 - We increased the swap deadline to prevent early refunds.
 
 ### Fixed:
@@ -332,7 +332,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ### Changed:
 - Improved transaction loading performance
-- Improved edge case error handling during proposal creation for both Zashi and Keystone
+- Improved edge case error handling during proposal creation for both Zapp and Keystone
 
 ## [2.4.3 (1250)] - 2025-10-13
 
@@ -381,9 +381,9 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ### Added:
 - Swap to ZEC feature that you have been waiting for! Supported by Near Intents.
-- Use Zashi to swap any supported cryptocurrency to Zcash.
+- Use Zapp to swap any supported cryptocurrency to Zcash.
 - Deposit funds using any of your favorite wallets.
-- Receive ZEC in Zashi and shield it.
+- Receive ZEC in Zapp and shield it.
 - See incoming transactions faster with mempool detection.
 - Get your change confirmed faster with 3 confirmations.
 
@@ -411,9 +411,9 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [2.2.0 (1120)] - 2025-08-27
 
 ### Added
-- Swap ZEC with Zashi:
+- Swap ZEC with Zapp:
 - Swap shielded ZEC to any supported cryptocurrency with the Near Intents integration.
-- Zashi is a ZEC-only wallet, so you’ll need a valid wallet address for the asset you’re swapping to.
+- Zapp is a ZEC-only wallet, so you’ll need a valid wallet address for the asset you’re swapping to.
 
 ## [2.1.0 (999)] - 2025-08-06
 
@@ -454,7 +454,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
   foreground
 
 ### Fixed
-- Receive screen now correctly displays colors for shielded addresses for both Zashi and Keystone
+- Receive screen now correctly displays colors for shielded addresses for both Zapp and Keystone
 
 ### Changed
 - Exchange rate is now always refreshed upon navigating to Send screen
@@ -489,16 +489,16 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [2.0.0 (934)] - 2025-04-25
 
 ### Added:
-- Zashi 2.0 is here!
-- New Wallet Status Widget helps you navigate Zashi with ease and get more info upon tap.
+- Zapp 2.0 is here!
+- New Wallet Status Widget helps you navigate Zapp with ease and get more info upon tap.
 
 ### Changed:
 - Redesigned Home Screen and streamlined app navigation.
 - Balances redesigned into a new Spendable component on the Send screen.
 - Revamped Restore flow.
 - Create Wallet with a tap! New Wallet Backup flow moved to when your wallet receives first funds.
-- Firebase Crashlytics are fully opt-in. Help us improve Zashi, or don’t, your choice.
-- Scanning a ZIP 321 QR code now opens Zashi!
+- Firebase Crashlytics are fully opt-in. Help us improve Zapp, or don’t, your choice.
+- Scanning a ZIP 321 QR code now opens Zapp!
 
 ## [1.5.2 (932)] - 2025-04-23
 
@@ -551,8 +551,8 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [1.4 (873)] - 2025-03-03
 
 ### Added
-- The new `Foss` build dimension has been added that suits for Zashi build that follows FOSS principles
-- The `release.yaml` has been added. It provides us with ability to build and deploy Zashi to GitHub Releases and 
+- The new `Foss` build dimension has been added that suits for Zapp build that follows FOSS principles
+- The `release.yaml` has been added. It provides us with ability to build and deploy Zapp to GitHub Releases and 
   F-Droid store.
 - Confirm the rejection of a Keystone transaction dialog added.
 - A new transaction history screen added with capability to use fulltext and predefined filters
@@ -564,7 +564,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ### Changed
 - `Flexa` version has been bumped to 1.0.11
-- Several non-FOSS dependencies has been removed for the new FOSS Zashi build type
+- Several non-FOSS dependencies has been removed for the new FOSS Zapp build type
 - Keystone flows swapped the buttons for the better UX, the main CTA is the closes button for a thumb.
 - `Synchronizer.redactPcztForSigner` is now called in order to generate pczt bytes to display as QR for Keystone
 - Transaction history widget has been redesigned
@@ -573,7 +573,7 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ### Changed
 - The QR code image logic of the `QrCode`, `Request`, and `SignTransaction` screens has been refactored to work 
-  with the newer `ZashiQr` component
+  with the newer `ZappQr` component
 - The colors of the QR code image on the `SignTransaction` screen are now white and black for both color themes to 
   improve the successful scanning chance by the Keystone device
 - The block synchronization progress logic has been changed to return an uncompleted percentage in case the
@@ -591,10 +591,10 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 - Send Confirmation & Send Progress screens have been refactored
 - ZXing QR codes scanning library has been replaced with a more recent MLkit Barcodes scanning library, which gives 
   us better results in testing
-- Zashi now displays dark version of QR code in the dark theme on the QR Code and Request screens
+- Zapp now displays dark version of QR code in the dark theme on the QR Code and Request screens
 
 ### Fixed
-- The way how Zashi treats ZIP 321 single address within URIs results has been fixed
+- The way how Zapp treats ZIP 321 single address within URIs results has been fixed
 
 ## [1.3.1 (822)] - 2025-01-07
 
@@ -604,14 +604,14 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 ## [1.3 (812)] - 2024-12-19
 
 ### Added
-- New feature: Keystone integration with an ability to connect HW wallet to Zashi wallet, preview transactions, sign
+- New feature: Keystone integration with an ability to connect HW wallet to Zapp wallet, preview transactions, sign
   new transactions and shield transparent funds
 - Thus, several new screens for the Keystone account import and signing transactions using the Keystone device have 
   been added
 
 ### Changed
 - App bar has been redesigned to give users ability to switch between wallet accounts
-- The Integrations screen is now enabled for the Zashi account only
+- The Integrations screen is now enabled for the Zapp account only
 - The Address book screen now shows the wallet addresses if more than one Account is imported
 - Optimizations on the New wallet creation to prevent indeterministic chain of async actions
 - Optimizations on the Wallet restoration to prevent indeterministic chain of async actions
@@ -640,8 +640,8 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 ### Added
 - Address book encryption
 - Android auto backup support for address book encryption
-- The device authentication feature on the Zashi app launch has been added
-- Zashi app now supports Spanish language. It can be changed in the System settings options.
+- The device authentication feature on the Zapp app launch has been added
+- Zapp app now supports Spanish language. It can be changed in the System settings options.
 - The Flexa SDK has been adopted to enable payments using the embedded Flexa UI
 - New Sending, Success, Failure, and GrpcFailure subscreens of the Send Confirmation screen have been added
 - New Copy Transaction IDs feature has been added to the MultipleTransactionFailure screen
@@ -850,14 +850,14 @@ flag is used on Android SDK level 33 and higher, masking out the `Toast` text on
 ## [1.1 (655)] - 2024-05-24
 
 ### Added
-- Zashi now provides system biometric or device credential (pattern, pin, or password) authentication for these use 
+- Zapp now provides system biometric or device credential (pattern, pin, or password) authentication for these use 
   cases: Send funds, Recovery Phrase, Export Private Data, and Delete Wallet. 
 - The app entry animation has been reworked to apply on every app access point, i.e. it will be displayed when 
   users return to an already set up app as well.
 - Synchronizer status details are now available to users by pressing the simple status view placed above the
   synchronization progress bar. The details are displayed within a dialog window on the Balances and Account screens.
-  This view also occasionally presents information about a possible Zashi app update available on Google Play. The 
-  app redirects users to the Google Play Zashi page by pressing the view.
+  This view also occasionally presents information about a possible Zapp app update available on Google Play. The 
+  app redirects users to the Google Play Zapp page by pressing the view.
 
 ### Changed
 - The app dialog window has now a bit more rounded corners
@@ -866,8 +866,8 @@ flag is used on Android SDK level 33 and higher, masking out the `Toast` text on
 ## [1.0 (650)] - 2024-05-07
 
 ### Added
-- Delete Zashi feature has been added. It's accessible from the Advanced settings screen. It removes the wallet 
-  secrets from Zashi and resets its state.
+- Delete Zapp feature has been added. It's accessible from the Advanced settings screen. It removes the wallet 
+  secrets from Zapp and resets its state.
 - Transaction messages are now checked and removed in case of duplicity  
 
 ### Changed
@@ -918,7 +918,7 @@ flag is used on Android SDK level 33 and higher, masking out the `Toast` text on
   Choose server has been added
 - A new Server switching screen has been added. Its purpose is to enable switching between predefined and custom 
   lightwalletd servers in runtime.
-- The About screen now contains a link to the new Zashi Privacy Policy website
+- The About screen now contains a link to the new Zapp Privacy Policy website
 - The Send Confirmation screen has been reworked according to the new design
 - Transitions between screens are now animated with a simple slide animation
 - Proposal API from the Zcash SDK has been integrated together with handling error states for multi-transaction 
@@ -1012,7 +1012,7 @@ this screen, together with buttons for copying the address and sharing the addre
 
 ### Changed
 - Home screen navigation switched from the Side menu to the Bottom Navigation Tabs menu
-- Re-enabled the possibility of installing different Zashi application build types on the same device simultaneously 
+- Re-enabled the possibility of installing different Zapp application build types on the same device simultaneously 
   (i.e., Mainnet, Testnet, Production, Debug)  
 - Send screen form now validates a maximum amount for sending with respect to the available balance
 - Send form now supports software keyboard confirm actions 

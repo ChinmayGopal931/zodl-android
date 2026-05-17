@@ -1,1 +1,1 @@
-Zodl: Zcash Wallet
+Zapp: Zcash Wallet

@@ -10,7 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-private const val CACHE_SUBDIR = "zodl_qr_images" // NON-NLS
+private const val CACHE_SUBDIR = "zapp_qr_images" // NON-NLS
 
 class ShareImageUseCase(
     private val context: Context,

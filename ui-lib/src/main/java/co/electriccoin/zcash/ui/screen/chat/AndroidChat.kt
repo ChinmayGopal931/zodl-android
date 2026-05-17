@@ -20,6 +20,7 @@ import co.electriccoin.zcash.ui.screen.chat.view.ChatSettingsView
 import co.electriccoin.zcash.ui.screen.chat.view.ContactEditView
 import co.electriccoin.zcash.ui.screen.chat.view.NewConversationView
 import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
+import co.electriccoin.zcash.ui.common.usecase.ChatSendContext
 import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
@@ -96,18 +97,14 @@ fun AndroidChatRoom(
 ) {
     val viewModel: ChatViewModel = koinViewModel()
     val navigationRouter = koinInject<NavigationRouter>()
-    val contacts by viewModel.contacts.collectAsState()
-    val currentConversation by viewModel.currentConversation.collectAsState()
+    val chatSendContext = koinInject<ChatSendContext>()
 
     ChatRoomView(
         conversationId = conversationId,
         onNavigateBack = onNavigateBack,
         onSendZec = {
-            // Prefill the Send screen with the peer's wallet address if we have
-            // it from a prior share; otherwise just open Send blank.
-            val peerKey = currentConversation?.participantIds?.firstOrNull()
-            val peerWalletAddress = peerKey
-                ?.let { key -> contacts.firstOrNull { it.publicKey == key }?.walletAddress }
+            val peerWalletAddress = viewModel.getPeerWalletAddress(conversationId)
+            chatSendContext.set(conversationId)
             navigationRouter.forward(UnifiedSendArgs(recipientAddress = peerWalletAddress))
         },
         viewModel = viewModel

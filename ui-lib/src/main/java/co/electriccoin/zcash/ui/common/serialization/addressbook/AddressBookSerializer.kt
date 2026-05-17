@@ -4,6 +4,7 @@ import co.electriccoin.zcash.ui.common.model.AddressBook
 import co.electriccoin.zcash.ui.common.model.AddressBookContact
 import co.electriccoin.zcash.ui.common.serialization.ADDRESS_BOOK_SERIALIZATION_V1
 import co.electriccoin.zcash.ui.common.serialization.ADDRESS_BOOK_SERIALIZATION_V2
+import co.electriccoin.zcash.ui.common.serialization.ADDRESS_BOOK_SERIALIZATION_V3
 import co.electriccoin.zcash.ui.common.serialization.BaseSerializer
 import java.io.InputStream
 import java.io.OutputStream
@@ -23,6 +24,11 @@ class AddressBookSerializer : BaseSerializer() {
             outputStream.write(contact.address.createByteArray())
             outputStream.write(contact.name.createByteArray())
             outputStream.write(contact.chain.createByteArray())
+            outputStream.write(contact.walletAddresses.size.createByteArray())
+            contact.walletAddresses.forEach { (key, value) ->
+                outputStream.write(key.createByteArray())
+                outputStream.write(value.createByteArray())
+            }
         }
     }
 
@@ -58,6 +64,29 @@ class AddressBookSerializer : BaseSerializer() {
                                     address = inputStream.readString(),
                                     name = inputStream.readString(),
                                     chain = inputStream.readString().takeIf { it.isNotEmpty() },
+                                )
+                            }
+                        }
+                )
+            }
+
+            ADDRESS_BOOK_SERIALIZATION_V3 -> {
+                AddressBook(
+                    version = ADDRESS_BOOK_SERIALIZATION_V3,
+                    lastUpdated = inputStream.readLong().let { Instant.fromEpochMilliseconds(it) },
+                    contacts =
+                        inputStream.readInt().let { contactsSize ->
+                            (0 until contactsSize).map { _ ->
+                                AddressBookContact(
+                                    lastUpdated = inputStream.readLong().let { Instant.fromEpochMilliseconds(it) },
+                                    address = inputStream.readString(),
+                                    name = inputStream.readString(),
+                                    chain = inputStream.readString().takeIf { it.isNotEmpty() },
+                                    walletAddresses = inputStream.readInt().let { mapSize ->
+                                        (0 until mapSize).associate { _ ->
+                                            inputStream.readString() to inputStream.readString()
+                                        }
+                                    },
                                 )
                             }
                         }

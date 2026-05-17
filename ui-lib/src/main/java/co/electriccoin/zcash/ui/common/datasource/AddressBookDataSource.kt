@@ -25,6 +25,7 @@ interface AddressBookDataSource {
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String>,
         key: AddressBookKey
     )
 
@@ -33,6 +34,7 @@ interface AddressBookDataSource {
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String>,
         key: AddressBookKey
     )
 
@@ -64,6 +66,7 @@ class AddressBookDataSourceImpl(
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String>,
         key: AddressBookKey
     ) = updateAB(key) { contacts ->
         contacts +
@@ -72,6 +75,7 @@ class AddressBookDataSourceImpl(
                 address = address.trim(),
                 chain = chain?.trim()?.takeIf { it.isNotEmpty() },
                 lastUpdated = getTimestampNow(),
+                walletAddresses = walletAddresses.filterValues { it.isNotBlank() },
             )
     }
 
@@ -80,6 +84,7 @@ class AddressBookDataSourceImpl(
         name: String,
         address: String,
         chain: String?,
+        walletAddresses: Map<String, String>,
         key: AddressBookKey
     ) = updateAB(key) { contacts ->
         contacts.apply {
@@ -90,6 +95,7 @@ class AddressBookDataSourceImpl(
                     address = address.trim(),
                     chain = chain?.trim()?.takeIf { it.isNotEmpty() },
                     lastUpdated = getTimestampNow(),
+                    walletAddresses = walletAddresses.filterValues { it.isNotBlank() },
                 )
             )
         }

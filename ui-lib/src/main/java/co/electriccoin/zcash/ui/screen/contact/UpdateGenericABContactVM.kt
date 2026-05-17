@@ -53,6 +53,8 @@ class UpdateGenericABContactVM(
     private val contactName = MutableStateFlow("")
     private val selectedBlockchain = MutableStateFlow<SwapBlockchain?>(null)
 
+    private val walletAddressInputs = MutableStateFlow<Map<String, String>>(emptyMap())
+
     private val isUpdatingContact = MutableStateFlow(false)
     private val isDeletingContact = MutableStateFlow(false)
     private val isLoadingContact = MutableStateFlow(true)
@@ -243,6 +245,7 @@ class UpdateGenericABContactVM(
             val contact = getContactByAddress(address = args.address, chain = args.chain)
             contactAddress.update { contact?.address.orEmpty() }
             contactName.update { contact?.name.orEmpty() }
+            walletAddressInputs.update { contact?.walletAddresses.orEmpty() }
             originalContact.update { contact }
             selectedBlockchain.update { contact?.blockchain ?: zcashBlockchain }
             isLoadingContact.update { false }
@@ -275,7 +278,8 @@ class UpdateGenericABContactVM(
                     contact = original,
                     name = contactName.value,
                     address = contactAddress.value,
-                    chain = selectedBlockchain.takeIf { it != zcashBlockchain }?.chainTicker
+                    chain = selectedBlockchain.takeIf { it != zcashBlockchain }?.chainTicker,
+                    walletAddresses = walletAddressInputs.value,
                 )
                 isUpdatingContact.update { false }
             }

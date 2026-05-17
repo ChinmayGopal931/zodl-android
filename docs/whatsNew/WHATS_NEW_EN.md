@@ -176,7 +176,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.1 (1470)] - 2026-03-02
 
 ### Changed:
-- Zashi -> Zodl branding update - we rebranded Zashi to Zodl, without impacting the user experience.
+- Zapp -> Zodl branding update - we rebranded Zapp to Zodl, without impacting the user experience.
 - We implemented Swap/Pay UX/UI improvements.
 
 ### Fixed:
@@ -185,7 +185,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.1 (1469)] - 2026-02-27
 
 ### Changed:
-- Zashi -> Zodl branding update - we rebranded Zashi to Zodl, without impacting the user experience.
+- Zapp -> Zodl branding update - we rebranded Zapp to Zodl, without impacting the user experience.
 - We implemented Swap/Pay UX/UI improvements.
 
 ### Fixed:
@@ -194,7 +194,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.0 (1468)] - 2026-02-26
 
 ### Changed:
-- Zashi -> Zodl branding update - we rebranded Zashi to Zodl, without impacting the user experience.
+- Zapp -> Zodl branding update - we rebranded Zapp to Zodl, without impacting the user experience.
 - We implemented Swap/Pay UX/UI improvements.
 
 ### Fixed:
@@ -203,7 +203,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.0 (1467)] - 2026-02-25
 
 ### Changed:
-- Zashi -> Zodl branding update - we rebranded Zashi to Zodl, without impacting the user experience.
+- Zapp -> Zodl branding update - we rebranded Zapp to Zodl, without impacting the user experience.
 - We implemented Swap/Pay UX/UI improvements.
 
 ### Fixed:
@@ -212,7 +212,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [3.0.0 (1466)] - 2026-02-25
 
 ### Changed:
-- Zashi -> Zodl branding update - we rebranded Zashi to Zodl, without impacting the user experience.
+- Zapp -> Zodl branding update - we rebranded Zapp to Zodl, without impacting the user experience.
 - We implemented Swap/Pay UX/UI improvements.
 
 ### Fixed:
@@ -304,7 +304,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.4.9 (1387)] - 2025-12-09
 
 ### Added:
-- We added error handling improvements for the most frequent Zashi errors to help you understand and troubleshoot.
+- We added error handling improvements for the most frequent Zapp errors to help you understand and troubleshoot.
 - We added an option to allow you to turn on Tor IP protection in the Restore flow.
 
 ### Changed:
@@ -312,7 +312,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - We improved Currency Conversion performance.
 - We moved Pay with Flexa feature to More options.
 - We removed Coinbase Onramp integration.
-- We also improved Reset Zashi experience.
+- We also improved Reset Zapp experience.
 
 ### Fixed:
 - We caught and fixed a number of user-reported issues.
@@ -322,7 +322,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.4.9 (1386)] - 2025-12-04
 
 ### Added:
-- We added error handling improvements for the most frequent Zashi errors to help you understand and troubleshoot.
+- We added error handling improvements for the most frequent Zapp errors to help you understand and troubleshoot.
 - We added an option to allow you to turn on Tor IP protection in the Restore flow.
 
 ### Changed:
@@ -330,7 +330,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - We improved Currency Conversion performance.
 - We moved Pay with Flexa feature to More options.
 - We removed Coinbase Onramp integration.
-- We also improved Reset Zashi experience.
+- We also improved Reset Zapp experience.
 
 ### Fixed:
 - We caught and fixed a number of user-reported issues.
@@ -359,7 +359,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - We added haptic feedback for important user actions.
 
 ### Changed:
-- We added a new server to the Zashi server list.
+- We added a new server to the Zapp server list.
 - We increased the swap deadline to prevent early refunds.
 
 ### Fixed:
@@ -412,9 +412,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Added:
 - Swap to ZEC feature that you have been waiting for! Supported by Near Intents.
-- Use Zashi to swap any supported cryptocurrency to Zcash.
+- Use Zapp to swap any supported cryptocurrency to Zcash.
 - Deposit funds using any of your favorite wallets.
-- Receive ZEC in Zashi and shield it.
+- Receive ZEC in Zapp and shield it.
 - See incoming transactions faster with mempool detection.
 - Get your change confirmed faster with 3 confirmations.
 - More bugfixes and design updates
@@ -423,9 +423,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Added:
 - Swap to ZEC feature that you have been waiting for! Supported by Near Intents.
-- Use Zashi to swap any supported cryptocurrency to Zcash.
+- Use Zapp to swap any supported cryptocurrency to Zcash.
 - Deposit funds using any of your favorite wallets.
-- Receive ZEC in Zashi and shield it.
+- Receive ZEC in Zapp and shield it.
 - See incoming transactions faster with mempool detection.
 - Get your change confirmed faster with 3 confirmations.
 - More bugfixes and design updates
@@ -434,9 +434,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Added:
 - Swap to ZEC feature that you have been waiting for! Supported by Near Intents.
-- Use Zashi to swap any supported cryptocurrency to Zcash.
+- Use Zapp to swap any supported cryptocurrency to Zcash.
 - Deposit funds using any of your favorite wallets.
-- Receive ZEC in Zashi and shield it.
+- Receive ZEC in Zapp and shield it.
 - See incoming transactions faster with mempool detection.
 - Get your change confirmed faster with 3 confirmations.
 
@@ -444,9 +444,9 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Added:
 - Swap to ZEC feature that you have been waiting for! Supported by Near Intents.
-- Use Zashi to swap any supported cryptocurrency to Zcash.
+- Use Zapp to swap any supported cryptocurrency to Zcash.
 - Deposit funds using any of your favorite wallets.
-- Receive ZEC in Zashi and shield it.
+- Receive ZEC in Zapp and shield it.
 - See incoming transactions faster with mempool detection.
 - Get your change confirmed faster with 3 confirmations.
 
@@ -454,34 +454,34 @@ directly impact users rather than highlighting other key architectural updates.*
 
 ### Added:
 - CrossPay with Near Intents
-- Use shielded ZEC to make cross-chain payments with Zashi and Near Intents.
+- Use shielded ZEC to make cross-chain payments with Zapp and Near Intents.
 - Accessible via the new Pay button on the home screen.
 
 ## [2.3.0 (1159)] - 2025-09-15
 
 ### Added:
 - CrossPay with Near Intents 
-- Use shielded ZEC to make cross-chain payments with Zashi and Near Intents.
+- Use shielded ZEC to make cross-chain payments with Zapp and Near Intents.
 - Accessible via the new Pay button on the home screen.
 
 ## [2.2.1 (1121)] - 2025-08-29
 
 ### Added:
-- Swap ZEC with Zashi:
+- Swap ZEC with Zapp:
 - Swap shielded ZEC to any supported cryptocurrency with the Near Intents integration.
-- Zashi is a ZEC-only wallet, so you’ll need a valid wallet address for the asset you’re swapping to.
+- Zapp is a ZEC-only wallet, so you’ll need a valid wallet address for the asset you’re swapping to.
 
 ## [2.2.0 (1120)] - 2025-08-27
 
 ### Added:
-- Swap ZEC with Zashi:
+- Swap ZEC with Zapp:
 - Swap shielded ZEC to any supported cryptocurrency with the Near Intents integration.
-- Zashi is a ZEC-only wallet, so you’ll need a valid wallet address for the asset you’re swapping to.
+- Zapp is a ZEC-only wallet, so you’ll need a valid wallet address for the asset you’re swapping to.
 
 ## [2.1.0 (999)] - 2025-08-06
 
 ### Added: 
-- Zashi’s built-in Tor client can now be used to:
+- Zapp’s built-in Tor client can now be used to:
 - Submit ZEC transactions
 - Fetch transaction data
 - Connect to third-party APIs (e.g. NEAR, soon!)
@@ -496,7 +496,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.1.0 (997)] - 2025-07-30
 
 ### Added:
-- Zashi’s built-in Tor client can now be used to:
+- Zapp’s built-in Tor client can now be used to:
 - Submit ZEC transactions
 - Fetch transaction data
 - Connect to third-party APIs (e.g. NEAR)
@@ -512,7 +512,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.1.0 (996)] - 2025-07-29
 
 ### Added:
-- Zashi’s built-in Tor client can now be used to:
+- Zapp’s built-in Tor client can now be used to:
 - Submit ZEC transactions
 - Fetch transaction data
 - Connect to third-party APIs (e.g. NEAR)
@@ -547,7 +547,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.0.3 (965)] - 2025-05-19
 
 ### Changed:
-- Zashi no longer includes transparent receivers in Unified Addresses.
+- Zapp no longer includes transparent receivers in Unified Addresses.
 - The Receive screen now displays a rotating, shielded-only UA which gets freshly generated each time you open the Receive screen.
 - All transactions sent to your different rotating Shielded Addresses will remain part of one wallet balance under the same seed phrase.
 - Wallets and exchanges that don’t support sending funds to shielded receivers will require transparent address.
@@ -568,30 +568,30 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [2.0.1 (941)] - 2025-04-29
 
 ### Added:
-- Zashi 2.0 is here!
-- New Wallet Status Widget helps you navigate Zashi with ease and get more info upon tap.
+- Zapp 2.0 is here!
+- New Wallet Status Widget helps you navigate Zapp with ease and get more info upon tap.
 
 ### Changed:
 - Redesigned Home Screen and streamlined app navigation.
 - Balances redesigned into a new Spendable component on the Send screen.
 - Revamped Restore flow.
 - Create Wallet with a tap! New Wallet Backup flow moved to when your wallet receives first funds.
-- Firebase Crashlytics are fully opt-in. Help us improve Zashi, or don’t, your choice.
-- Scanning a ZIP 321 QR code now opens Zashi!
+- Firebase Crashlytics are fully opt-in. Help us improve Zapp, or don’t, your choice.
+- Scanning a ZIP 321 QR code now opens Zapp!
 
 ## [2.0.0 (934)] - 2025-04-25
 
 ### Added:
-- Zashi 2.0 is here!
-- New Wallet Status Widget helps you navigate Zashi with ease and get more info upon tap.
+- Zapp 2.0 is here!
+- New Wallet Status Widget helps you navigate Zapp with ease and get more info upon tap.
 
 ### Changed:
 - Redesigned Home Screen and streamlined app navigation.
 - Balances redesigned into a new Spendable component on the Send screen.
 - Revamped Restore flow.
 - Create Wallet with a tap! New Wallet Backup flow moved to when your wallet receives first funds.
-- Firebase Crashlytics are fully opt-in. Help us improve Zashi, or don’t, your choice.
-- Scanning a ZIP 321 QR code now opens Zashi!
+- Firebase Crashlytics are fully opt-in. Help us improve Zapp, or don’t, your choice.
+- Scanning a ZIP 321 QR code now opens Zapp!
 
 ## [1.5.2 (932)] - 2025-04-23
 
@@ -604,7 +604,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - 1.5 Bug Fix release!
 - We fixed a migration issue impacting some users on 1.5 app version.
 - We also removed the redundant Security Warning screen which was incorrectly informing the user about crash 
-  reporting not included in Zashi Android FOSS version.
+  reporting not included in Zapp Android FOSS version.
 
 
 ## [1.5.2 (926)] - 2025-04-03
@@ -616,18 +616,18 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [1.5.1 (925)] - 2025-03-31
 
 ### Added:
-- Transparent Funds Rescue - Zashi can now help you recover funds from fully transparent wallets like Ledger. We recommend importing your transparent hardware wallet recovery phrase into a Keystone hardware wallet and then pairing it with Zashi using the Keystone integration.
+- Transparent Funds Rescue - Zapp can now help you recover funds from fully transparent wallets like Ledger. We recommend importing your transparent hardware wallet recovery phrase into a Keystone hardware wallet and then pairing it with Zapp using the Keystone integration.
 
 ### Fixed:
-- We fixed a long-standing note commitment tree issue that affected a small number of users. Zashi is now able to allow stuck funds to be spent.
+- We fixed a long-standing note commitment tree issue that affected a small number of users. Zapp is now able to allow stuck funds to be spent.
 
 ## [1.5 (923)] - 2025-03-27
 
 ### Added:
-- Transparent Funds Rescue - Zashi can now help you recover funds from fully transparent wallets like Ledger. We recommend importing your transparent hardware wallet recovery phrase into a Keystone hardware wallet and then pairing it with Zashi using the Keystone integration.
+- Transparent Funds Rescue - Zapp can now help you recover funds from fully transparent wallets like Ledger. We recommend importing your transparent hardware wallet recovery phrase into a Keystone hardware wallet and then pairing it with Zapp using the Keystone integration.
 
 ### Fixed:
-- We fixed a long-standing note commitment tree issue that affected a small number of users. Zashi is now able to allow stuck funds to be spent.
+- We fixed a long-standing note commitment tree issue that affected a small number of users. Zapp is now able to allow stuck funds to be spent.
 
 ## [1.4 (876)] - 2025-03-04
 
@@ -635,7 +635,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Export your last year's transaction history with a new Export Tax File feature.
 - Bookmark transactions, and add private notes.
 - Filter for Received, Sent, Memos, Notes, and Bookmarked transactions.
-- Download Zashi from F-Droid and GitHub.
+- Download Zapp from F-Droid and GitHub.
 
 ### Changed
 - Discover redesigned Transaction History!
@@ -652,7 +652,7 @@ directly impact users rather than highlighting other key architectural updates.*
 - Export your last year's transaction history with a new Export Tax File feature.
 - Bookmark transactions, and add private notes to them.
 - Filter for Received, Sent, Memos, Notes, and Bookmarked transactions.
-- Download Zashi Android from F-Droid and GitHub.
+- Download Zapp Android from F-Droid and GitHub.
 
 ### Changed
 - Discover completely redesigned Transaction History!
@@ -665,7 +665,7 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [1.3.3 (839)] - 2025-01-23
 
 ### Changed
-- We refactored the QR code image logic to work with the newer ZashiQr component.
+- We refactored the QR code image logic to work with the newer ZappQr component.
 - The colors of the QR code image on the SignTransaction screen are now the same for both color themes to improve 
   scanning by the Keystone device.
 - We improved the block synchronization progress logic to return an uncompleted percentage in case the Synchronizer 
@@ -680,25 +680,25 @@ directly impact users rather than highlighting other key architectural updates.*
 ## [1.3.2 (829)] - 2025-01-10
 
 ### Changed
-- Zashi now displays the dark version of QR codes in the dark theme
+- Zapp now displays the dark version of QR codes in the dark theme
 - We improved the QR code scanner to respond faster
 - We refactored the Send screens to work better for you
 
 ### Fixed
-- And we also fixed the way how Zashi treats addresses within QR codes
+- And we also fixed the way how Zapp treats addresses within QR codes
 
 ## [1.3.1 (822)] - 2025-01-07
 
 ### Fixed
 - We fixed a bug in the Coinbase Onramp feature which impacted users making purchases with their Coinbase account. 
-  We now pass a correct transparent address to Coinbase and your ZEC gets sent directly to your Zashi wallet instead 
+  We now pass a correct transparent address to Coinbase and your ZEC gets sent directly to your Zapp wallet instead 
   of your Coinbase account.
 
 ## [1.3 (812)] - 2024-12-19
 
 ### Added
-Zashi + Keystone Hardware Wallet integration is live!
-- Connect your Keystone wallet with Zashi.
+Zapp + Keystone Hardware Wallet integration is live!
+- Connect your Keystone wallet with Zapp.
 - Sign a transaction with your Keystone wallet.
 - Includes both shielded and transparent ZEC support.
 
@@ -707,12 +707,12 @@ Zashi + Keystone Hardware Wallet integration is live!
 ### Added
 - It is finally here! Flexa integration at your service!
 - Pay with Flexa at supported merchants in the US, Canada, and El Salvador.
-- It's waiting for you in Zashi Settings.
+- It's waiting for you in Zapp Settings.
 
 ## [1.2.2 (789)] - 2024-11-18
 
 ### Added
-- Hola! We taught Zashi to speak Spanish!
+- Hola! We taught Zapp to speak Spanish!
 - We adopted SDK release 2.2.6 which should help speed up sending multiple transactions.
 - We implemented encryption and remote storage for Address Book!
 - We added device authentication to app launch.
@@ -720,7 +720,7 @@ Zashi + Keystone Hardware Wallet integration is live!
 
 ### Changed
 - We made Settings and status screens pretty.
-- Let us know how you like Zashi with the improved Send Feedback feature.
+- Let us know how you like Zapp with the improved Send Feedback feature.
 
 ### Fixed
 - We fixed the shield icon behaviour in Transaction History.
@@ -746,7 +746,7 @@ Zashi + Keystone Hardware Wallet integration is live!
 ## [1.2 (735)] - 2024-09-20
 
 ### Added:
-- All Zashi's error dialogs now have a Report button that prefills the error stack trace in a selected email client.
+- All Zapp's error dialogs now have a Report button that prefills the error stack trace in a selected email client.
 
 ### Changed:
 - The Message input field on the Send screen has been updated to provide a Return key on the software keyboard, and make auto-capitalization at the beginning of every sentence or a new line.
@@ -779,7 +779,7 @@ Zashi + Keystone Hardware Wallet integration is live!
 ## [1.1.7 (718)] - 2024-09-06
 
 ### Added
-- We added ZEC/USD currency conversion to Zashi without compromising your IP address.
+- We added ZEC/USD currency conversion to Zapp without compromising your IP address.
 - You can now view your balances and type in transaction amounts in both USD and ZEC.
 
 ### Changed
@@ -791,7 +791,7 @@ Zashi + Keystone Hardware Wallet integration is live!
 ## [1.1.6 (712)] - 2024-09-04
 
 ### Added
-- We added ZEC/USD currency conversion to Zashi without compromising your IP address.
+- We added ZEC/USD currency conversion to Zapp without compromising your IP address.
 - You can now view your balances and type in transaction amounts in both USD and ZEC.
 
 ### Changed

@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,7 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,7 +36,11 @@ fun AttachmentSheet(
     onAttachMedia: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = ZappTheme.colors.surface,
+        scrimColor = ZappTheme.colors.overlay,
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -48,7 +54,7 @@ fun AttachmentSheet(
                 onClick = onShareAddress
             )
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                color = ZappTheme.colors.border,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
             AttachmentRow(
@@ -57,7 +63,7 @@ fun AttachmentSheet(
                 onClick = onSendZec
             )
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                color = ZappTheme.colors.border,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
             AttachmentRow(
@@ -78,7 +84,7 @@ private fun AttachmentRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(0.dp))
+            .clip(RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -87,13 +93,14 @@ private fun AttachmentRow(
         Icon(
             icon,
             contentDescription = label,
-            tint = MaterialTheme.colorScheme.primary,
+            tint = ZappTheme.colors.accent,
             modifier = Modifier.size(24.dp)
         )
         Text(
             label,
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = ZappTheme.colors.text
         )
     }
 }

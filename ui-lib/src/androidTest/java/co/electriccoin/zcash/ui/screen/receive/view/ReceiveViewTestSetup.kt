@@ -34,7 +34,7 @@ class ReceiveViewTestSetup(
                                     listOf(
                                         ReceiveAddressState(
                                             icon = R.drawable.ic_zec_round_full,
-                                            title = stringRes("Zodl"),
+                                            title = stringRes("Zapp"),
                                             subtitle =
                                                 styledStringResource(
                                                     "${WalletAddressFixture.UNIFIED_ADDRESS_STRING.take(20)}...",

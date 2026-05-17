@@ -137,7 +137,7 @@ android {
             // Note that the build-conventions defines the res configs
             isPseudoLocalesEnabled = true
 
-            // Suffixing app package name and version to avoid collisions with other installed Zashi
+            // Suffixing app package name and version to avoid collisions with other installed Zcash wallets
             // apps (e.g. from Google Play)
             versionNameSuffix = "-debug"
             applicationIdSuffix = ".debug"

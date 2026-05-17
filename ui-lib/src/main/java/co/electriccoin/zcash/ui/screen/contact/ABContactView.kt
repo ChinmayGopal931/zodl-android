@@ -1,11 +1,13 @@
 package co.electriccoin.zcash.ui.screen.contact
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -29,17 +31,15 @@ import co.electriccoin.zcash.ui.design.component.PickerState
 import co.electriccoin.zcash.ui.design.component.Spacer
 import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.component.ZashiAddressTextField
-import co.electriccoin.zcash.ui.design.component.ZashiButton
-import co.electriccoin.zcash.ui.design.component.ZashiButtonDefaults
-import co.electriccoin.zcash.ui.design.component.ZashiIconButton
 import co.electriccoin.zcash.ui.design.component.ZashiPicker
-import co.electriccoin.zcash.ui.design.component.ZashiSmallTopAppBar
 import co.electriccoin.zcash.ui.design.component.ZashiTextField
-import co.electriccoin.zcash.ui.design.component.ZashiTopAppBarBackNavigation
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
+import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
+import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
+import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
-import co.electriccoin.zcash.ui.design.theme.colors.ZashiColors
-import co.electriccoin.zcash.ui.design.theme.typography.ZashiTypography
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.imageRes
 import co.electriccoin.zcash.ui.design.util.scaffoldPadding
@@ -54,7 +54,10 @@ fun ABContactView(
     val nameFocusRequester = remember { FocusRequester() }
     BlankBgScaffold(
         topBar = {
-            ContactTopAppBar(onBack = state.onBack, state = state)
+            ContactTopAppBar(state = state)
+        },
+        bottomBar = {
+            ZappBottomActionBar(onBack = state.onBack)
         }
     ) { paddingValues ->
         ContactViewInternal(
@@ -81,16 +84,18 @@ private fun ContactViewInternal(
     nameFocusRequester: FocusRequester,
     modifier: Modifier = Modifier,
 ) {
+    val c = ZappTheme.colors
     Column(
         modifier = modifier,
     ) {
-        Text(
+        BasicText(
             text = stringResource(id = R.string.contact_address_label),
-            style = ZashiTypography.textSm,
-            fontWeight = FontWeight.Medium,
-            color = ZashiColors.Inputs.Filled.label
+            style = ZappTheme.typography.groupLabel.copy(
+                color = c.textMuted,
+                fontWeight = FontWeight.Black,
+            ),
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(6.dp)
         ZashiAddressTextField(
             modifier =
                 Modifier
@@ -100,8 +105,7 @@ private fun ContactViewInternal(
             placeholder = {
                 Text(
                     text = stringResource(id = R.string.contact_address_hint),
-                    style = ZashiTypography.textMd,
-                    color = ZashiColors.Inputs.Default.text
+                    style = ZappTheme.typography.body.copy(color = c.textSubtle),
                 )
             },
             keyboardOptions =
@@ -109,14 +113,15 @@ private fun ContactViewInternal(
                     imeAction = ImeAction.Next
                 )
         )
-        Spacer(modifier = Modifier.height(20.dp))
-        Text(
+        Spacer(20.dp)
+        BasicText(
             text = stringResource(id = R.string.contact_name_label),
-            style = ZashiTypography.textSm,
-            fontWeight = FontWeight.Medium,
-            color = ZashiColors.Inputs.Filled.label
+            style = ZappTheme.typography.groupLabel.copy(
+                color = c.textMuted,
+                fontWeight = FontWeight.Black,
+            ),
         )
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(6.dp)
         ZashiTextField(
             modifier =
                 Modifier
@@ -131,35 +136,40 @@ private fun ContactViewInternal(
             placeholder = {
                 Text(
                     text = stringResource(id = R.string.contact_name_hint),
-                    style = ZashiTypography.textMd,
-                    color = ZashiColors.Inputs.Default.text
+                    style = ZappTheme.typography.body.copy(color = c.textSubtle),
                 )
             }
         )
 
         if (state.chain != null) {
-            Spacer(modifier = Modifier.height(20.dp))
-            Text(
+            Spacer(20.dp)
+            BasicText(
                 text = stringResource(R.string.contact_select_chain),
-                style = ZashiTypography.textSm,
-                fontWeight = FontWeight.Medium,
-                color = ZashiColors.Inputs.Filled.label
+                style = ZappTheme.typography.groupLabel.copy(
+                    color = c.textMuted,
+                    fontWeight = FontWeight.Black,
+                ),
             )
             Spacer(6.dp)
             ZashiPicker(state = state.chain)
         }
         Spacer(1f)
         Spacer(24.dp)
-        ZashiButton(
-            state = state.positiveButton,
-            modifier = Modifier.fillMaxWidth()
+        ZappButton(
+            text = state.positiveButton.text.getValue(),
+            modifier = Modifier.fillMaxWidth(),
+            variant = ZappButtonVariant.Primary,
+            enabled = state.positiveButton.isEnabled,
+            onClick = state.positiveButton.onClick,
         )
 
         state.negativeButton?.let {
-            ZashiButton(
-                state = it,
+            ZappButton(
+                text = it.text.getValue(),
                 modifier = Modifier.fillMaxWidth(),
-                defaultPrimaryColors = ZashiButtonDefaults.destructive1Colors()
+                variant = ZappButtonVariant.Danger,
+                enabled = it.isEnabled,
+                onClick = it.onClick,
             )
         }
     }
@@ -167,22 +177,13 @@ private fun ContactViewInternal(
 
 @Composable
 private fun ContactTopAppBar(
-    onBack: () -> Unit,
     state: ABContactState
 ) {
-    ZashiSmallTopAppBar(
+    ZappScreenHeader(
         title = state.title.getValue(),
-        modifier = Modifier.testTag(ABContactTag.TOP_APP_BAR),
-        showTitleLogo = true,
-        navigationAction = {
-            ZashiTopAppBarBackNavigation(onBack = onBack)
-        },
-        regularActions = {
-            state.info?.let {
-                ZashiIconButton(it)
-                Spacer(20.dp)
-            }
-        }
+        modifier = Modifier
+            .windowInsetsPadding(WindowInsets.statusBars)
+            .testTag(ABContactTag.TOP_APP_BAR),
     )
 }
 

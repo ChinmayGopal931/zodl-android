@@ -4,6 +4,7 @@ import co.electriccoin.zcash.ui.common.mapper.SwapSupportMapper
 import co.electriccoin.zcash.ui.common.usecase.ApplyTransactionFiltersUseCase
 import co.electriccoin.zcash.ui.common.usecase.ApplyTransactionFulltextFiltersUseCase
 import co.electriccoin.zcash.ui.common.usecase.CancelProposalFlowUseCase
+import co.electriccoin.zcash.ui.common.usecase.ChatSendContext
 import co.electriccoin.zcash.ui.common.usecase.CancelSwapQuoteUseCase
 import co.electriccoin.zcash.ui.common.usecase.CancelSwapUseCase
 import co.electriccoin.zcash.ui.common.usecase.ConfirmResyncUseCase
@@ -185,6 +186,7 @@ val useCaseModule =
         factoryOf(::GetSelectedWalletAccountUseCase)
         singleOf(::ObserveClearSendUseCase)
         singleOf(::PrefillSendUseCase)
+        singleOf(::ChatSendContext)
         factoryOf(::GetTransactionsUseCase)
         factoryOf(::GetFilteredActivitiesUseCase)
         factoryOf(::CreateProposalUseCase)
