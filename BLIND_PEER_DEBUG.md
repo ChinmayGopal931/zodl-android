@@ -21,11 +21,127 @@
 > so all "responders=0 on both phones" data was an artifact; VPS verified
 > reachable from a fresh DHT client on the Mac, BLIND_PEER_BOOTSTRAP wired
 > through BuildConfig → argv → CUSTOM_BOOTSTRAP_NODES; phone2's failure
-> root-caused to double-NAT'd Android tethered hotspot, not code/VPS).
+> root-caused to double-NAT'd Android tethered hotspot, not code/VPS), and
+> 2026-05-18 (S6: **offline delivery proven end-to-end** — CPH2747 phone +
+> Android emulator paired, emulator killed, CPH2747 sent 4 messages
+> `SEND QUEUED` → blind-mirror replicated to VPS (storage grew +10.8KB) →
+> emulator relaunched → messages appeared. Earlier "OnePlus 8T uniquely
+> broken" hypothesis from S3 corrected: same residential Wi-Fi UDP NAT
+> mapping timeout hits both phones over hours; emulator stays healthy
+> because of QEMU's permissive userspace NAT. Trust-gate keypair injection
+> from `10b9983` verified working on both phones via new `--log-level=debug`
+> wiring; bundle from `10b9983` had to be locally rebuilt because the
+> collaborator's commit didn't include it).
 
 ---
 
-## TL;DR (state as of 2026-05-17)
+## ▶ Latest: Session 6 — 2026-05-18 — Offline delivery VERIFIED end-to-end
+
+**The whole point of the blind-peer architecture is async message delivery
+when both peers aren't simultaneously online. As of S6 this is proven, not
+just hypothesized.**
+
+### Test setup
+
+- **Sender**: CPH2747 physical phone, serial `3B15B401SNR00000`, on
+  residential Wi-Fi at `192.168.0.155`, identity pubkey `4147ec9ae9db…`.
+- **Receiver**: Android emulator (AVD `Medium_Phone_API_36.1`, QEMU NAT
+  at `10.0.2.16`), identity pubkey `3c67e9ba650b…`.
+- **Pairing**: pre-existing conversation `dm_a05387678` (set up in a
+  prior session) — both peers had each other's invite.
+- **Blind-peer**: VPS at `140.245.193.100:49737`, PID 4257, no
+  `--trusted-peer` flag (any keypair accepted).
+- **zappMessaging bundle**: locally rebuilt (collaborator pushed JS
+  changes in `10b9983` without bundling).
+
+### Sequence proven
+
+1. Killed emulator app (`adb shell am force-stop`) → "emulator offline".
+2. User sent 4 messages from CPH2747 chat UI.
+3. CPH2747 `p2p-diag.log` showed `Direct send FAILED conv=dm_a05387678
+   peers=1 sockets=0` → `SEND QUEUED queueLen=1`, then `queueLen=2`
+   after the second send while emulator stayed offline.
+4. CPH2747 `blind-mirror-diag.log` stayed at `rtNodes=113,
+   connected=true, rpc=true` — sender's mirror path to VPS healthy.
+5. VPS `du -sb /home/ubuntu/blind-peer-data` grew **+10,857 bytes**
+   within seconds of the queue-up; `000011.log` went `136,787 →
+   147,644`. Storage append confirms blind-peer accepted the queued
+   payload.
+6. Relaunched emulator app. After ~70s of DHT bootstrap, emulator's
+   `blind-mirror-diag.log` logged `Registered remote core:
+   conv=dm_a05387678 peer=4147ec9ae9db` at 23:03:40 — that's the
+   CPH2747's identity pubkey, meaning the emulator pulled the
+   sender's core from the VPS mirror.
+7. **Messages appeared in the emulator's chat UI** (user verified
+   visually).
+
+### What S6 also reframed
+
+**S3's "phone2/OnePlus 8T uniquely broken" hypothesis was wrong.** Same-day
+evidence in S6:
+
+- At T+0: CPH2747 fresh launch → `rtNodes=128 connected=true` (healthy).
+- A few hours later: CPH2747 → `rtNodes=0 online=false`, same
+  `PEER_NOT_FOUND` loop as the OnePlus 8T.
+- Emulator (QEMU NAT) over the entire session: stayed at `rtNodes=100+
+  connected=true rpc=true`, never degraded.
+
+So the symptom is **residential Wi-Fi UDP NAT mapping timeout**, not a
+device defect. Routers drop UDP mappings after 30s-3min of low traffic;
+once dropped the phone falls off the DHT and can't refresh its routing
+table. Restarting the app re-bootstraps a fresh DHT and works again for a
+while. Emulators survive because QEMU's userspace NAT is far more
+permissive.
+
+The new memory file `project_oneplus_8t_dht_bootstrap.md` (under
+`.claude/projects/`) was rewritten to reflect this. The architectural
+escape hatches are:
+
+1. Aggressive UDP keepalive to the VPS (every ~20s) to keep the NAT
+   mapping alive.
+2. LAN peer discovery (mDNS / UDP broadcast) as a DHT-independent
+   fallback when both peers are on the same subnet.
+3. Sticky TCP/RPC channel to the blind-peer that doesn't depend on UDP
+   NAT survival.
+
+None of these are implemented yet. For now, **app-restart bootstraps a
+healthy DHT** and the offline-delivery flow works during that window.
+
+### Code that landed in S6
+
+- `zappMessaging/android/build.gradle.kts`: new `ZAPP_MESSAGING_LOG_LEVEL`
+  BuildConfig field, mirrors the `BLIND_PEER_KEYS` / `BLIND_PEER_BOOTSTRAP`
+  resolver pattern (local.properties → -P / gradle.properties → env var).
+- `zappMessaging/android/.../BareWorkletManager.kt`: appends
+  `--log-level=$ZAPP_MESSAGING_LOG_LEVEL` to worklet argv when non-empty.
+  This drives the JS-side `LOG_LEVEL` constant in `core/lib/config.js`,
+  which `blind-mirror.js` `debugDiag()` gates on for stream-lifecycle
+  events, keypair dumps, and probe details (added in `10b9983`).
+- `zodl-android/gradle.properties`: `ZAPP_MESSAGING_LOG_LEVEL=debug` set
+  so the new instrumentation lights up by default for debug builds.
+- `zappMessaging/android/src/main/assets/worklet.bundle`: rebuilt locally
+  via `npm run build:android` to actually include the JS changes from
+  `10b9983` (collaborator's commit only touched the source files).
+
+### What S6 did not test
+
+- **0xVampirot's phone in the loop.** All testing was sender = CPH2747,
+  receiver = emulator. We don't yet have data on what offline delivery
+  looks like with a third independent phone on a different network. The
+  invite flow (sender presents an invite QR, receiver scans) hasn't been
+  re-tested in S6 either — only the pre-existing pairing was exercised.
+- **DHT keepalive under long-lived offline window.** We killed the
+  emulator for ~3 minutes. If the sender's blind-mirror connection
+  itself dies during the wait (because CPH2747's DHT degrades), what
+  happens to the queue? Untested.
+- **Mobile data on OnePlus 8T.** User indicated they did the OS-level
+  battery/data-saver fixes but didn't switch off Wi-Fi. With the S6
+  understanding (it's NAT timeout, not device-specific) this is no
+  longer the priority test it seemed in S5.
+
+---
+
+## TL;DR (state as of 2026-05-17, kept for S5 context)
 
 **S5 changed the picture significantly.** Two of the three "blockers"
 from the 2026-05-16 TL;DR turned out to be measurement artifacts, not
@@ -133,7 +249,7 @@ replicates cores reliably to it from cellular.
 
 ---
 
-## ▶ Resume Here (Session 6 onboarding, 2026-05-17)
+## ▶ Resume Here (Session 7 onboarding — written end of S5 / 2026-05-17, partly superseded by S6 above)
 
 If you're picking up after a context clear, start here. Read TL;DR
 above first — S5 changed several things from the 2026-05-16 picture.
