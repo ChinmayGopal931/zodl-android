@@ -35,6 +35,7 @@ import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.component.BlankSurface
 import co.electriccoin.zcash.ui.design.component.ConfigurationOverride
 import co.electriccoin.zcash.ui.design.component.Override
+import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 import co.electriccoin.zcash.ui.screen.ScreenTimeoutVM
 import co.electriccoin.zcash.ui.screen.authentication.AuthenticationUseCase
@@ -153,16 +154,18 @@ class MainActivity : FragmentActivity() {
                 ZcashTheme(
                     balancesAvailable = isHideBalances == false
                 ) {
-                    BlankSurface(
-                        Modifier
-                            .fillMaxWidth()
-                            .fillMaxHeight()
-                            .imePadding()
-                    ) {
-                        BindCompLocalProvider {
-                            MainContent()
-                            AuthenticationForAppAccess()
-                            ScreenTimeoutHandle()
+                    ProvideZappTheme {
+                        BlankSurface(
+                            Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()
+                                .imePadding()
+                        ) {
+                            BindCompLocalProvider {
+                                MainContent()
+                                AuthenticationForAppAccess()
+                                ScreenTimeoutHandle()
+                            }
                         }
                     }
                 }

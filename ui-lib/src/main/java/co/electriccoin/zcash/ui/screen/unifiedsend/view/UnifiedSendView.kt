@@ -70,7 +70,6 @@ import co.electriccoin.zcash.ui.design.component.IconButtonState
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
-import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 import co.electriccoin.zcash.ui.design.theme.colors.ZashiColors
@@ -90,7 +89,7 @@ import co.electriccoin.zcash.ui.screen.unifiedsend.model.UnifiedSendFormState
 internal fun UnifiedSendView(
     state: UnifiedSendFormState,
     balanceState: BalanceWidgetState,
-) = ProvideZappTheme {
+) {
     val c = ZappTheme.colors
     Column(
         modifier = Modifier
