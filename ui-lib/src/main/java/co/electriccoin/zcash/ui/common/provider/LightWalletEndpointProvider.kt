@@ -25,7 +25,8 @@ class LightWalletEndpointProvider(
             )
         } else {
             listOf(
-                LightWalletEndpoint(host = "testnet.zec.rocks", port = 443, isSecure = true)
+                LightWalletEndpoint(host = "lightwalletd.testnet.cipherscan.app", port = 443, isSecure = true),
+                LightWalletEndpoint(host = "testnet.zec.rocks", port = 443, isSecure = true),
             )
         }
 
