@@ -127,6 +127,8 @@ fun WalletHomeView() {
                 )
             }
 
+            item { SyncProgressRow(state = syncChip) }
+
             item {
                 Spacer(Modifier.height(14.dp))
                 BalanceCard(
@@ -187,6 +189,74 @@ private fun WalletActionFabStack(
             contentDescription = "Swap",
             onClick = onSwap,
         )
+    }
+}
+
+@Composable
+private fun SyncProgressRow(state: WalletSyncChipState) {
+    val label = when (state.status) {
+        WalletSyncStatus.SYNCING -> "Syncing"
+        WalletSyncStatus.RESTORING -> "Restoring"
+        WalletSyncStatus.INITIALIZING -> "Connecting"
+        WalletSyncStatus.DISCONNECTED -> "Offline — reconnecting"
+        WalletSyncStatus.ERROR -> "Sync error"
+        WalletSyncStatus.SYNCED -> return
+    }
+    val c = ZappTheme.colors
+    val isError = state.status == WalletSyncStatus.DISCONNECTED || state.status == WalletSyncStatus.ERROR
+    val fillColor = if (isError) c.danger else c.accent
+    val fraction = (state.progressPercent.coerceIn(0, 100)) / 100f
+    val showPercent = state.status == WalletSyncStatus.SYNCING || state.status == WalletSyncStatus.RESTORING
+
+    Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BasicText(
+                text = label,
+                style = ZappTheme.typography.rowSubtitle.copy(
+                    color = if (isError) c.danger else c.textMuted,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 0.5.sp,
+                ),
+            )
+            if (showPercent) {
+                BasicText(
+                    text = "${state.progressPercent}%",
+                    style = ZappTheme.typography.rowSubtitle.copy(
+                        color = c.text,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
+                )
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(3.dp)
+                .background(c.surfaceAlt, RectangleShape),
+        ) {
+            if (showPercent) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(fraction.coerceAtLeast(0.02f))
+                        .height(3.dp)
+                        .background(fillColor, RectangleShape),
+                )
+            } else if (isError) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(3.dp)
+                        .background(fillColor, RectangleShape),
+                )
+            }
+        }
     }
 }
 
