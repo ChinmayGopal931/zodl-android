@@ -3,7 +3,7 @@
 # Update when intentionally bumping a sibling dependency.
 
 # GitHub: https://github.com/JustZappIt/zappMessaging
-zappMessaging=d7f5460c50d8eb5f7f32018760412bf182d94d02
+zappMessaging=6f6325cbb08a4d31b4fc5258b9d5c9f0ea019663
 
 # bare-kit is a direct clone of holepunchto/bare-kit v2.0.0 with no Zapp modifications.
 # GitHub: https://github.com/holepunchto/bare-kit
