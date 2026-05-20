@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -160,11 +162,12 @@ fun ChatContactsView(
                     }
                 }
             } else {
+                val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(
                         top = 4.dp,
-                        bottom = ZappNavBar.CLEARANCE_DP.dp,
+                        bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
                     ),
                 ) {
                     grouped.forEach { (letter, bucket) ->
@@ -201,9 +204,10 @@ fun ChatContactsView(
             onClick = { showAddDialog = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(
                     end = 20.dp,
-                    bottom = (ZappNavBar.CLEARANCE_DP + 12).dp,
+                    bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
                 ),
         )
 
@@ -212,9 +216,10 @@ fun ChatContactsView(
                 onClick = state.onBack,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(
                         start = 20.dp,
-                        bottom = (ZappNavBar.CLEARANCE_DP + 12).dp,
+                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
                     ),
             )
         }

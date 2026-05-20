@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -116,9 +118,10 @@ fun WalletHomeView() {
             .background(c.bg)
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
+        val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = ZappNavBar.CLEARANCE_DP.dp),
+            contentPadding = PaddingValues(bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp),
         ) {
             item {
                 ZappScreenHeader(
@@ -167,9 +170,10 @@ private fun WalletActionFabStack(
 ) {
     Column(
         modifier = modifier
+            .windowInsetsPadding(WindowInsets.navigationBars)
             .padding(
                 end = 18.dp,
-                bottom = (ZappNavBar.CLEARANCE_DP + 12).dp,
+                bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
             ),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.End,

@@ -85,7 +85,21 @@ internal val LocalZappColors = staticCompositionLocalOf { LightZappColors }
 internal val LocalZappDarkMode = compositionLocalOf { false }
 
 object ZappNavBar {
-    /** Bottom clearance screens must preserve for the floating pill nav. */
-    const val CLEARANCE_DP = 88
+    /**
+     * Fixed bottom clearance for scrollable content (LazyColumn / Column).
+     * Covers the floating pill nav bar height (pill + padding) above the
+     * system navigation bar inset. Add navigationBars inset separately:
+     *   val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+     *   PaddingValues(bottom = navBottom + CLEARANCE_DP.dp)
+     */
+    const val CLEARANCE_DP = 80
+
+    /**
+     * Fixed bottom padding for FABs above the floating pill nav bar.
+     * Pair with windowInsetsPadding(WindowInsets.navigationBars) so the
+     * system nav bar height is handled dynamically:
+     *   Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+     *            .padding(bottom = FAB_BOTTOM_PADDING_DP.dp)
+     */
     const val FAB_BOTTOM_PADDING_DP = 80
 }

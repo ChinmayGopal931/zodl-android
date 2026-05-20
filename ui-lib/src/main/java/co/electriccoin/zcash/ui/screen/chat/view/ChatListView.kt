@@ -22,6 +22,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -102,12 +104,13 @@ fun ChatListView(
                     subtitle = state.emptySubtitle.getValue(),
                 )
             } else {
+                val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding =
                         PaddingValues(
                             top = 4.dp,
-                            bottom = ZappNavBar.CLEARANCE_DP.dp,
+                            bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
                         ),
                 ) {
                     items(items = state.items, key = { it.id }) { item ->
@@ -130,9 +133,10 @@ fun ChatListView(
             modifier =
                 Modifier
                     .align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(
                         end = 20.dp,
-                        bottom = (ZappNavBar.CLEARANCE_DP + 12).dp,
+                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
                     ),
         )
 
@@ -142,9 +146,10 @@ fun ChatListView(
                 modifier =
                     Modifier
                         .align(Alignment.BottomStart)
+                        .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(
                             start = 20.dp,
-                            bottom = (ZappNavBar.CLEARANCE_DP + 12).dp,
+                            bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
                         ),
             )
         }
