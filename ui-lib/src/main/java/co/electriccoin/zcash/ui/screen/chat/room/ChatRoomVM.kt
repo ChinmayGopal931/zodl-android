@@ -5,13 +5,13 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.usecase.GetZashiAccountUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListChipVariant
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListConnectionStatus
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListDhtHealth
@@ -43,7 +43,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions")
 class ChatRoomVM(
     args: ChatRoomArgs,
     private val application: Application,
@@ -83,7 +83,6 @@ class ChatRoomVM(
         observePeerStatus()
     }
 
-    @Suppress("LongMethod")
     val state: StateFlow<ChatRoomState> =
         combine(
             combine(conversation, messages, isLoading) { conv, msgs, loading ->
@@ -147,7 +146,6 @@ class ChatRoomVM(
         val peerOnline: Boolean?,
     )
 
-    @Suppress("LongParameterList")
     private fun createState(
         conversation: ChatConversation?,
         messages: List<ChatMessage>,
@@ -310,28 +308,24 @@ class ChatRoomVM(
 
     // ── Sources / observers ───────────────────────────────────────────────────
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun loadConversation() {
-        try {
+        runChatCall("ChatRoomVM: conversations refresh failed") {
             if (sdk.conversations.value.isEmpty()) sdk.refreshConversations()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: conversations refresh failed" }
         }
         val match = sdk.conversations.value.firstOrNull { it.id == conversationId }
         conversation.value = match?.let(ChatConversation::from)
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun loadMessages() {
         isLoading.value = true
         try {
-            val list =
-                sdk.getMessages(conversationId)
-                    .map(ChatMessage::from)
-                    .filterNot { msg -> moderationRepository.isBlocked(msg.senderName.orEmpty()) }
-            messages.value = list
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: loadMessages failed" }
+            runChatCall("ChatRoomVM: loadMessages failed") {
+                val list =
+                    sdk.getMessages(conversationId)
+                        .map(ChatMessage::from)
+                        .filterNot { msg -> moderationRepository.isBlocked(msg.senderName.orEmpty()) }
+                messages.value = list
+            }
         } finally {
             isLoading.value = false
         }
@@ -352,76 +346,90 @@ class ChatRoomVM(
         viewModelScope.launch { sdk.dhtHealth.collect { dhtHealth.value = mapDhtHealth(it) } }
     }
 
-    @Suppress("CyclomaticComplexMethod")
     private fun observeMessageEvents() {
-        viewModelScope.launch {
-            sdk.messageReceived.collect { (incomingConvId, msg) ->
-                if (incomingConvId != conversationId) return@collect
-                if (moderationRepository.isBlocked(msg.senderId)) return@collect
-                val mapped = ChatMessage.from(msg)
-                messages.update { current -> current + mapped }
+        observeIncomingMessages()
+        observeMessageStatus()
+        observeMediaDownloads()
+        observeGroupRenames()
+        observeMemberLeaves()
+        observeMemberJoins()
+        observeGroupDeletion()
+    }
+
+    private fun observeIncomingMessages() = viewModelScope.launch {
+        sdk.messageReceived.collect { (incomingConvId, msg) ->
+            if (incomingConvId != conversationId) return@collect
+            if (moderationRepository.isBlocked(msg.senderId)) return@collect
+            messages.update { it + ChatMessage.from(msg) }
+        }
+    }
+
+    private fun observeMessageStatus() = viewModelScope.launch {
+        sdk.messageStatus.collect { (messageId, _, status) ->
+            val mapped = mapMessageStatus(status) ?: return@collect
+            messages.update { list ->
+                list.map { m -> if (m.id == messageId) m.copy(status = mapped) else m }
             }
         }
-        viewModelScope.launch {
-            sdk.messageStatus.collect { (messageId, _, status) ->
-                val mapped =
-                    when (status) {
-                        STATUS_SENT -> MessageStatus.SENT
-                        STATUS_QUEUED -> MessageStatus.QUEUED
-                        STATUS_FAILED -> MessageStatus.FAILED
-                        else -> null
-                    } ?: return@collect
-                messages.update { list ->
-                    list.map { m -> if (m.id == messageId) m.copy(status = mapped) else m }
-                }
-            }
+    }
+
+    private fun mapMessageStatus(status: String): MessageStatus? =
+        when (status) {
+            STATUS_SENT -> MessageStatus.SENT
+            STATUS_QUEUED -> MessageStatus.QUEUED
+            STATUS_FAILED -> MessageStatus.FAILED
+            else -> null
         }
-        viewModelScope.launch {
-            sdk.mediaDownloadComplete.collect { (mediaId, filePath) ->
-                messages.update { list ->
-                    list.map { m ->
-                        if (m.mediaId == mediaId && m.mediaLocalPath == null) {
-                            m.copy(mediaLocalPath = filePath)
-                        } else {
-                            m
-                        }
+
+    private fun observeMediaDownloads() = viewModelScope.launch {
+        sdk.mediaDownloadComplete.collect { (mediaId, filePath) ->
+            messages.update { list ->
+                list.map { m ->
+                    if (m.mediaId == mediaId && m.mediaLocalPath == null) {
+                        m.copy(mediaLocalPath = filePath)
+                    } else {
+                        m
                     }
                 }
             }
         }
-        viewModelScope.launch {
-            sdk.groupRenamed.collect { (renamedId, newName) ->
-                if (renamedId == conversationId) {
-                    conversation.update { it?.copy(displayName = newName) }
+    }
+
+    private fun observeGroupRenames() = viewModelScope.launch {
+        sdk.groupRenamed.collect { (renamedId, newName) ->
+            if (renamedId == conversationId) {
+                conversation.update { it?.copy(displayName = newName) }
+            }
+        }
+    }
+
+    private fun observeMemberLeaves() = viewModelScope.launch {
+        sdk.memberLeft.collect { (leftConvId, peer) ->
+            if (leftConvId == conversationId) {
+                conversation.update { conv ->
+                    conv?.copy(participantIds = conv.participantIds.filter { it != peer })
                 }
             }
         }
-        viewModelScope.launch {
-            sdk.memberLeft.collect { (leftConvId, peer) ->
-                if (leftConvId == conversationId) {
-                    conversation.update { conv ->
-                        conv?.copy(participantIds = conv.participantIds.filter { it != peer })
+    }
+
+    private fun observeMemberJoins() = viewModelScope.launch {
+        sdk.memberAdded.collect { (addedConvId, peer, _) ->
+            if (addedConvId == conversationId) {
+                conversation.update { conv ->
+                    if (conv != null && peer !in conv.participantIds) {
+                        conv.copy(participantIds = conv.participantIds + peer)
+                    } else {
+                        conv
                     }
                 }
             }
         }
-        viewModelScope.launch {
-            sdk.memberAdded.collect { (addedConvId, peer, _) ->
-                if (addedConvId == conversationId) {
-                    conversation.update { conv ->
-                        if (conv != null && peer !in conv.participantIds) {
-                            conv.copy(participantIds = conv.participantIds + peer)
-                        } else {
-                            conv
-                        }
-                    }
-                }
-            }
-        }
-        viewModelScope.launch {
-            sdk.groupDeleted.collect { deletedId ->
-                if (deletedId == conversationId) navigationRouter.back()
-            }
+    }
+
+    private fun observeGroupDeletion() = viewModelScope.launch {
+        sdk.groupDeleted.collect { deletedId ->
+            if (deletedId == conversationId) navigationRouter.back()
         }
     }
 
@@ -591,19 +599,15 @@ class ChatRoomVM(
 
     // ── SDK calls ────────────────────────────────────────────────────────────
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun sendTextMessage(text: String) {
-        try {
+        runChatCall("ChatRoomVM: sendMessage failed") {
             val zmMessage = sdk.sendMessage(conversationId, text)
             messages.update { it + ChatMessage.from(zmMessage) }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: sendMessage failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun sendMediaFromUri(uri: Uri) {
-        try {
+        runChatCall("ChatRoomVM: sendMedia failed") {
             withContext(Dispatchers.IO) {
                 val mimeType = FileUtils.getMimeType(application, uri)
                 val thumbnail =
@@ -623,14 +627,11 @@ class ChatRoomVM(
                     sendMediaMessage(cached.absolutePath, mimeType, thumbnailData = thumbnail)
                 }
             }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: sendMedia failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun sendFileFromUri(uri: Uri) {
-        try {
+        runChatCall("ChatRoomVM: sendFile failed") {
             withContext(Dispatchers.IO) {
                 val cached =
                     FileUtils.copyUriToCache(application, uri) ?: error("Failed to cache file")
@@ -644,14 +645,11 @@ class ChatRoomVM(
                     }
                 sendMediaMessage(cached.absolutePath, mimeType, fileName, thumbnail)
             }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: sendFile failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun sendCameraCapture(uri: Uri) {
-        try {
+        runChatCall("ChatRoomVM: sendCameraCapture failed") {
             withContext(Dispatchers.IO) {
                 val thumbnail = ImageProcessor.generateThumbnail(application, uri)
                 val compressed =
@@ -659,29 +657,23 @@ class ChatRoomVM(
                         ?: error("Image compression failed")
                 sendMediaMessage(compressed.absolutePath, IMAGE_MIME, thumbnailData = thumbnail)
             }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: sendCameraCapture failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun sendMediaMessage(
         mediaPath: String,
         contentType: String,
         caption: String = "",
         thumbnailData: String? = null,
     ) {
-        try {
+        runChatCall("ChatRoomVM: sendMediaMessage failed") {
             val zmMessage = sdk.sendMediaMessage(conversationId, mediaPath, contentType, caption, thumbnailData)
             messages.update { it + ChatMessage.from(zmMessage) }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: sendMediaMessage failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun sendLocationMessage(latitude: Double, longitude: Double, accuracy: Float) {
-        try {
+        runChatCall("ChatRoomVM: sendLocationMessage failed") {
             val content =
                 JSONObject()
                     .apply {
@@ -691,38 +683,27 @@ class ChatRoomVM(
                     }.toString()
             val zmMessage = sdk.sendMessage(conversationId, content, LOCATION_MIME)
             messages.update { it + ChatMessage.from(zmMessage) }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: sendLocationMessage failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun shareWalletAddress() {
-        try {
+        runChatCall("ChatRoomVM: shareWalletAddress failed") {
             val address = getZashiAccount().unified.address.address
             val zmMessage = sdk.sendMessage(conversationId, address, WALLET_ADDRESS_MIME)
             messages.update { it + ChatMessage.from(zmMessage) }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: shareWalletAddress failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun fetchConnectionDetails() {
-        try {
+        runChatCall("ChatRoomVM: getConnectionDetails failed") {
             connectionDetails.value = ConnectionDetailsUi.from(sdk.getConnectionDetails())
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: getConnectionDetails failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun updateContact(publicKey: String, newName: String) {
-        try {
+        runChatCall("ChatRoomVM: updateContact failed") {
             sdk.updateContact(publicKey, newName)
             conversation.update { it?.copy(displayName = newName) }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatRoomVM: updateContact failed" }
         }
     }
 

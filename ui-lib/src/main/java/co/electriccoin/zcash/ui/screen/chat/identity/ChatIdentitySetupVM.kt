@@ -59,7 +59,6 @@ class ChatIdentitySetupVM(
                 ),
         )
 
-    @Suppress("LongParameterList")
     private fun createState(
         tab: ChatIdentitySetupTab,
         createName: String,

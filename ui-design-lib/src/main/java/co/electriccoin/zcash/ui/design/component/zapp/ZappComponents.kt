@@ -244,7 +244,7 @@ fun ZappRow(
 }
 
 @Composable
-fun ZappRowChevron() {
+private fun ZappRowChevron() {
     Icon(
         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
         contentDescription = null,

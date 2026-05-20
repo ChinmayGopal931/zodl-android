@@ -2,7 +2,10 @@ package co.electriccoin.zcash.ui.screen.chat.contacts
 
 import androidx.compose.ui.text.input.TextFieldValue
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.AddressBookContact
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.stringRes
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,7 +30,6 @@ import kotlinx.coroutines.flow.update
  *
  * Save and scan actions are wired by the parent VM via constructor callbacks.
  */
-@Suppress("LongParameterList")
 class AddChatContactVM(
     private val scope: CoroutineScope,
     private val existingKeysProvider: () -> Set<String>,
@@ -47,7 +49,7 @@ class AddChatContactVM(
     private val evmAddr = MutableStateFlow(TextFieldValue(""))
     private val solanaAddr = MutableStateFlow(TextFieldValue(""))
     private val showAdditionalAddresses = MutableStateFlow(false)
-    private val error = MutableStateFlow<String?>(null)
+    private val error = MutableStateFlow<StringResource?>(null)
 
     // When the user taps a per-field scan icon (transparent / evm / solana),
     // we record which field is awaiting the result. `null` means the next
@@ -218,10 +220,10 @@ class AddChatContactVM(
             }
         }
         when {
-            nameVal.isEmpty() -> error.value = "Name is required"
-            pk.isEmpty() -> error.value = "Messaging key is required"
-            !isValidHex -> error.value = "Invalid messaging key — must be 64 hex characters"
-            existingKeysProvider().contains(pk) -> error.value = "Contact already exists"
+            nameVal.isEmpty() -> error.value = stringRes(R.string.chat_contact_error_name_required)
+            pk.isEmpty() -> error.value = stringRes(R.string.chat_contact_error_messaging_key_required)
+            !isValidHex -> error.value = stringRes(R.string.chat_contact_error_invalid_messaging_key)
+            existingKeysProvider().contains(pk) -> error.value = stringRes(R.string.chat_contact_error_already_exists)
             else -> onSaveContact(pk, nameVal, wallet, addrs)
         }
     }

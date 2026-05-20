@@ -218,7 +218,6 @@ private fun IdentitySection(
     }
 }
 
-@Suppress("CyclomaticComplexMethod")
 @Composable
 private fun NetworkSection(
     connectionStatus: ChatListConnectionStatus,
@@ -236,38 +235,13 @@ private fun NetworkSection(
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             NetworkInfoRow(
                 label = stringResource(R.string.chat_settings_label_connection),
-                value =
-                    when (connectionStatus) {
-                        ChatListConnectionStatus.CONNECTED ->
-                            stringResource(R.string.chat_settings_connection_connected)
-                        ChatListConnectionStatus.CONNECTING ->
-                            stringResource(R.string.chat_settings_connection_connecting)
-                        ChatListConnectionStatus.DISCONNECTED ->
-                            stringResource(R.string.chat_settings_connection_disconnected)
-                        ChatListConnectionStatus.ERROR ->
-                            stringResource(R.string.chat_settings_connection_error)
-                    },
-                valueColor =
-                    when (connectionStatus) {
-                        ChatListConnectionStatus.CONNECTED -> c.success
-                        ChatListConnectionStatus.CONNECTING -> c.accent
-                        else -> c.danger
-                    },
+                value = connectionStatusLabel(connectionStatus),
+                valueColor = connectionStatusColor(connectionStatus),
             )
             NetworkInfoRow(
                 label = stringResource(R.string.chat_settings_label_dht_health),
-                value =
-                    when (dhtHealth) {
-                        ChatListDhtHealth.HEALTHY -> stringResource(R.string.chat_settings_dht_healthy)
-                        ChatListDhtHealth.DEGRADED -> stringResource(R.string.chat_settings_dht_degraded)
-                        ChatListDhtHealth.CRITICAL -> stringResource(R.string.chat_settings_dht_critical)
-                    },
-                valueColor =
-                    when (dhtHealth) {
-                        ChatListDhtHealth.HEALTHY -> c.success
-                        ChatListDhtHealth.DEGRADED -> c.accent
-                        ChatListDhtHealth.CRITICAL -> c.danger
-                    },
+                value = dhtHealthLabel(dhtHealth),
+                valueColor = dhtHealthColor(dhtHealth),
             )
             NetworkInfoRow(
                 label = stringResource(R.string.chat_settings_label_peers),
@@ -285,6 +259,43 @@ private fun NetworkSection(
                 valueColor = c.textMuted,
             )
         }
+    }
+}
+
+@Composable
+private fun connectionStatusLabel(status: ChatListConnectionStatus): String =
+    when (status) {
+        ChatListConnectionStatus.CONNECTED -> stringResource(R.string.chat_settings_connection_connected)
+        ChatListConnectionStatus.CONNECTING -> stringResource(R.string.chat_settings_connection_connecting)
+        ChatListConnectionStatus.DISCONNECTED -> stringResource(R.string.chat_settings_connection_disconnected)
+        ChatListConnectionStatus.ERROR -> stringResource(R.string.chat_settings_connection_error)
+    }
+
+@Composable
+private fun connectionStatusColor(status: ChatListConnectionStatus): Color {
+    val c = ZappTheme.colors
+    return when (status) {
+        ChatListConnectionStatus.CONNECTED -> c.success
+        ChatListConnectionStatus.CONNECTING -> c.accent
+        else -> c.danger
+    }
+}
+
+@Composable
+private fun dhtHealthLabel(health: ChatListDhtHealth): String =
+    when (health) {
+        ChatListDhtHealth.HEALTHY -> stringResource(R.string.chat_settings_dht_healthy)
+        ChatListDhtHealth.DEGRADED -> stringResource(R.string.chat_settings_dht_degraded)
+        ChatListDhtHealth.CRITICAL -> stringResource(R.string.chat_settings_dht_critical)
+    }
+
+@Composable
+private fun dhtHealthColor(health: ChatListDhtHealth): Color {
+    val c = ZappTheme.colors
+    return when (health) {
+        ChatListDhtHealth.HEALTHY -> c.success
+        ChatListDhtHealth.DEGRADED -> c.accent
+        ChatListDhtHealth.CRITICAL -> c.danger
     }
 }
 

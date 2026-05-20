@@ -1,7 +1,6 @@
 package co.electriccoin.zcash.ui.screen.chat.common
 
 import android.app.Application
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProvider
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import kotlinx.coroutines.MainScope
@@ -17,28 +16,14 @@ import kotlinx.coroutines.launch
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
 import xyz.justzappit.zappmessaging.models.ZMIdentity
 
-/**
- * Application-scoped bootstrap for the chat subsystem. Owns the one-shot
- * `sdk.initialize` call, the aggregate unread-count counter that the tabs
- * shell renders on the chat tab badge, and the `restoreFromWalletSeed`
- * entry point used during onboarding.
- *
- * Per-screen state lives on the per-screen `*VM` classes; cross-screen
- * state lives here. Registered as a Koin `single` and constructed lazily
- * on first request — by the time any chat screen is rendered, init has
- * been kicked off.
- */
-@Suppress("TooGenericExceptionCaught")
 class ChatBootstrap(
     private val application: Application,
     private val sdk: ZappMessagingSDK,
     private val moderationRepository: ChatModerationRepository,
     private val persistableWalletProvider: PersistableWalletProvider,
 ) {
-    // Bare-kit's native IPC init (called from `sdk.initialize`) has main-thread
-    // affinity — the legacy ChatViewModel ran initialize() inside viewModelScope
-    // (Dispatchers.Main.immediate). Mirror that here, otherwise bare_ipc_poll_init
-    // null-derefs on a worker thread.
+    // Bare-kit's native IPC init has main-thread affinity; running off-main
+    // null-derefs in `bare_ipc_poll_init`.
     private val scope = MainScope()
 
     private val _isInitializing = MutableStateFlow(true)
@@ -55,9 +40,9 @@ class ChatBootstrap(
     init {
         scope.launch {
             try {
-                sdk.initialize(application)
-            } catch (e: Exception) {
-                Twig.warn(e) { "ChatBootstrap: sdk.initialize failed" }
+                runChatCall("ChatBootstrap: sdk.initialize failed") {
+                    sdk.initialize(application)
+                }
             } finally {
                 _isInitializing.value = false
             }

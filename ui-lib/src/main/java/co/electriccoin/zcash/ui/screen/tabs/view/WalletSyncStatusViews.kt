@@ -14,9 +14,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappChipVariant
 import co.electriccoin.zcash.ui.design.component.zapp.ZappStatusChip
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -26,11 +28,11 @@ import co.electriccoin.zcash.ui.screen.tabs.viewmodel.WalletSyncStatus
 @Composable
 internal fun SyncProgressRow(state: WalletSyncChipState) {
     val label = when (state.status) {
-        WalletSyncStatus.SYNCING -> "Syncing"
-        WalletSyncStatus.RESTORING -> "Restoring"
-        WalletSyncStatus.INITIALIZING -> "Connecting"
-        WalletSyncStatus.DISCONNECTED -> "Offline — reconnecting"
-        WalletSyncStatus.ERROR -> "Sync error"
+        WalletSyncStatus.SYNCING -> stringResource(R.string.home_sync_progress_syncing)
+        WalletSyncStatus.RESTORING -> stringResource(R.string.home_sync_progress_restoring)
+        WalletSyncStatus.INITIALIZING -> stringResource(R.string.home_sync_progress_connecting)
+        WalletSyncStatus.DISCONNECTED -> stringResource(R.string.home_sync_progress_offline)
+        WalletSyncStatus.ERROR -> stringResource(R.string.home_sync_progress_error)
         WalletSyncStatus.SYNCED -> return
     }
     val c = ZappTheme.colors
@@ -96,16 +98,40 @@ internal fun SyncStatusChip(state: WalletSyncChipState) {
     val c = ZappTheme.colors
     when (state.status) {
         WalletSyncStatus.SYNCED ->
-            ZappStatusChip("Synced", variant = ZappChipVariant.Success, dotColor = c.success)
+            ZappStatusChip(
+                stringResource(R.string.home_sync_chip_synced),
+                variant = ZappChipVariant.Success,
+                dotColor = c.success,
+            )
         WalletSyncStatus.SYNCING ->
-            ZappStatusChip("Syncing ${state.progressPercent}%", variant = ZappChipVariant.Accent, dotColor = c.accent)
+            ZappStatusChip(
+                stringResource(R.string.home_sync_chip_syncing_fmt, state.progressPercent),
+                variant = ZappChipVariant.Accent,
+                dotColor = c.accent,
+            )
         WalletSyncStatus.RESTORING ->
-            ZappStatusChip("Restoring ${state.progressPercent}%", variant = ZappChipVariant.Accent, dotColor = c.accent)
+            ZappStatusChip(
+                stringResource(R.string.home_sync_chip_restoring_fmt, state.progressPercent),
+                variant = ZappChipVariant.Accent,
+                dotColor = c.accent,
+            )
         WalletSyncStatus.DISCONNECTED ->
-            ZappStatusChip("Offline", variant = ZappChipVariant.Danger, dotColor = c.danger)
+            ZappStatusChip(
+                stringResource(R.string.home_sync_chip_offline),
+                variant = ZappChipVariant.Danger,
+                dotColor = c.danger,
+            )
         WalletSyncStatus.ERROR ->
-            ZappStatusChip("Sync error", variant = ZappChipVariant.Danger, dotColor = c.danger)
+            ZappStatusChip(
+                stringResource(R.string.home_sync_progress_error),
+                variant = ZappChipVariant.Danger,
+                dotColor = c.danger,
+            )
         WalletSyncStatus.INITIALIZING ->
-            ZappStatusChip("Connecting", variant = ZappChipVariant.Muted, dotColor = c.textSubtle)
+            ZappStatusChip(
+                stringResource(R.string.home_sync_progress_connecting),
+                variant = ZappChipVariant.Muted,
+                dotColor = c.textSubtle,
+            )
     }
 }

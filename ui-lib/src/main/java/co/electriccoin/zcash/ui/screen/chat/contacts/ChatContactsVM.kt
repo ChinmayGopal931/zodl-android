@@ -3,7 +3,6 @@ package co.electriccoin.zcash.ui.screen.chat.contacts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.AddressBookRepository
@@ -11,6 +10,7 @@ import co.electriccoin.zcash.ui.common.usecase.NavigateToScanGenericAddressUseCa
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanPublicKeyUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
 import xyz.justzappit.zappmessaging.models.ConversationType as SdkConversationType
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions")
 class ChatContactsVM(
     private val sdk: ZappMessagingSDK,
     private val addressBookRepository: AddressBookRepository,
@@ -102,10 +102,9 @@ class ChatContactsVM(
         viewModelScope.launch { createDirectChat(publicKey) }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun createDirectChat(publicKey: String) {
         val cleaned = publicKey.trim().removePrefix("0x")
-        try {
+        runChatCall("ChatContactsVM: createConversation failed") {
             val conv =
                 sdk.createConversation(
                     type = SdkConversationType.DIRECT,
@@ -113,8 +112,6 @@ class ChatContactsVM(
                     displayName = null,
                 )
             navigationRouter.forward(ChatRoomArgs(conv.id))
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatContactsVM: createConversation failed" }
         }
     }
 
@@ -193,14 +190,13 @@ class ChatContactsVM(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun performAddContact(
         publicKey: String,
         name: String,
         walletAddress: String,
         walletAddresses: Map<String, String>,
     ) {
-        try {
+        runChatCall("ChatContactsVM: addContact failed") {
             sdk.addContact(publicKey, name)
             val wallet = walletAddress.trim()
             if (wallet.isNotEmpty() || walletAddresses.isNotEmpty()) {
@@ -212,8 +208,6 @@ class ChatContactsVM(
                 )
             }
             refreshContacts()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatContactsVM: addContact failed" }
         }
     }
 
@@ -229,14 +223,13 @@ class ChatContactsVM(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun performUpdateContact(
         publicKey: String,
         name: String,
         walletAddress: String,
         walletAddresses: Map<String, String>,
     ) {
-        try {
+        runChatCall("ChatContactsVM: updateContact failed") {
             sdk.updateContact(publicKey, name)
             val wallet = walletAddress.trim()
             if (wallet.isNotEmpty() || walletAddresses.isNotEmpty()) {
@@ -248,8 +241,6 @@ class ChatContactsVM(
                 )
             }
             refreshContacts()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatContactsVM: updateContact failed" }
         }
     }
 
@@ -260,23 +251,17 @@ class ChatContactsVM(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun performDeleteContact(publicKey: String) {
-        try {
+        runChatCall("ChatContactsVM: deleteContact failed") {
             sdk.deleteContact(publicKey)
             refreshContacts()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatContactsVM: deleteContact failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun refreshContacts() {
-        try {
+        runChatCall("ChatContactsVM: refreshContacts failed") {
             sdk.refreshContacts()
             contacts.value = sdk.contacts.value.map(ChatContact::from)
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatContactsVM: refreshContacts failed" }
         }
     }
 }

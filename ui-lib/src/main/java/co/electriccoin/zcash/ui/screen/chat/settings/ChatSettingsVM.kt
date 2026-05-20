@@ -7,12 +7,12 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.ChatContactsArgs
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListConnectionStatus
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListDhtHealth
 import co.electriccoin.zcash.ui.screen.chat.list.mapDhtHealth
@@ -82,7 +82,6 @@ class ChatSettingsVM(
                 ),
         )
 
-    @Suppress("LongParameterList")
     private fun createState(
         id: ChatSettingsIdentity?,
         copied: Boolean,
@@ -168,12 +167,9 @@ class ChatSettingsVM(
         viewModelScope.launch { updateDisplayName(trimmed) }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun updateDisplayName(name: String) {
-        try {
+        runChatCall("ChatSettingsVM: updateDisplayName failed") {
             sdk.updateDisplayName(name)
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatSettingsVM: updateDisplayName failed" }
         }
     }
 
@@ -194,10 +190,9 @@ class ChatSettingsVM(
         viewModelScope.launch { performDeleteIdentity() }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun performDeleteIdentity() {
-        runCatching { sdk.shutdown() }.onFailure {
-            Twig.warn(it) { "ChatSettingsVM: sdk.shutdown failed" }
+        runChatCall("ChatSettingsVM: sdk.shutdown failed") {
+            sdk.shutdown()
         }
         navigationRouter.backToRoot()
     }

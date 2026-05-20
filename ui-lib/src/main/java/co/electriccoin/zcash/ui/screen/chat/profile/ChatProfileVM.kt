@@ -21,6 +21,7 @@ import co.electriccoin.zcash.ui.common.security.PinAuthGate
 import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions")
 class ChatProfileVM(
     private val application: Application,
     private val sdk: ZappMessagingSDK,
@@ -104,7 +105,6 @@ class ChatProfileVM(
                 ),
         )
 
-    @Suppress("LongMethod", "LongParameterList")
     private fun createState(
         tab: ChatProfileTab,
         sub: ChatProfileWalletSubTab,
@@ -221,12 +221,9 @@ class ChatProfileVM(
         viewModelScope.launch { updateDisplayName(trimmed) }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun updateDisplayName(name: String) {
-        try {
+        runChatCall("ChatProfileVM: updateDisplayName failed") {
             sdk.updateDisplayName(name)
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatProfileVM: updateDisplayName failed" }
         }
     }
 
@@ -247,9 +244,10 @@ class ChatProfileVM(
         viewModelScope.launch { performDeleteIdentity() }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun performDeleteIdentity() {
-        runCatching { sdk.shutdown() }.onFailure { Twig.warn(it) { "ChatProfileVM: sdk.shutdown failed" } }
+        runChatCall("ChatProfileVM: sdk.shutdown failed") {
+            sdk.shutdown()
+        }
         navigationRouter.backToRoot()
     }
 
@@ -296,7 +294,6 @@ class ChatProfileVM(
         viewModelScope.launch { initiateSeedReveal() }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun initiateSeedReveal() {
         val authMethod =
             StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())

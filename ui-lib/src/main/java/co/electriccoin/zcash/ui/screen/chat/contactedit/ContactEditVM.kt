@@ -3,11 +3,11 @@ package co.electriccoin.zcash.ui.screen.chat.contactedit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.ContactEditArgs
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -74,15 +74,14 @@ class ContactEditVM(
                 },
         )
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun loadContact() {
         try {
-            if (sdk.contacts.value.isEmpty()) sdk.refreshContacts()
-            val found = sdk.contacts.value.firstOrNull { it.publicKey == publicKey }
-            contact.value = found?.let(ChatContact::from)
-            nameInput.value = contact.value?.name.orEmpty()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ContactEditVM: loadContact failed" }
+            runChatCall("ContactEditVM: loadContact failed") {
+                if (sdk.contacts.value.isEmpty()) sdk.refreshContacts()
+                val found = sdk.contacts.value.firstOrNull { it.publicKey == publicKey }
+                contact.value = found?.let(ChatContact::from)
+                nameInput.value = contact.value?.name.orEmpty()
+            }
         } finally {
             contactLoaded.value = true
         }
@@ -98,13 +97,10 @@ class ContactEditVM(
         viewModelScope.launch { updateContact(trimmed) }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun updateContact(name: String) {
-        try {
+        runChatCall("ContactEditVM: updateContact failed") {
             sdk.updateContact(publicKey, name)
             navigationRouter.back()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ContactEditVM: updateContact failed" }
         }
     }
 
@@ -121,13 +117,10 @@ class ContactEditVM(
         viewModelScope.launch { deleteContact() }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun deleteContact() {
-        try {
+        runChatCall("ContactEditVM: deleteContact failed") {
             sdk.deleteContact(publicKey)
             navigationRouter.back()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ContactEditVM: deleteContact failed" }
         }
     }
 

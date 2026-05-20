@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappInputField
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.addressbook.WalletAddressesSection
 import co.electriccoin.zcash.ui.screen.chat.contacts.AddChatContactState
 
@@ -192,11 +193,10 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
                 },
             )
 
-            // Inline error message
             state.error?.let {
                 Spacer(Modifier.height(8.dp))
                 BasicText(
-                    text = it,
+                    text = it.getValue(),
                     style = ZappTheme.typography.caption.copy(color = c.danger),
                 )
             }

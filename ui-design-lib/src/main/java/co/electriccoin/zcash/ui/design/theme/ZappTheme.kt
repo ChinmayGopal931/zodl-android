@@ -44,6 +44,8 @@ object ZappTheme {
         @ReadOnlyComposable
         get() = LocalZappTypography.current
 
+    val spacing: ZappSpacing get() = ZappSpacing
+
     val isDark: Boolean
         @Composable
         @ReadOnlyComposable

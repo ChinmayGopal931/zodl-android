@@ -1,19 +1,8 @@
 package co.electriccoin.zcash.ui.screen.chat.contacts
 
 import androidx.compose.ui.text.input.TextFieldValue
+import co.electriccoin.zcash.ui.design.util.StringResource
 
-/**
- * UI state for the "Add new chat contact" bottom sheet.
- *
- * Mirrors the upstream `ABContactState` / `AddZashiABContactVM` pattern: the VM
- * owns every form field as a `MutableStateFlow`, exposes it through this data
- * class, and the View is purely declarative — no `remember { mutableStateOf(...) }`
- * for form data.
- *
- * The fork keeps `TextFieldValue` (rather than upstream's `TextFieldState`)
- * because the views render with `ZappInputField`, which preserves cursor and
- * selection state via `TextFieldValue`.
- */
 data class AddChatContactState(
     val name: TextFieldValue,
     val publicKey: TextFieldValue,
@@ -22,7 +11,7 @@ data class AddChatContactState(
     val evmAddr: TextFieldValue,
     val solanaAddr: TextFieldValue,
     val showAdditionalAddresses: Boolean,
-    val error: String?,
+    val error: StringResource?,
     val isValidKey: Boolean,
     val cleanedKey: String,
     val onNameChange: (TextFieldValue) -> Unit,

@@ -204,4 +204,10 @@
     <string name="chat_contacts_empty_subtitle">Add contacts to start chatting</string>
     <string name="chat_contacts_add_content_description">Add contact</string>
     <string name="chat_contacts_start_chat_content_description">Start chat</string>
+
+    <!-- Chat contacts — add/edit validation errors -->
+    <string name="chat_contact_error_name_required">Name is required</string>
+    <string name="chat_contact_error_messaging_key_required">Messaging key is required</string>
+    <string name="chat_contact_error_invalid_messaging_key">Invalid messaging key — must be 64 hex characters</string>
+    <string name="chat_contact_error_already_exists">Contact already exists</string>
 </resources>

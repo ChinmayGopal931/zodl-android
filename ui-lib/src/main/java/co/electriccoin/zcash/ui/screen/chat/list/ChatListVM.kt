@@ -13,6 +13,7 @@ import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
@@ -96,7 +97,6 @@ class ChatListVM(
                 ),
         )
 
-    @Suppress("LongParameterList")
     private fun createState(
         conversations: List<ChatConversation>?,
         blockedKeys: Set<String>,
@@ -367,22 +367,16 @@ class ChatListVM(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun leaveConversation(conversationId: String) {
-        try {
+        runChatCall("ChatListVM: leave conversation failed") {
             sdk.removeConversation(conversationId)
             conversations.update { it?.filter { conv -> conv.id != conversationId } }
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatListVM: leave conversation failed" }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun refreshConnectionDetails() {
-        try {
+        runChatCall("ChatListVM: failed to fetch connection details") {
             connectionDetails.value = ConnectionDetailsUi.from(sdk.getConnectionDetails())
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatListVM: failed to fetch connection details" }
         }
     }
 

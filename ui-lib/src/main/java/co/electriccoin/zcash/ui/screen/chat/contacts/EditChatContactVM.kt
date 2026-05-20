@@ -2,7 +2,10 @@ package co.electriccoin.zcash.ui.screen.chat.contacts
 
 import androidx.compose.ui.text.input.TextFieldValue
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.AddressBookContact
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,7 +26,6 @@ import kotlinx.coroutines.flow.update
  * `SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT)`), adapted for
  * the fork's `ZappInputField` + `TextFieldValue` rendering.
  */
-@Suppress("LongParameterList")
 class EditChatContactVM(
     private val contact: ChatContact,
     private val scope: CoroutineScope,
@@ -41,7 +43,7 @@ class EditChatContactVM(
     private val solanaAddr = MutableStateFlow(TextFieldValue(""))
     private val showAdditionalAddresses = MutableStateFlow(false)
     private val showDeleteConfirm = MutableStateFlow(false)
-    private val error = MutableStateFlow<String?>(null)
+    private val error = MutableStateFlow<StringResource?>(null)
 
     private val scanTargetField = MutableStateFlow<String?>(null)
 
@@ -187,7 +189,7 @@ class EditChatContactVM(
     private fun onSave() {
         val nameVal = name.value.text.trim()
         if (nameVal.isEmpty()) {
-            error.value = "Name is required"
+            error.value = stringRes(R.string.chat_contact_error_name_required)
             return
         }
         val addrs = buildMap {

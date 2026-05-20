@@ -3,12 +3,12 @@ package co.electriccoin.zcash.ui.screen.chat.newconv
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanPublicKeyUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -165,19 +165,18 @@ class NewConversationVM(
         viewModelScope.launch { createDirectChat(first.publicKey, first.displayName) }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun createDirectChat(publicKey: String, displayName: String) {
         isCreating.value = true
         try {
-            val conv =
-                sdk.createConversation(
-                    type = SdkConversationType.DIRECT,
-                    participants = listOf(publicKey),
-                    displayName = displayName,
-                )
-            navigationRouter.replace(ChatRoomArgs(conv.id))
-        } catch (e: Exception) {
-            Twig.warn(e) { "NewConversationVM: createConversation failed" }
+            runChatCall("NewConversationVM: createConversation failed") {
+                val conv =
+                    sdk.createConversation(
+                        type = SdkConversationType.DIRECT,
+                        participants = listOf(publicKey),
+                        displayName = displayName,
+                    )
+                navigationRouter.replace(ChatRoomArgs(conv.id))
+            }
         } finally {
             isCreating.value = false
         }
@@ -192,13 +191,10 @@ class NewConversationVM(
 
     private fun onBack() = navigationRouter.back()
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun refreshContacts() {
-        try {
+        runChatCall("NewConversationVM: refreshContacts failed") {
             sdk.refreshContacts()
             contacts.value = sdk.contacts.value.map(ChatContact::from)
-        } catch (e: Exception) {
-            Twig.warn(e) { "NewConversationVM: refreshContacts failed" }
         }
     }
 
