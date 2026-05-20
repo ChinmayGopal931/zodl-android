@@ -1,5 +1,6 @@
 package co.electriccoin.zcash.ui.screen.chat.view
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,49 +23,34 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
+import co.electriccoin.zcash.ui.design.util.getValue
+import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditDeleteDialogState
+import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditState
 
 @Composable
-fun ContactEditView(
-    publicKey: String,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: ChatViewModel
-) {
+fun ContactEditView(state: ContactEditState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
-    val contacts by viewModel.contacts.collectAsState()
-    val contact = contacts.find { it.publicKey == publicKey }
-
-    var nameInput by remember(contact) {
-        mutableStateOf(TextFieldValue(contact?.name ?: ""))
-    }
-    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             ZappScreenHeader(
-                title = "Edit Contact",
+                title = state.title.getValue(),
                 right = {
-                    IconButton(
-                        onClick = { showDeleteDialog = true },
-                        modifier = Modifier.size(32.dp),
-                    ) {
+                    IconButton(onClick = state.onDeleteClick, modifier = Modifier.size(32.dp)) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = "Delete",
+                            contentDescription =
+                                stringResource(R.string.chat_contact_edit_delete_content_description),
                             tint = c.danger,
                             modifier = Modifier.size(20.dp),
                         )
@@ -74,74 +60,46 @@ fun ContactEditView(
         },
         bottomBar = {
             ZappBottomActionBar(
-                onBack = onNavigateBack,
+                onBack = state.onBack,
                 primaryAction = {
                     ZappButton(
-                        text = "Save",
-                        enabled = nameInput.text.isNotBlank(),
-                        onClick = {
-                            val name = nameInput.text.trim()
-                            if (name.isNotEmpty()) {
-                                viewModel.updateContact(publicKey, name)
-                                onNavigateBack()
-                            }
-                        },
+                        text = stringResource(R.string.chat_contact_edit_save),
+                        enabled = state.canSave,
+                        onClick = state.onSave,
                     )
                 },
             )
         },
         containerColor = c.bg,
-        modifier = modifier,
     ) { paddingValues ->
-        if (contact == null) {
+        if (!state.isContactFound) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(24.dp),
             ) {
                 BasicText(
-                    "Contact not found",
+                    text = stringResource(R.string.chat_contact_edit_not_found),
                     style = ZappTheme.typography.body.copy(color = c.textMuted),
                 )
             }
         } else {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(24.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp),
             ) {
-                // Public key card
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(c.surfaceAlt, RectangleShape)
-                        .border(
-                            androidx.compose.foundation.BorderStroke(1.dp, c.border),
-                            RectangleShape,
-                        )
-                        .padding(16.dp),
-                ) {
-                    Column {
-                        BasicText(
-                            "Public Key",
-                            style = ZappTheme.typography.caption.copy(color = c.textMuted),
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        BasicText(
-                            publicKey,
-                            style = ZappTheme.typography.mono.copy(color = c.text),
-                            maxLines = 3,
-                        )
-                    }
-                }
+                PublicKeyCard(publicKey = state.publicKey)
 
                 OutlinedTextField(
-                    value = nameInput,
-                    onValueChange = { nameInput = it },
-                    label = { Text("Name") },
+                    value = state.nameInput,
+                    onValueChange = state.onNameChange,
+                    label = { Text(stringResource(R.string.chat_contact_edit_name_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -149,23 +107,50 @@ fun ContactEditView(
         }
     }
 
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Contact") },
-            text = { Text("Are you sure you want to delete this contact?") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteContact(publicKey)
-                        showDeleteDialog = false
-                        onNavigateBack()
-                    },
-                ) { Text("Delete") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
-            },
-        )
+    state.deleteDialog?.let { DeleteContactDialog(state = it) }
+}
+
+@Composable
+private fun PublicKeyCard(publicKey: String) {
+    val c = ZappTheme.colors
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surfaceAlt, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .padding(16.dp),
+    ) {
+        Column {
+            BasicText(
+                text = stringResource(R.string.chat_contact_edit_public_key_label),
+                style = ZappTheme.typography.caption.copy(color = c.textMuted),
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            BasicText(
+                text = publicKey,
+                style = ZappTheme.typography.mono.copy(color = c.text),
+                maxLines = 3,
+            )
+        }
     }
+}
+
+@Composable
+private fun DeleteContactDialog(state: ContactEditDeleteDialogState) {
+    AlertDialog(
+        onDismissRequest = state.onDismiss,
+        title = { Text(stringResource(R.string.chat_contact_edit_delete_dialog_title)) },
+        text = { Text(stringResource(R.string.chat_contact_edit_delete_dialog_message)) },
+        confirmButton = {
+            TextButton(onClick = state.onConfirm) {
+                Text(stringResource(R.string.chat_contact_edit_delete_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = state.onDismiss) {
+                Text(stringResource(R.string.chat_contact_edit_delete_dialog_cancel))
+            }
+        },
+    )
 }

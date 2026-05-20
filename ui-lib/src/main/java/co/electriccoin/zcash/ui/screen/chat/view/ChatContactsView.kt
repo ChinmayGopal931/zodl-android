@@ -73,29 +73,24 @@ import co.electriccoin.zcash.ui.design.component.zapp.ellipsizeAddress
 import co.electriccoin.zcash.ui.design.component.zapp.initialsOf
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.AddressBookContact
+import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.addressbook.WalletAddressesSection
+import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsState
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatContactsView(
-    onStartChat: (String) -> Unit,
-    onNavigateBack: () -> Unit,
-    showBackButton: Boolean = true,
+    state: ChatContactsState,
     modifier: Modifier = Modifier,
-    viewModel: ChatViewModel
 ) {
-    val contacts by viewModel.contacts.collectAsState()
-    val scannedPublicKey by viewModel.scannedPublicKey.collectAsState()
-    val scannedWalletAddress by viewModel.scannedWalletAddress.collectAsState()
+    val contacts = state.contacts
+    val scannedPublicKey = state.scannedPublicKey
+    val scannedWalletAddress = state.scannedWalletAddress
     var showAddDialog by rememberSaveable { mutableStateOf(false) }
     var editingContact by remember { mutableStateOf<ChatContact?>(null) }
-
-    LaunchedEffect(Unit) {
-        viewModel.loadContacts()
-    }
 
     // Reopen the sheet automatically after a scan completes — the scanner
     // screen disposes this composition, so the sheet has to be re-summoned
@@ -128,10 +123,10 @@ fun ChatContactsView(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             ZappScreenHeader(
-                title = "Contacts",
+                title = state.title.getValue(),
                 right = {
                     ZappStatusChip(
-                        text = "${contacts.size} saved",
+                        text = stringResource(R.string.chat_contacts_saved_count_fmt, contacts.size),
                         variant = ZappChipVariant.Muted,
                     )
                 },
@@ -154,12 +149,12 @@ fun ChatContactsView(
                         )
                         Spacer(Modifier.height(12.dp))
                         BasicText(
-                            "No contacts yet",
+                            stringResource(R.string.chat_contacts_empty_title),
                             style = ZappTheme.typography.sectionTitle.copy(color = c.text),
                         )
                         Spacer(Modifier.height(6.dp))
                         BasicText(
-                            "Add contacts to start chatting",
+                            stringResource(R.string.chat_contacts_empty_subtitle),
                             style = ZappTheme.typography.body.copy(color = c.textMuted),
                         )
                     }
@@ -191,7 +186,7 @@ fun ChatContactsView(
                         ) { contact ->
                             ContactListItem(
                                 contact = contact,
-                                onChat = { onStartChat(contact.publicKey) },
+                                onChat = { state.onStartChat(contact.publicKey) },
                                 onEdit = { editingContact = contact },
                             )
                         }
@@ -202,7 +197,7 @@ fun ChatContactsView(
 
         ZappFab(
             icon = Icons.Default.PersonAdd,
-            contentDescription = "Add contact",
+            contentDescription = stringResource(R.string.chat_contacts_add_content_description),
             onClick = { showAddDialog = true },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
@@ -212,10 +207,9 @@ fun ChatContactsView(
                 ),
         )
 
-        // Back button floats bottom-left, horizontally aligned with the FAB.
-        if (showBackButton) {
+        if (state.showBackButton) {
             ZappBackButton(
-                onClick = onNavigateBack,
+                onClick = state.onBack,
                 modifier = Modifier
                     .align(Alignment.BottomStart)
                     .padding(
@@ -231,15 +225,15 @@ fun ChatContactsView(
             existingKeys = contacts.map { it.publicKey }.toSet(),
             scannedPublicKey = scannedPublicKey,
             scannedWalletAddress = scannedWalletAddress,
-            onScanPublicKey = { viewModel.scanPublicKey() },
-            onScanWalletAddress = { viewModel.scanWalletAddress() },
-            onConsumeScannedKey = { viewModel.consumeScannedKey() },
-            onConsumeScannedWalletAddress = { viewModel.consumeScannedWalletAddress() },
+            onScanPublicKey = state.onScanPublicKey,
+            onScanWalletAddress = state.onScanWalletAddress,
+            onConsumeScannedKey = state.onConsumeScannedPublicKey,
+            onConsumeScannedWalletAddress = state.onConsumeScannedWalletAddress,
             onDismiss = { showAddDialog = false },
             onAdd = { publicKey, name, walletAddress, walletAddresses ->
-                viewModel.addContact(publicKey, name, walletAddress, walletAddresses)
-                viewModel.consumeScannedKey()
-                viewModel.consumeScannedWalletAddress()
+                state.onAddContact(publicKey, name, walletAddress, walletAddresses)
+                state.onConsumeScannedPublicKey()
+                state.onConsumeScannedWalletAddress()
                 showAddDialog = false
             }
         )
@@ -249,15 +243,15 @@ fun ChatContactsView(
         EditChatContactSheet(
             contact = contact,
             scannedWalletAddress = scannedWalletAddress,
-            onScanWalletAddress = { viewModel.scanWalletAddress() },
-            onConsumeScannedWalletAddress = { viewModel.consumeScannedWalletAddress() },
+            onScanWalletAddress = state.onScanWalletAddress,
+            onConsumeScannedWalletAddress = state.onConsumeScannedWalletAddress,
             onDismiss = { editingContact = null },
             onSave = { name, walletAddress, walletAddresses ->
-                viewModel.updateContact(contact.publicKey, name, walletAddress, walletAddresses)
+                state.onUpdateContact(contact.publicKey, name, walletAddress, walletAddresses)
                 editingContact = null
             },
             onDelete = {
-                viewModel.deleteContact(contact.publicKey)
+                state.onDeleteContact(contact.publicKey)
                 editingContact = null
             },
         )
@@ -314,7 +308,10 @@ private fun ContactListItem(
             modifier = Modifier
                 .size(48.dp)
                 .clickable(onClick = onChat)
-                .semantics { contentDescription = "Start chat"; role = Role.Button },
+                .semantics {
+                    contentDescription = "Start chat"
+                    role = Role.Button
+                },
             contentAlignment = Alignment.Center,
         ) {
             Icon(

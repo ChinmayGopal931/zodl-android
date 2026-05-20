@@ -13,16 +13,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
-import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
-import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
-import co.electriccoin.zcash.ui.screen.chat.ContactEditArgs
-import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
-import co.electriccoin.zcash.ui.screen.chat.view.ChatContactsView
-import co.electriccoin.zcash.ui.screen.chat.view.ChatIdentitySetupView
-import co.electriccoin.zcash.ui.screen.chat.view.ChatListView
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
+import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsScreen
+import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupScreen
+import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListScreen
+import org.koin.compose.koinInject
 import co.electriccoin.zcash.ui.screen.onboarding.ZappOnboardingFlow
 import co.electriccoin.zcash.ui.screen.welcome.WelcomeGateVM
 import co.electriccoin.zcash.ui.screen.welcome.view.ChatRestoreView
@@ -48,26 +47,38 @@ fun ZappTabsScaffold(
             isWelcomeDismissed == null || isOnboardingCompleted == null -> {
                 Box(modifier = Modifier.fillMaxSize()) // brief blank while prefs load
             }
-            restoreMode -> ChatRestoreView(
-                onBack = { restoreMode = false },
-                onSuccess = {
-                    welcomeGateVM.dismissWelcome()
-                    welcomeGateVM.completeOnboarding()
-                    restoreMode = false
-                },
-            )
-            isWelcomeDismissed == false -> WelcomeGateView(
-                onGetStarted = { welcomeGateVM.dismissWelcome() },
-                onRestoreExisting = { restoreMode = true },
-            )
-            isOnboardingCompleted == false -> ZappOnboardingFlow(
-                onComplete = { welcomeGateVM.completeOnboarding() },
-                onBackToWelcome = { welcomeGateVM.undoDismissWelcome() },
-                walletViewModel = walletViewModel,
-                chatViewModel = koinViewModel(),
-                navigationRouter = navigationRouter,
-            )
-            else -> ZappTabsScaffoldContent(navigationRouter = navigationRouter)
+
+            restoreMode -> {
+                ChatRestoreView(
+                    onBack = { restoreMode = false },
+                    onSuccess = {
+                        welcomeGateVM.dismissWelcome()
+                        welcomeGateVM.completeOnboarding()
+                        restoreMode = false
+                    },
+                )
+            }
+
+            isWelcomeDismissed == false -> {
+                WelcomeGateView(
+                    onGetStarted = { welcomeGateVM.dismissWelcome() },
+                    onRestoreExisting = { restoreMode = true },
+                )
+            }
+
+            isOnboardingCompleted == false -> {
+                ZappOnboardingFlow(
+                    onComplete = { welcomeGateVM.completeOnboarding() },
+                    onBackToWelcome = { welcomeGateVM.undoDismissWelcome() },
+                    walletViewModel = walletViewModel,
+                    chatBootstrap = koinInject(),
+                    navigationRouter = navigationRouter,
+                )
+            }
+
+            else -> {
+                ZappTabsScaffoldContent(navigationRouter = navigationRouter)
+            }
         }
     }
 }
@@ -82,38 +93,30 @@ private fun ZappTabsScaffoldContent(
     // the two don't overlap.
     var hideNavPill by rememberSaveable { mutableStateOf(false) }
 
-    val chatViewModel: ChatViewModel = koinViewModel()
-    val unreadCount by chatViewModel.totalUnreadCount.collectAsState()
+    val bootstrap: ChatBootstrap = koinInject()
+    val unreadCount by bootstrap.totalUnreadCount.collectAsState()
     val c = ZappTheme.colors
 
     Box(modifier = Modifier.fillMaxSize().background(c.bg)) {
         when (currentTab) {
-            ZappTab.WALLET -> WalletTabContent(
-                navigationRouter = navigationRouter,
-                onFullscreenChange = { hideNavPill = it },
-            )
-            ZappTab.CHATS -> ChatsTabContent(
-                chatViewModel = chatViewModel,
-                onOpenConversation = { conversationId ->
-                    navigationRouter.forward(ChatRoomArgs(conversationId))
-                },
-                onNewMessage = {
-                    navigationRouter.forward(NewConversationArgs)
-                },
-            )
-            ZappTab.CONTACTS -> ContactsTabContent(
-                chatViewModel = chatViewModel,
-                onOpenConversation = { conversationId ->
-                    navigationRouter.forward(ChatRoomArgs(conversationId))
-                },
-                onEditContact = { publicKey ->
-                    navigationRouter.forward(ContactEditArgs(publicKey))
-                }
-            )
-            ZappTab.SETTINGS -> SettingsTabContent(
-                navigationRouter = navigationRouter,
-                chatViewModel = chatViewModel
-            )
+            ZappTab.WALLET -> {
+                WalletTabContent(
+                    navigationRouter = navigationRouter,
+                    onFullscreenChange = { hideNavPill = it },
+                )
+            }
+
+            ZappTab.CHATS -> {
+                ChatsTabContent()
+            }
+
+            ZappTab.CONTACTS -> {
+                ContactsTabContent()
+            }
+
+            ZappTab.SETTINGS -> {
+                SettingsTabContent(navigationRouter = navigationRouter)
+            }
         }
 
         if (!hideNavPill) {
@@ -128,13 +131,11 @@ private fun ZappTabsScaffoldContent(
 }
 
 @Composable
-private fun ChatsTabContent(
-    chatViewModel: ChatViewModel,
-    onOpenConversation: (String) -> Unit,
-    onNewMessage: () -> Unit,
-) {
-    val isInitializing by chatViewModel.isInitializing.collectAsState()
-    val identity by chatViewModel.identity.collectAsState()
+private fun ChatsTabContent() {
+    val bootstrap: ChatBootstrap = koinInject()
+    val identitySetupVm: ChatIdentitySetupVM = koinViewModel()
+    val isInitializing by bootstrap.isInitializing.collectAsState()
+    val isSetupComplete by identitySetupVm.isSetupComplete.collectAsState()
 
     val c = ZappTheme.colors
     when {
@@ -143,35 +144,26 @@ private fun ChatsTabContent(
                 CircularProgressIndicator(color = c.accent)
             }
         }
-        identity == null -> {
-            ChatIdentitySetupView(
-                onSetupComplete = { /* state will recompose */ },
-                viewModel = chatViewModel,
-            )
+
+        !isSetupComplete -> {
+            ChatIdentitySetupScreen()
         }
+
         else -> {
-            ChatListView(
-                onConversationClick = { conversation ->
-                    chatViewModel.setCurrentConversation(conversation)
-                    onOpenConversation(conversation.id)
-                },
-                onNewMessage = onNewMessage,
-                onNavigateBack = {},
+            ChatListScreen(
                 showBackButton = false,
-                viewModel = chatViewModel,
+                onLegacyConversationSelected = { conv -> bootstrap.markConversationRead(conv.id) },
             )
         }
     }
 }
 
 @Composable
-private fun ContactsTabContent(
-    chatViewModel: ChatViewModel,
-    onOpenConversation: (String) -> Unit,
-    onEditContact: (String) -> Unit
-) {
-    val isInitializing by chatViewModel.isInitializing.collectAsState()
-    val identity by chatViewModel.identity.collectAsState()
+private fun ContactsTabContent() {
+    val bootstrap: ChatBootstrap = koinInject()
+    val identitySetupVm: ChatIdentitySetupVM = koinViewModel()
+    val isInitializing by bootstrap.isInitializing.collectAsState()
+    val isSetupComplete by identitySetupVm.isSetupComplete.collectAsState()
 
     val c = ZappTheme.colors
     when {
@@ -180,23 +172,13 @@ private fun ContactsTabContent(
                 CircularProgressIndicator(color = c.accent)
             }
         }
-        identity == null -> {
-            ChatIdentitySetupView(
-                onSetupComplete = { /* state will recompose */ },
-                viewModel = chatViewModel,
-            )
+
+        !isSetupComplete -> {
+            ChatIdentitySetupScreen()
         }
+
         else -> {
-            ChatContactsView(
-                onStartChat = { publicKey ->
-                    chatViewModel.createDirectChat(publicKey) { conversationId ->
-                        onOpenConversation(conversationId)
-                    }
-                },
-                onNavigateBack = {},
-                showBackButton = false,
-                viewModel = chatViewModel
-            )
+            ChatContactsScreen(showBackButton = false)
         }
     }
 }

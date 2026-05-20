@@ -9,19 +9,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import co.electriccoin.zcash.ui.NavigationRouter
-import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
-import co.electriccoin.zcash.ui.screen.chat.view.ChatContactsView
-import co.electriccoin.zcash.ui.screen.chat.view.ChatIdentitySetupView
-import co.electriccoin.zcash.ui.screen.chat.view.ChatListView
-import co.electriccoin.zcash.ui.screen.chat.view.ChatProfileView
-import co.electriccoin.zcash.ui.screen.chat.view.ChatRoomView
-import co.electriccoin.zcash.ui.screen.chat.view.ChatSettingsView
-import co.electriccoin.zcash.ui.screen.chat.view.ContactEditView
-import co.electriccoin.zcash.ui.screen.chat.view.NewConversationView
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
-import co.electriccoin.zcash.ui.common.usecase.ChatSendContext
-import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
+import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditScreen
+import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsScreen
+import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupScreen
+import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListScreen
+import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationScreen
+import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileScreen
+import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomScreen
+import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsScreen
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -32,7 +29,9 @@ import org.koin.compose.koinInject
 object ChatHomeArgs
 
 @Serializable
-data class ChatRoomArgs(val conversationId: String)
+data class ChatRoomArgs(
+    val conversationId: String
+)
 
 @Serializable
 object NewConversationArgs
@@ -47,19 +46,18 @@ object ChatProfileArgs
 object ChatSettingsArgs
 
 @Serializable
-data class ContactEditArgs(val publicKey: String)
+data class ContactEditArgs(
+    val publicKey: String
+)
 
 // ── Entry point composables ─────────────────────────────────────────────
 
 @Composable
-fun AndroidChatHome(
-    onNavigateToChatRoom: (String) -> Unit,
-    onNavigateToNewConversation: () -> Unit,
-    onNavigateBack: () -> Unit
-) {
-    val viewModel: ChatViewModel = koinViewModel()
-    val isInitializing by viewModel.isInitializing.collectAsState()
-    val identity by viewModel.identity.collectAsState()
+fun AndroidChatHome() {
+    val bootstrap: ChatBootstrap = koinInject()
+    val identitySetupVm: ChatIdentitySetupVM = koinViewModel()
+    val isInitializing by bootstrap.isInitializing.collectAsState()
+    val isSetupComplete by identitySetupVm.isSetupComplete.collectAsState()
 
     when {
         isInitializing -> {
@@ -70,126 +68,45 @@ fun AndroidChatHome(
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         }
-        identity == null -> {
-            ChatIdentitySetupView(
-                onSetupComplete = { /* Identity set, recomposition will show chat list */ },
-                viewModel = viewModel
-            )
+
+        !isSetupComplete -> {
+            ChatIdentitySetupScreen()
         }
+
         else -> {
-            ChatListView(
-                onConversationClick = { conversation ->
-                    viewModel.setCurrentConversation(conversation)
-                    onNavigateToChatRoom(conversation.id)
-                },
-                onNewMessage = onNavigateToNewConversation,
-                onNavigateBack = onNavigateBack,
-                viewModel = viewModel
+            ChatListScreen(
+                onLegacyConversationSelected = { conv -> bootstrap.markConversationRead(conv.id) }
             )
         }
     }
 }
 
 @Composable
-fun AndroidChatRoom(
-    conversationId: String,
-    onNavigateBack: () -> Unit
-) {
-    val viewModel: ChatViewModel = koinViewModel()
-    val navigationRouter = koinInject<NavigationRouter>()
-    val chatSendContext = koinInject<ChatSendContext>()
-
-    ChatRoomView(
-        conversationId = conversationId,
-        onNavigateBack = onNavigateBack,
-        onSendZec = {
-            val peerWalletAddress = viewModel.getPeerWalletAddress(conversationId)
-            chatSendContext.set(conversationId)
-            navigationRouter.forward(UnifiedSendArgs(recipientAddress = peerWalletAddress))
-        },
-        viewModel = viewModel
-    )
+fun AndroidChatRoom(conversationId: String) {
+    ChatRoomScreen(conversationId = conversationId)
 }
 
 @Composable
-fun AndroidNewConversation(
-    onConversationCreated: (String) -> Unit,
-    onNavigateBack: () -> Unit
-) {
-    val viewModel: ChatViewModel = koinViewModel()
-
-    NewConversationView(
-        onConversationCreated = onConversationCreated,
-        onNavigateBack = onNavigateBack,
-        viewModel = viewModel
-    )
+fun AndroidNewConversation() {
+    NewConversationScreen()
 }
 
 @Composable
-fun AndroidChatContacts(
-    onStartChat: (String) -> Unit,
-    onNavigateBack: () -> Unit,
-) {
-    val viewModel: ChatViewModel = koinViewModel()
-
-    ChatContactsView(
-        onStartChat = { publicKey ->
-            viewModel.createDirectChat(publicKey) { conversationId ->
-                onStartChat(conversationId)
-            }
-        },
-        onNavigateBack = onNavigateBack,
-        viewModel = viewModel
-    )
+fun AndroidChatContacts() {
+    ChatContactsScreen()
 }
 
 @Composable
-fun AndroidChatProfile(
-    onNavigateBack: () -> Unit,
-    onNavigateToContacts: () -> Unit,
-    onIdentityDeleted: () -> Unit
-) {
-    val viewModel: ChatViewModel = koinViewModel()
-    val observeWalletAccount: ObserveSelectedWalletAccountUseCase = koinInject()
-    val walletAccount by observeWalletAccount().collectAsState(initial = null)
-
-    ChatProfileView(
-        onNavigateBack = onNavigateBack,
-        onNavigateToContacts = onNavigateToContacts,
-        onIdentityDeleted = onIdentityDeleted,
-        walletAccount = walletAccount,
-        viewModel = viewModel,
-    )
+fun AndroidChatProfile() {
+    ChatProfileScreen()
 }
 
 @Composable
-fun AndroidChatSettings(
-    onNavigateBack: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToContacts: () -> Unit,
-    onIdentityDeleted: () -> Unit
-) {
-    val viewModel: ChatViewModel = koinViewModel()
-
-    ChatSettingsView(
-        onNavigateBack = onNavigateBack,
-        onNavigateToProfile = onNavigateToProfile,
-        onNavigateToContacts = onNavigateToContacts,
-        onIdentityDeleted = onIdentityDeleted,
-        viewModel = viewModel
-    )
+fun AndroidChatSettings() {
+    ChatSettingsScreen()
 }
 
 @Composable
-fun AndroidContactEdit(
-    publicKey: String,
-    onNavigateBack: () -> Unit
-) {
-    val viewModel: ChatViewModel = koinViewModel()
-
-    ContactEditView(
-        publicKey = publicKey,
-        onNavigateBack = onNavigateBack,
-        viewModel = viewModel
-    )
+fun AndroidContactEdit(publicKey: String) {
+    ContactEditScreen(publicKey = publicKey)
 }

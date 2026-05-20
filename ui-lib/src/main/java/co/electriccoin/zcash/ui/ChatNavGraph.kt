@@ -32,60 +32,27 @@ import co.electriccoin.zcash.ui.screen.chat.scan.ChatScanPublicKeyScreen
  */
 fun NavGraphBuilder.chatNavGraph(navigationRouter: NavigationRouter) {
     composable<ChatHomeArgs> {
-        AndroidChatHome(
-            onNavigateToChatRoom = { conversationId ->
-                navigationRouter.forward(ChatRoomArgs(conversationId))
-            },
-            onNavigateToNewConversation = {
-                navigationRouter.forward(NewConversationArgs)
-            },
-            onNavigateBack = { navigationRouter.back() }
-        )
+        AndroidChatHome()
     }
     composable<ChatRoomArgs> { backStackEntry ->
         val args = backStackEntry.toRoute<ChatRoomArgs>()
-        AndroidChatRoom(
-            conversationId = args.conversationId,
-            onNavigateBack = { navigationRouter.back() }
-        )
+        AndroidChatRoom(conversationId = args.conversationId)
     }
     composable<NewConversationArgs> {
-        AndroidNewConversation(
-            onConversationCreated = { conversationId ->
-                navigationRouter.replace(ChatRoomArgs(conversationId))
-            },
-            onNavigateBack = { navigationRouter.back() }
-        )
+        AndroidNewConversation()
     }
     composable<ChatContactsArgs> {
-        AndroidChatContacts(
-            onStartChat = { conversationId ->
-                navigationRouter.forward(ChatRoomArgs(conversationId))
-            },
-            onNavigateBack = { navigationRouter.back() }
-        )
+        AndroidChatContacts()
     }
     composable<ChatProfileArgs> {
-        AndroidChatProfile(
-            onNavigateBack = { navigationRouter.back() },
-            onNavigateToContacts = { navigationRouter.forward(ChatContactsArgs) },
-            onIdentityDeleted = { navigationRouter.backToRoot() }
-        )
+        AndroidChatProfile()
     }
     composable<ChatSettingsArgs> {
-        AndroidChatSettings(
-            onNavigateBack = { navigationRouter.back() },
-            onNavigateToProfile = { navigationRouter.forward(ChatProfileArgs) },
-            onNavigateToContacts = { navigationRouter.forward(ChatContactsArgs) },
-            onIdentityDeleted = { navigationRouter.backToRoot() }
-        )
+        AndroidChatSettings()
     }
     composable<ContactEditArgs> { backStackEntry ->
         val args = backStackEntry.toRoute<ContactEditArgs>()
-        AndroidContactEdit(
-            publicKey = args.publicKey,
-            onNavigateBack = { navigationRouter.back() }
-        )
+        AndroidContactEdit(publicKey = args.publicKey)
     }
     composable<ChatScanPublicKeyArgs> { backStackEntry ->
         ChatScanPublicKeyScreen(args = backStackEntry.toRoute())

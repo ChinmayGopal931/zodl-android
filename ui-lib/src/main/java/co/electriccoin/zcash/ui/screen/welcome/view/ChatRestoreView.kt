@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -32,19 +33,21 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
+import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbBottomDock
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbHero
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbSub
-import org.koin.androidx.compose.koinViewModel
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
 private const val EXPECTED_WORDS = 24
 
 /**
  * Swiss-styled chat-identity restore — entered when the user taps "I already
  * use Zapp" on the welcome gate. The 24-word phrase + display name pair maps
- * directly onto [ChatViewModel.restoreFromSeedPhrase]; success is observed by
- * watching `chatViewModel.identity` go non-null.
+ * directly onto [ChatBootstrap.restoreFromSeedPhrase]; success is observed by
+ * watching the SDK's identity flow (exposed via `bootstrap.identity`) go
+ * non-null.
  *
  * This is the *messaging* restore flow, not the wallet restore. The two have
  * different seeds and live separately by design.
@@ -53,10 +56,10 @@ private const val EXPECTED_WORDS = 24
 fun ChatRestoreView(
     onBack: () -> Unit,
     onSuccess: () -> Unit,
-    chatViewModel: ChatViewModel = koinViewModel(),
+    bootstrap: ChatBootstrap = koinInject(),
 ) {
     ProvideZappTheme {
-        ChatRestoreContent(onBack = onBack, onSuccess = onSuccess, viewModel = chatViewModel)
+        ChatRestoreContent(onBack = onBack, onSuccess = onSuccess, bootstrap = bootstrap)
     }
 }
 
@@ -64,16 +67,17 @@ fun ChatRestoreView(
 private fun ChatRestoreContent(
     onBack: () -> Unit,
     onSuccess: () -> Unit,
-    viewModel: ChatViewModel,
+    bootstrap: ChatBootstrap,
 ) {
     val c = ZappTheme.colors
+    val scope = rememberCoroutineScope()
 
     var displayName by rememberSaveable { mutableStateOf("") }
     var phrase by rememberSaveable { mutableStateOf("") }
+    var isLoading by rememberSaveable { mutableStateOf(false) }
+    var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
-    val identity by viewModel.identity.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val identity by bootstrap.identity.collectAsStateWithLifecycle()
 
     val wordCount = if (phrase.isBlank()) 0 else phrase.trim().split(Regex("\\s+")).size
     val nameValid = displayName.trim().isNotEmpty()
@@ -131,10 +135,19 @@ private fun ChatRestoreContent(
             cta = if (isLoading) "Restoring…" else "Restore",
             onCta = {
                 if (isValid) {
-                    viewModel.restoreFromSeedPhrase(
-                        seedPhrase = phrase.trim(),
-                        displayName = displayName.trim(),
-                    )
+                    isLoading = true
+                    errorMessage = null
+                    scope.launch {
+                        runCatching {
+                            bootstrap.restoreFromSeedPhrase(
+                                seedPhrase = phrase.trim(),
+                                displayName = displayName.trim(),
+                            )
+                        }.onFailure { e ->
+                            errorMessage = e.message ?: "Restore failed"
+                        }
+                        isLoading = false
+                    }
                 }
             },
             ctaEnabled = isValid,
