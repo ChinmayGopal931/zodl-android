@@ -1,10 +1,8 @@
+@file:Suppress("TooManyFunctions")
+
 package co.electriccoin.zcash.ui.screen.chat.view
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,19 +30,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
@@ -54,45 +48,28 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappRowDivider
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.component.zapp.initialsOf
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import co.electriccoin.zcash.ui.design.util.getValue
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListConnectionStatus
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListDhtHealth
+import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsDeleteDialogState
+import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsEditNameDialogState
+import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsState
 
 @Composable
-fun ChatSettingsView(
-    onNavigateBack: () -> Unit,
-    onNavigateToProfile: () -> Unit,
-    onNavigateToContacts: () -> Unit,
-    onIdentityDeleted: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: ChatViewModel
-) {
+fun ChatSettingsView(state: ChatSettingsState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val identity by viewModel.identity.collectAsState()
-    val connectionStatus by viewModel.connectionStatus.collectAsState()
-    val peerCount by viewModel.peerCount.collectAsState()
-    val dhtHealth by viewModel.dhtHealth.collectAsState()
-
-    var showEditNameDialog by remember { mutableStateOf(false) }
-    var editNameText by remember { mutableStateOf("") }
-    var showCopiedFeedback by remember { mutableStateOf(false) }
-    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier,
-        topBar = {
-            ZappScreenHeader(title = "Chat Settings")
-        },
+        topBar = { ZappScreenHeader(title = state.title.getValue()) },
         bottomBar = {
             ZappBottomActionBar(
-                onBack = onNavigateBack,
+                onBack = state.onBack,
                 primaryAction = {
                     ZappButton(
-                        text = "Delete Identity",
+                        text = state.deleteLabel.getValue(),
                         variant = ZappButtonVariant.Danger,
-                        onClick = { showDeleteConfirm = true },
+                        onClick = state.onDeleteClick,
                     )
                 },
             )
@@ -100,205 +77,221 @@ fun ChatSettingsView(
         containerColor = c.bg,
     ) { paddingValues ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
-            // Identity card
-            identity?.let { id ->
-                val initials = remember(id.displayName) { initialsOf(id.displayName) }
-
-                ZappGroupHeader(text = "Identity")
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(c.surface),
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(20.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        // Square avatar
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .background(c.accent, RectangleShape),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            BasicText(
-                                initials,
-                                style = ZappTheme.typography.sectionTitle.copy(color = c.onAccent),
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                        ) {
-                            BasicText(
-                                id.displayName,
-                                style = ZappTheme.typography.sectionTitle.copy(color = c.text),
-                            )
-                            IconButton(
-                                onClick = { editNameText = id.displayName; showEditNameDialog = true },
-                                modifier = Modifier.size(28.dp),
-                            ) {
-                                Icon(
-                                    Icons.Default.Edit,
-                                    contentDescription = "Edit name",
-                                    tint = c.textMuted,
-                                    modifier = Modifier.size(16.dp),
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        // Copyable public key
-                        Row(
-                            modifier = Modifier
-                                .clickable {
-                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    clipboard.setPrimaryClip(ClipData.newPlainText("Public Key", id.publicKey))
-                                    showCopiedFeedback = true
-                                    scope.launch { delay(2000); showCopiedFeedback = false }
-                                }
-                                .padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            BasicText(
-                                "${id.publicKey.take(10)}...${id.publicKey.takeLast(6)}",
-                                style = ZappTheme.typography.mono.copy(color = c.textMuted),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                if (showCopiedFeedback) Icons.Default.Check else Icons.Default.ContentCopy,
-                                contentDescription = "Copy",
-                                tint = if (showCopiedFeedback) c.success else c.textMuted,
-                                modifier = Modifier.size(14.dp),
-                            )
-                        }
-                    }
-                }
+            state.displayName?.let { name ->
+                val pk = state.publicKey.orEmpty()
+                IdentitySection(
+                    displayName = name,
+                    publicKey = pk,
+                    isPublicKeyCopied = state.isPublicKeyCopied,
+                    onEditClick = state.onEditDisplayNameClick,
+                    onCopyClick = state.onCopyPublicKeyClick,
+                )
                 ZappRowDivider()
             }
 
-            // Account section
-            ZappGroupHeader(text = "Account")
-            ZappRow(title = "Profile", subtitle = "View identity details", onClick = onNavigateToProfile)
+            ZappGroupHeader(text = stringResource(R.string.chat_settings_section_account))
+            ZappRow(
+                title = stringResource(R.string.chat_settings_row_profile),
+                subtitle = stringResource(R.string.chat_settings_row_profile_subtitle),
+                onClick = state.onProfileClick,
+            )
             ZappRowDivider(inset = true)
-            ZappRow(title = "Contacts", subtitle = "Manage your contacts", onClick = onNavigateToContacts)
+            ZappRow(
+                title = stringResource(R.string.chat_settings_row_contacts),
+                subtitle = stringResource(R.string.chat_settings_row_contacts_subtitle),
+                onClick = state.onContactsClick,
+            )
             ZappRowDivider()
 
-            // Network section
-            ZappGroupHeader(text = "Network")
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(c.surface)
-                    .padding(horizontal = 18.dp, vertical = 12.dp),
-            ) {
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    NetworkInfoRow(
-                        label = "Connection",
-                        value = when (connectionStatus) {
-                            ChatViewModel.ConnectionStatus.CONNECTED -> "Connected"
-                            ChatViewModel.ConnectionStatus.CONNECTING -> "Connecting"
-                            ChatViewModel.ConnectionStatus.DISCONNECTED -> "Disconnected"
-                            ChatViewModel.ConnectionStatus.ERROR -> "Error"
-                        },
-                        valueColor = when (connectionStatus) {
-                            ChatViewModel.ConnectionStatus.CONNECTED -> c.success
-                            ChatViewModel.ConnectionStatus.CONNECTING -> c.accent
-                            else -> c.danger
-                        },
-                    )
-                    NetworkInfoRow(
-                        label = "DHT Health",
-                        value = when (dhtHealth) {
-                            ChatViewModel.DhtHealth.HEALTHY -> "Healthy"
-                            ChatViewModel.DhtHealth.DEGRADED -> "Degraded"
-                            ChatViewModel.DhtHealth.CRITICAL -> "Critical"
-                        },
-                        valueColor = when (dhtHealth) {
-                            ChatViewModel.DhtHealth.HEALTHY -> c.success
-                            ChatViewModel.DhtHealth.DEGRADED -> c.accent
-                            ChatViewModel.DhtHealth.CRITICAL -> c.danger
-                        },
-                    )
-                    NetworkInfoRow(
-                        label = "Peers",
-                        value = peerCount.toString(),
-                        valueColor = if (peerCount > 0) c.success else c.textMuted,
-                    )
-                    NetworkInfoRow(label = "Protocol", value = "Hyperswarm DHT", valueColor = c.textMuted)
-                    NetworkInfoRow(label = "Encryption", value = "Ed25519 + Noise", valueColor = c.textMuted)
-                }
-            }
+            ZappGroupHeader(text = stringResource(R.string.chat_settings_section_network))
+            NetworkSection(
+                connectionStatus = state.connectionStatus,
+                dhtHealth = state.dhtHealth,
+                peerCount = state.peerCount,
+            )
             ZappRowDivider()
 
             Spacer(modifier = Modifier.height(24.dp))
         }
     }
 
-    if (showEditNameDialog) {
-        AlertDialog(
-            onDismissRequest = { showEditNameDialog = false },
-            title = { Text("Edit Display Name") },
-            text = {
-                OutlinedTextField(
-                    value = editNameText,
-                    onValueChange = { editNameText = it },
-                    label = { Text("Display name") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (editNameText.isNotBlank()) {
-                            viewModel.updateDisplayName(editNameText)
-                            showEditNameDialog = false
-                        }
-                    },
-                    enabled = editNameText.isNotBlank(),
-                ) { Text("Save") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEditNameDialog = false }) { Text("Cancel") }
-            },
-        )
-    }
+    state.editNameDialog?.let { EditDisplayNameDialog(state = it) }
+    state.deleteDialog?.let { DeleteIdentityDialog(state = it) }
+}
 
-    if (showDeleteConfirm) {
-        AlertDialog(
-            onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("Delete Identity") },
-            text = { Text("This will permanently remove your messaging identity. Back up your seed phrase first.") },
-            confirmButton = {
-                TextButton(
-                    onClick = { showDeleteConfirm = false; viewModel.deleteIdentity { onIdentityDeleted() } },
-                ) { Text("Delete") }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteConfirm = false }) { Text("Cancel") }
-            },
-        )
+@Composable
+private fun IdentitySection(
+    displayName: String,
+    publicKey: String,
+    isPublicKeyCopied: Boolean,
+    onEditClick: () -> Unit,
+    onCopyClick: () -> Unit,
+) {
+    val c = ZappTheme.colors
+    val initials = remember(displayName) { initialsOf(displayName) }
+    val editLabel = stringResource(R.string.chat_settings_edit_name_content_description)
+    val copyLabel = stringResource(R.string.chat_settings_copy_content_description)
+
+    ZappGroupHeader(text = stringResource(R.string.chat_settings_section_identity))
+
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface),
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(72.dp)
+                        .background(c.accent, RectangleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                BasicText(
+                    text = initials,
+                    style = ZappTheme.typography.sectionTitle.copy(color = c.onAccent),
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                BasicText(
+                    text = displayName,
+                    style = ZappTheme.typography.sectionTitle.copy(color = c.text),
+                )
+                IconButton(onClick = onEditClick, modifier = Modifier.size(28.dp)) {
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = editLabel,
+                        tint = c.textMuted,
+                        modifier = Modifier.size(16.dp),
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            if (publicKey.isNotEmpty()) {
+                Row(
+                    modifier =
+                        Modifier
+                            .clickable(onClick = onCopyClick)
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BasicText(
+                        text =
+                            "${publicKey.take(PUBLIC_KEY_HEAD)}...${
+                                publicKey.takeLast(PUBLIC_KEY_TAIL)
+                            }",
+                        style = ZappTheme.typography.mono.copy(color = c.textMuted),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector =
+                            if (isPublicKeyCopied) Icons.Default.Check else Icons.Default.ContentCopy,
+                        contentDescription = copyLabel,
+                        tint = if (isPublicKeyCopied) c.success else c.textMuted,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Suppress("CyclomaticComplexMethod")
+@Composable
+private fun NetworkSection(
+    connectionStatus: ChatListConnectionStatus,
+    dhtHealth: ChatListDhtHealth,
+    peerCount: Int,
+) {
+    val c = ZappTheme.colors
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            NetworkInfoRow(
+                label = stringResource(R.string.chat_settings_label_connection),
+                value =
+                    when (connectionStatus) {
+                        ChatListConnectionStatus.CONNECTED ->
+                            stringResource(R.string.chat_settings_connection_connected)
+                        ChatListConnectionStatus.CONNECTING ->
+                            stringResource(R.string.chat_settings_connection_connecting)
+                        ChatListConnectionStatus.DISCONNECTED ->
+                            stringResource(R.string.chat_settings_connection_disconnected)
+                        ChatListConnectionStatus.ERROR ->
+                            stringResource(R.string.chat_settings_connection_error)
+                    },
+                valueColor =
+                    when (connectionStatus) {
+                        ChatListConnectionStatus.CONNECTED -> c.success
+                        ChatListConnectionStatus.CONNECTING -> c.accent
+                        else -> c.danger
+                    },
+            )
+            NetworkInfoRow(
+                label = stringResource(R.string.chat_settings_label_dht_health),
+                value =
+                    when (dhtHealth) {
+                        ChatListDhtHealth.HEALTHY -> stringResource(R.string.chat_settings_dht_healthy)
+                        ChatListDhtHealth.DEGRADED -> stringResource(R.string.chat_settings_dht_degraded)
+                        ChatListDhtHealth.CRITICAL -> stringResource(R.string.chat_settings_dht_critical)
+                    },
+                valueColor =
+                    when (dhtHealth) {
+                        ChatListDhtHealth.HEALTHY -> c.success
+                        ChatListDhtHealth.DEGRADED -> c.accent
+                        ChatListDhtHealth.CRITICAL -> c.danger
+                    },
+            )
+            NetworkInfoRow(
+                label = stringResource(R.string.chat_settings_label_peers),
+                value = peerCount.toString(),
+                valueColor = if (peerCount > 0) c.success else c.textMuted,
+            )
+            NetworkInfoRow(
+                label = stringResource(R.string.chat_settings_label_protocol),
+                value = stringResource(R.string.chat_settings_protocol_value),
+                valueColor = c.textMuted,
+            )
+            NetworkInfoRow(
+                label = stringResource(R.string.chat_settings_label_encryption),
+                value = stringResource(R.string.chat_settings_encryption_value),
+                valueColor = c.textMuted,
+            )
+        }
     }
 }
 
 @Composable
-private fun NetworkInfoRow(label: String, value: String, valueColor: androidx.compose.ui.graphics.Color) {
+private fun NetworkInfoRow(label: String, value: String, valueColor: Color) {
     val c = ZappTheme.colors
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -315,3 +308,52 @@ private fun NetworkInfoRow(label: String, value: String, valueColor: androidx.co
         }
     }
 }
+
+@Composable
+private fun EditDisplayNameDialog(state: ChatSettingsEditNameDialogState) {
+    AlertDialog(
+        onDismissRequest = state.onDismiss,
+        title = { Text(stringResource(R.string.chat_settings_edit_name_dialog_title)) },
+        text = {
+            OutlinedTextField(
+                value = state.value,
+                onValueChange = state.onValueChange,
+                label = { Text(stringResource(R.string.chat_settings_edit_name_dialog_placeholder)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = state.onSave, enabled = state.canSave) {
+                Text(stringResource(R.string.chat_settings_edit_name_dialog_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = state.onDismiss) {
+                Text(stringResource(R.string.chat_settings_edit_name_dialog_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun DeleteIdentityDialog(state: ChatSettingsDeleteDialogState) {
+    AlertDialog(
+        onDismissRequest = state.onDismiss,
+        title = { Text(stringResource(R.string.chat_settings_delete_dialog_title)) },
+        text = { Text(stringResource(R.string.chat_settings_delete_dialog_message)) },
+        confirmButton = {
+            TextButton(onClick = state.onConfirm) {
+                Text(stringResource(R.string.chat_settings_delete_dialog_confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = state.onDismiss) {
+                Text(stringResource(R.string.chat_settings_delete_dialog_cancel))
+            }
+        },
+    )
+}
+
+private const val PUBLIC_KEY_HEAD = 10
+private const val PUBLIC_KEY_TAIL = 6

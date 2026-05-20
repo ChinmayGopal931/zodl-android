@@ -1,22 +1,207 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Chat list screen -->
+    <string name="chat_list_title">Chats</string>
+    <string name="chat_list_empty_title">No conversations yet</string>
+    <string name="chat_list_empty_subtitle">Tap + to start a new P2P chat</string>
+    <string name="chat_list_no_messages">No messages yet</string>
+    <string name="chat_list_media_placeholder">[Media]</string>
+    <string name="chat_list_new_conversation_content_description">New conversation</string>
+
+    <!-- Chat list — swipe-to-leave -->
+    <string name="chat_list_leave_action">Leave</string>
+    <string name="chat_list_leave_dialog_title">Leave conversation?</string>
+    <string name="chat_list_leave_dialog_message">You\'ll leave \"%1$s\" and stop receiving its messages.</string>
+    <string name="chat_list_leave_dialog_cancel">Cancel</string>
+    <string name="chat_list_leave_dialog_confirm">Leave</string>
+
+    <!-- Chat list — network/status chip labels -->
+    <string name="chat_list_status_connecting">…</string>
+    <string name="chat_list_status_disconnected">off</string>
+    <string name="chat_list_status_error">err</string>
+
+    <!-- Chat list — relative time (short) -->
+    <string name="chat_list_time_now">now</string>
+    <string name="chat_list_time_minutes_short">%1$dm</string>
+
+    <!-- Chat identity setup -->
+    <string name="chat_identity_setup_welcome_title">Welcome to P2P Chat</string>
+    <string name="chat_identity_setup_restore_title">Restore Your Identity</string>
+    <string name="chat_identity_setup_welcome_subtitle">Create a display name to get started with peer-to-peer messaging.</string>
+    <string name="chat_identity_setup_restore_subtitle">Restore your messaging identity using your wallet\'s 24-word seed phrase.</string>
+    <string name="chat_identity_setup_tab_create">Create</string>
+    <string name="chat_identity_setup_tab_restore">Restore</string>
+    <string name="chat_identity_setup_display_name_placeholder">Display name</string>
+    <string name="chat_identity_setup_seed_phrase_placeholder">Enter your wallet seed phrase (24 words)</string>
+    <string name="chat_identity_setup_create_button">Create Identity</string>
+    <string name="chat_identity_setup_restore_button">Restore Identity</string>
+    <string name="chat_identity_setup_error_name_required">Display name is required</string>
+    <string name="chat_identity_setup_error_seed_word_count">Seed phrase must be exactly 24 words</string>
+    <string name="chat_identity_setup_error_create_failed">Failed to create identity: %1$s</string>
+    <string name="chat_identity_setup_error_restore_failed">Failed to restore identity: %1$s</string>
+    <string name="chat_identity_setup_error_unknown">Unknown error</string>
+    <string name="chat_identity_setup_backup_title">Back Up Your Seed Phrase</string>
+    <string name="chat_identity_setup_backup_subtitle">Write these words down and store them safely. This is the only way to recover your messaging identity.</string>
+    <string name="chat_identity_setup_backup_confirm">I\'ve Saved My Seed Phrase</string>
+
+    <!-- Chat room screen -->
+    <string name="chat_room_title_fallback">Chat</string>
+    <string name="chat_room_input_placeholder">Message</string>
+    <string name="chat_room_attach_content_description">Attach</string>
+    <string name="chat_room_send_content_description">Send</string>
+
+    <!-- Chat room — chip labels -->
+    <string name="chat_room_chip_online">Online</string>
+    <string name="chat_room_chip_dht">DHT</string>
+    <string name="chat_room_chip_off">Off</string>
+    <string name="chat_room_chip_err">Err</string>
+
+    <!-- Chat room — connection subtitle -->
+    <string name="chat_room_subtitle_peer_online">Peer online</string>
+    <string name="chat_room_subtitle_dht_unreachable">DHT unreachable</string>
+    <string name="chat_room_subtitle_peer_offline">Peer offline — messages queued</string>
+    <string name="chat_room_subtitle_p2p_connected">P2P connected</string>
+    <string name="chat_room_subtitle_dht_degraded">DHT degraded</string>
+    <string name="chat_room_subtitle_waiting_for_peer">Waiting for peer…</string>
+    <string name="chat_room_subtitle_connecting">Connecting…</string>
+    <string name="chat_room_subtitle_offline">Offline</string>
+    <string name="chat_room_subtitle_error">Connection error</string>
+
+    <!-- Chat room — permission/location toasts -->
+    <string name="chat_room_toast_camera_permission_required">Camera permission required</string>
+    <string name="chat_room_toast_location_permission_required">Location permission required</string>
+    <string name="chat_room_toast_location_unavailable">Could not get location</string>
+    <string name="chat_room_toast_location_error_fmt">Location error: %1$s</string>
+
+    <!-- Chat room — edit contact sheet -->
+    <string name="chat_room_edit_contact_title">Edit Contact</string>
+    <string name="chat_room_edit_contact_name_label">Name</string>
+    <string name="chat_room_edit_contact_cancel">Cancel</string>
+    <string name="chat_room_edit_contact_save">Save</string>
+    <string name="chat_room_edit_contact_report">Report</string>
+    <string name="chat_room_edit_contact_block">Block User</string>
+
+    <!-- Chat room — delivery indicator content descriptions -->
+    <string name="chat_room_delivery_sent">Sent</string>
+    <string name="chat_room_delivery_queued">Queued</string>
+    <string name="chat_room_delivery_failed">Failed</string>
+    <string name="chat_room_delivery_sending">Sending</string>
+
     <!-- Chat profile screen -->
-    <string name="chat_profile_title">Profile</string>
+    <string name="chat_profile_title">Profile &amp; Identity</string>
     <string name="chat_profile_unknown_name">Unknown</string>
     <string name="chat_profile_public_key_label">Public Key</string>
-    <string name="chat_profile_copy_content_description">Copy</string>
-    <string name="chat_profile_seed_phrase_title">Seed Phrase</string>
-    <string name="chat_profile_seed_phrase_subtitle">View your recovery words</string>
+    <string name="chat_profile_qr_caption">Scan to start a conversation</string>
+    <string name="chat_profile_tab_messaging_id">Messaging ID</string>
+    <string name="chat_profile_tab_wallet_address">Wallet Address</string>
+    <string name="chat_profile_subtab_shielded">Shielded</string>
+    <string name="chat_profile_subtab_transparent">Transparent</string>
+    <string name="chat_profile_address_shielded_label">Shielded Address</string>
+    <string name="chat_profile_address_transparent_label">Transparent Address</string>
+    <string name="chat_profile_address_shielded_caption">Shielded address — private by default</string>
+    <string name="chat_profile_address_transparent_caption">Transparent address — visible on chain</string>
 
-    <!-- Delete identity dialog -->
-    <string name="chat_profile_delete_button">Delete Identity</string>
-    <string name="chat_profile_delete_dialog_title">Delete Identity</string>
-    <string name="chat_profile_delete_dialog_message">This will remove your messaging identity. Make sure you\'ve backed up your seed phrase. This cannot be undone.</string>
+    <!-- Chat profile — seed phrase row -->
+    <string name="chat_profile_seed_phrase_title">Seed Phrase</string>
+    <string name="chat_profile_seed_phrase_subtitle">Backs up both messaging &amp; wallet identities</string>
+
+    <!-- Chat profile — accessibility / content descriptions -->
+    <string name="chat_profile_back_content_description">Go back</string>
+    <string name="chat_profile_edit_display_name_content_description">Edit display name</string>
+    <string name="chat_profile_delete_identity_content_description">Delete Identity</string>
+    <string name="chat_profile_copy_public_key_content_description">Copy public key</string>
+    <string name="chat_profile_copy_address_content_description">Copy address</string>
+    <string name="chat_profile_copied_content_description">Copied</string>
+
+    <!-- Chat profile — bottom dock -->
+    <string name="chat_profile_delete_button">DELETE IDENTITY</string>
+
+    <!-- Chat profile — edit display name dialog -->
+    <string name="chat_profile_edit_name_title">Edit display name</string>
+    <string name="chat_profile_edit_name_save">Save</string>
+    <string name="chat_profile_edit_name_cancel">Cancel</string>
+
+    <!-- Chat profile — delete identity dialog -->
+    <string name="chat_profile_delete_dialog_title">Delete identity?</string>
+    <string name="chat_profile_delete_dialog_message">This will remove your messaging identity and all chat history from this device. Your wallet funds are unaffected and can be recovered at any time with your seed phrase.</string>
     <string name="chat_profile_delete_dialog_confirm">Delete</string>
     <string name="chat_profile_delete_dialog_cancel">Cancel</string>
 
-    <!-- Seed phrase dialog -->
+    <!-- Chat profile — seed phrase reveal dialog -->
     <string name="chat_profile_seed_phrase_dialog_title">Seed Phrase</string>
-    <string name="chat_profile_seed_phrase_dialog_message">Keep this safe. Anyone with these words can access your messaging identity.</string>
+    <string name="chat_profile_seed_phrase_dialog_message">Keep this safe. Anyone with these words can access your wallet and messages.</string>
     <string name="chat_profile_seed_phrase_dialog_done">Done</string>
+    <string name="chat_profile_seed_phrase_biometric_prompt">View your seed phrase</string>
+
+    <!-- Chat settings screen -->
+    <string name="chat_settings_title">Chat Settings</string>
+    <string name="chat_settings_delete_button">Delete Identity</string>
+    <string name="chat_settings_section_identity">Identity</string>
+    <string name="chat_settings_section_account">Account</string>
+    <string name="chat_settings_section_network">Network</string>
+    <string name="chat_settings_row_profile">Profile</string>
+    <string name="chat_settings_row_profile_subtitle">View identity details</string>
+    <string name="chat_settings_row_contacts">Contacts</string>
+    <string name="chat_settings_row_contacts_subtitle">Manage your contacts</string>
+    <string name="chat_settings_label_connection">Connection</string>
+    <string name="chat_settings_label_dht_health">DHT Health</string>
+    <string name="chat_settings_label_peers">Peers</string>
+    <string name="chat_settings_label_protocol">Protocol</string>
+    <string name="chat_settings_label_encryption">Encryption</string>
+    <string name="chat_settings_protocol_value">Hyperswarm DHT</string>
+    <string name="chat_settings_encryption_value">Ed25519 + Noise</string>
+    <string name="chat_settings_connection_connected">Connected</string>
+    <string name="chat_settings_connection_connecting">Connecting</string>
+    <string name="chat_settings_connection_disconnected">Disconnected</string>
+    <string name="chat_settings_connection_error">Error</string>
+    <string name="chat_settings_dht_healthy">Healthy</string>
+    <string name="chat_settings_dht_degraded">Degraded</string>
+    <string name="chat_settings_dht_critical">Critical</string>
+    <string name="chat_settings_edit_name_content_description">Edit name</string>
+    <string name="chat_settings_copy_content_description">Copy</string>
+    <string name="chat_settings_edit_name_dialog_title">Edit Display Name</string>
+    <string name="chat_settings_edit_name_dialog_placeholder">Display name</string>
+    <string name="chat_settings_edit_name_dialog_save">Save</string>
+    <string name="chat_settings_edit_name_dialog_cancel">Cancel</string>
+    <string name="chat_settings_delete_dialog_title">Delete Identity</string>
+    <string name="chat_settings_delete_dialog_message">This will permanently remove your messaging identity. Back up your seed phrase first.</string>
+    <string name="chat_settings_delete_dialog_confirm">Delete</string>
+    <string name="chat_settings_delete_dialog_cancel">Cancel</string>
+
+    <!-- New conversation screen -->
+    <string name="chat_new_conversation_title">New Conversation</string>
+    <string name="chat_new_conversation_empty_title">Start a private conversation</string>
+    <string name="chat_new_conversation_empty_body">Scan someone\'s QR code or enter their public key to send them a message.</string>
+    <string name="chat_new_conversation_privacy_callout">Messages are peer-to-peer encrypted and only readable by you and the recipient.</string>
+    <string name="chat_new_conversation_search_placeholder">Type or paste a public key…</string>
+    <string name="chat_new_conversation_public_key_detected">Public key detected</string>
+    <string name="chat_new_conversation_add_action">Add</string>
+    <string name="chat_new_conversation_clear_content_description">Clear</string>
+    <string name="chat_new_conversation_back_content_description">Go back</string>
+    <string name="chat_new_conversation_selected_content_description">Selected</string>
+    <string name="chat_new_conversation_remove_participant_content_description_fmt">Remove %1$s</string>
+    <string name="chat_new_conversation_start_chat_label">START CHAT</string>
+    <string name="chat_new_conversation_start_chat_content_description">Start Chat</string>
+    <string name="chat_new_conversation_scan_qr_label">SCAN QR CODE</string>
+    <string name="chat_new_conversation_scan_qr_content_description">Scan QR Code</string>
+
+    <!-- Contact edit screen -->
+    <string name="chat_contact_edit_title">Edit Contact</string>
+    <string name="chat_contact_edit_delete_content_description">Delete</string>
+    <string name="chat_contact_edit_save">Save</string>
+    <string name="chat_contact_edit_not_found">Contact not found</string>
+    <string name="chat_contact_edit_public_key_label">Public Key</string>
+    <string name="chat_contact_edit_name_label">Name</string>
+    <string name="chat_contact_edit_delete_dialog_title">Delete Contact</string>
+    <string name="chat_contact_edit_delete_dialog_message">Are you sure you want to delete this contact?</string>
+    <string name="chat_contact_edit_delete_dialog_confirm">Delete</string>
+    <string name="chat_contact_edit_delete_dialog_cancel">Cancel</string>
+
+    <!-- Chat contacts screen -->
+    <string name="chat_contacts_title">Contacts</string>
+    <string name="chat_contacts_saved_count_fmt">%1$d saved</string>
+    <string name="chat_contacts_empty_title">No contacts yet</string>
+    <string name="chat_contacts_empty_subtitle">Add contacts to start chatting</string>
+    <string name="chat_contacts_add_content_description">Add contact</string>
+    <string name="chat_contacts_start_chat_content_description">Start chat</string>
 </resources>

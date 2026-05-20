@@ -33,40 +33,41 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListConnectionStatus
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListDhtHealth
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
 
 private val OkColor = Color(0xFF2E7D32)
 private val WarnColor = Color(0xFFE65100)
 
 @Composable
 fun ConnectionPill(
-    connectionStatus: ChatViewModel.ConnectionStatus,
+    connectionStatus: ChatListConnectionStatus,
     peerCount: Int,
-    dhtHealth: ChatViewModel.DhtHealth,
+    dhtHealth: ChatListDhtHealth,
     onClick: (() -> Unit)? = null
 ) {
     val errorColor = MaterialTheme.colorScheme.error
     val statusColor = when (connectionStatus) {
-        ChatViewModel.ConnectionStatus.CONNECTED -> when {
-            dhtHealth == ChatViewModel.DhtHealth.CRITICAL -> errorColor
+        ChatListConnectionStatus.CONNECTED -> when {
+            dhtHealth == ChatListDhtHealth.CRITICAL -> errorColor
             peerCount > 0 -> OkColor
-            dhtHealth == ChatViewModel.DhtHealth.DEGRADED -> WarnColor
+            dhtHealth == ChatListDhtHealth.DEGRADED -> WarnColor
             else -> OkColor
         }
-        ChatViewModel.ConnectionStatus.CONNECTING -> WarnColor
+        ChatListConnectionStatus.CONNECTING -> WarnColor
         else -> errorColor
     }
     val label = when (connectionStatus) {
-        ChatViewModel.ConnectionStatus.CONNECTED -> when {
-            dhtHealth == ChatViewModel.DhtHealth.CRITICAL -> "DHT unreachable"
+        ChatListConnectionStatus.CONNECTED -> when {
+            dhtHealth == ChatListDhtHealth.CRITICAL -> "DHT unreachable"
             peerCount > 0 -> if (peerCount == 1) "1 peer" else "$peerCount peers"
-            dhtHealth == ChatViewModel.DhtHealth.DEGRADED -> "DHT degraded"
+            dhtHealth == ChatListDhtHealth.DEGRADED -> "DHT degraded"
             else -> "Online"
         }
-        ChatViewModel.ConnectionStatus.CONNECTING -> "Connecting"
-        ChatViewModel.ConnectionStatus.DISCONNECTED -> "Offline"
-        ChatViewModel.ConnectionStatus.ERROR -> "Error"
+        ChatListConnectionStatus.CONNECTING -> "Connecting"
+        ChatListConnectionStatus.DISCONNECTED -> "Offline"
+        ChatListConnectionStatus.ERROR -> "Error"
     }
 
     Surface(
@@ -98,9 +99,9 @@ fun ConnectionPill(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NetworkDetailsSheet(
-    connectionStatus: ChatViewModel.ConnectionStatus,
+    connectionStatus: ChatListConnectionStatus,
     peerCount: Int,
-    dhtHealth: ChatViewModel.DhtHealth,
+    dhtHealth: ChatListDhtHealth,
     connectionDetails: ConnectionDetailsUi?,
     onDismiss: () -> Unit
 ) {
@@ -129,14 +130,14 @@ fun NetworkDetailsSheet(
                 icon = Icons.Default.Wifi,
                 label = "Connection",
                 value = when (connectionStatus) {
-                    ChatViewModel.ConnectionStatus.CONNECTED -> "Connected"
-                    ChatViewModel.ConnectionStatus.CONNECTING -> "Connecting"
-                    ChatViewModel.ConnectionStatus.DISCONNECTED -> "Disconnected"
-                    ChatViewModel.ConnectionStatus.ERROR -> "Error"
+                    ChatListConnectionStatus.CONNECTED -> "Connected"
+                    ChatListConnectionStatus.CONNECTING -> "Connecting"
+                    ChatListConnectionStatus.DISCONNECTED -> "Disconnected"
+                    ChatListConnectionStatus.ERROR -> "Error"
                 },
                 valueColor = when (connectionStatus) {
-                    ChatViewModel.ConnectionStatus.CONNECTED -> OkColor
-                    ChatViewModel.ConnectionStatus.CONNECTING -> WarnColor
+                    ChatListConnectionStatus.CONNECTED -> OkColor
+                    ChatListConnectionStatus.CONNECTING -> WarnColor
                     else -> errorColor
                 }
             )
@@ -145,14 +146,14 @@ fun NetworkDetailsSheet(
                 icon = Icons.Default.Hub,
                 label = "DHT",
                 value = when (dhtHealth) {
-                    ChatViewModel.DhtHealth.HEALTHY -> "Healthy"
-                    ChatViewModel.DhtHealth.DEGRADED -> "Degraded"
-                    ChatViewModel.DhtHealth.CRITICAL -> "Critical"
+                    ChatListDhtHealth.HEALTHY -> "Healthy"
+                    ChatListDhtHealth.DEGRADED -> "Degraded"
+                    ChatListDhtHealth.CRITICAL -> "Critical"
                 },
                 valueColor = when (dhtHealth) {
-                    ChatViewModel.DhtHealth.HEALTHY -> OkColor
-                    ChatViewModel.DhtHealth.DEGRADED -> WarnColor
-                    ChatViewModel.DhtHealth.CRITICAL -> errorColor
+                    ChatListDhtHealth.HEALTHY -> OkColor
+                    ChatListDhtHealth.DEGRADED -> WarnColor
+                    ChatListDhtHealth.CRITICAL -> errorColor
                 }
             )
 

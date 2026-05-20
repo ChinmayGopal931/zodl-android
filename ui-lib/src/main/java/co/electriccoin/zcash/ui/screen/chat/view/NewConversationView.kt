@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package co.electriccoin.zcash.ui.screen.chat.view
 
 import androidx.compose.foundation.BorderStroke
@@ -34,359 +36,391 @@ import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.component.zapp.initialsOf
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
-
-private data class SelectedParticipant(
-    val publicKey: String,
-    val displayName: String,
-)
+import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationContactItem
+import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationParticipantChip
+import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationPrimaryAction
+import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NewConversationView(
-    onConversationCreated: (String) -> Unit,
-    onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: ChatViewModel,
-) {
+fun NewConversationView(state: NewConversationState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
-    val contacts by viewModel.contacts.collectAsState()
-    val scannedPublicKey by viewModel.scannedPublicKey.collectAsState()
-
-    var searchInput by remember { mutableStateOf(TextFieldValue("")) }
-    var selectedParticipants by remember { mutableStateOf<List<SelectedParticipant>>(emptyList()) }
-    var isCreating by remember { mutableStateOf(false) }
-
-    LaunchedEffect(scannedPublicKey) {
-        scannedPublicKey?.let { key ->
-            searchInput = TextFieldValue(key)
-            viewModel.consumeScannedKey()
-        }
-    }
-
-    val searchText = searchInput.text.trim()
-    val cleanedSearch = searchText.removePrefix("0x")
-    val isPublicKey = cleanedSearch.length == 64 &&
-        cleanedSearch.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
-
-    val filteredContacts = if (searchText.isEmpty()) contacts
-    else contacts.filter {
-        it.name.contains(searchText, ignoreCase = true) ||
-            it.publicKey.contains(searchText, ignoreCase = true)
-    }
-
-    val canStartChat = selectedParticipants.isNotEmpty() && !isCreating
-    val showEmptyState = searchInput.text.isEmpty() && selectedParticipants.isEmpty()
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .imePadding(),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .imePadding(),
     ) {
-        ZappScreenHeader(title = "New Conversation")
+        ZappScreenHeader(title = state.title.getValue())
 
-        // Body — grows to fill available space
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
         ) {
-            if (showEmptyState) {
+            if (state.showEmptyState) {
                 EmptyState(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 28.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.Center)
+                            .padding(horizontal = 28.dp),
                 )
             } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 18.dp),
-                ) {
-                    // Selected participant chips
-                    if (selectedParticipants.isNotEmpty()) {
-                        Spacer(Modifier.height(12.dp))
-                        FlowRow(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            selectedParticipants.forEach { participant ->
-                                Row(
-                                    modifier = Modifier
-                                        .background(c.accentSoft, RectangleShape)
-                                        .border(BorderStroke(1.dp, c.border), RectangleShape)
-                                        .clickable(onClick = {
-                                            selectedParticipants = selectedParticipants
-                                                .filter { it.publicKey != participant.publicKey }
-                                        })
-                                        .semantics {
-                                            contentDescription = "Remove ${participant.displayName}"
-                                            role = Role.Button
-                                        }
-                                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                ) {
-                                    BasicText(
-                                        text = participant.displayName,
-                                        style = ZappTheme.typography.chip.copy(color = c.accentText),
-                                    )
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(14.dp),
-                                        tint = c.accentText,
-                                    )
-                                }
-                            }
-                        }
-                        Spacer(Modifier.height(12.dp))
-                    }
-
-                    // Public key detected banner
-                    if (isPublicKey && selectedParticipants.none { it.publicKey == cleanedSearch }) {
-                        Spacer(Modifier.height(12.dp))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(c.accentSoft, RectangleShape)
-                                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                                .clickable {
-                                    val existingContact = contacts.find { it.publicKey == cleanedSearch }
-                                    selectedParticipants = selectedParticipants + SelectedParticipant(
-                                        publicKey = cleanedSearch,
-                                        displayName = existingContact?.name
-                                            ?: "${cleanedSearch.take(8)}...",
-                                    )
-                                    searchInput = TextFieldValue("")
-                                }
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(
-                                Icons.Default.CheckCircle,
-                                contentDescription = null,
-                                tint = c.accentText,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Spacer(Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                BasicText(
-                                    "Public key detected",
-                                    style = ZappTheme.typography.caption.copy(color = c.accentText),
-                                )
-                                BasicText(
-                                    "${cleanedSearch.take(12)}...${cleanedSearch.takeLast(6)}",
-                                    style = ZappTheme.typography.mono.copy(color = c.accentText),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
-                            BasicText(
-                                "Add",
-                                style = ZappTheme.typography.button.copy(color = c.accentText),
-                            )
-                        }
-                        Spacer(Modifier.height(12.dp))
-                    }
-
-                    // Filtered contact list
-                    LazyColumn(modifier = Modifier.weight(1f)) {
-                        items(
-                            items = filteredContacts.sortedBy { it.name.lowercase() },
-                            key = { it.publicKey },
-                        ) { contact ->
-                            val isSelected = selectedParticipants.any { it.publicKey == contact.publicKey }
-                            ContactSelectRow(
-                                contact = contact,
-                                isSelected = isSelected,
-                                onToggle = {
-                                    selectedParticipants = if (isSelected) {
-                                        selectedParticipants.filter { it.publicKey != contact.publicKey }
-                                    } else {
-                                        selectedParticipants + SelectedParticipant(
-                                            publicKey = contact.publicKey,
-                                            displayName = contact.name,
-                                        )
-                                    }
-                                },
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(start = 56.dp)
-                                    .height(1.dp)
-                                    .background(c.border, RectangleShape),
-                            )
-                        }
-                    }
-                }
+                ConversationBody(state = state)
             }
         }
 
-        // Search / paste field
+        SearchField(
+            value = state.searchInput,
+            onChange = state.onSearchInputChange,
+            onClear = state.onClearSearch,
+        )
+
+        BottomDock(state = state)
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ConversationBody(state: NewConversationState) {
+    val c = ZappTheme.colors
+    Column(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .padding(horizontal = 18.dp),
+    ) {
+        if (state.selectedParticipants.isNotEmpty()) {
+            Spacer(Modifier.height(12.dp))
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                state.selectedParticipants.forEach { chip -> ParticipantChip(chip = chip) }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        if (state.isPublicKeyDetected) {
+            Spacer(Modifier.height(12.dp))
+            PublicKeyDetectedBanner(
+                detectedKey = state.detectedPublicKey,
+                onAdd = state.onAddDetectedKey,
+            )
+            Spacer(Modifier.height(12.dp))
+        }
+
+        LazyColumn(modifier = Modifier.weight(1f)) {
+            items(items = state.contacts, key = { it.contact.publicKey }) { item ->
+                ContactSelectRow(item = item)
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 56.dp)
+                            .height(1.dp)
+                            .background(c.border, RectangleShape),
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ParticipantChip(chip: NewConversationParticipantChip) {
+    val c = ZappTheme.colors
+    val description =
+        stringResource(R.string.chat_new_conversation_remove_participant_content_description_fmt, chip.displayName)
+    Row(
+        modifier =
+            Modifier
+                .background(c.accentSoft, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .clickable(onClick = chip.onRemove)
+                .semantics {
+                    contentDescription = description
+                    role = Role.Button
+                }.padding(horizontal = 10.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        BasicText(
+            text = chip.displayName,
+            style = ZappTheme.typography.chip.copy(color = c.accentText),
+        )
+        Icon(
+            Icons.Default.Close,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = c.accentText,
+        )
+    }
+}
+
+@Composable
+private fun PublicKeyDetectedBanner(detectedKey: String, onAdd: () -> Unit) {
+    val c = ZappTheme.colors
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.accentSoft, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .clickable(onClick = onAdd)
+                .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            Icons.Default.CheckCircle,
+            contentDescription = null,
+            tint = c.accentText,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            BasicText(
+                text = stringResource(R.string.chat_new_conversation_public_key_detected),
+                style = ZappTheme.typography.caption.copy(color = c.accentText),
+            )
+            BasicText(
+                text = "${detectedKey.take(KEY_PREVIEW_HEAD)}...${detectedKey.takeLast(KEY_PREVIEW_TAIL)}",
+                style = ZappTheme.typography.mono.copy(color = c.accentText),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        BasicText(
+            text = stringResource(R.string.chat_new_conversation_add_action),
+            style = ZappTheme.typography.button.copy(color = c.accentText),
+        )
+    }
+}
+
+@Composable
+private fun ContactSelectRow(item: NewConversationContactItem) {
+    val c = ZappTheme.colors
+    val contact: ChatContact = item.contact
+    val initials = remember(contact.name) { initialsOf(contact.name) }
+    val selectedLabel = stringResource(R.string.chat_new_conversation_selected_content_description)
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = item.onToggle)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(
-            modifier = Modifier
+            modifier =
+                Modifier
+                    .size(40.dp)
+                    .background(c.accent, RectangleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            BasicText(initials, style = ZappTheme.typography.rowTitle.copy(color = c.onAccent))
+        }
+
+        Spacer(Modifier.width(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
+            BasicText(
+                contact.name,
+                style = ZappTheme.typography.rowTitle.copy(color = c.text),
+            )
+            BasicText(
+                "${contact.publicKey.take(CONTACT_KEY_HEAD)}...${contact.publicKey.takeLast(CONTACT_KEY_TAIL)}",
+                style = ZappTheme.typography.mono.copy(color = c.textMuted),
+            )
+        }
+
+        if (item.isSelected) {
+            Icon(
+                Icons.Default.CheckCircle,
+                contentDescription = selectedLabel,
+                tint = c.accent,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun SearchField(value: String, onChange: (String) -> Unit, onClear: () -> Unit) {
+    val c = ZappTheme.colors
+    val clearLabel = stringResource(R.string.chat_new_conversation_clear_content_description)
+    Box(
+        modifier =
+            Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 18.dp, vertical = 12.dp)
                 .background(c.surfaceInput, RectangleShape)
                 .border(
                     BorderStroke(
-                        width = if (searchInput.text.isNotEmpty()) 2.dp else 1.dp,
-                        color = if (searchInput.text.isNotEmpty()) c.borderStrong else c.border,
+                        width = if (value.isNotEmpty()) 2.dp else 1.dp,
+                        color = if (value.isNotEmpty()) c.borderStrong else c.border,
                     ),
                     RectangleShape,
                 ),
-        ) {
-            Row(
-                modifier = Modifier
+    ) {
+        Row(
+            modifier =
+                Modifier
                     .fillMaxWidth()
                     .padding(start = 14.dp, end = 0.dp, top = 14.dp, bottom = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    Icons.Default.Search,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = c.textSubtle,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = c.textSubtle,
+            )
+            Spacer(Modifier.width(10.dp))
+            Box(modifier = Modifier.weight(1f)) {
+                BasicTextField(
+                    value = value,
+                    onValueChange = onChange,
+                    singleLine = true,
+                    textStyle = ZappTheme.typography.body.copy(color = c.text),
+                    cursorBrush = SolidColor(c.accent),
+                    modifier = Modifier.fillMaxWidth(),
                 )
-                Spacer(Modifier.width(10.dp))
-                Box(modifier = Modifier.weight(1f)) {
-                    BasicTextField(
-                        value = searchInput,
-                        onValueChange = { searchInput = it },
-                        singleLine = true,
-                        textStyle = ZappTheme.typography.body.copy(color = c.text),
-                        cursorBrush = SolidColor(c.accent),
-                        modifier = Modifier.fillMaxWidth(),
+                if (value.isEmpty()) {
+                    BasicText(
+                        text = stringResource(R.string.chat_new_conversation_search_placeholder),
+                        style = ZappTheme.typography.body.copy(color = c.textSubtle),
                     )
-                    if (searchInput.text.isEmpty()) {
-                        BasicText(
-                            text = "Type or paste a public key…",
-                            style = ZappTheme.typography.body.copy(color = c.textSubtle),
-                        )
-                    }
                 }
-                if (searchInput.text.isNotEmpty()) {
-                    Box(
-                        modifier = Modifier
+            }
+            if (value.isNotEmpty()) {
+                Box(
+                    modifier =
+                        Modifier
                             .size(48.dp)
-                            .clickable { searchInput = TextFieldValue("") }
-                            .semantics { contentDescription = "Clear"; role = Role.Button },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = c.textSubtle,
-                        )
-                    }
+                            .clickable(onClick = onClear)
+                            .semantics {
+                                contentDescription = clearLabel
+                                role = Role.Button
+                            },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = c.textSubtle,
+                    )
                 }
             }
         }
+    }
+}
 
-        // Bottom dock: back ← + Scan QR Code / Start Chat
-        Row(
-            modifier = Modifier
+@Composable
+private fun BottomDock(state: NewConversationState) {
+    val c = ZappTheme.colors
+    val backLabel = stringResource(R.string.chat_new_conversation_back_content_description)
+    val (label, description) =
+        when (state.primaryAction) {
+            is NewConversationPrimaryAction.StartChat ->
+                stringResource(R.string.chat_new_conversation_start_chat_label) to
+                    stringResource(R.string.chat_new_conversation_start_chat_content_description)
+            is NewConversationPrimaryAction.ScanQr ->
+                stringResource(R.string.chat_new_conversation_scan_qr_label) to
+                    stringResource(R.string.chat_new_conversation_scan_qr_content_description)
+        }
+
+    Row(
+        modifier =
+            Modifier
                 .fillMaxWidth()
                 .background(c.surface)
                 .border(BorderStroke(1.dp, c.border), RectangleShape)
                 .windowInsetsPadding(WindowInsets.navigationBars),
-        ) {
-            Box(
-                modifier = Modifier
+    ) {
+        Box(
+            modifier =
+                Modifier
                     .size(width = 72.dp, height = 52.dp)
                     .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable(onClick = onNavigateBack)
-                    .semantics { contentDescription = "Go back"; role = Role.Button },
-                contentAlignment = Alignment.Center,
-            ) {
-                BasicText(
-                    "←",
-                    style = ZappTheme.typography.button.copy(
+                    .clickable(onClick = state.onBack)
+                    .semantics {
+                        contentDescription = backLabel
+                        role = Role.Button
+                    },
+            contentAlignment = Alignment.Center,
+        ) {
+            BasicText(
+                "←",
+                style =
+                    ZappTheme.typography.button.copy(
                         color = c.text,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black,
                     ),
-                )
-            }
+            )
+        }
 
-            Box(
-                modifier = Modifier
+        Box(
+            modifier =
+                Modifier
                     .weight(1f)
                     .height(52.dp)
                     .background(c.accent, RectangleShape)
-                    .clickable(onClick = {
-                        if (canStartChat) {
-                            if (isCreating) return@clickable
-                            isCreating = true
-                            viewModel.createDirectChat(
-                                publicKey = selectedParticipants.first().publicKey,
-                                displayName = selectedParticipants.first().displayName,
-                                onCreated = { conversationId ->
-                                    isCreating = false
-                                    onConversationCreated(conversationId)
-                                },
-                            )
-                        } else {
-                            viewModel.scanPublicKey()
-                        }
-                    })
+                    .clickable(onClick = state.primaryAction.onClick)
                     .semantics {
-                        contentDescription = if (canStartChat) "Start Chat" else "Scan QR Code"
+                        contentDescription = description
                         role = Role.Button
                     },
-                contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    if (!canStartChat) {
-                        Icon(
-                            Icons.Default.QrCodeScanner,
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                            tint = c.onAccent,
-                        )
-                    }
-                    BasicText(
-                        text = if (canStartChat) "START CHAT" else "SCAN QR CODE",
-                        style = ZappTheme.typography.button.copy(
-                            color = c.onAccent,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.6.sp,
-                        ),
+                if (state.primaryAction is NewConversationPrimaryAction.ScanQr) {
+                    Icon(
+                        Icons.Default.QrCodeScanner,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                        tint = c.onAccent,
                     )
                 }
+                BasicText(
+                    text = label,
+                    style =
+                        ZappTheme.typography.button.copy(
+                            color = c.onAccent,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = BUTTON_LETTER_SPACING,
+                        ),
+                )
             }
         }
     }
@@ -399,11 +433,11 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // Illustration box
         Box(
-            modifier = Modifier
-                .size(100.dp)
-                .background(c.surfaceAlt, RectangleShape),
+            modifier =
+                Modifier
+                    .size(100.dp)
+                    .background(c.surfaceAlt, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -417,42 +451,45 @@ private fun EmptyState(modifier: Modifier = Modifier) {
         Spacer(Modifier.height(24.dp))
 
         BasicText(
-            text = "Start a private conversation",
-            style = ZappTheme.typography.sectionTitle.copy(
-                color = c.text,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center,
-            ),
+            text = stringResource(R.string.chat_new_conversation_empty_title),
+            style =
+                ZappTheme.typography.sectionTitle.copy(
+                    color = c.text,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center,
+                ),
         )
 
         Spacer(Modifier.height(8.dp))
 
         BasicText(
-            text = "Scan someone's QR code or enter their public key to send them a message.",
-            style = ZappTheme.typography.body.copy(
-                color = c.textMuted,
-                textAlign = TextAlign.Center,
-            ),
+            text = stringResource(R.string.chat_new_conversation_empty_body),
+            style =
+                ZappTheme.typography.body.copy(
+                    color = c.textMuted,
+                    textAlign = TextAlign.Center,
+                ),
         )
 
         Spacer(Modifier.height(20.dp))
 
-        // Privacy callout
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(c.accentSoft, RectangleShape)
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(c.accentSoft, RectangleShape)
+                    .padding(16.dp),
             verticalAlignment = Alignment.Top,
         ) {
             Box(
-                modifier = Modifier
-                    .size(8.dp)
-                    .background(c.accent, RectangleShape),
+                modifier =
+                    Modifier
+                        .size(8.dp)
+                        .background(c.accent, RectangleShape),
             )
             Spacer(Modifier.width(12.dp))
             BasicText(
-                text = "Messages are peer-to-peer encrypted and only readable by you and the recipient.",
+                text = stringResource(R.string.chat_new_conversation_privacy_callout),
                 style = ZappTheme.typography.body.copy(color = c.accentText),
                 modifier = Modifier.weight(1f),
             )
@@ -460,53 +497,8 @@ private fun EmptyState(modifier: Modifier = Modifier) {
     }
 }
 
-@Composable
-private fun ContactSelectRow(
-    contact: ChatContact,
-    isSelected: Boolean,
-    onToggle: () -> Unit,
-) {
-    val c = ZappTheme.colors
-    val initials = remember(contact.name) { initialsOf(contact.name) }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onToggle)
-            .padding(horizontal = 18.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(c.accent, RectangleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            BasicText(
-                initials,
-                style = ZappTheme.typography.rowTitle.copy(color = c.onAccent),
-            )
-        }
-
-        Spacer(Modifier.width(12.dp))
-
-        Column(modifier = Modifier.weight(1f)) {
-            BasicText(
-                contact.name,
-                style = ZappTheme.typography.rowTitle.copy(color = c.text),
-            )
-            BasicText(
-                "${contact.publicKey.take(8)}...${contact.publicKey.takeLast(4)}",
-                style = ZappTheme.typography.mono.copy(color = c.textMuted),
-            )
-        }
-
-        if (isSelected) {
-            Icon(
-                Icons.Default.CheckCircle,
-                contentDescription = "Selected",
-                tint = c.accent,
-                modifier = Modifier.size(24.dp),
-            )
-        }
-    }
-}
+private const val KEY_PREVIEW_HEAD = 12
+private const val KEY_PREVIEW_TAIL = 6
+private const val CONTACT_KEY_HEAD = 8
+private const val CONTACT_KEY_TAIL = 4
+private val BUTTON_LETTER_SPACING = 0.6.sp

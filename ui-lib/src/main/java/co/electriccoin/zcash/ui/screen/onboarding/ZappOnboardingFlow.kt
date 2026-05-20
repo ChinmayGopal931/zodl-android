@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -26,7 +27,8 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
+import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import kotlinx.coroutines.launch
 import co.electriccoin.zcash.ui.screen.onboarding.view.BioScanScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.MessagingPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnboardingDoneScreen
@@ -64,7 +66,7 @@ private enum class Step {
  * - **Part 3 — Secure Zapp** (biometric/PIN, scan, done)
  *
  * The wallet's 24-word BIP-39 phrase seeds the messaging identity via
- * [ChatViewModel.restoreFromWalletSeed], so users back up one phrase for
+ * [ChatBootstrap.restoreFromWalletSeed], so users back up one phrase for
  * everything. Wallet restore forwards to the existing [RestoreSeedArgs] flow;
  * an observer auto-advances to the secure step once `secretState` flips to
  * READY so the user lands back inside onboarding rather than on an unfinished
@@ -75,12 +77,13 @@ fun ZappOnboardingFlow(
     onComplete: () -> Unit,
     onBackToWelcome: () -> Unit,
     walletViewModel: WalletViewModel,
-    chatViewModel: ChatViewModel,
+    chatBootstrap: ChatBootstrap,
     navigationRouter: NavigationRouter,
 ) {
     var step by rememberSaveable { mutableStateOf(Step.MSG_INTRO) }
     var twoFAMode by rememberSaveable { mutableStateOf(TwoFAMode.Bio) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
+    val onboardingScope = rememberCoroutineScope()
 
     val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
@@ -133,7 +136,9 @@ fun ZappOnboardingFlow(
             onBack = { step = Step.WALLET_INTRO },
             onCreate = {
                 walletViewModel.createNewWallet()
-                chatViewModel.restoreFromWalletSeed(pendingUsername)
+                onboardingScope.launch {
+                    runCatching { chatBootstrap.restoreFromWalletSeed(pendingUsername) }
+                }
                 step = Step.WALLET_SEED
             },
             onRestore = {

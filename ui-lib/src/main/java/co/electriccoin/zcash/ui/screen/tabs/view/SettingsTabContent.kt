@@ -49,22 +49,23 @@ import co.electriccoin.zcash.ui.design.component.zapp.initialsOf
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
-import co.electriccoin.zcash.ui.screen.chat.viewmodel.ChatViewModel
+import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsTabContent(
     navigationRouter: NavigationRouter,
-    chatViewModel: ChatViewModel,
     walletViewModel: WalletViewModel = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
     val c = ZappTheme.colors
-    val identity by chatViewModel.identity.collectAsState()
+    val bootstrap: ChatBootstrap = koinInject()
+    val identity by bootstrap.identity.collectAsState()
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val hasWallet = secretState == SecretState.READY
     val snackbarHostState = remember { SnackbarHostState() }
