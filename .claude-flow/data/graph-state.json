@@ -1,0 +1,215 @@
+{
+  "version": 1,
+  "updatedAt": 1779287746686,
+  "nodeCount": 18,
+  "nodes": {
+    "mem-MEMORY-memory-index": {
+      "id": "mem-MEMORY-memory-index",
+      "category": "core",
+      "confidence": 0.525,
+      "accessCount": 1,
+      "createdAt": 1778772953789
+    },
+    "mem-feedback_commit_style----": {
+      "id": "mem-feedback_commit_style----",
+      "category": "feedback_commit_style",
+      "confidence": 1,
+      "accessCount": 14,
+      "createdAt": 1778772953790
+    },
+    "mem-project_justzappit----": {
+      "id": "mem-project_justzappit----",
+      "category": "project_justzappit",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953787
+    },
+    "mem-project_justzappit_audit----": {
+      "id": "mem-project_justzappit_audit----",
+      "category": "project_justzappit_audit",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953787
+    },
+    "mem-project_zapp_5_bug_fixes----": {
+      "id": "mem-project_zapp_5_bug_fixes----",
+      "category": "project_zapp_5_bug_fixes",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953788
+    },
+    "mem-project_zapp_simulator_fixes----": {
+      "id": "mem-project_zapp_simulator_fixes----",
+      "category": "project_zapp_simulator_fixes",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953788
+    },
+    "mem-MEMORY-critical--node-env-build-issue": {
+      "id": "mem-MEMORY-critical--node-env-build-issue",
+      "category": "core",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953791
+    },
+    "mem-MEMORY-project-structure": {
+      "id": "mem-MEMORY-project-structure",
+      "category": "core",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953791
+    },
+    "mem-MEMORY-phase-status": {
+      "id": "mem-MEMORY-phase-status",
+      "category": "core",
+      "confidence": 0.6800000000000002,
+      "accessCount": 4,
+      "createdAt": 1778772953791
+    },
+    "mem-MEMORY-key-files": {
+      "id": "mem-MEMORY-key-files",
+      "category": "core",
+      "confidence": 0.8600000000000003,
+      "accessCount": 8,
+      "createdAt": 1778772953793
+    },
+    "mem-debugging-next-js-build---node-env": {
+      "id": "mem-debugging-next-js-build---node-env",
+      "category": "debugging",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953792
+    },
+    "mem-debugging-turbopack-root-warning": {
+      "id": "mem-debugging-turbopack-root-warning",
+      "category": "debugging",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953792
+    },
+    "mem-MEMORY-critical-fix--barekit-ipc-init": {
+      "id": "mem-MEMORY-critical-fix--barekit-ipc-init",
+      "category": "core",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953793
+    },
+    "mem-MEMORY-critical-fix--ed25519-keypairs": {
+      "id": "mem-MEMORY-critical-fix--ed25519-keypairs",
+      "category": "core",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953793
+    },
+    "mem-MEMORY-architecture": {
+      "id": "mem-MEMORY-architecture",
+      "category": "core",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778772953793
+    },
+    "mem-MEMORY-media-messaging-architecture": {
+      "id": "mem-MEMORY-media-messaging-architecture",
+      "category": "core",
+      "confidence": 0.8500000000000003,
+      "accessCount": 7,
+      "createdAt": 1778772953793
+    },
+    "mem-MEMORY-barekit-notes": {
+      "id": "mem-MEMORY-barekit-notes",
+      "category": "core",
+      "confidence": 0.7600000000000002,
+      "accessCount": 6,
+      "createdAt": 1778772953793
+    },
+    "insight-1778805964001-eobd": {
+      "id": "insight-1778805964001-eobd",
+      "category": "insights",
+      "confidence": 0.3999999999999999,
+      "accessCount": 0,
+      "createdAt": 1778805964001
+    }
+  },
+  "edges": [
+    {
+      "sourceId": "mem-MEMORY-critical--node-env-build-issue",
+      "targetId": "mem-MEMORY-project-structure",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-project-structure",
+      "targetId": "mem-MEMORY-phase-status",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-phase-status",
+      "targetId": "mem-MEMORY-key-files",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-debugging-next-js-build---node-env",
+      "targetId": "mem-debugging-turbopack-root-warning",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-critical-fix--barekit-ipc-init",
+      "targetId": "mem-MEMORY-critical-fix--ed25519-keypairs",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-critical-fix--ed25519-keypairs",
+      "targetId": "mem-MEMORY-architecture",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-architecture",
+      "targetId": "mem-MEMORY-key-files",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-key-files",
+      "targetId": "mem-MEMORY-media-messaging-architecture",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-MEMORY-media-messaging-architecture",
+      "targetId": "mem-MEMORY-barekit-notes",
+      "type": "temporal",
+      "weight": 0.5
+    },
+    {
+      "sourceId": "mem-feedback_commit_style----",
+      "targetId": "mem-feedback_commit_style----",
+      "type": "similar",
+      "weight": 0.536
+    }
+  ],
+  "pageRanks": {
+    "mem-MEMORY-memory-index": 0.023246021868659855,
+    "mem-feedback_commit_style----": 0.15450762970372348,
+    "mem-project_justzappit----": 0.023246021868659855,
+    "mem-project_justzappit_audit----": 0.023246021868659855,
+    "mem-project_zapp_5_bug_fixes----": 0.023246021868659855,
+    "mem-project_zapp_simulator_fixes----": 0.023246021868659855,
+    "mem-MEMORY-critical--node-env-build-issue": 0.023246021868659855,
+    "mem-MEMORY-project-structure": 0.04300664486845683,
+    "mem-MEMORY-phase-status": 0.05980470112789986,
+    "mem-MEMORY-key-files": 0.12492318557581003,
+    "mem-debugging-next-js-build---node-env": 0.023246021868659855,
+    "mem-debugging-turbopack-root-warning": 0.04300664486845683,
+    "mem-MEMORY-critical-fix--barekit-ipc-init": 0.023246021868659855,
+    "mem-MEMORY-critical-fix--ed25519-keypairs": 0.04300664486845683,
+    "mem-MEMORY-architecture": 0.05980470112789986,
+    "mem-MEMORY-media-messaging-architecture": 0.12944160013234549,
+    "mem-MEMORY-barekit-notes": 0.13328405090901224,
+    "insight-1778805964001-eobd": 0.023246021868659855
+  }
+}

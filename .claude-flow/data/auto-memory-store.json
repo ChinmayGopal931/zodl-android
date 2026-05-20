@@ -1,0 +1,276 @@
+[
+  {
+    "id": "mem-MEMORY-memory-index",
+    "key": "memory-index",
+    "content": "- [justZappIt project overview](project_justzappit.md) — Next.js 14 crypto exchange directory app, Supabase, Tailwind, Leaflet, hCaptcha, Vercel\n- [justZappIt audit findings](project_justzappit_audit.md) — Comprehensive audit completed 2026-03-27, all critical/high issues fixed\n- [Commit style](feedback_commit_style.md) — Do not add Co-Authored-By attribution to commits\n- [Zapp simulator fixes](project_zapp_simulator_fixes.md) — iOS dyld fix (ZappMessaging embed + sandbox), Android APK install; ",
+    "summary": "Memory Index",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953786
+  },
+  {
+    "id": "mem-feedback_commit_style----",
+    "key": "-",
+    "content": "name: No Co-Authored-By in commits\ndescription: Do not add Co-Authored-By attribution to git commit messages\ntype: feedback\n---\n\nDo not add `Co-Authored-By: Claude ...` lines to git commit messages.\n\n**Why:** User explicitly rejected a commit that included this attribution.\n\n**How to apply:** When creating any git commit, omit the Co-Authored-By trailer entirely.",
+    "summary": "---",
+    "namespace": "feedback_commit_style",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org/memory/feedback_commit_style.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953786
+  },
+  {
+    "id": "mem-project_justzappit----",
+    "key": "-",
+    "content": "name: justZappIt project overview\ndescription: Tech stack, architecture, and key files for the justZappIt crypto exchange directory app\ntype: project\n---\n\nApp at /Users/reneec/Documents/Zapp-Org/justZappIt — community directory of physical crypto exchange shops.\n\n**Stack:** Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, Supabase (PostgreSQL + RLS + Realtime), Leaflet + MarkerCluster, hCaptcha, Resend email, Vercel Analytics, AGPL-3.0 license.\n\n**Key paths:**\n- `apps/web/` — Next.js",
+    "summary": "---",
+    "namespace": "project_justzappit",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org/memory/project_justzappit.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953787
+  },
+  {
+    "id": "mem-project_justzappit_audit----",
+    "key": "-",
+    "content": "name: justZappIt audit findings\ndescription: Comprehensive code audit completed 2026-03-27 — issues found and fixed\ntype: project\n---\n\nFull audit completed 2026-03-27. All critical and high-priority issues were fixed.\n\n**Fixes applied:**\n\n1. **hcaptcha.ts** — Added try/catch around fetch, `res.ok` check before `.json()`, `encodeURIComponent` on both secret and token params. Previously would throw unhandled exceptions on network errors.\n\n2. **submissions/route.ts** — Added `.trim()` to all string",
+    "summary": "---",
+    "namespace": "project_justzappit_audit",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org/memory/project_justzappit_audit.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953787
+  },
+  {
+    "id": "mem-project_zapp_5_bug_fixes----",
+    "key": "-",
+    "content": "name: Zapp 5-issue fix batch\ndescription: Five bug fixes applied 2026-03-30 across zapp-android, zapp-ios, and zappMessaging\ntype: project\n---\n\nFixed 2026-03-30 across all three repos.\n\n**Issue 1 – Android quits/restarts:**\n- `AndroidManifest.xml`: added `android:launchMode=\"singleTop\"` + `android:configChanges` to prevent Activity recreation from deep links and orientation changes.\n- `ZappApplication.kt`: debounced `onStop` SDK suspension by 3s so brief app-switches (notification shade, etc.) d",
+    "summary": "---",
+    "namespace": "project_zapp_5_bug_fixes",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org/memory/project_zapp_5_bug_fixes.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953788
+  },
+  {
+    "id": "mem-project_zapp_simulator_fixes----",
+    "key": "-",
+    "content": "name: Zapp simulator fixes\ndescription: iOS dyld crash fix and Android emulator setup notes for Zapp apps\ntype: project\n---\n\niOS and Android simulator issues diagnosed and fixed 2026-03-28.\n\n**iOS fix — ZappMessaging.framework not embedded:**\n- Root cause: `ZappMessaging.framework` was linked by `Zapp.debug.dylib` via `@rpath` but never copied into `Zapp.app/Frameworks/` → dyld crash at launch\n- Fix in `zapp-ios/Zapp.xcodeproj/project.pbxproj`:\n  1. Added Run Script build phase `CF11111111111111",
+    "summary": "---",
+    "namespace": "project_zapp_simulator_fixes",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org/memory/project_zapp_simulator_fixes.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953788
+  },
+  {
+    "id": "mem-MEMORY-memory-index",
+    "key": "memory-index",
+    "content": "- [Commit message style](feedback_commit_style.md) — Never include Co-Authored-By lines in commits",
+    "summary": "Memory Index",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org-zapp-android/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953789
+  },
+  {
+    "id": "mem-feedback_commit_style----",
+    "key": "-",
+    "content": "name: Commit message style\ndescription: Do not include Co-Authored-By lines in git commits\ntype: feedback\n---\n\nNever include `Co-Authored-By:` lines in commit messages.\n\n**Why:** User preference — they don't want it.\n\n**How to apply:** Omit the Co-Authored-By trailer from all git commits in this project.",
+    "summary": "---",
+    "namespace": "feedback_commit_style",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-Zapp-Org-zapp-android/memory/feedback_commit_style.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953790
+  },
+  {
+    "id": "mem-MEMORY-critical--node-env-build-issue",
+    "key": "critical-node-env-build-issue",
+    "content": "- Next.js 16 (and 15) builds FAIL with `useContext` null / `<Html>` errors when `NODE_ENV=development` is set in the environment\n- Root cause: development React builds behave differently during SSG prerendering\n- Fix: `NODE_ENV=production next build` in the build script\n- This affects ALL Next.js versions on this machine (Node 22.9.0)",
+    "summary": "Critical: NODE_ENV Build Issue",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-clawdStack/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953791
+  },
+  {
+    "id": "mem-MEMORY-project-structure",
+    "key": "project-structure",
+    "content": "- Next.js 16.1.6 + React 19 + Tailwind CSS 4 + TypeScript\n- App Router, dark mode default, Geist fonts\n- State management: React Context + useReducer (AppContext.tsx)\n- Icons: lucide-react\n- Testing: Vitest + happy-dom\n- ESLint: Flat config (eslint.config.mjs) with eslint-config-next@16",
+    "summary": "Project Structure",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-clawdStack/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953791
+  },
+  {
+    "id": "mem-MEMORY-phase-status",
+    "key": "phase-status",
+    "content": "- Phase 1 (Core Graph Visualizer): Complete\n- Phase 2 (Skills Explorer): Complete — all code, tests, routes done\n- Phase 3 (Sharing & Collaboration): Not started\n- Phase 4 (Polish): Not started",
+    "summary": "Phase Status",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-clawdStack/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953791
+  },
+  {
+    "id": "mem-MEMORY-key-files",
+    "key": "key-files",
+    "content": "- [debugging.md](debugging.md) - Debugging notes and patterns",
+    "summary": "Key Files",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-clawdStack/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953792
+  },
+  {
+    "id": "mem-debugging-next-js-build---node-env",
+    "key": "next-js-build-node-env",
+    "content": "When NODE_ENV=development is set globally (e.g., in shell profile), `next build` fails with:\n- Next.js 16: `TypeError: Cannot read properties of null (reading 'useContext')` on `/_global-error`\n- Next.js 15: `Error: <Html> should not be imported outside of pages/_document` on `/404`\n\nBoth are caused by React development builds being used during SSG prerendering.\nFix: Prefix build command with `NODE_ENV=production`.",
+    "summary": "Next.js Build + NODE_ENV",
+    "namespace": "debugging",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-clawdStack/memory/debugging.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953792
+  },
+  {
+    "id": "mem-debugging-turbopack-root-warning",
+    "key": "turbopack-root-warning",
+    "content": "Parent directory has its own package-lock.json, causing turbopack to infer wrong workspace root.\nThis is cosmetic — builds work fine. Can silence with `turbopack.root` in next.config.ts.",
+    "summary": "Turbopack Root Warning",
+    "namespace": "debugging",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-clawdStack/memory/debugging.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953792
+  },
+  {
+    "id": "mem-MEMORY-critical-fix--barekit-ipc-init",
+    "key": "critical-fix-barekit-ipc-init-order",
+    "content": "**IPC must be created AFTER `worklet.start()`, not before.** `bare_worklet_init` sets `incoming = -1, outgoing = -1`. The FDs are only set inside `bare_worklet__on_thread` (via barrier). Creating `IPC(worklet:)` before `start()` causes `dup(-1)` → invalid FDs → `read(-1)` → EBADF → uninitialized memory in `-[BareIPC read]` → SIGSEGV.",
+    "summary": "Critical Fix: BareKit IPC Init Order",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-p2pChatApp/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953793
+  },
+  {
+    "id": "mem-MEMORY-critical-fix--ed25519-keypairs",
+    "key": "critical-fix-ed25519-keypairs",
+    "content": "Use `hypercore-crypto.keyPair()` (not `bare-crypto` SHA256) for Hyperswarm-compatible Ed25519 keypairs. Old code used `SHA256(seed)` as publicKey which is NOT a valid Ed25519 key and crashes Hyperswarm's Noise protocol.",
+    "summary": "Critical Fix: Ed25519 Keypairs",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-p2pChatApp/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953793
+  },
+  {
+    "id": "mem-MEMORY-architecture",
+    "key": "architecture",
+    "content": "- Hybrid iOS app: Swift/SwiftUI + BareKit JavaScript worklet\n- IPC: NDJSON framing over raw BareKit IPC byte stream\n- P2P: Hyperswarm with topic-based discovery (`swarm.join(topic)`)\n- Build: `npm run build` (bare-pack), then `xcodegen generate`, then `xcodebuild`\n- Simulator: iPhone 17, iOS 26.1, device ID `09A22481-7E76-47BF-AA09-9D658AFB0C1C`",
+    "summary": "Architecture",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-p2pChatApp/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953793
+  },
+  {
+    "id": "mem-MEMORY-key-files",
+    "key": "key-files",
+    "content": "- `app/swift/Services/WorkletBridge.swift` - Swift↔JS IPC bridge\n- `app/js/app.js` - Worklet entry point\n- `app/js/lib/identity.js` - Ed25519 keypair management\n- `app/js/lib/p2p-manager.js` - Hyperswarm topic-based discovery (uses FramedSocket)\n- `app/js/lib/ipc-handler.js` - JS-side NDJSON IPC routing\n- `app/js/lib/socket-framing.js` - Length-prefixed binary framing for P2P sockets\n- `app/js/lib/media-store.js` - Content-addressed media file storage (Blake2b hash)\n- `app/js/lib/media-transfer.",
+    "summary": "Key Files",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-p2pChatApp/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953793
+  },
+  {
+    "id": "mem-MEMORY-media-messaging-architecture",
+    "key": "media-messaging-architecture",
+    "content": "- P2P sockets use length-prefixed framing: `[4B len][1B type][payload]`\n  - Type 0x01: JSON, 0x02: media chunk, 0x03: media request\n- Backward compatible: detects legacy raw JSON `{` first-byte\n- Media files stored in `~/Documents/p2pchat/media/{blake2bHash}.{ext}`\n- Swift writes compressed images to temp files, passes file paths to JS via IPC\n- Thumbnails (~15KB base64) embedded inline in message JSON for instant preview\n- Full images transferred via 64KB chunks over FramedSocket\n- Message.cont",
+    "summary": "Media Messaging Architecture",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-p2pChatApp/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953793
+  },
+  {
+    "id": "mem-MEMORY-barekit-notes",
+    "key": "barekit-notes",
+    "content": "- v1.15.1 prebuilt xcframework (asserts compiled out in release)\n- `-[BareIPC read]` has bug: doesn't init `data`/`len` on error path\n- Empty IPC reads are normal (yield/sleep to avoid spin loop)",
+    "summary": "BareKit Notes",
+    "namespace": "core",
+    "type": "semantic",
+    "metadata": {
+      "sourceFile": "/Users/reneec/.claude/projects/-Users-reneec-Documents-p2pChatApp/memory/MEMORY.md",
+      "bootstrapped": true
+    },
+    "createdAt": 1778772953793
+  },
+  {
+    "id": "insight-1778805964001-eobd",
+    "key": "frequent-edit-unknown",
+    "content": "File unknown was edited 115 times this session — likely a hot path worth monitoring.",
+    "summary": "Frequently edited: unknown (115x)",
+    "namespace": "insights",
+    "type": "procedural",
+    "metadata": {
+      "sourceFile": "unknown",
+      "editCount": 115,
+      "autoGenerated": true
+    },
+    "createdAt": 1778805964001
+  }
+]
