@@ -28,9 +28,9 @@ import co.electriccoin.zcash.ui.design.component.ZashiCard
 import co.electriccoin.zcash.ui.design.component.chart.SparkChart
 import co.electriccoin.zcash.ui.design.component.chart.SparkChartData
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
+import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
-import co.electriccoin.zcash.ui.design.theme.colors.ZashiColors
-import co.electriccoin.zcash.ui.design.theme.typography.ZashiTypography
 import co.electriccoin.zcash.ui.design.util.TickerLocation
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
@@ -61,8 +61,8 @@ fun BalanceChartWidget(
     ) {
         Text(
             text = stringResource(R.string.home_balance_chart_title),
-            color = ZashiColors.Text.textPrimary,
-            style = ZashiTypography.textLg,
+            color = ZappTheme.colors.text,
+            style = ZappTheme.typography.sectionTitle,
             fontWeight = FontWeight.SemiBold,
         )
 
@@ -139,14 +139,14 @@ private fun PeriodChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val activeColor = ZashiColors.Utility.WarningYellow.utilityOrange500
-    val bg = if (isSelected) ZashiColors.Utility.WarningYellow.utilityOrange50 else Color.Transparent
-    val fg = if (isSelected) activeColor else ZashiColors.Text.textTertiary
+    val activeColor = ZappTheme.colors.accent
+    val bg = if (isSelected) ZappTheme.colors.accentSoft else Color.Transparent
+    val fg = if (isSelected) activeColor else ZappTheme.colors.textSubtle
 
     Text(
         text = label,
         color = fg,
-        style = ZashiTypography.textSm,
+        style = ZappTheme.typography.caption,
         fontWeight = FontWeight.Medium,
         modifier =
             modifier
@@ -165,8 +165,8 @@ private fun Footer(balance: Zatoshi) {
                 R.string.home_balance_chart_footer,
                 stringRes(balance, TickerLocation.HIDDEN).getValue(),
             ),
-        color = ZashiColors.Text.textTertiary,
-        style = ZashiTypography.textXs,
+        color = ZappTheme.colors.textSubtle,
+        style = ZappTheme.typography.caption,
     )
 }
 
@@ -181,8 +181,8 @@ private fun EmptyChart() {
     ) {
         Text(
             text = stringResource(R.string.home_balance_chart_empty),
-            color = ZashiColors.Text.textTertiary,
-            style = ZashiTypography.textSm,
+            color = ZappTheme.colors.textSubtle,
+            style = ZappTheme.typography.caption,
         )
     }
 }
@@ -195,7 +195,7 @@ private fun LoadingChart() {
                 .fillMaxWidth()
                 .height(140.dp)
                 .clip(RoundedCornerShape(0.dp))
-                .background(ZashiColors.Surfaces.bgTertiary),
+                .background(ZappTheme.colors.surfaceAlt),
     )
 }
 
@@ -225,8 +225,10 @@ object BalanceChartWidgetStateFixture {
 @Composable
 private fun DataPreview() =
     ZcashTheme {
-        BlankSurface {
-            BalanceChartWidget(state = BalanceChartWidgetStateFixture.data())
+        ProvideZappTheme {
+            BlankSurface {
+                BalanceChartWidget(state = BalanceChartWidgetStateFixture.data())
+            }
         }
     }
 
@@ -234,14 +236,16 @@ private fun DataPreview() =
 @Composable
 private fun EmptyPreview() =
     ZcashTheme {
-        BlankSurface {
-            BalanceChartWidget(
-                state =
-                    BalanceChartState.Empty(
-                        selectedPeriod = BalanceChartPeriod.W1,
-                        onPeriodClick = {},
-                    )
-            )
+        ProvideZappTheme {
+            BlankSurface {
+                BalanceChartWidget(
+                    state =
+                        BalanceChartState.Empty(
+                            selectedPeriod = BalanceChartPeriod.W1,
+                            onPeriodClick = {},
+                        )
+                )
+            }
         }
     }
 
@@ -249,7 +253,9 @@ private fun EmptyPreview() =
 @Composable
 private fun LoadingPreview() =
     ZcashTheme {
-        BlankSurface {
-            BalanceChartWidget(state = BalanceChartState.Loading)
+        ProvideZappTheme {
+            BlankSurface {
+                BalanceChartWidget(state = BalanceChartState.Loading)
+            }
         }
     }

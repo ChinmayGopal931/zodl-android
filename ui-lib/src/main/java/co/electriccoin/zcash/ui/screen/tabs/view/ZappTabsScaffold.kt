@@ -149,7 +149,6 @@ private fun ChatsTabContent() {
         else -> {
             ChatListScreen(
                 showBackButton = false,
-                onLegacyConversationSelected = { conv -> bootstrap.markConversationRead(conv.id) },
             )
         }
     }

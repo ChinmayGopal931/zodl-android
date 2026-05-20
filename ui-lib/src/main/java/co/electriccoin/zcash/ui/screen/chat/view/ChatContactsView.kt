@@ -55,6 +55,7 @@ import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 @Composable
 fun ChatContactsView(
     state: ChatContactsState,
+    showBackButton: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     val contacts = state.contacts
@@ -135,7 +136,7 @@ fun ChatContactsView(
                 ),
         )
 
-        if (state.showBackButton) {
+        if (showBackButton) {
             ZappBackButton(
                 onClick = state.onBack,
                 modifier = Modifier

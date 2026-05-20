@@ -9,7 +9,7 @@ import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ReportCategory
 
 data class ChatRoomState(
-    val title: String,
+    val title: StringResource,
     val subtitle: StringResource,
     val isTitleClickable: Boolean,
     val onTitleClick: () -> Unit,

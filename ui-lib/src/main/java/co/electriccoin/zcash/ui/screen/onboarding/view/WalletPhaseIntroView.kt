@@ -1,5 +1,3 @@
-@file:Suppress("TooManyFunctions")
-
 package co.electriccoin.zcash.ui.screen.onboarding.view
 
 import androidx.compose.foundation.background

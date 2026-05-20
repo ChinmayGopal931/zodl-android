@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.media.FileUtils
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import java.text.SimpleDateFormat
@@ -37,8 +38,8 @@ fun FileBubble(message: ChatMessage, isFromMe: Boolean) {
             bottomStart = if (isFromMe) 0.dp else 4.dp,
             bottomEnd = if (isFromMe) 4.dp else 0.dp
         ),
-        color = if (isFromMe) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.surfaceVariant,
+        color = if (isFromMe) ZappTheme.colors.accent
+        else ZappTheme.colors.surfaceAlt,
         modifier = Modifier.widthIn(max = 280.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -46,8 +47,8 @@ fun FileBubble(message: ChatMessage, isFromMe: Boolean) {
                 Icon(
                     Icons.AutoMirrored.Filled.InsertDriveFile,
                     contentDescription = null,
-                    tint = if (isFromMe) MaterialTheme.colorScheme.onPrimary
-                    else MaterialTheme.colorScheme.primary,
+                    tint = if (isFromMe) ZappTheme.colors.onAccent
+                    else ZappTheme.colors.accent,
                     modifier = Modifier.size(28.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -55,16 +56,16 @@ fun FileBubble(message: ChatMessage, isFromMe: Boolean) {
                     Text(
                         text = fileName,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isFromMe) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface,
+                        color = if (isFromMe) ZappTheme.colors.onAccent
+                        else ZappTheme.colors.text,
                         maxLines = 2
                     )
                     if (fileSize != null && fileSize > 0) {
                         Text(
                             text = FileUtils.formatFileSize(fileSize),
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isFromMe) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isFromMe) ZappTheme.colors.onAccent.copy(alpha = 0.7f)
+                            else ZappTheme.colors.textMuted
                         )
                     }
                 }
@@ -73,8 +74,8 @@ fun FileBubble(message: ChatMessage, isFromMe: Boolean) {
             Text(
                 text = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(message.timestamp)),
                 style = MaterialTheme.typography.labelSmall,
-                color = if (isFromMe) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                else MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (isFromMe) ZappTheme.colors.onAccent.copy(alpha = 0.7f)
+                else ZappTheme.colors.textMuted
             )
         }
     }

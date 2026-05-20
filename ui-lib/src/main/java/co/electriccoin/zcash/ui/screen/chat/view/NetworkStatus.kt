@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Cable
@@ -31,14 +30,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListConnectionStatus
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListDhtHealth
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
-
-private val OkColor = Color(0xFF2E7D32)
-private val WarnColor = Color(0xFFE65100)
 
 @Composable
 fun ConnectionPill(
@@ -47,15 +45,17 @@ fun ConnectionPill(
     dhtHealth: ChatListDhtHealth,
     onClick: (() -> Unit)? = null
 ) {
-    val errorColor = MaterialTheme.colorScheme.error
+    val errorColor = ZappTheme.colors.danger
+    val okColor = ZappTheme.colors.success
+    val warnColor = ZappTheme.colors.accent
     val statusColor = when (connectionStatus) {
         ChatListConnectionStatus.CONNECTED -> when {
             dhtHealth == ChatListDhtHealth.CRITICAL -> errorColor
-            peerCount > 0 -> OkColor
-            dhtHealth == ChatListDhtHealth.DEGRADED -> WarnColor
-            else -> OkColor
+            peerCount > 0 -> okColor
+            dhtHealth == ChatListDhtHealth.DEGRADED -> warnColor
+            else -> okColor
         }
-        ChatListConnectionStatus.CONNECTING -> WarnColor
+        ChatListConnectionStatus.CONNECTING -> warnColor
         else -> errorColor
     }
     val label = when (connectionStatus) {
@@ -105,12 +105,14 @@ fun NetworkDetailsSheet(
     connectionDetails: ConnectionDetailsUi?,
     onDismiss: () -> Unit
 ) {
-    val errorColor = MaterialTheme.colorScheme.error
-    val secondaryColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val errorColor = ZappTheme.colors.danger
+    val okColor = ZappTheme.colors.success
+    val warnColor = ZappTheme.colors.accent
+    val secondaryColor = ZappTheme.colors.textMuted
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = ZappTheme.colors.bg
     ) {
         Column(
             modifier = Modifier
@@ -123,6 +125,7 @@ fun NetworkDetailsSheet(
             Text(
                 "Network",
                 style = MaterialTheme.typography.titleMedium,
+                color = ZappTheme.colors.text,
                 modifier = Modifier.padding(bottom = 4.dp)
             )
 
@@ -136,8 +139,8 @@ fun NetworkDetailsSheet(
                     ChatListConnectionStatus.ERROR -> "Error"
                 },
                 valueColor = when (connectionStatus) {
-                    ChatListConnectionStatus.CONNECTED -> OkColor
-                    ChatListConnectionStatus.CONNECTING -> WarnColor
+                    ChatListConnectionStatus.CONNECTED -> okColor
+                    ChatListConnectionStatus.CONNECTING -> warnColor
                     else -> errorColor
                 }
             )
@@ -151,8 +154,8 @@ fun NetworkDetailsSheet(
                     ChatListDhtHealth.CRITICAL -> "Critical"
                 },
                 valueColor = when (dhtHealth) {
-                    ChatListDhtHealth.HEALTHY -> OkColor
-                    ChatListDhtHealth.DEGRADED -> WarnColor
+                    ChatListDhtHealth.HEALTHY -> okColor
+                    ChatListDhtHealth.DEGRADED -> warnColor
                     ChatListDhtHealth.CRITICAL -> errorColor
                 }
             )
@@ -161,11 +164,11 @@ fun NetworkDetailsSheet(
                 icon = Icons.Default.People,
                 label = "Peers",
                 value = peerCount.toString(),
-                valueColor = if (peerCount > 0) OkColor else secondaryColor
+                valueColor = if (peerCount > 0) okColor else secondaryColor
             )
 
             connectionDetails?.let { details ->
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                HorizontalDivider(color = ZappTheme.colors.border.copy(alpha = 0.3f))
 
                 NetworkDetailRow(
                     icon = Icons.Default.Cable,
@@ -185,10 +188,10 @@ fun NetworkDetailsSheet(
                     value = if (details.pendingMessageCount > 0)
                         "${details.pendingMessageCount} msgs in ${details.pendingQueues} queues"
                     else "None",
-                    valueColor = if (details.pendingMessageCount > 0) WarnColor else OkColor
+                    valueColor = if (details.pendingMessageCount > 0) warnColor else okColor
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
+                HorizontalDivider(color = ZappTheme.colors.border.copy(alpha = 0.3f))
 
                 NetworkDetailRow(
                     icon = Icons.Default.Security,
@@ -214,7 +217,7 @@ private fun NetworkDetailRow(
     valueColor: Color = Color.Unspecified
 ) {
     val effectiveValueColor = if (valueColor == Color.Unspecified) {
-        MaterialTheme.colorScheme.onSurface
+        ZappTheme.colors.text
     } else valueColor
 
     Row(
@@ -230,12 +233,12 @@ private fun NetworkDetailRow(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = ZappTheme.colors.textMuted
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = ZappTheme.colors.textMuted
             )
         }
         Text(

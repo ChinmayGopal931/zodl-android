@@ -27,9 +27,9 @@ import co.electriccoin.zcash.ui.design.component.ZashiScreenModalBottomSheet
 import co.electriccoin.zcash.ui.design.component.ZashiTextField
 import co.electriccoin.zcash.ui.design.component.rememberScreenModalBottomSheetState
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
+import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
-import co.electriccoin.zcash.ui.design.theme.colors.ZashiColors
-import co.electriccoin.zcash.ui.design.theme.typography.ZashiTypography
 import co.electriccoin.zcash.ui.design.util.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -69,15 +69,15 @@ private fun Content(
     ) {
         Text(
             text = stringResource(R.string.offramp_title),
-            color = ZashiColors.Text.textPrimary,
-            style = ZashiTypography.header6,
+            color = ZappTheme.colors.text,
+            style = ZappTheme.typography.sectionTitle,
             fontWeight = FontWeight.SemiBold
         )
         Spacer(16.dp)
         Text(
             text = stringResource(R.string.offramp_amount_label),
-            color = ZashiColors.Text.textPrimary,
-            style = ZashiTypography.textSm,
+            color = ZappTheme.colors.text,
+            style = ZappTheme.typography.caption,
             fontWeight = FontWeight.Medium
         )
         Spacer(4.dp)
@@ -88,8 +88,8 @@ private fun Content(
             placeholder = {
                 Text(
                     text = stringResource(R.string.offramp_amount_hint),
-                    color = ZashiColors.Text.textTertiary,
-                    style = ZashiTypography.textMd
+                    color = ZappTheme.colors.textSubtle,
+                    style = ZappTheme.typography.body
                 )
             },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -99,20 +99,20 @@ private fun Content(
             Spacer(4.dp)
             Text(
                 text = fiat.getValue(),
-                color = ZashiColors.Text.textTertiary,
-                style = ZashiTypography.textSm
+                color = ZappTheme.colors.textSubtle,
+                style = ZappTheme.typography.caption
             )
         }
         Spacer(16.dp)
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = ZashiColors.Surfaces.bgAlt),
+            colors = CardDefaults.cardColors(containerColor = ZappTheme.colors.surfaceAlt),
         ) {
             Text(
                 modifier = Modifier.padding(16.dp),
                 text = stringResource(R.string.offramp_info_body),
-                color = ZashiColors.Text.textTertiary,
-                style = ZashiTypography.textSm
+                color = ZappTheme.colors.textSubtle,
+                style = ZappTheme.typography.caption
             )
         }
         Spacer(24.dp)
@@ -128,8 +128,8 @@ private fun Content(
                 .fillMaxWidth()
                 .padding(vertical = 4.dp),
             text = state.attribution.getValue(),
-            color = ZashiColors.Text.textTertiary,
-            style = ZashiTypography.textSm,
+            color = ZappTheme.colors.textSubtle,
+            style = ZappTheme.typography.caption,
             textAlign = TextAlign.Center
         )
         Spacer(8.dp)
@@ -147,16 +147,18 @@ private fun Content(
 @Composable
 private fun Preview() =
     ZcashTheme {
-        OfframpView(
-            state =
-                OfframpState(
-                    onBack = {},
-                    amount = "0.08",
-                    fiatAmount = null,
-                    onAmountChange = {},
-                    onContinue = {},
-                    isContinueEnabled = true,
-                    attribution = co.electriccoin.zcash.ui.design.util.stringRes("Powered by peer.xyz"),
-                )
-        )
+        ProvideZappTheme {
+            OfframpView(
+                state =
+                    OfframpState(
+                        onBack = {},
+                        amount = "0.08",
+                        fiatAmount = null,
+                        onAmountChange = {},
+                        onContinue = {},
+                        isContinueEnabled = true,
+                        attribution = co.electriccoin.zcash.ui.design.util.stringRes("Powered by peer.xyz"),
+                    )
+            )
+        }
     }

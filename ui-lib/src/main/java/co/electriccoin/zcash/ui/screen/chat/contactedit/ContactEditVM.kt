@@ -33,37 +33,45 @@ class ContactEditVM(
         viewModelScope.launch { loadContact() }
     }
 
-    val state: StateFlow<ContactEditState?> =
+    val state: StateFlow<ContactEditState> =
         combine(
             contact,
             contactLoaded,
             nameInput,
             showDeleteDialog,
         ) { c, loaded, name, showDelete ->
-            ContactEditState(
-                title = stringRes(R.string.chat_contact_edit_title),
-                publicKey = publicKey,
-                nameInput = name,
-                isContactFound = c != null || !loaded,
-                onNameChange = ::onNameChange,
-                onSave = ::onSave,
-                canSave = name.isNotBlank() && c != null,
-                onDeleteClick = ::onDeleteClick,
-                onBack = ::onBack,
-                deleteDialog =
-                    if (showDelete) {
-                        ContactEditDeleteDialogState(
-                            onConfirm = ::onDeleteConfirm,
-                            onDismiss = ::dismissDeleteDialog,
-                        )
-                    } else {
-                        null
-                    },
-            )
+            createState(c, loaded, name, showDelete)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue = createState(c = null, loaded = false, name = "", showDelete = false),
+        )
+
+    private fun createState(
+        c: ChatContact?,
+        loaded: Boolean,
+        name: String,
+        showDelete: Boolean,
+    ): ContactEditState =
+        ContactEditState(
+            title = stringRes(R.string.chat_contact_edit_title),
+            publicKey = publicKey,
+            nameInput = name,
+            isContactFound = c != null || !loaded,
+            onNameChange = ::onNameChange,
+            onSave = ::onSave,
+            canSave = name.isNotBlank() && c != null,
+            onDeleteClick = ::onDeleteClick,
+            onBack = ::onBack,
+            deleteDialog =
+                if (showDelete) {
+                    ContactEditDeleteDialogState(
+                        onConfirm = ::onDeleteConfirm,
+                        onDismiss = ::dismissDeleteDialog,
+                    )
+                } else {
+                    null
+                },
         )
 
     @Suppress("TooGenericExceptionCaught")

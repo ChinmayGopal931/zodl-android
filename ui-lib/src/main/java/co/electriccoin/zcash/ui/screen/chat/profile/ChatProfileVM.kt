@@ -16,6 +16,7 @@ import co.electriccoin.zcash.ui.common.repository.BiometricRepository
 import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
+import co.electriccoin.zcash.ui.common.model.WalletAccount
 import co.electriccoin.zcash.ui.common.security.PinAuthGate
 import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
@@ -73,8 +74,7 @@ class ChatProfileVM(
     private var copyKeyResetJob: Job? = null
     private var copyAddressResetJob: Job? = null
 
-    @Suppress("LongMethod")
-    val state: StateFlow<ChatProfileState?> =
+    val state: StateFlow<ChatProfileState> =
         combine(
             combine(activeTab, walletSubTab, identity) { tab, sub, id -> Triple(tab, sub, id) },
             walletAccount,
@@ -84,58 +84,87 @@ class ChatProfileVM(
             },
             combine(pinVerifyMode, pendingSeedPhrase) { pin, seed -> pin to seed },
         ) { (tab, sub, id), wallet, (keyCopied, addrCopied), (delDlg, editDlg, editInput), (pinMode, seed) ->
-            ChatProfileState(
-                title = stringRes(R.string.chat_profile_title),
-                activeTab = tab,
-                walletSubTab = sub,
-                displayName = id?.displayName,
-                publicKey = id?.publicKey,
-                shieldedAddress = wallet?.unified?.address?.address,
-                transparentAddress = wallet?.transparent?.address?.address,
-                isKeyCopied = keyCopied,
-                isAddressCopied = addrCopied,
-                onMainTabSelected = ::onMainTabSelected,
-                onWalletSubTabSelected = ::onWalletSubTabSelected,
-                onEditDisplayNameClick = ::onEditDisplayNameClick,
-                onCopyPublicKeyClick = ::onCopyPublicKeyClick,
-                onCopyAddressClick = ::onCopyAddressClick,
-                onSeedPhraseClick = ::onSeedPhraseClick,
-                onDeleteClick = ::onDeleteClick,
-                onBack = ::onBack,
-                editNameDialog =
-                    if (editDlg) {
-                        ChatProfileEditNameDialogState(
-                            value = editInput,
-                            canSave = editInput.isNotBlank(),
-                            onValueChange = ::onEditNameInputChange,
-                            onSave = ::onEditNameSave,
-                            onDismiss = ::dismissEditNameDialog,
-                        )
-                    } else {
-                        null
-                    },
-                deleteDialog =
-                    if (delDlg) {
-                        ChatProfileDeleteDialogState(
-                            onConfirm = ::onDeleteConfirm,
-                            onDismiss = ::dismissDeleteDialog,
-                        )
-                    } else {
-                        null
-                    },
-                seedPhraseDialog =
-                    seed?.let { phrase ->
-                        ChatProfileSeedPhraseDialogState(
-                            words = phrase.split(" ").filter { it.isNotBlank() },
-                            onDismiss = ::dismissSeedPhraseDialog,
-                        )
-                    },
-                pinVerify = pinMode.toState(),
-            )
+            createState(tab, sub, id, wallet, keyCopied, addrCopied, delDlg, editDlg, editInput, pinMode, seed)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue =
+                createState(
+                    tab = ChatProfileTab.MESSAGING_ID,
+                    sub = ChatProfileWalletSubTab.SHIELDED,
+                    id = null,
+                    wallet = null,
+                    keyCopied = false,
+                    addrCopied = false,
+                    delDlg = false,
+                    editDlg = false,
+                    editInput = "",
+                    pinMode = PinVerifyMode.Idle,
+                    seed = null,
+                ),
+        )
+
+    @Suppress("LongMethod", "LongParameterList")
+    private fun createState(
+        tab: ChatProfileTab,
+        sub: ChatProfileWalletSubTab,
+        id: ChatProfileIdentity?,
+        wallet: WalletAccount?,
+        keyCopied: Boolean,
+        addrCopied: Boolean,
+        delDlg: Boolean,
+        editDlg: Boolean,
+        editInput: String,
+        pinMode: PinVerifyMode,
+        seed: String?,
+    ): ChatProfileState =
+        ChatProfileState(
+            title = stringRes(R.string.chat_profile_title),
+            activeTab = tab,
+            walletSubTab = sub,
+            displayName = id?.displayName,
+            publicKey = id?.publicKey,
+            shieldedAddress = wallet?.unified?.address?.address,
+            transparentAddress = wallet?.transparent?.address?.address,
+            isKeyCopied = keyCopied,
+            isAddressCopied = addrCopied,
+            onMainTabSelected = ::onMainTabSelected,
+            onWalletSubTabSelected = ::onWalletSubTabSelected,
+            onEditDisplayNameClick = ::onEditDisplayNameClick,
+            onCopyPublicKeyClick = ::onCopyPublicKeyClick,
+            onCopyAddressClick = ::onCopyAddressClick,
+            onSeedPhraseClick = ::onSeedPhraseClick,
+            onDeleteClick = ::onDeleteClick,
+            onBack = ::onBack,
+            editNameDialog =
+                if (editDlg) {
+                    ChatProfileEditNameDialogState(
+                        value = editInput,
+                        canSave = editInput.isNotBlank(),
+                        onValueChange = ::onEditNameInputChange,
+                        onSave = ::onEditNameSave,
+                        onDismiss = ::dismissEditNameDialog,
+                    )
+                } else {
+                    null
+                },
+            deleteDialog =
+                if (delDlg) {
+                    ChatProfileDeleteDialogState(
+                        onConfirm = ::onDeleteConfirm,
+                        onDismiss = ::dismissDeleteDialog,
+                    )
+                } else {
+                    null
+                },
+            seedPhraseDialog =
+                seed?.let { phrase ->
+                    ChatProfileSeedPhraseDialogState(
+                        words = phrase.split(" ").filter { it.isNotBlank() },
+                        onDismiss = ::dismissSeedPhraseDialog,
+                    )
+                },
+            pinVerify = pinMode.toState(),
         )
 
     private fun PinVerifyMode.toState(): ChatProfilePinVerifyState? =

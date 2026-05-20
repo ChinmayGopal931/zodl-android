@@ -18,7 +18,7 @@ import org.koin.core.parameter.parametersOf
 import java.util.UUID
 
 @Composable
-fun ChatScanPublicKeyScreen(args: ChatScanPublicKeyArgs) {
+internal fun ChatScanPublicKeyScreen(args: ChatScanPublicKeyArgs) {
     val vm = koinViewModel<ChatScanPublicKeyVM> { parametersOf(args) }
     val state by vm.state.collectAsStateWithLifecycle()
     val context = LocalContext.current

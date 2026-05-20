@@ -37,7 +37,7 @@ class ChatIdentitySetupVM(
             initialValue = false,
         )
 
-    val state: StateFlow<ChatIdentitySetupState?> =
+    val state: StateFlow<ChatIdentitySetupState> =
         combine(
             selectedTab,
             combine(createName, restoreName, restoreSeed) { c, r, s -> Triple(c, r, s) },
@@ -47,7 +47,16 @@ class ChatIdentitySetupVM(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue =
+                createState(
+                    tab = ChatIdentitySetupTab.CREATE,
+                    createName = "",
+                    restoreName = "",
+                    restoreSeed = "",
+                    isSubmitting = false,
+                    error = null,
+                    backup = null,
+                ),
         )
 
     @Suppress("LongParameterList")

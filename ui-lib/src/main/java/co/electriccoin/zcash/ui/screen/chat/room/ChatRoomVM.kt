@@ -8,7 +8,7 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
-import co.electriccoin.zcash.ui.common.usecase.ChatSendContext
+import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.usecase.GetZashiAccountUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
@@ -50,7 +50,7 @@ class ChatRoomVM(
     private val sdk: ZappMessagingSDK,
     private val moderationRepository: ChatModerationRepository,
     private val getZashiAccount: GetZashiAccountUseCase,
-    private val chatSendContext: ChatSendContext,
+    private val chatSendContext: ChatSendContextProvider,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
     private val conversationId: String = args.conversationId
@@ -84,7 +84,7 @@ class ChatRoomVM(
     }
 
     @Suppress("LongMethod")
-    val state: StateFlow<ChatRoomState?> =
+    val state: StateFlow<ChatRoomState> =
         combine(
             combine(conversation, messages, isLoading) { conv, msgs, loading ->
                 Triple(conv, msgs, loading)
@@ -117,7 +117,27 @@ class ChatRoomVM(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue =
+                createState(
+                    conversation = null,
+                    messages = emptyList(),
+                    isLoading = true,
+                    connection =
+                        ConnectionSnapshot(
+                            status = ChatListConnectionStatus.CONNECTING,
+                            peerCount = 0,
+                            dhtHealth = ChatListDhtHealth.HEALTHY,
+                            peerOnline = null,
+                        ),
+                    messageInput = "",
+                    showAttachmentSheet = false,
+                    showMediaSheet = false,
+                    showNetworkSheet = false,
+                    connectionDetails = null,
+                    showEditContact = false,
+                    showBlockDialog = false,
+                    showReportDialog = false,
+                ),
         )
 
     private data class ConnectionSnapshot(
@@ -143,7 +163,11 @@ class ChatRoomVM(
         showReportDialog: Boolean,
     ): ChatRoomState =
         ChatRoomState(
-            title = conversation?.displayName.orEmpty(),
+            title =
+                conversation?.displayName
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { stringRes(it) }
+                    ?: stringRes(R.string.chat_room_title_fallback),
             subtitle = subtitleText(connection),
             isTitleClickable = conversation?.type == ConversationType.DIRECT,
             onTitleClick = ::onTitleClick,

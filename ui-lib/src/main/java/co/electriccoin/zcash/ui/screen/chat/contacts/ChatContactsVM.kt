@@ -37,7 +37,6 @@ class ChatContactsVM(
     private val contacts = MutableStateFlow<List<ChatContact>>(emptyList())
     private val scannedPublicKey = MutableStateFlow<String?>(null)
     private val scannedWalletAddress = MutableStateFlow<String?>(null)
-    private val showBackButton = MutableStateFlow(true)
 
     // Per-sheet VMs. The parent owns these because the sheets share its scan
     // bridge and contact list — see AddChatContactVM / EditChatContactVM kdoc.
@@ -46,14 +45,6 @@ class ChatContactsVM(
 
     init {
         viewModelScope.launch { refreshContacts() }
-    }
-
-    /**
-     * Hosted contexts can opt out of the back chevron (used by the tabs scaffold
-     * which routes navigation through the tab bar instead).
-     */
-    fun setShowBackButton(value: Boolean) {
-        showBackButton.value = value
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -76,28 +67,33 @@ class ChatContactsVM(
                 initialValue = null,
             )
 
-    val state: StateFlow<ChatContactsState?> =
+    val state: StateFlow<ChatContactsState> =
         combine(
             contacts,
-            showBackButton,
             addSheetState,
             editSheetState,
-        ) { list, showBack, add, edit ->
-            ChatContactsState(
-                title = stringRes(R.string.chat_contacts_title),
-                contacts = list,
-                showBackButton = showBack,
-                onStartChat = ::onStartChat,
-                onAddSheetOpen = ::openAddSheet,
-                onEditSheetOpen = ::openEditSheet,
-                onBack = ::onBack,
-                addSheet = add,
-                editSheet = edit,
-            )
+        ) { list, add, edit ->
+            createState(list, add, edit)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue = createState(emptyList(), null, null),
+        )
+
+    private fun createState(
+        list: List<ChatContact>,
+        add: AddChatContactState?,
+        edit: EditChatContactState?,
+    ): ChatContactsState =
+        ChatContactsState(
+            title = stringRes(R.string.chat_contacts_title),
+            contacts = list,
+            onStartChat = ::onStartChat,
+            onAddSheetOpen = ::openAddSheet,
+            onEditSheetOpen = ::openEditSheet,
+            onBack = ::onBack,
+            addSheet = add,
+            editSheet = edit,
         )
 
     private fun onBack() = navigationRouter.back()

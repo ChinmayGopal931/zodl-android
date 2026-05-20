@@ -2,6 +2,7 @@ package co.electriccoin.zcash.ui.common.usecase
 
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
+import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.datasource.ExactInputSwapTransactionProposal
 import co.electriccoin.zcash.ui.common.datasource.ExactOutputSwapTransactionProposal
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
@@ -19,7 +20,7 @@ class CancelProposalFlowUseCase(
     private val observeClearSend: ObserveClearSendUseCase,
     private val accountDataSource: AccountDataSource,
     private val swapRepository: SwapRepository,
-    private val chatSendContext: ChatSendContext,
+    private val chatSendContext: ChatSendContextProvider,
 ) {
     suspend operator fun invoke(clearSendForm: Boolean = true) {
         val proposal =

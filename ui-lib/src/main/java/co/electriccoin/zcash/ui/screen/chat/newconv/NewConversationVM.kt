@@ -35,7 +35,7 @@ class NewConversationVM(
         viewModelScope.launch { refreshContacts() }
     }
 
-    val state: StateFlow<NewConversationState?> =
+    val state: StateFlow<NewConversationState> =
         combine(
             searchInput,
             selectedParticipants,
@@ -46,7 +46,13 @@ class NewConversationVM(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue =
+                createState(
+                    input = "",
+                    participants = emptyList(),
+                    contactList = emptyList(),
+                    creating = false,
+                ),
         )
 
     private fun createState(

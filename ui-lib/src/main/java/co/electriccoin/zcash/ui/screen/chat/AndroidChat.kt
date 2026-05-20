@@ -26,7 +26,7 @@ import org.koin.compose.koinInject
 // ── Navigation route args ───────────────────────────────────────────────
 
 @Serializable
-object ChatHomeArgs
+data object ChatHomeArgs
 
 @Serializable
 data class ChatRoomArgs(
@@ -34,16 +34,16 @@ data class ChatRoomArgs(
 )
 
 @Serializable
-object NewConversationArgs
+data object NewConversationArgs
 
 @Serializable
-object ChatContactsArgs
+data object ChatContactsArgs
 
 @Serializable
-object ChatProfileArgs
+data object ChatProfileArgs
 
 @Serializable
-object ChatSettingsArgs
+data object ChatSettingsArgs
 
 @Serializable
 data class ContactEditArgs(
@@ -74,9 +74,7 @@ fun AndroidChatHome() {
         }
 
         else -> {
-            ChatListScreen(
-                onLegacyConversationSelected = { conv -> bootstrap.markConversationRead(conv.id) }
-            )
+            ChatListScreen()
         }
     }
 }

@@ -1,5 +1,3 @@
-@file:Suppress("TooManyFunctions")
-
 package co.electriccoin.zcash.ui.screen.unifiedsend.view
 
 import androidx.compose.animation.AnimatedVisibility
@@ -72,8 +70,6 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
-import co.electriccoin.zcash.ui.design.theme.colors.ZashiColors
-import co.electriccoin.zcash.ui.design.theme.typography.ZashiTypography
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidget
@@ -147,8 +143,8 @@ internal fun UnifiedSendView(
                     Spacer(height = 6.dp)
                     Text(
                         text = state.amountError.getValue(),
-                        style = ZashiTypography.textSm,
-                        color = ZashiColors.Inputs.ErrorDefault.hint,
+                        style = ZappTheme.typography.caption,
+                        color = ZappTheme.colors.danger,
                     )
                 }
                 Spacer(12.dp)
@@ -193,8 +189,8 @@ internal fun UnifiedSendView(
         if (state.infoFooter != null) {
             Text(
                 text = state.infoFooter.getValue(),
-                style = ZashiTypography.textSm,
-                color = ZashiColors.Text.textSecondary,
+                style = ZappTheme.typography.caption,
+                color = ZappTheme.colors.textMuted,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -261,9 +257,9 @@ private fun TheyReceiveRow(label: StringResource) {
         Spacer(8.dp)
         Text(
             text = label.getValue(),
-            style = ZashiTypography.textSm,
+            style = ZappTheme.typography.caption,
             fontWeight = FontWeight.Medium,
-            color = ZashiColors.Text.textPrimary,
+            color = ZappTheme.colors.text,
             modifier = Modifier.weight(1f),
         )
     }
@@ -327,7 +323,7 @@ private fun AmountInputField(
                 {
                     ZashiNumberTextFieldDefaults.Placeholder(
                         modifier = Modifier.fillMaxWidth(),
-                        style = ZashiTypography.textMd.copy(color = ZashiColors.Inputs.Default.text),
+                        style = ZappTheme.typography.body.copy(color = ZappTheme.colors.textSubtle),
                         fontWeight = FontWeight.Normal,
                         text = stringResource(R.string.send_usd_amount_hint)
                     )
@@ -337,7 +333,7 @@ private fun AmountInputField(
                 {
                     ZashiNumberTextFieldDefaults.Placeholder(
                         modifier = Modifier.fillMaxWidth(),
-                        style = ZashiTypography.textMd.copy(color = ZashiColors.Inputs.Default.text),
+                        style = ZappTheme.typography.body.copy(color = ZappTheme.colors.textSubtle),
                         fontWeight = FontWeight.Normal,
                         text = "0.00"
                     )
@@ -352,9 +348,9 @@ private fun AmountInputField(
                     contentDescription = null,
                     colorFilter = ColorFilter.tint(
                         if (fiatValue.isNotEmpty()) {
-                            ZashiColors.Inputs.Filled.text
+                            ZappTheme.colors.text
                         } else {
-                            ZashiColors.Inputs.Filled.iconMain
+                            ZappTheme.colors.textMuted
                         }
                     )
                 )
@@ -383,8 +379,8 @@ private fun AddressField(state: UnifiedSendFormState) {
             {
                 Text(
                     text = state.addressPlaceholder.getValue(),
-                    style = ZashiTypography.textMd,
-                    color = ZashiColors.Inputs.Default.text,
+                    style = ZappTheme.typography.body,
+                    color = ZappTheme.colors.textSubtle,
                 )
             }
         } else {
@@ -422,10 +418,10 @@ private fun ContactChipPrefix(contact: ChipButtonState) {
             contentPadding = PaddingValues(start = 10.dp, top = 4.5.dp, end = 4.5.dp, bottom = 4.5.dp),
             useTint = false,
             shape = RoundedCornerShape(0.dp),
-            color = ZashiColors.Tags.surfacePrimary,
-            border = BorderStroke(1.dp, ZashiColors.Tags.surfaceStroke),
-            textStyle = ZashiTypography.textSm.copy(
-                color = ZashiColors.Text.textPrimary,
+            color = ZappTheme.colors.chipBg,
+            border = BorderStroke(1.dp, ZappTheme.colors.border),
+            textStyle = ZappTheme.typography.caption.copy(
+                color = ZappTheme.colors.text,
                 fontWeight = FontWeight.Medium,
             )
         )
@@ -459,11 +455,11 @@ private fun MemoSection(memo: MemoFieldState.Editable) {
             suffix = {
                 Text(
                     text = "${memo.byteCount} / ${memo.maxBytes}",
-                    style = ZashiTypography.textXs,
+                    style = ZappTheme.typography.caption,
                     color = if (memo.byteCount > memo.maxBytes) {
-                        ZashiColors.Inputs.ErrorDefault.hint
+                        ZappTheme.colors.danger
                     } else {
-                        ZashiColors.Text.textTertiary
+                        ZappTheme.colors.textSubtle
                     },
                 )
             },

@@ -20,9 +20,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
+import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
-import co.electriccoin.zcash.ui.design.theme.colors.ZashiColors
-import co.electriccoin.zcash.ui.design.theme.typography.ZashiTypography
 
 @Composable
 fun SendAddressBookHint(modifier: Modifier = Modifier) {
@@ -31,8 +31,8 @@ fun SendAddressBookHint(modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(0.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = ZashiColors.HintTooltips.surfacePrimary,
-                contentColor = ZashiColors.Text.textLight
+                containerColor = ZappTheme.colors.accent,
+                contentColor = ZappTheme.colors.onAccent
             ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -41,15 +41,15 @@ fun SendAddressBookHint(modifier: Modifier = Modifier) {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.ic_send_address_book_hint),
-                colorFilter = ColorFilter.tint(ZashiColors.Text.textLightSupport),
+                colorFilter = ColorFilter.tint(ZappTheme.colors.onAccent),
                 contentDescription = null
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = stringResource(id = R.string.send_address_book_hint),
-                style = ZashiTypography.textXs,
+                style = ZappTheme.typography.caption,
                 fontWeight = FontWeight.Medium,
-                color = ZashiColors.Text.textLight
+                color = ZappTheme.colors.onAccent
             )
         }
     }
@@ -59,9 +59,11 @@ fun SendAddressBookHint(modifier: Modifier = Modifier) {
 @Composable
 private fun SendAddressBookHintPreview() =
     ZcashTheme {
-        Box(
-            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
-        ) {
-            SendAddressBookHint(Modifier.fillMaxWidth())
+        ProvideZappTheme {
+            Box(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+            ) {
+                SendAddressBookHint(Modifier.fillMaxWidth())
+            }
         }
     }

@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import java.io.File
 import java.text.SimpleDateFormat
@@ -59,8 +60,8 @@ fun MediaBubble(message: ChatMessage, isFromMe: Boolean) {
 
     Surface(
         shape = shape,
-        color = if (isFromMe) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.surfaceVariant,
+        color = if (isFromMe) ZappTheme.colors.accent
+        else ZappTheme.colors.surfaceAlt,
         modifier = Modifier.widthIn(max = 240.dp)
     ) {
         Column {
@@ -88,8 +89,8 @@ fun MediaBubble(message: ChatMessage, isFromMe: Boolean) {
                         Text(
                             if (isVideo) "Video" else "Image",
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isFromMe) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
-                            else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isFromMe) ZappTheme.colors.onAccent.copy(alpha = 0.5f)
+                            else ZappTheme.colors.textMuted
                         )
                     }
                 }
@@ -99,14 +100,14 @@ fun MediaBubble(message: ChatMessage, isFromMe: Boolean) {
                         Icons.Default.PlayCircle,
                         contentDescription = "Play video",
                         modifier = Modifier.size(48.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                        tint = ZappTheme.colors.onAccent.copy(alpha = 0.85f)
                     )
                 }
 
                 if (isSending) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(32.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
+                        color = ZappTheme.colors.onAccent,
                         strokeWidth = 2.dp
                     )
                 }
@@ -117,16 +118,16 @@ fun MediaBubble(message: ChatMessage, isFromMe: Boolean) {
                     Text(
                         text = message.content,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isFromMe) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface
+                        color = if (isFromMe) ZappTheme.colors.onAccent
+                        else ZappTheme.colors.text
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                 }
                 Text(
                     text = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(message.timestamp)),
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (isFromMe) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
-                    else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isFromMe) ZappTheme.colors.onAccent.copy(alpha = 0.7f)
+                    else ZappTheme.colors.textMuted
                 )
             }
         }

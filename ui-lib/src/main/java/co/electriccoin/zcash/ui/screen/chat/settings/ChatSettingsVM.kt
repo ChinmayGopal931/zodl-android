@@ -57,7 +57,7 @@ class ChatSettingsVM(
         observeConnection()
     }
 
-    val state: StateFlow<ChatSettingsState?> =
+    val state: StateFlow<ChatSettingsState> =
         combine(
             combine(identity, isPublicKeyCopied) { id, copied -> id to copied },
             combine(connectionStatus, peerCount, dhtHealth) { cs, pc, dh -> Triple(cs, pc, dh) },
@@ -65,47 +65,70 @@ class ChatSettingsVM(
                 Triple(edit, input, del)
             },
         ) { (id, copied), (cs, pc, dh), (editDlg, editInput, delDlg) ->
-            ChatSettingsState(
-                title = stringRes(R.string.chat_settings_title),
-                deleteLabel = stringRes(R.string.chat_settings_delete_button),
-                displayName = id?.displayName,
-                publicKey = id?.publicKey,
-                isPublicKeyCopied = copied,
-                connectionStatus = cs,
-                dhtHealth = dh,
-                peerCount = pc,
-                onProfileClick = ::onProfileClick,
-                onContactsClick = ::onContactsClick,
-                onEditDisplayNameClick = ::onEditDisplayNameClick,
-                onCopyPublicKeyClick = ::onCopyPublicKeyClick,
-                onDeleteClick = ::onDeleteClick,
-                onBack = ::onBack,
-                editNameDialog =
-                    if (editDlg) {
-                        ChatSettingsEditNameDialogState(
-                            value = editInput,
-                            canSave = editInput.isNotBlank(),
-                            onValueChange = ::onEditNameInputChange,
-                            onSave = ::onEditNameSave,
-                            onDismiss = ::dismissEditNameDialog,
-                        )
-                    } else {
-                        null
-                    },
-                deleteDialog =
-                    if (delDlg) {
-                        ChatSettingsDeleteDialogState(
-                            onConfirm = ::onDeleteConfirm,
-                            onDismiss = ::dismissDeleteDialog,
-                        )
-                    } else {
-                        null
-                    },
-            )
+            createState(id, copied, cs, pc, dh, editDlg, editInput, delDlg)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue =
+                createState(
+                    id = null,
+                    copied = false,
+                    cs = ChatListConnectionStatus.CONNECTING,
+                    pc = 0,
+                    dh = ChatListDhtHealth.HEALTHY,
+                    editDlg = false,
+                    editInput = "",
+                    delDlg = false,
+                ),
+        )
+
+    @Suppress("LongParameterList")
+    private fun createState(
+        id: ChatSettingsIdentity?,
+        copied: Boolean,
+        cs: ChatListConnectionStatus,
+        pc: Int,
+        dh: ChatListDhtHealth,
+        editDlg: Boolean,
+        editInput: String,
+        delDlg: Boolean,
+    ): ChatSettingsState =
+        ChatSettingsState(
+            title = stringRes(R.string.chat_settings_title),
+            deleteLabel = stringRes(R.string.chat_settings_delete_button),
+            displayName = id?.displayName,
+            publicKey = id?.publicKey,
+            isPublicKeyCopied = copied,
+            connectionStatus = cs,
+            dhtHealth = dh,
+            peerCount = pc,
+            onProfileClick = ::onProfileClick,
+            onContactsClick = ::onContactsClick,
+            onEditDisplayNameClick = ::onEditDisplayNameClick,
+            onCopyPublicKeyClick = ::onCopyPublicKeyClick,
+            onDeleteClick = ::onDeleteClick,
+            onBack = ::onBack,
+            editNameDialog =
+                if (editDlg) {
+                    ChatSettingsEditNameDialogState(
+                        value = editInput,
+                        canSave = editInput.isNotBlank(),
+                        onValueChange = ::onEditNameInputChange,
+                        onSave = ::onEditNameSave,
+                        onDismiss = ::dismissEditNameDialog,
+                    )
+                } else {
+                    null
+                },
+            deleteDialog =
+                if (delDlg) {
+                    ChatSettingsDeleteDialogState(
+                        onConfirm = ::onDeleteConfirm,
+                        onDismiss = ::dismissDeleteDialog,
+                    )
+                } else {
+                    null
+                },
         )
 
     private fun observeConnection() {

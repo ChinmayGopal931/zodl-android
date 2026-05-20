@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import org.json.JSONObject
 import java.text.SimpleDateFormat
@@ -40,7 +41,7 @@ fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
 
     Surface(
         shape = RectangleShape,
-        color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
+        color = ZappTheme.colors.accent.copy(alpha = 0.1f),
         modifier = Modifier.widthIn(max = 280.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
@@ -48,14 +49,14 @@ fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
                 Icon(
                     Icons.Default.LocationOn,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.tertiary,
+                    tint = ZappTheme.colors.accent,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = if (isFromMe) "Location shared" else "Location received",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.tertiary
+                    color = ZappTheme.colors.accent
                 )
             }
 
@@ -64,7 +65,7 @@ fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
             Text(
                 text = String.format(Locale.US, "%.6f, %.6f", lat, lng),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = ZappTheme.colors.text
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -84,13 +85,13 @@ fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
                 Icon(
                     Icons.AutoMirrored.Filled.OpenInNew,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = ZappTheme.colors.accent,
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
                     text = "Open in Maps",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = ZappTheme.colors.accent
                 )
             }
 
@@ -99,7 +100,7 @@ fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
             Text(
                 text = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(message.timestamp)),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = ZappTheme.colors.textMuted
             )
         }
     }

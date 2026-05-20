@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupBackupDialogState
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupFormState
@@ -60,7 +61,7 @@ fun ChatIdentitySetupView(
             Icons.Default.Person,
             contentDescription = null,
             modifier = Modifier.size(72.dp),
-            tint = MaterialTheme.colorScheme.primary,
+            tint = ZappTheme.colors.accent,
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -68,7 +69,7 @@ fun ChatIdentitySetupView(
         Text(
             text = state.title.getValue(),
             style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = ZappTheme.colors.text,
         )
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -76,7 +77,7 @@ fun ChatIdentitySetupView(
         Text(
             text = state.subtitle.getValue(),
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = ZappTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
 
@@ -93,7 +94,7 @@ fun ChatIdentitySetupView(
             Text(
                 text = error.getValue(),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error,
+                color = ZappTheme.colors.danger,
             )
         }
     }
@@ -108,7 +109,7 @@ private fun TabToggle(state: ChatIdentitySetupTabsState) {
             Modifier
                 .fillMaxWidth()
                 .clip(RectangleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .background(ZappTheme.colors.surfaceAlt)
                 .padding(4.dp),
     ) {
         listOf(
@@ -121,7 +122,7 @@ private fun TabToggle(state: ChatIdentitySetupTabsState) {
                     Modifier
                         .weight(1f)
                         .clip(RectangleShape)
-                        .background(if (selected) MaterialTheme.colorScheme.surface else Color.Transparent)
+                        .background(if (selected) ZappTheme.colors.surface else Color.Transparent)
                         .clickable { state.onSelect(tab) }
                         .padding(vertical = 10.dp),
                 contentAlignment = Alignment.Center,
@@ -131,9 +132,9 @@ private fun TabToggle(state: ChatIdentitySetupTabsState) {
                     style = MaterialTheme.typography.labelLarge,
                     color =
                         if (selected) {
-                            MaterialTheme.colorScheme.primary
+                            ZappTheme.colors.accent
                         } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
+                            ZappTheme.colors.textMuted
                         },
                 )
             }
@@ -226,7 +227,7 @@ private fun PrimarySubmitButton(
         if (isSubmitting) {
             CircularProgressIndicator(
                 modifier = Modifier.size(20.dp),
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = ZappTheme.colors.onAccent,
                 strokeWidth = 2.dp,
             )
             Spacer(modifier = Modifier.width(8.dp))
@@ -247,7 +248,7 @@ private fun SeedPhraseBackupDialog(state: ChatIdentitySetupBackupDialogState) {
                     .fillMaxWidth(DIALOG_WIDTH_FRACTION)
                     .wrapContentHeight(),
             shape = RectangleShape,
-            color = MaterialTheme.colorScheme.surface,
+            color = ZappTheme.colors.surface,
             tonalElevation = 6.dp,
         ) {
             Column(
@@ -258,7 +259,7 @@ private fun SeedPhraseBackupDialog(state: ChatIdentitySetupBackupDialogState) {
                     Icons.Default.Warning,
                     contentDescription = null,
                     modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = ZappTheme.colors.danger,
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -274,7 +275,7 @@ private fun SeedPhraseBackupDialog(state: ChatIdentitySetupBackupDialogState) {
                 Text(
                     text = state.subtitle.getValue(),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = ZappTheme.colors.textMuted,
                     textAlign = TextAlign.Center,
                 )
 
@@ -312,7 +313,7 @@ private fun SeedPhraseGrid(words: List<String>) {
                 column.forEachIndexed { i, word ->
                     Surface(
                         shape = RectangleShape,
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = ZappTheme.colors.surfaceAlt,
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -321,7 +322,7 @@ private fun SeedPhraseGrid(words: List<String>) {
                             Text(
                                 text = "${offset + i + 1}.",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = ZappTheme.colors.textMuted,
                                 modifier = Modifier.width(28.dp),
                             )
                             Text(

@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.AndroidQrCodeImageGenerator
 import co.electriccoin.zcash.ui.design.util.JvmQrCodeGenerator
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
@@ -67,7 +68,7 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
 
     Surface(
         shape = RectangleShape,
-        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+        color = ZappTheme.colors.accent.copy(alpha = 0.08f),
         modifier = Modifier.widthIn(min = 200.dp, max = 280.dp)
     ) {
         Column(
@@ -81,14 +82,14 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
                 Icon(
                     Icons.Default.AccountBalanceWallet,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = ZappTheme.colors.accent,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     text = if (isFromMe) "Wallet address shared" else "Wallet address",
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.primary
+                    color = ZappTheme.colors.accent
                 )
             }
 
@@ -112,7 +113,7 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
             Text(
                 text = address,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = ZappTheme.colors.text,
                 modifier = Modifier
                     .fillMaxWidth()
                     .combinedClickable(
@@ -131,7 +132,7 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
             Text(
                 text = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(message.timestamp)),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = ZappTheme.colors.textMuted,
                 modifier = Modifier.align(Alignment.End)
             )
         }

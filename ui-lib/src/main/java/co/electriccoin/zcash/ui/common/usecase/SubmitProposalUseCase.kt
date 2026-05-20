@@ -6,6 +6,7 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
 import co.electriccoin.zcash.ui.common.datasource.SendTransactionProposal
+import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.datasource.SwapTransactionProposal
 import co.electriccoin.zcash.ui.common.datasource.TransactionProposal
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
@@ -37,7 +38,7 @@ class SubmitProposalUseCase(
     private val metadataRepository: MetadataRepository,
     private val processSwapTransaction: ProcessSwapTransactionUseCase,
     private val prefillSend: PrefillSendUseCase,
-    private val chatSendContext: ChatSendContext,
+    private val chatSendContext: ChatSendContextProvider,
     private val messagingSDK: ZappMessagingSDK,
 ) {
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())

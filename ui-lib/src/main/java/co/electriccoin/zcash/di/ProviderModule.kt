@@ -4,6 +4,7 @@ import co.electriccoin.zcash.ui.common.provider.ApplicationStateProvider
 import co.electriccoin.zcash.ui.common.provider.ApplicationStateProviderImpl
 import co.electriccoin.zcash.ui.common.provider.BlockchainProvider
 import co.electriccoin.zcash.ui.common.provider.BlockchainProviderImpl
+import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.provider.CMCApiProvider
 import co.electriccoin.zcash.ui.common.provider.CMCApiProviderImpl
 import co.electriccoin.zcash.ui.common.provider.CrashReportingStorageProvider
@@ -90,4 +91,5 @@ val providerModule =
         singleOf(::EphemeralAddressStorageProviderImpl) bind EphemeralAddressStorageProvider::class
         singleOf(::CMCApiProviderImpl) bind CMCApiProvider::class
         factoryOf(::KeystoneSDKProviderImpl) bind KeystoneSDKProvider::class
+        singleOf(::ChatSendContextProvider)
     }

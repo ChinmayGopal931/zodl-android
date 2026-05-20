@@ -12,19 +12,17 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
+import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -40,6 +38,7 @@ class ChatListVM(
     private val moderationRepository: ChatModerationRepository,
     private val standardPreferenceProvider: StandardPreferenceProvider,
     private val navigationRouter: NavigationRouter,
+    private val chatBootstrap: ChatBootstrap,
 ) : ViewModel() {
     private val conversations = MutableStateFlow<List<ChatConversation>?>(null)
     private val connectionStatus = MutableStateFlow(ChatListConnectionStatus.CONNECTING)
@@ -53,10 +52,6 @@ class ChatListVM(
 
     private var refreshJob: Job? = null
 
-    private val _onConversationOpened =
-        MutableSharedFlow<ChatConversation>(extraBufferCapacity = 4)
-    val onConversationOpened: SharedFlow<ChatConversation> = _onConversationOpened.asSharedFlow()
-
     init {
         viewModelScope.launch { observeIdentityAndRefresh() }
         observeConnection()
@@ -64,7 +59,7 @@ class ChatListVM(
         viewModelScope.launch { checkTosAccepted() }
     }
 
-    val state: StateFlow<ChatListState?> =
+    val state: StateFlow<ChatListState> =
         combine(
             combine(conversations, moderationRepository.blockedKeys) { c, b -> c to b },
             combine(connectionStatus, peerCount, dhtHealth) { cs, pc, dh -> Triple(cs, pc, dh) },
@@ -87,7 +82,18 @@ class ChatListVM(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null,
+            initialValue =
+                createState(
+                    conversations = null,
+                    blockedKeys = emptySet(),
+                    connectionStatus = ChatListConnectionStatus.CONNECTING,
+                    peerCount = 0,
+                    dhtHealth = ChatListDhtHealth.HEALTHY,
+                    connectionDetails = null,
+                    showNetworkSheet = false,
+                    showTosDialog = false,
+                    leaveTarget = null,
+                ),
         )
 
     @Suppress("LongParameterList")
@@ -208,7 +214,7 @@ class ChatListVM(
         conversations.update { current ->
             current?.map { c -> if (c.id == conv.id) c.copy(unreadCount = 0) else c }
         }
-        _onConversationOpened.tryEmit(conv)
+        chatBootstrap.markConversationRead(conv.id)
         navigationRouter.forward(ChatRoomArgs(conv.id))
     }
 

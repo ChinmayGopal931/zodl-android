@@ -15,8 +15,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
-import co.electriccoin.zcash.ui.design.theme.colors.ZashiColors
 
 /**
  * Single-series chart data. [points] are plotted in order; the x-axis is purely positional.
@@ -39,7 +40,7 @@ data class SparkChartData(
 fun SparkChart(
     data: SparkChartData,
     modifier: Modifier = Modifier,
-    lineColor: Color = ZashiColors.Utility.WarningYellow.utilityOrange500,
+    lineColor: Color = ZappTheme.colors.accent,
     fillColor: Color = lineColor,
     height: Dp = 140.dp,
     strokeWidth: Dp = 2.dp,
@@ -110,7 +111,8 @@ fun SparkChart(
 @Composable
 private fun SparkChartPreview() =
     ZcashTheme {
-        SparkChart(
+        ProvideZappTheme {
+            SparkChart(
             data =
                 SparkChartData(
                     points =
@@ -124,6 +126,7 @@ private fun SparkChartPreview() =
                             SparkChartData.Point(6.0, 18.0),
                         )
                 ),
-            modifier = Modifier.fillMaxWidth()
-        )
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
