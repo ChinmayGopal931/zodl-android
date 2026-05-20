@@ -53,7 +53,6 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList")
 internal fun EditContactSheet(
     editData: EditContactData,
     scannedAddress: String?,

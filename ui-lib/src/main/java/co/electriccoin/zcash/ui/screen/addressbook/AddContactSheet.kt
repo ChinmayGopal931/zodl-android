@@ -55,7 +55,6 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Suppress("LongParameterList")
 internal fun AddContactSheet(
     scannedMessagingKey: String?,
     onConsumeScannedMessagingKey: () -> Unit,

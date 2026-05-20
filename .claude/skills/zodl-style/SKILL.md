@@ -18,9 +18,12 @@ When migrating an existing Zashi-token call site, the t-shirt scale maps cleanly
 
 ## Strings — never hardcoded
 
+Applies to **both VMs and views** — every user-facing string round-trips through `strings.xml`. The rule is loudest in error toasts, dialog titles, button labels, and PIN/onboarding flows, which is where past audits found the most violations.
+
 - VM holds `error: StringResource?` (not `String?`). Set via `stringRes(R.string.foo)`. Import from `co.electriccoin.zcash.ui.design.util`.
-- View renders via `.getValue()` for `StringResource`, or `stringResource(R.string.foo)` for pure-view text.
-- New strings go in `ui-lib/src/main/res/ui/<feature>/values/strings.xml`, not the common file. Match existing `<feature>_<noun>_<purpose>` naming.
+- View renders via `.getValue()` for `StringResource`, or `stringResource(R.string.foo)` for pure-view text. **Never** `BasicText(text = "Confirm")`, `Text("Retry")`, etc.
+- New strings go in `ui-lib/src/main/res/ui/<feature>/values/strings.xml`, not the common file. Match existing `<feature>_<noun>_<purpose>` naming. Mirror to `values-es/strings.xml` in the same commit.
+- Clipboard labels and accessibility content-descriptions count as user-facing.
 
 ## Error handling
 
@@ -63,13 +66,34 @@ Before adding any `@Suppress`: confirm the rule is active in `tools/detekt.yml`.
 
 Three files in the same package, no `view/` subdir at the screen level (only chat does that for the many small composables — copy that pattern only there):
 
-- `FooState.kt` — `data class`.
+- `FooState.kt` — `data class`. State lives in its own file; **do not** declare it inside `FooView.kt`.
 - `FooVM.kt` — VM, not `ViewModel`. Extends `androidx.lifecycle.ViewModel`. Exposes `val state: StateFlow<FooState?>`.
-- `FooView.kt` — single `internal fun FooView(state: FooState, ...)` composable. **`internal`, not public.**
+- `FooView.kt` — single `internal fun FooView(state: FooState, ...)` composable.
+
+### Two rules that get missed at scale
+
+**Rule 1 — VM file and class are `FooVM`, not `FooViewModel`.**
+Audit history: `OnboardingSecurityViewModel.kt`, `RestoreSuccessViewModel.kt`, `SecuritySettingsViewModel.kt`, `UnifiedSendViewModel.kt` all violated this and had to be renamed. When you create a VM, the class name ends in `VM` and the filename matches.
+
+**Rule 2 — top-level screen composables are `internal`, not public.**
+The route-entry composable in `Android<Foo>.kt` stays public (it's referenced by `MainActivity`'s nav graph). Everything in `FooView.kt`, `ChatRoomView.kt`, every dialog and bottom-sheet composable in `chat/view/` etc. is `internal`. A `fun FooView(...)` without `internal` is a fork-style violation even though Kotlin and Detekt are happy.
+
+```kotlin
+// FooView.kt
+@Composable
+internal fun FooView(state: FooState, ...) { ... }     // ✓
+// fun FooView(state: FooState, ...) { ... }            // ✗ public by default
+```
 
 Variants: prefer `sealed interface`. Use cases: `GetXUseCase`, `NavigateToXUseCase`, `CreateXUseCase`.
 
 Anti-pattern: class names like `OldHomeViewModel`, `LegacyChatScreen`. If something is genuinely deprecated, use `@Deprecated`. If it's still active code, name it for what it does.
+
+## Design components — one component per file
+
+`ui-design-lib/.../component/zapp/` mirrors upstream's Zashi layer: **one composable (or one tightly-related family) per `.kt` file**, named for the component (`ZappButton.kt`, `ZappFab.kt`, `ZappEyebrowTopAppBar.kt`, …). Upstream ships ~74 such files; the fork should match.
+
+The legacy `ZappComponents.kt` aggregates ~17 components for historical reasons and is being broken up. **Do not add new components to it.** New design components get their own file. Enums and helpers tightly bound to one component (e.g. `ZappButtonVariant` with `ZappButton`) live alongside that component.
 
 ## Comments
 

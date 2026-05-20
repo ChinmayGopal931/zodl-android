@@ -7,24 +7,15 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
@@ -36,7 +27,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -49,9 +39,14 @@ import androidx.compose.ui.unit.sp
 import cash.z.ecc.android.sdk.fixture.WalletAddressFixture
 import cash.z.ecc.android.sdk.model.WalletAddress
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.component.BlankBgScaffold
 import co.electriccoin.zcash.ui.design.component.CircularScreenProgressIndicator
 import co.electriccoin.zcash.ui.design.component.ZashiQr
+import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
+import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
 import co.electriccoin.zcash.ui.design.component.zapp.ZappChipVariant
+import co.electriccoin.zcash.ui.design.component.zapp.ZappEyebrowTopAppBar
+import co.electriccoin.zcash.ui.design.component.zapp.ZappStackedActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappStatusChip
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
 import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
@@ -131,65 +126,44 @@ private fun QrCodePrepared(
     state: QrCodeState.Prepared,
     snackbarHostState: SnackbarHostState,
 ) {
-    val c = ZappTheme.colors
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
-            QrCodeHeader(onBack = state.onBack)
-            QrCodeContents(
-                state = state,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+    BlankBgScaffold(
+        topBar = {
+            ZappEyebrowTopAppBar(
+                eyebrow = stringResource(id = R.string.qr_code_receive_title),
+                onClose = state.onBack,
+                closeContentDescription = stringResource(id = R.string.qr_code_close_content_description),
             )
-            QrCodeBottomDock(state = state)
-        }
-        SnackbarHost(
-            hostState = snackbarHostState,
-            modifier = Modifier.align(Alignment.BottomCenter),
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
+        bottomBar = { QrCodeBottomBar(state = state) },
+    ) { paddingValues ->
+        QrCodeContents(
+            state = state,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(
+                    top = paddingValues.calculateTopPadding(),
+                    bottom = paddingValues.calculateBottomPadding(),
+                ),
         )
     }
 }
 
 @Composable
-private fun QrCodeHeader(onBack: () -> Unit) {
-    val c = ZappTheme.colors
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 28.dp, end = 14.dp, top = 16.dp, bottom = 16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        BasicText(
-            text = "RECEIVE",
-            style = ZappTheme.typography.eyebrow.copy(
-                color = c.accent,
-                fontSize = 10.sp,
-                letterSpacing = 2.5.sp,
-                fontWeight = FontWeight.Black,
-            ),
-            modifier = Modifier.weight(1f),
+private fun QrCodeBottomBar(state: QrCodeState.Prepared) {
+    ZappStackedActionBar {
+        ZappButton(
+            text = stringResource(id = R.string.qr_code_share_btn).uppercase(),
+            variant = ZappButtonVariant.Primary,
+            onClick = { state.onQrCodeShare(state.walletAddress.address) },
+            modifier = Modifier.fillMaxWidth(),
         )
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .clickable(onClick = onBack),
-            contentAlignment = Alignment.Center,
-        ) {
-            BasicText(
-                text = "✕",
-                style = ZappTheme.typography.display.copy(
-                    color = c.text,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Black,
-                ),
-            )
-        }
+        ZappButton(
+            text = stringResource(id = R.string.qr_code_copy_btn).uppercase(),
+            variant = ZappButtonVariant.Secondary,
+            onClick = { state.onAddressCopy(state.walletAddress.address) },
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 
@@ -207,7 +181,6 @@ private fun QrCodeContents(
     ) {
         Spacer(Modifier.height(12.dp))
 
-        // QR code itself — sharp 1dp bordered frame, fully Swiss container.
         Box(
             modifier = Modifier
                 .background(c.bg, RectangleShape)
@@ -304,62 +277,6 @@ private fun QrCode(state: QrCodeState.Prepared) {
             centerImageResId = addressType.qrCenterImage,
         ),
     )
-}
-
-@Composable
-private fun QrCodeBottomDock(state: QrCodeState.Prepared) {
-    val c = ZappTheme.colors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(BorderStroke(1.dp, c.text), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars),
-    ) {
-        // Primary: Share QR — accent fill.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .background(c.accent, RectangleShape)
-                .clickable { state.onQrCodeShare(state.walletAddress.address) },
-            contentAlignment = Alignment.Center,
-        ) {
-            BasicText(
-                text = stringResource(id = R.string.qr_code_share_btn).uppercase(),
-                style = ZappTheme.typography.button.copy(
-                    color = c.onAccent,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.6.sp,
-                ),
-            )
-        }
-        // Secondary: Copy address — ghost row, top divider matches the dock rule.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .clickable { state.onAddressCopy(state.walletAddress.address) },
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(width = 24.dp, height = 1.dp)
-                    .background(c.text, RectangleShape),
-            )
-            Spacer(Modifier.width(10.dp))
-            BasicText(
-                text = stringResource(id = R.string.qr_code_copy_btn).uppercase(),
-                style = ZappTheme.typography.button.copy(
-                    color = c.text,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.6.sp,
-                ),
-            )
-        }
-    }
 }
 
 private fun addressLabelRes(state: QrCodeState.Prepared): Int = when (state.walletAddress) {

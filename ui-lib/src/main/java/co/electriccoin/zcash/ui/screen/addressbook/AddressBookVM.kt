@@ -158,7 +158,6 @@ class AddressBookVM(
         editingContact.update { null }
     }
 
-    @Suppress("LongParameterList")
     private fun onSaveNewContact(name: String, messagingKey: String, walletAddress: String, walletAddresses: Map<String, String>) {
         if (walletAddress.isNotEmpty() || walletAddresses.isNotEmpty()) {
             addressBookRepository.saveContact(

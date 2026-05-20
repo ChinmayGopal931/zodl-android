@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="qr_code_close_content_description">Close</string>
+    <string name="qr_code_receive_title">Receive</string>
     <string name="qr_code_unified_content_description">Unified Address QR code</string>
     <string name="qr_code_sapling_content_description">Sapling Address QR code</string>
     <string name="qr_code_transparent_content_description">Transparent Address QR code</string>

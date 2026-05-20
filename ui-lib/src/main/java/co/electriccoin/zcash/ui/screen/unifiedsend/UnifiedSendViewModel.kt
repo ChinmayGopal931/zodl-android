@@ -78,7 +78,7 @@ import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.MathContext
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions")
 internal class UnifiedSendViewModel(
     private val args: UnifiedSendArgs,
     getSelectedSwapAsset: GetSelectedSwapAssetUseCase,
@@ -498,7 +498,7 @@ internal class UnifiedSendViewModel(
 
     // ── State builder ─────────────────────────────────────────────────────────
 
-    @Suppress("LongParameterList", "LongMethod", "CyclomaticComplexMethod")
+    @Suppress("CyclomaticComplexMethod")
     private fun buildFormState(
         isSwap: Boolean,
         asset: SwapAsset?,

@@ -61,7 +61,6 @@ class AdvancedSettingsVM(
                 )
         )
 
-    @Suppress("LongMethod")
     private fun createState(
         walletRestoringState: WalletRestoringState,
         accounts: List<WalletAccount>?
