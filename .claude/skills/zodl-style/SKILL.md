@@ -89,6 +89,30 @@ Variants: prefer `sealed interface`. Use cases: `GetXUseCase`, `NavigateToXUseCa
 
 Anti-pattern: class names like `OldHomeViewModel`, `LegacyChatScreen`. If something is genuinely deprecated, use `@Deprecated`. If it's still active code, name it for what it does.
 
+## VM & screen wiring
+
+Conventions that aren't obvious from reading one file but are pervasive across upstream. Match these in new fork code.
+
+**StateFlow updates.** Use `MutableStateFlow.update { it.copy(foo = bar) }`, not `state.value = state.value.copy(...)`. Upstream uses `.update { }` everywhere — it's atomic, it composes, and Detekt-stable. Grep upstream's `SwapVM`, `AddSwapABContactVM` etc. for the shape.
+
+**Koin DI module placement.** Don't make a new module for one binding. Put new things in their topic module:
+
+| What you wrote | Module file |
+|---|---|
+| `ViewModel` | `di/ViewModelModule.kt` |
+| `GetXUseCase` / `NavigateToXUseCase` / `CreateXUseCase` | `di/UseCaseModule.kt` |
+| `Repository` (anything that owns state or a data source) | `di/RepositoryModule.kt` |
+| `Provider` (anything that wraps `Context`, prefs, SDK access) | `di/ProviderModule.kt` |
+| `Mapper` (DTO → domain conversions) | `di/MapperModule.kt` |
+
+A new module file is only justified when you bring in a whole new domain (e.g. `ZappMessagingModule` for the JS worklet stack). New module files must also be added to the `startKoin { modules(...) }` list in `ZcashApplication.onCreate`.
+
+**Navigation.** VMs inject `NavigationRouter` and call `.forward(args)`, `.back()`, `.replaceAll(...)`. Don't pass `NavController` into composables or VMs. Composables stay navigation-agnostic — they fire callbacks; the VM routes.
+
+**Typed nav Args.** Each navigable screen has a `@Serializable data class FooArgs(...)` co-located with the screen (either its own `FooArgs.kt` file or inside `FooScreen.kt`). `Args` is the navigation handle *and* the typed parameter carrier. No `Bundle` extras, no `String?` URL params.
+
+**Previews.** Use `@PreviewScreens` (the fork/upstream multi-config preview annotation), not bare `@Preview`. Preview functions are `private fun`. Wrap the body in `ZcashTheme(forceDarkMode = …) { … }`. For data, prefer fixtures from `cash.z.ecc.android.sdk.fixture.*` over hand-built mocks — they round-trip the real types.
+
 ## Design components — one component per file
 
 `ui-design-lib/.../component/zapp/` mirrors upstream's Zashi layer: **one composable (or one tightly-related family) per `.kt` file**, named for the component (`ZappButton.kt`, `ZappFab.kt`, `ZappEyebrowTopAppBar.kt`, …). Upstream ships ~74 such files; the fork should match.
