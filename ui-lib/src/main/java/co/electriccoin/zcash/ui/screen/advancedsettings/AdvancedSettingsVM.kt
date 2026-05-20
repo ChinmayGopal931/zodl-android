@@ -1,31 +1,33 @@
 package co.electriccoin.zcash.ui.screen.advancedsettings
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.UsbOff
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.BuildConfig
 import co.electriccoin.zcash.ui.NavigationRouter
-import co.electriccoin.zcash.ui.NavigationTargets
 import co.electriccoin.zcash.ui.R
-import co.electriccoin.zcash.ui.common.model.DistributionDimension
+import co.electriccoin.zcash.ui.common.model.KeystoneAccount
 import co.electriccoin.zcash.ui.common.model.WalletAccount
 import co.electriccoin.zcash.ui.common.model.WalletRestoringState
-import co.electriccoin.zcash.ui.common.provider.GetVersionInfoProvider
 import co.electriccoin.zcash.ui.common.usecase.GetWalletAccountsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetWalletRestoringStateUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToExportPrivateDataUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToResetWalletUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToTaxExportUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToWalletBackupUseCase
-import co.electriccoin.zcash.ui.design.component.ButtonState
-import co.electriccoin.zcash.ui.design.component.listitem.ListItemState
-import co.electriccoin.zcash.ui.design.util.imageRes
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.advancedsettings.debug.DebugArgs
-import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.disconnect.DisconnectArgs
-import co.electriccoin.zcash.ui.screen.resync.confirm.ConfirmResyncArgs
-import co.electriccoin.zcash.ui.screen.tor.settings.TorSettingsArgs
+import co.electriccoin.zcash.ui.screen.hotfix.enhancement.EnhancementHotfixArgs
+import co.electriccoin.zcash.ui.screen.hotfix.ephemeral.EphemeralHotfixArgs
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
@@ -33,18 +35,15 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-@Suppress("TooManyFunctions")
 class AdvancedSettingsVM(
     getWalletRestoringState: GetWalletRestoringStateUseCase,
     getWalletAccounts: GetWalletAccountsUseCase,
     private val navigationRouter: NavigationRouter,
-    private val navigateToTaxExport: NavigateToTaxExportUseCase,
     private val navigateToWalletBackup: NavigateToWalletBackupUseCase,
-    private val getVersionInfo: GetVersionInfoProvider,
     private val navigateToResetWallet: NavigateToResetWalletUseCase,
     private val navigateToExportPrivateData: NavigateToExportPrivateDataUseCase,
+    private val navigateToTaxExport: NavigateToTaxExportUseCase,
 ) : ViewModel() {
-    private val versionInfo by lazy { getVersionInfo() }
 
     val state: StateFlow<AdvancedSettingsState> =
         combine(
@@ -62,94 +61,60 @@ class AdvancedSettingsVM(
                 )
         )
 
+    @Suppress("LongMethod")
     private fun createState(
         walletRestoringState: WalletRestoringState,
         accounts: List<WalletAccount>?
     ): AdvancedSettingsState {
-        val hasKeystoneAccount = accounts?.any { it is co.electriccoin.zcash.ui.common.model.KeystoneAccount } == true
+        val hasKeystoneAccount = accounts?.any { it is KeystoneAccount } == true
+        val restoring = walletRestoringState == WalletRestoringState.RESTORING
 
         return AdvancedSettingsState(
             onBack = ::onBack,
             items =
                 listOfNotNull(
-                    ListItemState(
+                    AdvancedSettingsItem(
                         title = stringRes(R.string.advanced_settings_recovery),
-                        bigIcon = imageRes(R.drawable.ic_advanced_settings_recovery),
-                        onClick = ::onSeedRecoveryClick
+                        icon = Icons.Default.Key,
+                        onClick = ::onSeedRecoveryClick,
                     ),
-                    // DEAD CODE [hidden]: Export private data — uncomment to restore
-                    // ListItemState(
-                    //     title = stringRes(R.string.advanced_settings_export),
-                    //     bigIcon = imageRes(R.drawable.ic_advanced_settings_export),
-                    //     onClick = ::onExportPrivateDataClick
-                    // ),
-                    // DEAD CODE [hidden]: Tax export — uncomment to restore
-                    // ListItemState(
-                    //     title = stringRes(R.string.advanced_settings_tax),
-                    //     bigIcon =
-                    //         imageRes(
-                    //             if (walletRestoringState == WalletRestoringState.RESTORING) {
-                    //                 R.drawable.ic_advanced_settings_tax_disabled
-                    //             } else {
-                    //                 R.drawable.ic_advanced_settings_tax
-                    //             }
-                    //         ),
-                    //     isEnabled = walletRestoringState != WalletRestoringState.RESTORING,
-                    //     onClick = ::onTaxExportClick
-                    // ),
-                    // DEAD CODE [hidden]: Choose server — uncomment to restore
-                    // ListItemState(
-                    //     title = stringRes(R.string.advanced_settings_choose_server),
-                    //     bigIcon = imageRes(R.drawable.ic_advanced_settings_choose_server),
-                    //     onClick = ::onChooseServerClick
-                    // ),
-                    // ListItemState(
-                    //     title = stringRes(R.string.advanced_settings_resync_wallet),
-                    //     bigIcon = imageRes(R.drawable.ic_advanced_settings_resync),
-                    //     onClick = ::onResyncWalletClick
-                    // ),
-                    // DEAD CODE [hidden]: Tor / Privacy — uncomment to restore
-                    // ListItemState(
-                    //     title = stringRes(R.string.advanced_settings_privacy),
-                    //     bigIcon = imageRes(R.drawable.ic_advanced_settings_privacy),
-                    //     onClick = ::onPrivacyClick
-                    // ),
-                    // DEAD CODE [hidden]: Crash reporting — uncomment to restore
-                    // ListItemState(
-                    //     title = stringRes(R.string.advanced_settings_crash_reporting),
-                    //     bigIcon = imageRes(R.drawable.ic_advanced_settings_crash_reporting),
-                    //     onClick = ::onCrashReportingClick
-                    // ).takeIf { versionInfo.distribution == DistributionDimension.STORE },
-                    ListItemState(
+                    AdvancedSettingsItem(
+                        title = stringRes(R.string.advanced_settings_export),
+                        icon = Icons.Default.FileDownload,
+                        onClick = ::onExportPrivateDataClick,
+                    ),
+                    AdvancedSettingsItem(
+                        title = stringRes(R.string.advanced_settings_tax),
+                        icon = Icons.Default.Receipt,
+                        isEnabled = !restoring,
+                        onClick = ::onTaxExportClick,
+                    ),
+                    AdvancedSettingsItem(
+                        title = stringRes("Discover funds"),
+                        icon = Icons.Default.Search,
+                        onClick = ::onDiscoverFundsClick,
+                    ),
+                    AdvancedSettingsItem(
+                        title = stringRes("Refresh transaction data"),
+                        icon = Icons.Default.Refresh,
+                        onClick = ::onRefreshTransactionDataClick,
+                    ),
+                    AdvancedSettingsItem(
                         title = stringRes(R.string.advanced_settings_disconnect_hw_wallet),
-                        bigIcon = imageRes(R.drawable.ic_advanced_settings_disconnect_hw),
-                        onClick = ::onDisconnectHwWalletClick
+                        icon = Icons.Default.UsbOff,
+                        onClick = ::onDisconnectHwWalletClick,
                     ).takeIf { hasKeystoneAccount },
-                    // DEAD CODE [hidden]: Debug menu — uncomment to restore
-                    // ListItemState(
-                    //     title = stringRes("Debug menu"),
-                    //     onClick = ::onDebugMenuClick
-                    // ).takeIf { BuildConfig.DEBUG },
+                    AdvancedSettingsItem(
+                        title = stringRes("Developer tools"),
+                        icon = Icons.Default.BugReport,
+                        onClick = ::onDebugMenuClick,
+                    ).takeIf { BuildConfig.DEBUG },
                 ),
-            deleteButton =
-                ButtonState(
-                    text = stringRes(R.string.advanced_settings_delete_button),
-                    onClick = ::onResetWalletClick,
-                ),
+            onDeleteWallet = ::onResetWalletClick,
         )
     }
 
-    private fun onPrivacyClick() = navigationRouter.forward(TorSettingsArgs)
-
     fun onBack() = navigationRouter.back()
-
-    private fun onChooseServerClick() = navigationRouter.forward(ChooseServerArgs)
-
-    private fun onDebugMenuClick() = navigationRouter.forward(DebugArgs)
-
-    private fun onCrashReportingClick() = navigationRouter.forward(NavigationTargets.CRASH_REPORTING_OPT_IN)
-
-    private fun onTaxExportClick() = viewModelScope.launch { navigateToTaxExport() }
 
     private fun onSeedRecoveryClick() =
         viewModelScope.launch {
@@ -158,11 +123,15 @@ class AdvancedSettingsVM(
 
     private fun onExportPrivateDataClick() = viewModelScope.launch { navigateToExportPrivateData() }
 
+    private fun onTaxExportClick() = viewModelScope.launch { navigateToTaxExport() }
+
+    private fun onDiscoverFundsClick() = navigationRouter.forward(EphemeralHotfixArgs(address = null))
+
+    private fun onRefreshTransactionDataClick() = navigationRouter.forward(EnhancementHotfixArgs)
+
+    private fun onDisconnectHwWalletClick() = navigationRouter.forward(DisconnectArgs)
+
+    private fun onDebugMenuClick() = navigationRouter.forward(DebugArgs)
+
     private fun onResetWalletClick() = viewModelScope.launch { navigateToResetWallet() }
-
-    private fun onDisconnectHwWalletClick() {
-        navigationRouter.forward(DisconnectArgs)
-    }
-
-    // private fun onResyncWalletClick() = navigationRouter.forward(ConfirmResyncArgs)
 }
