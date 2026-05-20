@@ -1,0 +1,219 @@
+package co.electriccoin.zcash.ui.screen.chat.contacts
+
+import androidx.compose.ui.text.input.TextFieldValue
+import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
+import co.electriccoin.zcash.ui.common.model.AddressBookContact
+import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
+
+/**
+ * Per-sheet ViewModel for the "Edit chat contact" flow. Loaded with a
+ * [ChatContact] as its seed; owns all form state thereafter.
+ *
+ * Follows the upstream `UpdateGenericABContactVM` pattern (state.stateIn with
+ * `SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT)`), adapted for
+ * the fork's `ZappInputField` + `TextFieldValue` rendering.
+ */
+@Suppress("LongParameterList")
+class EditChatContactVM(
+    private val contact: ChatContact,
+    private val scope: CoroutineScope,
+    private val scannedWalletAddressFlow: StateFlow<String?>,
+    private val onConsumeScannedWalletAddress: () -> Unit,
+    private val onScanWalletAddressRequest: () -> Unit,
+    private val onSaveContact: (publicKey: String, name: String, walletAddress: String, walletAddresses: Map<String, String>) -> Unit,
+    private val onDeleteContact: (publicKey: String) -> Unit,
+    private val onDismissRequest: () -> Unit,
+) {
+    private val name = MutableStateFlow(TextFieldValue(contact.name))
+    private val walletAddress = MutableStateFlow(TextFieldValue(contact.walletAddress.orEmpty()))
+    private val transparentAddr = MutableStateFlow(TextFieldValue(""))
+    private val evmAddr = MutableStateFlow(TextFieldValue(""))
+    private val solanaAddr = MutableStateFlow(TextFieldValue(""))
+    private val showAdditionalAddresses = MutableStateFlow(false)
+    private val showDeleteConfirm = MutableStateFlow(false)
+    private val error = MutableStateFlow<String?>(null)
+
+    private val scanTargetField = MutableStateFlow<String?>(null)
+
+    init {
+        scannedWalletAddressFlow
+            .onEach { addr ->
+                if (!addr.isNullOrEmpty()) {
+                    val target = scanTargetField.value
+                    if (target != null) {
+                        val tfv = TextFieldValue(addr)
+                        when (target) {
+                            AddressBookContact.ADDR_TYPE_TRANSPARENT -> transparentAddr.value = tfv
+                            AddressBookContact.ADDR_TYPE_EVM -> evmAddr.value = tfv
+                            AddressBookContact.ADDR_TYPE_SOLANA -> solanaAddr.value = tfv
+                        }
+                        showAdditionalAddresses.value = true
+                        scanTargetField.value = null
+                    } else {
+                        walletAddress.value = TextFieldValue(addr)
+                        error.value = null
+                    }
+                    onConsumeScannedWalletAddress()
+                }
+            }
+            .launchIn(scope)
+    }
+
+    val state: StateFlow<EditChatContactState> =
+        combine(
+            combine(name, walletAddress) { n, w -> n to w },
+            combine(transparentAddr, evmAddr, solanaAddr) { t, e, s -> Triple(t, e, s) },
+            showAdditionalAddresses,
+            showDeleteConfirm,
+            error,
+        ) { primary, extras, showExtras, showDelete, err ->
+            val (nameVal, walletVal) = primary
+            val (tAddr, eAddr, sAddr) = extras
+            val originalWallet = contact.walletAddress.orEmpty()
+            val hasChanges = nameVal.text.trim() != contact.name ||
+                walletVal.text.trim() != originalWallet ||
+                tAddr.text.isNotBlank() || eAddr.text.isNotBlank() || sAddr.text.isNotBlank()
+            val isSaveEnabled = hasChanges && nameVal.text.isNotBlank()
+            EditChatContactState(
+                publicKey = contact.publicKey,
+                originalName = contact.name,
+                originalWalletAddress = originalWallet,
+                name = nameVal,
+                walletAddress = walletVal,
+                transparentAddr = tAddr,
+                evmAddr = eAddr,
+                solanaAddr = sAddr,
+                showAdditionalAddresses = showExtras,
+                showDeleteConfirm = showDelete,
+                error = err,
+                isSaveEnabled = isSaveEnabled,
+                onNameChange = ::onNameChange,
+                onWalletAddressChange = ::onWalletAddressChange,
+                onTransparentAddrChange = ::onTransparentAddrChange,
+                onEvmAddrChange = ::onEvmAddrChange,
+                onSolanaAddrChange = ::onSolanaAddrChange,
+                onToggleAdditionalAddresses = ::onToggleAdditionalAddresses,
+                onScanWalletAddress = ::onScanPrimaryWalletAddress,
+                onScanAddressField = ::onScanAddressField,
+                onSave = ::onSave,
+                onRequestDelete = ::onRequestDelete,
+                onCancelDelete = ::onCancelDelete,
+                onConfirmDelete = ::onConfirmDelete,
+                onDismiss = onDismissRequest,
+            )
+        }.stateIn(
+            scope = scope,
+            started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
+            initialValue = initialState(),
+        )
+
+    private fun initialState(): EditChatContactState {
+        val originalWallet = contact.walletAddress.orEmpty()
+        return EditChatContactState(
+            publicKey = contact.publicKey,
+            originalName = contact.name,
+            originalWalletAddress = originalWallet,
+            name = TextFieldValue(contact.name),
+            walletAddress = TextFieldValue(originalWallet),
+            transparentAddr = TextFieldValue(""),
+            evmAddr = TextFieldValue(""),
+            solanaAddr = TextFieldValue(""),
+            showAdditionalAddresses = false,
+            showDeleteConfirm = false,
+            error = null,
+            isSaveEnabled = false,
+            onNameChange = ::onNameChange,
+            onWalletAddressChange = ::onWalletAddressChange,
+            onTransparentAddrChange = ::onTransparentAddrChange,
+            onEvmAddrChange = ::onEvmAddrChange,
+            onSolanaAddrChange = ::onSolanaAddrChange,
+            onToggleAdditionalAddresses = ::onToggleAdditionalAddresses,
+            onScanWalletAddress = ::onScanPrimaryWalletAddress,
+            onScanAddressField = ::onScanAddressField,
+            onSave = ::onSave,
+            onRequestDelete = ::onRequestDelete,
+            onCancelDelete = ::onCancelDelete,
+            onConfirmDelete = ::onConfirmDelete,
+            onDismiss = onDismissRequest,
+        )
+    }
+
+    private fun onNameChange(value: TextFieldValue) {
+        name.value = value
+        error.value = null
+    }
+
+    private fun onWalletAddressChange(value: TextFieldValue) {
+        walletAddress.value = value
+        error.value = null
+    }
+
+    private fun onTransparentAddrChange(value: TextFieldValue) {
+        transparentAddr.value = value
+    }
+
+    private fun onEvmAddrChange(value: TextFieldValue) {
+        evmAddr.value = value
+    }
+
+    private fun onSolanaAddrChange(value: TextFieldValue) {
+        solanaAddr.value = value
+    }
+
+    private fun onToggleAdditionalAddresses() {
+        showAdditionalAddresses.update { !it }
+    }
+
+    private fun onScanPrimaryWalletAddress() {
+        scanTargetField.value = null
+        onScanWalletAddressRequest()
+    }
+
+    private fun onScanAddressField(addrType: String) {
+        scanTargetField.value = addrType
+        onScanWalletAddressRequest()
+    }
+
+    private fun onSave() {
+        val nameVal = name.value.text.trim()
+        if (nameVal.isEmpty()) {
+            error.value = "Name is required"
+            return
+        }
+        val addrs = buildMap {
+            if (transparentAddr.value.text.isNotBlank()) {
+                put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.value.text.trim())
+            }
+            if (evmAddr.value.text.isNotBlank()) {
+                put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.value.text.trim())
+            }
+            if (solanaAddr.value.text.isNotBlank()) {
+                put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.value.text.trim())
+            }
+        }
+        onSaveContact(contact.publicKey, nameVal, walletAddress.value.text.trim(), addrs)
+    }
+
+    private fun onRequestDelete() {
+        showDeleteConfirm.value = true
+    }
+
+    private fun onCancelDelete() {
+        showDeleteConfirm.value = false
+    }
+
+    private fun onConfirmDelete() {
+        onDeleteContact(contact.publicKey)
+    }
+
+}

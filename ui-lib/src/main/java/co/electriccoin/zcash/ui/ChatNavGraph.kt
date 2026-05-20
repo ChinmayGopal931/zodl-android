@@ -35,8 +35,7 @@ fun NavGraphBuilder.chatNavGraph(navigationRouter: NavigationRouter) {
         AndroidChatHome()
     }
     composable<ChatRoomArgs> { backStackEntry ->
-        val args = backStackEntry.toRoute<ChatRoomArgs>()
-        AndroidChatRoom(conversationId = args.conversationId)
+        AndroidChatRoom(args = backStackEntry.toRoute())
     }
     composable<NewConversationArgs> {
         AndroidNewConversation()
@@ -51,8 +50,7 @@ fun NavGraphBuilder.chatNavGraph(navigationRouter: NavigationRouter) {
         AndroidChatSettings()
     }
     composable<ContactEditArgs> { backStackEntry ->
-        val args = backStackEntry.toRoute<ContactEditArgs>()
-        AndroidContactEdit(publicKey = args.publicKey)
+        AndroidContactEdit(args = backStackEntry.toRoute())
     }
     composable<ChatScanPublicKeyArgs> { backStackEntry ->
         ChatScanPublicKeyScreen(args = backStackEntry.toRoute())

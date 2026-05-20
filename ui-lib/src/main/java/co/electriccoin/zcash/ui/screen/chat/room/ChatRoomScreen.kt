@@ -12,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -24,6 +23,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.media.rememberCameraCaptureState
 import co.electriccoin.zcash.ui.screen.chat.view.ChatRoomView
 import com.google.android.gms.location.LocationServices
@@ -37,8 +38,8 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-internal fun ChatRoomScreen(conversationId: String) {
-    val viewModel = koinViewModel<ChatRoomVM> { parametersOf(conversationId) }
+internal fun ChatRoomScreen(args: ChatRoomArgs) {
+    val viewModel = koinViewModel<ChatRoomVM> { parametersOf(args) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -133,7 +134,7 @@ internal fun ChatRoomScreen(conversationId: String) {
     val currentState = state
     if (currentState == null) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            CircularProgressIndicator(color = ZappTheme.colors.accent)
         }
         return
     }

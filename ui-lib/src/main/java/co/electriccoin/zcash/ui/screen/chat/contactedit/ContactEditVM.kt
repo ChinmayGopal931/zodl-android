@@ -7,6 +7,7 @@ import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.chat.ContactEditArgs
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,10 +19,11 @@ import kotlinx.coroutines.launch
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 class ContactEditVM(
-    private val publicKey: String,
+    args: ContactEditArgs,
     private val sdk: ZappMessagingSDK,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
+    private val publicKey: String = args.publicKey
     private val nameInput = MutableStateFlow("")
     private val showDeleteDialog = MutableStateFlow(false)
     private val contact = MutableStateFlow<ChatContact?>(null)

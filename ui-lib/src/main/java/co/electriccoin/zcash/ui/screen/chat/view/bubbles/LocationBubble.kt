@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.LocationOn
@@ -39,7 +39,7 @@ fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
     val lng = parsed?.optDouble("longitude") ?: 0.0
 
     Surface(
-        shape = RoundedCornerShape(0.dp),
+        shape = RectangleShape,
         color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
         modifier = Modifier.widthIn(max = 280.dp)
     ) {

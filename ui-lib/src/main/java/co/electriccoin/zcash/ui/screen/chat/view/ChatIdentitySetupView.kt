@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Warning
@@ -107,7 +107,7 @@ private fun TabToggle(state: ChatIdentitySetupTabsState) {
         modifier =
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(0.dp))
+                .clip(RectangleShape)
                 .background(MaterialTheme.colorScheme.surfaceVariant)
                 .padding(4.dp),
     ) {
@@ -120,7 +120,7 @@ private fun TabToggle(state: ChatIdentitySetupTabsState) {
                 modifier =
                     Modifier
                         .weight(1f)
-                        .clip(RoundedCornerShape(0.dp))
+                        .clip(RectangleShape)
                         .background(if (selected) MaterialTheme.colorScheme.surface else Color.Transparent)
                         .clickable { state.onSelect(tab) }
                         .padding(vertical = 10.dp),
@@ -202,7 +202,7 @@ private fun PlainTextField(
         minLines = minLines,
         maxLines = maxLines,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(0.dp),
+        shape = RectangleShape,
         colors =
             TextFieldDefaults.colors(
                 focusedIndicatorColor = Color.Transparent,
@@ -221,7 +221,7 @@ private fun PrimarySubmitButton(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         enabled = !isSubmitting,
-        shape = RoundedCornerShape(0.dp),
+        shape = RectangleShape,
     ) {
         if (isSubmitting) {
             CircularProgressIndicator(
@@ -246,7 +246,7 @@ private fun SeedPhraseBackupDialog(state: ChatIdentitySetupBackupDialogState) {
                 Modifier
                     .fillMaxWidth(DIALOG_WIDTH_FRACTION)
                     .wrapContentHeight(),
-            shape = RoundedCornerShape(0.dp),
+            shape = RectangleShape,
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 6.dp,
         ) {
@@ -287,7 +287,7 @@ private fun SeedPhraseBackupDialog(state: ChatIdentitySetupBackupDialogState) {
                 Button(
                     onClick = state.onConfirm,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(0.dp),
+                    shape = RectangleShape,
                 ) {
                     Text(state.confirmLabel.getValue(), modifier = Modifier.padding(vertical = 4.dp))
                 }
@@ -311,7 +311,7 @@ private fun SeedPhraseGrid(words: List<String>) {
             ) {
                 column.forEachIndexed { i, word ->
                     Surface(
-                        shape = RoundedCornerShape(0.dp),
+                        shape = RectangleShape,
                         color = MaterialTheme.colorScheme.surfaceVariant,
                     ) {
                         Row(

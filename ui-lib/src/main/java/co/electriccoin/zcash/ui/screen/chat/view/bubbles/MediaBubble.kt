@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material3.CircularProgressIndicator
@@ -67,9 +68,7 @@ fun MediaBubble(message: ChatMessage, isFromMe: Boolean) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 120.dp, max = 300.dp)
-                    .clip(
-                        RoundedCornerShape(0.dp)
-                    ),
+                    .clip(RectangleShape),
                 contentAlignment = Alignment.Center
             ) {
                 if (imageModel != null) {

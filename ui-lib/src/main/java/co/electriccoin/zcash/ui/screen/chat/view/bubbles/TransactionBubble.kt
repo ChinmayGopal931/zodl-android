@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
@@ -32,7 +32,7 @@ fun TransactionBubble(message: ChatMessage, isFromMe: Boolean) {
     val signature = parsed?.optString("signature", "")?.takeIf { it.isNotEmpty() }
 
     Surface(
-        shape = RoundedCornerShape(0.dp),
+        shape = RectangleShape,
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
         modifier = Modifier.widthIn(max = 280.dp)
     ) {

@@ -14,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
-import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsScreen
@@ -32,53 +31,51 @@ import org.koin.androidx.compose.koinViewModel
 fun ZappTabsScaffold(
     navigationRouter: NavigationRouter,
 ) {
-    ProvideZappTheme {
-        val welcomeGateVM: WelcomeGateVM = koinViewModel()
-        val walletViewModel: WalletViewModel = koinViewModel()
-        val isWelcomeDismissed by welcomeGateVM.isWelcomeDismissed.collectAsState()
-        val isOnboardingCompleted by welcomeGateVM.isOnboardingCompleted.collectAsState()
+    val welcomeGateVM: WelcomeGateVM = koinViewModel()
+    val walletViewModel: WalletViewModel = koinViewModel()
+    val isWelcomeDismissed by welcomeGateVM.isWelcomeDismissed.collectAsState()
+    val isOnboardingCompleted by welcomeGateVM.isOnboardingCompleted.collectAsState()
 
-        // True while the user is filling out the chat-restore form (entered via
-        // WelcomeGate's "I already use Zapp"). Held locally so cancelling drops
-        // them back at the welcome gate without persisting any state.
-        var restoreMode by rememberSaveable { mutableStateOf(false) }
+    // True while the user is filling out the chat-restore form (entered via
+    // WelcomeGate's "I already use Zapp"). Held locally so cancelling drops
+    // them back at the welcome gate without persisting any state.
+    var restoreMode by rememberSaveable { mutableStateOf(false) }
 
-        when {
-            isWelcomeDismissed == null || isOnboardingCompleted == null -> {
-                Box(modifier = Modifier.fillMaxSize()) // brief blank while prefs load
-            }
+    when {
+        isWelcomeDismissed == null || isOnboardingCompleted == null -> {
+            Box(modifier = Modifier.fillMaxSize()) // brief blank while prefs load
+        }
 
-            restoreMode -> {
-                ChatRestoreView(
-                    onBack = { restoreMode = false },
-                    onSuccess = {
-                        welcomeGateVM.dismissWelcome()
-                        welcomeGateVM.completeOnboarding()
-                        restoreMode = false
-                    },
-                )
-            }
+        restoreMode -> {
+            ChatRestoreView(
+                onBack = { restoreMode = false },
+                onSuccess = {
+                    welcomeGateVM.dismissWelcome()
+                    welcomeGateVM.completeOnboarding()
+                    restoreMode = false
+                },
+            )
+        }
 
-            isWelcomeDismissed == false -> {
-                WelcomeGateView(
-                    onGetStarted = { welcomeGateVM.dismissWelcome() },
-                    onRestoreExisting = { restoreMode = true },
-                )
-            }
+        isWelcomeDismissed == false -> {
+            WelcomeGateView(
+                onGetStarted = { welcomeGateVM.dismissWelcome() },
+                onRestoreExisting = { restoreMode = true },
+            )
+        }
 
-            isOnboardingCompleted == false -> {
-                ZappOnboardingFlow(
-                    onComplete = { welcomeGateVM.completeOnboarding() },
-                    onBackToWelcome = { welcomeGateVM.undoDismissWelcome() },
-                    walletViewModel = walletViewModel,
-                    chatBootstrap = koinInject(),
-                    navigationRouter = navigationRouter,
-                )
-            }
+        isOnboardingCompleted == false -> {
+            ZappOnboardingFlow(
+                onComplete = { welcomeGateVM.completeOnboarding() },
+                onBackToWelcome = { welcomeGateVM.undoDismissWelcome() },
+                walletViewModel = walletViewModel,
+                chatBootstrap = koinInject(),
+                navigationRouter = navigationRouter,
+            )
+        }
 
-            else -> {
-                ZappTabsScaffoldContent(navigationRouter = navigationRouter)
-            }
+        else -> {
+            ZappTabsScaffoldContent(navigationRouter = navigationRouter)
         }
     }
 }

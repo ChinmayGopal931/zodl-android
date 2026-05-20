@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CameraAlt
@@ -111,7 +111,7 @@ private fun MediaOption(
     Surface(
         onClick = onClick,
         modifier = modifier.height(80.dp),
-        shape = RoundedCornerShape(12.dp),
+        shape = RectangleShape,
         color = ZappTheme.colors.surfaceAlt
     ) {
         Column(

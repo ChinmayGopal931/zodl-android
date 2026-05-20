@@ -24,6 +24,7 @@ import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.model.MessageStatus
 import co.electriccoin.zcash.ui.screen.chat.model.ReportCategory
+import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +45,7 @@ import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 @Suppress("TooManyFunctions", "LongParameterList")
 class ChatRoomVM(
-    private val conversationId: String,
+    args: ChatRoomArgs,
     private val application: Application,
     private val sdk: ZappMessagingSDK,
     private val moderationRepository: ChatModerationRepository,
@@ -52,6 +53,7 @@ class ChatRoomVM(
     private val chatSendContext: ChatSendContext,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
+    private val conversationId: String = args.conversationId
     private val conversation = MutableStateFlow<ChatConversation?>(null)
     private val messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     private val isLoading = MutableStateFlow(true)

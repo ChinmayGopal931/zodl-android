@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.Icon
@@ -33,7 +33,7 @@ fun PaymentRequestBubble(message: ChatMessage, isFromMe: Boolean) {
     val token = parsed?.optString("token", "ZEC") ?: "ZEC"
 
     Surface(
-        shape = RoundedCornerShape(0.dp),
+        shape = RectangleShape,
         color = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.1f),
         modifier = Modifier.widthIn(max = 280.dp)
     ) {

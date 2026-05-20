@@ -3,12 +3,12 @@ package co.electriccoin.zcash.ui.screen.chat
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditScreen
 import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsScreen
@@ -65,7 +65,7 @@ fun AndroidChatHome() {
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                CircularProgressIndicator(color = ZappTheme.colors.accent)
             }
         }
 
@@ -82,8 +82,8 @@ fun AndroidChatHome() {
 }
 
 @Composable
-fun AndroidChatRoom(conversationId: String) {
-    ChatRoomScreen(conversationId = conversationId)
+fun AndroidChatRoom(args: ChatRoomArgs) {
+    ChatRoomScreen(args = args)
 }
 
 @Composable
@@ -107,6 +107,6 @@ fun AndroidChatSettings() {
 }
 
 @Composable
-fun AndroidContactEdit(publicKey: String) {
-    ContactEditScreen(publicKey = publicKey)
+fun AndroidContactEdit(args: ContactEditArgs) {
+    ContactEditScreen(args = args)
 }

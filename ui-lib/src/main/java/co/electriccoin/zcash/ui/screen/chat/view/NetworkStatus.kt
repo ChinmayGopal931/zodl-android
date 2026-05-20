@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Cable
@@ -71,7 +71,7 @@ fun ConnectionPill(
     }
 
     Surface(
-        shape = RoundedCornerShape(0.dp),
+        shape = RectangleShape,
         color = statusColor.copy(alpha = 0.12f),
         modifier = Modifier
             .height(26.dp)

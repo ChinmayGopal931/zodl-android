@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material3.Icon
@@ -66,7 +66,7 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
     }
 
     Surface(
-        shape = RoundedCornerShape(0.dp),
+        shape = RectangleShape,
         color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
         modifier = Modifier.widthIn(min = 200.dp, max = 280.dp)
     ) {
@@ -95,7 +95,7 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
             Spacer(modifier = Modifier.height(12.dp))
 
             Surface(
-                shape = RoundedCornerShape(0.dp),
+                shape = RectangleShape,
                 color = Color.White,
             ) {
                 Image(

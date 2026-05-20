@@ -203,22 +203,6 @@ val viewModelModule =
         viewModelOf(::ChatSettingsVM)
         viewModelOf(::ChatContactsVM)
         viewModelOf(::NewConversationVM)
-        viewModel { (publicKey: String) ->
-            ContactEditVM(
-                publicKey = publicKey,
-                sdk = get(),
-                navigationRouter = get(),
-            )
-        }
-        viewModel { (conversationId: String) ->
-            ChatRoomVM(
-                conversationId = conversationId,
-                application = androidApplication(),
-                sdk = get(),
-                moderationRepository = get(),
-                getZashiAccount = get(),
-                chatSendContext = get(),
-                navigationRouter = get(),
-            )
-        }
+        viewModelOf(::ContactEditVM)
+        viewModelOf(::ChatRoomVM)
     }
