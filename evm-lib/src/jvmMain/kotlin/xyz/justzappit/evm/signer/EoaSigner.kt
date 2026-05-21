@@ -7,6 +7,8 @@ import xyz.justzappit.evm.rpc.TransactionReceipt
 import xyz.justzappit.evm.rpc.hexToBigInteger
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.evm.types.TxHash
+import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
@@ -19,16 +21,16 @@ class EoaSigner(
 ) {
     suspend fun sendTransaction(
         to: Address,
-        value: BigInteger = BigInteger.ZERO,
+        value: Wei = Wei.ZERO,
         data: ByteArray = byteArrayOf(),
         gasLimitOverride: BigInteger? = null,
-    ): String {
+    ): TxHash {
         val nonce = rpc.ethGetTransactionCount(account.address, blockTag = "pending")
-        val tip = rpc.ethMaxPriorityFeePerGas()
+        val tip: Wei = rpc.ethMaxPriorityFeePerGas()
         val block = rpc.ethGetBlockByNumber(blockTag = "latest")
-        val baseFee = block.baseFeePerGas?.let { hexToBigInteger(it) }
+        val baseFee: Wei = block.baseFeePerGas?.let { Wei(hexToBigInteger(it)) }
             ?: error("baseFeePerGas missing in latest block — chain may be pre-EIP-1559")
-        val maxFee = baseFee.multiply(BigInteger.valueOf(baseFeeMultiplier.toLong())).add(tip)
+        val maxFee: Wei = baseFee * baseFeeMultiplier + tip
         val gasLimit = gasLimitOverride
             ?: rpc.ethEstimateGas(account.address, to, value, data)
                 .multiply(BigInteger.valueOf(100L + gasLimitBufferPercent))
@@ -49,7 +51,7 @@ class EoaSigner(
     }
 
     suspend fun awaitReceipt(
-        txHash: String,
+        txHash: TxHash,
         timeoutMs: Long = DEFAULT_RECEIPT_TIMEOUT_MS,
         pollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
     ): TransactionReceipt {
@@ -58,7 +60,7 @@ class EoaSigner(
             rpc.ethGetTransactionReceipt(txHash)?.let { return it }
             delay(pollIntervalMs)
         }
-        error("Timed out after ${timeoutMs}ms waiting for receipt of $txHash")
+        error("Timed out after ${timeoutMs}ms waiting for receipt of ${txHash.hex}")
     }
 
     companion object {

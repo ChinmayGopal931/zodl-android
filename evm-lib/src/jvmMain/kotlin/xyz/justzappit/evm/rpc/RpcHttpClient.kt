@@ -11,6 +11,9 @@ import io.ktor.client.network.sockets.SocketTimeoutException
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.LogLevel
+import io.ktor.client.plugins.logging.Logger
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import java.io.IOException
@@ -23,6 +26,13 @@ object RpcHttpClient {
         val maxRetries: Int = 3,
         val maxBackoffMillis: Long = 5_000L,
         val randomJitterMillis: Long = 100L,
+        /**
+         * Optional ktor [Logging] sink. Defaults to null (off) so jvmTest mock-engine tests stay
+         * quiet; production wiring in `ProviderModule` passes a Twig-backed logger so subgraph +
+         * RPC failures appear in logcat alongside the rest of the app's HTTP traffic.
+         */
+        val logger: Logger? = null,
+        val logLevel: LogLevel = LogLevel.INFO,
     )
 
     fun create(config: Config = Config()): HttpClient = HttpClient(OkHttp) { applyDefaults(config) }
@@ -41,6 +51,12 @@ object RpcHttpClient {
 
     private fun HttpClientConfig<*>.applyDefaults(config: Config) {
         install(ContentNegotiation) { json() }
+        config.logger?.let { sink ->
+            install(Logging) {
+                logger = sink
+                level = config.logLevel
+            }
+        }
         install(HttpTimeout) {
             connectTimeoutMillis = config.connectTimeoutMillis
             requestTimeoutMillis = config.requestTimeoutMillis

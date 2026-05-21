@@ -17,6 +17,8 @@ import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.evm.types.TxHash
+import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.toHex
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -44,7 +46,7 @@ class EoaSignerTest {
                 "eth_sendRawTransaction" -> {
                     val raw = payload["params"]!!.toString().substringAfter('"').substringBefore('"')
                     sentRawTxs += raw
-                    """{"jsonrpc":"2.0","id":1,"result":"0xfakehash"}"""
+                    """{"jsonrpc":"2.0","id":1,"result":"$RETURNED_TX_HASH_HEX"}"""
                 }
                 else -> error("Unexpected method: $method")
             }
@@ -68,9 +70,9 @@ class EoaSignerTest {
 
         val txHash = signer.sendTransaction(
             to = Address.parse("0x000000000000000000000000000000000000dEaD"),
-            value = java.math.BigInteger.valueOf(1_000),
+            value = Wei.ofLong(1_000),
         )
-        assertEquals("0xfakehash", txHash)
+        assertEquals(TxHash.fromHex(RETURNED_TX_HASH_HEX), txHash)
         assertEquals(1, sentRawTxs.size)
 
         val signedTxHex = sentRawTxs.first().removePrefix("0x")
@@ -139,11 +141,11 @@ class EoaSignerTest {
         val tx = Eip1559Tx(
             chainId = chainId,
             nonce = nonce,
-            maxPriorityFeePerGas = tip,
-            maxFeePerGas = maxFee,
+            maxPriorityFeePerGas = Wei(tip),
+            maxFeePerGas = Wei(maxFee),
             gasLimit = gasLimit,
             to = to,
-            value = value,
+            value = Wei(value),
             data = data,
         )
         return tx.signingPayload()
@@ -218,5 +220,9 @@ class EoaSignerTest {
         const val MNEMONIC =
             "abandon abandon abandon abandon abandon abandon " +
                 "abandon abandon abandon abandon abandon about"
+
+        // Synthetic but valid 32-byte tx hash used by the mock RPC.
+        private const val RETURNED_TX_HASH_HEX =
+            "0xfeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedfacefeedface"
     }
 }

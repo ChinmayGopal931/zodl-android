@@ -81,6 +81,16 @@ internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
                 OrderSummaryCard(summary)
             }
 
+            state.feeBreakdown?.let { fees ->
+                Spacer(modifier = Modifier.height(GAP_LG.dp))
+                FeeBreakdownCard(fees)
+            }
+
+            state.cancelled?.let { cancelled ->
+                Spacer(modifier = Modifier.height(GAP_LG.dp))
+                CancelledCard(cancelled)
+            }
+
             state.failure?.let { failure ->
                 Spacer(modifier = Modifier.height(GAP_LG.dp))
                 FailureCard(failure)
@@ -129,6 +139,33 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
             label = stringResource(R.string.upi_offramp_summary_network),
             value = summary.networkName,
         )
+        summary.completionDuration?.let { duration ->
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            SummaryRow(
+                label = stringResource(R.string.upi_offramp_summary_completion),
+                value = duration.getValue(),
+            )
+        }
+        summary.terminalTimestamp?.let { ts ->
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            SummaryRow(
+                label = stringResource(R.string.upi_offramp_summary_time),
+                value = ts.getValue(),
+            )
+        }
+        if (summary.merchantAddress != null && summary.merchantExplorerUrl != null) {
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            BasicText(
+                text = stringResource(R.string.upi_offramp_summary_merchant),
+                style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            AddressLink(
+                address = summary.merchantAddress,
+                url = summary.merchantExplorerUrl,
+                uriHandler = uriHandler,
+            )
+        }
         Spacer(modifier = Modifier.height(GAP_SM.dp))
         BasicText(
             text = stringResource(R.string.upi_offramp_summary_signer),
@@ -139,6 +176,68 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
             address = summary.signerAddress,
             url = summary.signerExplorerUrl,
             uriHandler = uriHandler,
+        )
+    }
+}
+
+@Composable
+private fun FeeBreakdownCard(fees: UpiOfframpFeeBreakdown) {
+    val c = ZappTheme.colors
+    val t = ZappTheme.typography
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(c.surface)
+            .border(BorderStroke(1.dp, c.border))
+            .padding(CARD_PADDING.dp),
+    ) {
+        BasicText(
+            text = stringResource(R.string.upi_offramp_fee_breakdown_header),
+            style = t.button.copy(color = c.text, fontWeight = FontWeight.SemiBold),
+        )
+        fees.youSend?.let {
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            SummaryRow(stringResource(R.string.upi_offramp_fee_breakdown_you_send), it.getValue())
+        }
+        fees.fee?.let {
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            SummaryRow(stringResource(R.string.upi_offramp_fee_breakdown_fee), it.getValue())
+        }
+        fees.youReceive?.let {
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            SummaryRow(stringResource(R.string.upi_offramp_fee_breakdown_you_receive), it.getValue())
+        }
+    }
+}
+
+@Composable
+private fun CancelledCard(cancelled: UpiOfframpCancelledCard) {
+    val c = ZappTheme.colors
+    val t = ZappTheme.typography
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(c.surface)
+            .border(BorderStroke(1.dp, c.border))
+            .padding(CARD_PADDING.dp),
+    ) {
+        cancelled.refundedAmount?.let {
+            BasicText(
+                text = it.getValue(),
+                style = t.body.copy(color = c.text, fontWeight = FontWeight.SemiBold),
+            )
+        }
+        cancelled.cancelledAt?.let {
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            BasicText(
+                text = it.getValue(),
+                style = t.caption.copy(color = c.textMuted),
+            )
+        }
+        Spacer(modifier = Modifier.height(GAP_SM.dp))
+        BasicText(
+            text = cancelled.tip.getValue(),
+            style = t.caption.copy(color = c.textMuted),
         )
     }
 }
@@ -374,6 +473,8 @@ private fun PreviewInProgress() {
                 title = stringRes("Sending to merchant"),
                 subtitle = stringRes("Recipient: merchant@upi"),
                 summary = previewSummary,
+                feeBreakdown = null,
+                cancelled = null,
                 steps = listOf(
                     UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
                     UpiOfframpStep(stringRes("Approving USDC"), UpiOfframpStepStatus.Completed),
@@ -396,7 +497,18 @@ private fun PreviewCompleted() {
             state = UpiOfframpProgressState(
                 title = stringRes("Payment sent"),
                 subtitle = stringRes("The merchant has confirmed the UPI transfer."),
-                summary = previewSummary,
+                summary = previewSummary.copy(
+                    completionDuration = stringRes("1m 32s"),
+                    terminalTimestamp = stringRes("22 May 2026, 02:43 AM"),
+                    merchantAddress = "0x1111111111111111111111111111111111111111",
+                    merchantExplorerUrl = "https://sepolia.basescan.org/address/0x1111",
+                ),
+                feeBreakdown = UpiOfframpFeeBreakdown(
+                    youSend = stringRes("5.000 USDC"),
+                    fee = stringRes("0.050 USDC"),
+                    youReceive = stringRes("₹445.00"),
+                ),
+                cancelled = null,
                 steps = listOf(
                     UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
                     UpiOfframpStep(stringRes("Approving USDC"), UpiOfframpStepStatus.Completed),
@@ -416,6 +528,40 @@ private fun PreviewCompleted() {
 
 @PreviewScreens
 @Composable
+private fun PreviewCancelled() {
+    ZcashTheme {
+        UpiOfframpProgressView(
+            state = UpiOfframpProgressState(
+                title = stringRes("Order cancelled"),
+                subtitle = stringRes("No merchant completed this order in time. Your USDC has been refunded on-chain."),
+                summary = previewSummary.copy(
+                    terminalTimestamp = stringRes("22 May 2026, 03:51 AM"),
+                ),
+                feeBreakdown = null,
+                cancelled = UpiOfframpCancelledCard(
+                    refundedAmount = stringRes("5.00 USDC refunded to your offramp account"),
+                    cancelledAt = stringRes("Cancelled at 22 May 2026, 03:51 AM"),
+                    tip = stringRes("Tip: ask the merchant to generate the UPI QR only after this screen opens."),
+                ),
+                steps = listOf(
+                    UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Approving USDC"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Placing the order"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Waiting for merchant"), UpiOfframpStepStatus.Failed),
+                ),
+                failure = null,
+                primaryButton = ButtonState(
+                    text = stringRes("Close"),
+                    onClick = {},
+                ),
+                onBack = {},
+            ),
+        )
+    }
+}
+
+@PreviewScreens
+@Composable
 private fun PreviewFailed() {
     ZcashTheme {
         UpiOfframpProgressView(
@@ -423,6 +569,8 @@ private fun PreviewFailed() {
                 title = stringRes("Something went wrong"),
                 subtitle = null,
                 summary = previewSummary,
+                feeBreakdown = null,
+                cancelled = null,
                 steps = listOf(
                     UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
                     UpiOfframpStep(stringRes("Approving USDC"), UpiOfframpStepStatus.Failed),

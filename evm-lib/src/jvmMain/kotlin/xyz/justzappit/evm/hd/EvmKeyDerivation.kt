@@ -45,14 +45,13 @@ object EvmKeyDerivation {
         require(accountIndex >= 0) { "accountIndex must be non-negative" }
         val seed = mnemonicToSeed(mnemonic, passphrase)
         val master = masterFromSeed(seed)
-        val path = intArrayOf(
+        val derived = listOf(
             44 or HARDENED_BIT,
             60 or HARDENED_BIT,
             0 or HARDENED_BIT,
             0,
             accountIndex,
-        )
-        val derived = path.fold(master) { acc, index -> ckdPriv(acc, index) }
+        ).fold(master) { parent, index -> ckdPrivWithRetry(parent, index) }
         return fromPrivateKey(derived.priv)
     }
 
@@ -88,7 +87,27 @@ object EvmKeyDerivation {
         return ExtKey(priv = i.copyOfRange(0, FIELD_BYTES), chainCode = i.copyOfRange(FIELD_BYTES, i.size))
     }
 
-    private fun ckdPriv(parent: ExtKey, index: Int): ExtKey {
+    /**
+     * BIP-32 §"Private parent → private child" requires that if the candidate IL is ≥ n or the
+     * resulting child key is zero, we MUST advance to the next sibling index and retry. Both
+     * conditions have probability < 2^-127, but skipping the retry would diverge from every other
+     * BIP-32 implementation on that one-in-2^127 input and produce a different address than the
+     * user's other wallets.
+     */
+    private fun ckdPrivWithRetry(parent: ExtKey, startIndex: Int): ExtKey {
+        var index = startIndex
+        while (true) {
+            val candidate = ckdPrivOnce(parent, index)
+            if (candidate != null) return candidate
+            // Hardened bits never collide with their non-hardened neighbours; incrementing by 1
+            // stays within the same range.
+            val next = index + 1
+            check(next != startIndex) { "BIP-32 ckdPriv: exhausted all 2^32 child indices" }
+            index = next
+        }
+    }
+
+    private fun ckdPrivOnce(parent: ExtKey, index: Int): ExtKey? {
         val hardened = (index.toLong() and 0xffff_ffffL) >= 0x8000_0000L
         val data = if (hardened) {
             byteArrayOf(0x00) + parent.priv + intToBytes(index)
@@ -99,10 +118,10 @@ object EvmKeyDerivation {
         val il = i.copyOfRange(0, FIELD_BYTES)
         val ir = i.copyOfRange(FIELD_BYTES, i.size)
         val ilNum = BigInteger(1, il)
-        require(ilNum < curve.n) { "IL >= n, derivation invalid (1 in 2^127)" }
+        if (ilNum >= curve.n) return null
         val parentNum = BigInteger(1, parent.priv)
         val childNum = (ilNum + parentNum).mod(curve.n)
-        require(childNum != BigInteger.ZERO) { "child key is zero, derivation invalid" }
+        if (childNum == BigInteger.ZERO) return null
         return ExtKey(priv = padTo32(childNum.toByteArray()), chainCode = ir)
     }
 

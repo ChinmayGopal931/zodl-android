@@ -96,6 +96,7 @@
     <string name="upi_offramp_rate_label">1 USDC ≈ ₹%1$s (estimated)</string>
     <string name="upi_offramp_upi_id_label">UPI ID</string>
     <string name="upi_offramp_upi_id_placeholder">merchant@upi</string>
+    <string name="upi_offramp_scan_qr_cd">Scan UPI QR code</string>
     <string name="upi_offramp_estimate_disclaimer">Estimated. Final amount locks in when the merchant accepts.</string>
     <string name="upi_offramp_error_above_cap">Amounts above $99 USDC require KYC and aren\'t supported yet.</string>
     <string name="upi_offramp_error_invalid_upi">That doesn\'t look like a UPI handle (expected something like name@bank).</string>
@@ -139,7 +140,53 @@
     <string name="upi_offramp_failure_header">Failed during: %1$s</string>
     <string name="upi_offramp_failure_selector">Revert selector %1$s</string>
 
-    <!-- UPI Offramp known revert reasons (mapped from KnownRevertReason in offramp-lib) -->
-    <string name="upi_offramp_revert_insufficient_reputation">This account doesn\'t have enough reputation points yet. On Sepolia, request an RP grant from the p2p.me team; on mainnet, complete social or KYC verification.</string>
-    <string name="upi_offramp_revert_no_merchant_liquidity">No merchant has fiat liquidity for this order in the selected circle. Try a smaller amount, wait for merchants to fund, or retry to pick a different circle.</string>
+    <!-- UPI Offramp known revert reasons (mapped from KnownRevertReason in offramp-lib).
+         Keep aligned with @p2pdotme/user-app-client i18n keys where wording overlaps. -->
+    <string name="upi_offramp_revert_buy_order_amount_exceeds_limit">Order amount is above your per-transaction limit. The limit grows with reputation points — complete verification at app.p2p.me/limits.</string>
+    <string name="upi_offramp_revert_insufficient_reputation">Your account has no reputation points yet. Complete social or KYC verification at app.p2p.me/limits before placing orders.</string>
+    <string name="upi_offramp_revert_zk_verification_required">This amount requires KYC verification. Verify at app.p2p.me/limits.</string>
+    <string name="upi_offramp_revert_order_amount_exceeds_limit">Order amount exceeds the global per-order cap.</string>
+    <string name="upi_offramp_revert_sell_amount_exceeds_fiat_limit">Amount exceeds your daily fiat limit.</string>
+    <string name="upi_offramp_revert_currency_not_supported">This currency isn\'t deployed on this network yet.</string>
+    <string name="upi_offramp_revert_user_is_blacklisted">Your account is blocked by the exchange. Contact p2p.me support.</string>
+    <string name="upi_offramp_revert_exchange_not_operational">p2p.me is temporarily paused. Try again later.</string>
+    <string name="upi_offramp_revert_not_enough_eligible_merchants">No merchant has fiat liquidity for this order right now. Try a smaller amount, wait for merchants to fund, or retry to pick a different circle.</string>
+    <string name="upi_offramp_revert_order_expired">The merchant didn\'t act in time. Your USDC has been refunded.</string>
+    <string name="upi_offramp_revert_upi_already_sent">This order already has a UPI payment address. This is a bug — please report.</string>
+    <string name="upi_offramp_revert_invalid_order_upi">The merchant rejected the encrypted UPI handle. This may signal a wire-format issue — please report.</string>
+    <string name="upi_offramp_revert_order_not_accepted">The order isn\'t yet accepted. Try again shortly.</string>
+    <string name="upi_offramp_revert_usdc_transfer_failed">USDC transfer failed. Check your balance and allowance.</string>
+    <!-- Long-tail fallback for SDK-known but non-curated contract errors. %1$s is the SDK error
+         constant (e.g. ORDER_ALREADY_MARKED_COMPLETED). -->
+    <string name="upi_offramp_revert_sdk_long_tail">Contract error: %1$s</string>
+
+    <!-- Surfaced when a poll loop has been running for a while without a merchant transition. -->
+    <string name="upi_offramp_detail_stalled">Taking longer than usual — your USDC stays escrowed on-chain until the merchant accepts or the order auto-cancels (~72 hours).</string>
+
+    <!-- Per-step on-chain timestamps -->
+    <string name="upi_offramp_detail_accepted_at">Accepted at %1$s</string>
+    <string name="upi_offramp_detail_paid_at">Payment confirmed at %1$s</string>
+    <string name="upi_offramp_detail_completed_at">Completed at %1$s</string>
+
+    <!-- Completed-state summary extras -->
+    <string name="upi_offramp_completion_duration">Completed in %1$s</string>
+    <string name="upi_offramp_terminal_at">%1$s</string>
+    <string name="upi_offramp_summary_completion">Completed in</string>
+    <string name="upi_offramp_summary_time">Time</string>
+    <string name="upi_offramp_summary_merchant">Paid to</string>
+
+    <!-- Order fee breakdown card (from getAdditionalOrderDetails) -->
+    <string name="upi_offramp_fee_breakdown_header">Order breakdown</string>
+    <string name="upi_offramp_fee_breakdown_you_send">You send</string>
+    <string name="upi_offramp_fee_breakdown_fee">Network &amp; merchant fee</string>
+    <string name="upi_offramp_fee_breakdown_you_receive">You receive</string>
+    <string name="upi_offramp_fee_breakdown_amount_usdc">%1$s USDC</string>
+    <string name="upi_offramp_fee_breakdown_amount_inr">₹%1$s</string>
+
+    <!-- Cancelled terminal state (normal on-chain outcome, USDC refunded — not an error) -->
+    <string name="upi_offramp_progress_title_cancelled">Order cancelled</string>
+    <string name="upi_offramp_progress_subtitle_cancelled">No merchant completed this order in time. Your USDC has been refunded on-chain.</string>
+    <string name="upi_offramp_cancelled_refunded">%1$s USDC refunded to your offramp account</string>
+    <string name="upi_offramp_cancelled_at">Cancelled at %1$s</string>
+    <string name="upi_offramp_cancelled_tip">Tip: ask the merchant to generate the UPI QR only after this screen opens, so the order completes before it expires.</string>
 </resources>

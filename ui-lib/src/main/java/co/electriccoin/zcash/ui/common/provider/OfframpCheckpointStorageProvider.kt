@@ -47,12 +47,14 @@ internal class OfframpCheckpointStorageProviderImpl(
         emitAll(encryptedPreferenceProvider().observe(key).map { raw -> raw?.let(::decode) })
     }
 
-    private fun decode(raw: String): OfframpCheckpoint? = runCatching {
+    private fun decode(raw: String): OfframpCheckpoint? = try {
         json.decodeFromString(OfframpCheckpoint.serializer(), raw)
-    }.recoverCatching { e ->
+    } catch (e: SerializationException) {
         // Schema drift between fork versions: drop the stale checkpoint rather than crashing.
-        if (e is SerializationException) null else throw e
-    }.getOrNull()
+        // Any other failure (e.g. IllegalArgumentException from invariant violations) is a real
+        // bug and must surface — do NOT swallow it here.
+        null
+    }
 
     companion object {
         private const val PREF_KEY = "upi_offramp_checkpoint_v1"

@@ -13,7 +13,7 @@ class DiamondCallsTest {
     fun `placeOrder calldata starts with the canonical selector and has the right length`() {
         val args = PlaceOrderArgs(
             relayPubKeyEthCrypto = "00".repeat(64),
-            usdcAmount = BigInteger.valueOf(5_000_000),
+            usdcAmount = Usdc6.ofMicros(5_000_000),
             recipientAddress = Address.parse("0x000000000000000000000000000000000000dEaD"),
             orderType = OrderType.PAY,
             currency = CurrencyCode.Inr,
@@ -37,7 +37,7 @@ class DiamondCallsTest {
     fun `PAY order routes the relay pubkey into _pubKey and leaves _userPubKey empty`() {
         val args = PlaceOrderArgs(
             relayPubKeyEthCrypto = "ab".repeat(64),
-            usdcAmount = BigInteger.TEN,
+            usdcAmount = Usdc6.ofMicros(BigInteger.TEN),
             recipientAddress = Address.parse("0x000000000000000000000000000000000000dEaD"),
             orderType = OrderType.PAY,
             currency = CurrencyCode.Inr,
@@ -53,7 +53,7 @@ class DiamondCallsTest {
     fun `BUY order routes the relay pubkey into _userPubKey and leaves _pubKey empty`() {
         val args = PlaceOrderArgs(
             relayPubKeyEthCrypto = "cd".repeat(64),
-            usdcAmount = BigInteger.TEN,
+            usdcAmount = Usdc6.ofMicros(BigInteger.TEN),
             recipientAddress = Address.parse("0x000000000000000000000000000000000000dEaD"),
             orderType = OrderType.BUY,
             currency = CurrencyCode.Inr,
@@ -91,8 +91,8 @@ class DiamondCallsTest {
             assignUpTo = BigInteger.valueOf(3),
             currency = CurrencyCode.Inr,
             user = Address.parse("0x000000000000000000000000000000000000bEEf"),
-            usdtAmount = BigInteger.valueOf(5_000_000),
-            fiatAmount = BigInteger.valueOf(418_000_000),
+            usdtAmount = Usdc6.ofMicros(5_000_000),
+            fiatAmount = Usdc6.ofMicros(418_000_000),
             orderType = OrderType.PAY,
         )
         assertEquals(4 + (8 * 32), data.size)

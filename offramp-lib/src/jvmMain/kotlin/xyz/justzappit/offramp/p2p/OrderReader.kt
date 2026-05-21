@@ -53,8 +53,8 @@ object OrderReader {
         val orderType = OrderType.entries.firstOrNull { it.onChain == orderTypeByte }
             ?: error("Unknown OrderType from chain: $orderTypeByte")
 
-        val usdcAmount = BigInteger(1, tuple.copyOfRange(FIELD_AMOUNT * WORD, (FIELD_AMOUNT + 1) * WORD))
-        val fiatAmount = BigInteger(1, tuple.copyOfRange(FIELD_FIAT_AMOUNT * WORD, (FIELD_FIAT_AMOUNT + 1) * WORD))
+        val usdcAmount = Usdc6(BigInteger(1, tuple.copyOfRange(FIELD_AMOUNT * WORD, (FIELD_AMOUNT + 1) * WORD)))
+        val fiatAmount = Usdc6(BigInteger(1, tuple.copyOfRange(FIELD_FIAT_AMOUNT * WORD, (FIELD_FIAT_AMOUNT + 1) * WORD)))
         val placedTimestamp = BigInteger(
             1,
             tuple.copyOfRange(FIELD_PLACED_TS * WORD, (FIELD_PLACED_TS + 1) * WORD),

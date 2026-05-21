@@ -1,6 +1,7 @@
 package xyz.justzappit.offramp.p2p
 
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.TxHash
 import java.math.BigInteger
 
 data class OrderSnapshot(
@@ -9,8 +10,8 @@ data class OrderSnapshot(
     val orderType: OrderType,
     val circleId: BigInteger,
     val userAddress: Address,
-    val usdcAmount: BigInteger,
-    val fiatAmount: BigInteger,
+    val usdcAmount: Usdc6,
+    val fiatAmount: Usdc6,
     val currencyHex: String,
     val acceptedMerchantAddress: Address?,
     val merchantPubKey: String,
@@ -21,9 +22,9 @@ data class OrderSnapshot(
     val paidAtEpochSeconds: Long?,
     val completedAtEpochSeconds: Long?,
     val cancelledAtEpochSeconds: Long?,
-    val actualUsdcAmount: BigInteger?,
-    val actualFiatAmount: BigInteger?,
-    val placedTxHash: String?,
+    val actualUsdcAmount: Usdc6?,
+    val actualFiatAmount: Usdc6?,
+    val placedTxHash: TxHash?,
     val placedAtBlockNumber: Long?,
     val source: Source,
 ) {

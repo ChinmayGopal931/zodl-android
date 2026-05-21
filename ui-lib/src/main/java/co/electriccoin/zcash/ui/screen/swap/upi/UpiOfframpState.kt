@@ -20,4 +20,5 @@ internal data class UpiOfframpState(
     val infoText: StringResource?,
     val errorText: StringResource?,
     val sendButton: ButtonState,
+    val onScanQr: () -> Unit,
 )

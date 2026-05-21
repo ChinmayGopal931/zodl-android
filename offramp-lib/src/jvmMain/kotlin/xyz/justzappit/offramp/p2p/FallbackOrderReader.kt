@@ -14,19 +14,27 @@ class FallbackOrderReader(
 ) : OrderReadSource {
 
     override suspend fun fetchOrder(orderId: BigInteger): OrderSnapshot? {
-        val primaryResult = runPrimary(orderId)
+        val primaryResult = runSafely(orderId, "Primary", primary)
         if (primaryResult != null) return primaryResult
-        return fallback.fetchOrder(orderId)
+        return runSafely(orderId, "Fallback", fallback)
     }
 
-    private suspend fun runPrimary(orderId: BigInteger): OrderSnapshot? {
-        return try {
-            primary.fetchOrder(orderId)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            logger?.warn("Primary order source failed for orderId=$orderId; falling back", e)
-            null
-        }
+    /**
+     * Both layers must be total — if the fallback also throws, the orchestrator's poll loop sees
+     * `null` and re-emits the WaitingFor* status without bailing. A transient RPC blip during a
+     * 30-minute completion wait is not allowed to fail an order whose USDC is already escrowed
+     * on-chain. CancellationException always propagates so coroutine cancellation works.
+     */
+    private suspend fun runSafely(
+        orderId: BigInteger,
+        label: String,
+        source: OrderReadSource,
+    ): OrderSnapshot? = try {
+        source.fetchOrder(orderId)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Throwable) {
+        logger?.warn("$label order source failed for orderId=$orderId; continuing", e)
+        null
     }
 }

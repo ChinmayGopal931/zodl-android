@@ -8,6 +8,7 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.OfframpRepository
 import co.electriccoin.zcash.ui.common.usecase.GetUpiOfframpRateUseCase
+import co.electriccoin.zcash.ui.common.usecase.NavigateToScanUpiUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
@@ -17,6 +18,7 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.p2p.CurrencyCode
+import xyz.justzappit.offramp.p2p.UpiQrParser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +34,7 @@ internal class UpiOfframpVM(
     private val navigationRouter: NavigationRouter,
     private val getRate: GetUpiOfframpRateUseCase,
     private val offrampRepo: OfframpRepository,
+    private val navigateToScanUpi: NavigateToScanUpiUseCase,
 ) : ViewModel() {
     private val primary = MutableStateFlow(UpiOfframpAmountSide.INR)
     private val usdcState = MutableStateFlow(NumberTextFieldInnerState())
@@ -124,7 +127,7 @@ internal class UpiOfframpVM(
                 usdcAmount != null &&
                 usdcAmount > BigDecimal.ZERO &&
                 upi.isNotBlank() &&
-                UPI_HANDLE_REGEX.matches(upi)
+                UpiQrParser.validateUpiId(upi)
         }
         return UpiOfframpState(
             primary = side,
@@ -146,15 +149,37 @@ internal class UpiOfframpVM(
                 isEnabled = sendEnabled,
                 onClick = ::onSendClick,
             ),
+            onScanQr = ::onScanQr,
         )
     }
 
     private fun validate(usdc: BigDecimal?, upi: String): StringResource? {
         if (usdc != null && usdc > USDC_CAP) return stringRes(R.string.upi_offramp_error_above_cap)
-        if (upi.isNotBlank() && !UPI_HANDLE_REGEX.matches(upi)) {
+        if (upi.isNotBlank() && !UpiQrParser.validateUpiId(upi)) {
             return stringRes(R.string.upi_offramp_error_invalid_upi)
         }
         return null
+    }
+
+    private fun onScanQr() {
+        viewModelScope.launch {
+            val result = navigateToScanUpi() ?: return@launch
+            upiText.update { result.paymentAddress }
+            result.fiatAmount?.let { fiat ->
+                // QR included an `am=` field; pre-fill the INR side as the user's primary so the
+                // USDC side derives from the live rate (matches the SDK's `parseUPI` semantics).
+                primary.update { UpiOfframpAmountSide.INR }
+                inrState.update {
+                    NumberTextFieldInnerState.fromAmount(fiat.setScale(INR_DECIMALS, RoundingMode.HALF_UP))
+                }
+                val currentRate = rate.value
+                usdcState.update {
+                    NumberTextFieldInnerState.fromAmount(
+                        fiat.divide(currentRate, USDC_DECIMALS, RoundingMode.HALF_UP),
+                    )
+                }
+            }
+        }
     }
 
     private fun onUsdcChange(next: NumberTextFieldInnerState) {
@@ -206,7 +231,7 @@ internal class UpiOfframpVM(
         val usdcAmount = usdcState.value.amount ?: return
         if (usdcAmount <= BigDecimal.ZERO || usdcAmount > USDC_CAP) return
         val upi = upiText.value
-        if (upi.isBlank() || !UPI_HANDLE_REGEX.matches(upi)) return
+        if (upi.isBlank() || !UpiQrParser.validateUpiId(upi)) return
         val usdcMicro = usdcAmount.movePointRight(USDC_CONTRACT_DECIMALS).toBigInteger()
         navigationRouter.forward(
             UpiOfframpProgressArgs(
@@ -229,7 +254,5 @@ internal class UpiOfframpVM(
         private const val USDC_DECIMALS = 4
         private const val USDC_CONTRACT_DECIMALS = 6
         private const val INR_DECIMALS = 2
-
-        private val UPI_HANDLE_REGEX = Regex("^[A-Za-z0-9._\\-]{1,256}@[A-Za-z]{2,64}\$")
     }
 }

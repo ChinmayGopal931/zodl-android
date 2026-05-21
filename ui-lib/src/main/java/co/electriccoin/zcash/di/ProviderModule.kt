@@ -114,20 +114,39 @@ val providerModule =
 
         // UPI offramp infrastructure (evm-lib + offramp-lib config wiring).
         singleOf(::OfframpCheckpointStorageProviderImpl) bind OfframpCheckpointStorageProvider::class
-        single<HttpClient>(named(OFFRAMP_HTTP_CLIENT_QUALIFIER)) { RpcHttpClient.create() }
+        single<HttpClient>(named(OFFRAMP_HTTP_CLIENT_QUALIFIER)) {
+            // Pipe ktor's Logging plugin output through Twig so subgraph + RPC errors land in
+            // logcat under our "Twig" tag with the OfframpHttp prefix. Without this, transport
+            // failures (ConnectException, SSL handshake, etc.) emit no logcat trace and the only
+            // signal is the orchestrator's Failed status emission — which gets rotated out of
+            // the buffer before we can grab it.
+            val twigLogger = object : io.ktor.client.plugins.logging.Logger {
+                override fun log(message: String) {
+                    Twig.debug { "OfframpHttp $message" }
+                }
+            }
+            RpcHttpClient.create(config = RpcHttpClient.Config(logger = twigLogger))
+        }
         single<P2pConfigProvider> {
-            when (BuildConfig.P2P_NETWORK.lowercase(Locale.ROOT)) {
+            // Recognised values are exactly "", "sepolia", "mainnet"; blank defaults to Sepolia
+            // for CI / side-by-side installs. A typo like "mainet" must not silently boot the
+            // testnet build into the wrong network — fail closed instead.
+            when (val net = BuildConfig.P2P_NETWORK.lowercase(Locale.ROOT)) {
                 P2pNetworks.MAINNET_NAME -> P2pConfigProvider(
                     networkName = P2pNetworks.MAINNET_NAME,
                     rpcUrlOverride = BuildConfig.P2P_RPC_URL_BASE_MAINNET.takeIf { it.isNotBlank() },
                     subgraphUrlOverride = BuildConfig.P2P_SUBGRAPH_URL_MAINNET.takeIf { it.isNotBlank() },
                 )
-                else -> P2pConfigProvider(
+                P2pNetworks.SEPOLIA_NAME, "" -> P2pConfigProvider(
                     networkName = P2pNetworks.SEPOLIA_NAME,
                     rpcUrlOverride = BuildConfig.P2P_RPC_URL_BASE_SEPOLIA.takeIf { it.isNotBlank() }
                         ?: P2pNetworks.SEPOLIA.rpcUrl,
                     subgraphUrlOverride = BuildConfig.P2P_SUBGRAPH_URL_SEPOLIA.takeIf { it.isNotBlank() }
                         ?: P2pNetworks.SEPOLIA.subgraphUrl,
+                )
+                else -> error(
+                    "Unknown P2P_NETWORK build flag value '$net' — expected '${P2pNetworks.SEPOLIA_NAME}', " +
+                        "'${P2pNetworks.MAINNET_NAME}', or blank for the default.",
                 )
             }
         }

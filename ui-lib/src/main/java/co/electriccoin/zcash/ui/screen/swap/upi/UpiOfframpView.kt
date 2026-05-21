@@ -40,6 +40,7 @@ import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.IconButtonState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
+import co.electriccoin.zcash.ui.design.component.ZashiIconButton
 import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.component.ZashiAddressTextField
 import co.electriccoin.zcash.ui.design.component.ZashiImageButton
@@ -105,7 +106,18 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 style = ZappTheme.typography.eyebrow.copy(color = c.textMuted),
             )
             Spacer(modifier = Modifier.height(GAP_SM.dp))
-            UpiHandleField(state.upiField)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(modifier = Modifier.weight(1f)) { UpiHandleField(state.upiField) }
+                Spacer(modifier = Modifier.width(GAP_SM.dp))
+                ZashiIconButton(
+                    state = IconButtonState(
+                        icon = R.drawable.qr_code_icon,
+                        contentDescription = stringRes(R.string.upi_offramp_scan_qr_cd),
+                        onClick = state.onScanQr,
+                    ),
+                    modifier = Modifier.size(SCAN_ICON_BUTTON_SIZE.dp),
+                )
+            }
 
             Spacer(modifier = Modifier.height(GAP_MD.dp))
 
@@ -270,6 +282,7 @@ private const val TOKEN_PADDING_H = 12
 private const val TOKEN_PADDING_V = 8
 private const val INNER_FIELD_PADDING = 4
 private const val DIRECTION_BUTTON_SIZE = 40
+private const val SCAN_ICON_BUTTON_SIZE = 44
 
 @PreviewScreens
 @Composable
@@ -286,6 +299,7 @@ private fun PreviewEmpty() {
                 infoText = null,
                 errorText = null,
                 sendButton = ButtonState(stringRes("Send")),
+                onScanQr = {},
             ),
         )
     }
@@ -312,6 +326,7 @@ private fun PreviewFilled() {
                 infoText = stringRes("Final amount locks when merchant accepts."),
                 errorText = null,
                 sendButton = ButtonState(stringRes("Send"), isEnabled = true),
+                onScanQr = {},
             ),
         )
     }

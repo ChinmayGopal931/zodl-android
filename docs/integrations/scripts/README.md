@@ -33,6 +33,24 @@ Paste the four `ciphertextHex` strings back into `evm-lib`'s
 Only re-run when the SDK's ECIES wire format changes — fixtures are
 committed and travel with the test.
 
+## `generate-revert-selectors.ts`
+
+Regenerates `offramp-lib/.../orchestrator/KnownContractErrors.kt` — the wholesale
+selector → SDK error-name table — by regex-parsing `user-app-client/src/lib/errors.ts`.
+No node_modules required; the script is self-contained.
+
+```sh
+bun /path/to/zodl-android/docs/integrations/scripts/generate-revert-selectors.ts \
+  /path/to/user-app-client \
+  > /path/to/zodl-android/offramp-lib/src/jvmMain/kotlin/xyz/justzappit/offramp/orchestrator/KnownContractErrors.kt
+```
+
+The path arg defaults to `/Users/chinmaygopal/dev/user-app-client` if omitted.
+Selectors are emitted in stable (alphabetical) order so a re-run with no source
+change produces zero diff. Re-run whenever you sync to a newer `user-app-client`
+release — `KnownRevertsTest` asserts the table stays ≥120 entries and that every
+*curated* selector still exists in the generated table.
+
 ## `generate-calldata-fixtures.ts`
 
 Emits viem-encoded calldata for `approve`, `placeOrder`, `setSellOrderUpi`,

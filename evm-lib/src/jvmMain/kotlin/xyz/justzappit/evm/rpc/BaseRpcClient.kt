@@ -23,6 +23,8 @@ import xyz.justzappit.evm.abi.Selector4
 import xyz.justzappit.evm.abi.SolidityErrors
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.evm.types.TxHash
+import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
@@ -38,11 +40,11 @@ class BaseRpcClient(
     suspend fun ethChainId(): ChainId =
         ChainId(hexToBigInteger(rpcCall("eth_chainId", emptyJsonArray).jsonPrimitive.content).toLong())
 
-    suspend fun ethGasPrice(): BigInteger =
-        hexToBigInteger(rpcCall("eth_gasPrice", emptyJsonArray).jsonPrimitive.content)
+    suspend fun ethGasPrice(): Wei =
+        Wei(hexToBigInteger(rpcCall("eth_gasPrice", emptyJsonArray).jsonPrimitive.content))
 
-    suspend fun ethMaxPriorityFeePerGas(): BigInteger =
-        hexToBigInteger(rpcCall("eth_maxPriorityFeePerGas", emptyJsonArray).jsonPrimitive.content)
+    suspend fun ethMaxPriorityFeePerGas(): Wei =
+        Wei(hexToBigInteger(rpcCall("eth_maxPriorityFeePerGas", emptyJsonArray).jsonPrimitive.content))
 
     suspend fun ethGetTransactionCount(address: Address, blockTag: String = "pending"): BigInteger =
         hexToBigInteger(
@@ -70,7 +72,7 @@ class BaseRpcClient(
     suspend fun ethEstimateGas(
         from: Address,
         to: Address,
-        value: BigInteger = BigInteger.ZERO,
+        value: Wei = Wei.ZERO,
         data: ByteArray = byteArrayOf(),
     ): BigInteger = hexToBigInteger(
         rpcCall(
@@ -79,21 +81,23 @@ class BaseRpcClient(
                 addJsonObject {
                     put("from", from.checksumHex)
                     put("to", to.checksumHex)
-                    put("value", "0x" + value.toString(16))
+                    put("value", "0x" + value.value.toString(HEX_BASE))
                     put("data", "0x" + data.toHex())
                 }
             },
         ).jsonPrimitive.content,
     )
 
-    suspend fun ethSendRawTransaction(rawTxHex: String): String =
-        rpcCall(
-            "eth_sendRawTransaction",
-            buildJsonArray { add(if (rawTxHex.startsWith("0x")) rawTxHex else "0x$rawTxHex") },
-        ).jsonPrimitive.content
+    suspend fun ethSendRawTransaction(rawTxHex: String): TxHash =
+        TxHash.fromHex(
+            rpcCall(
+                "eth_sendRawTransaction",
+                buildJsonArray { add(if (rawTxHex.startsWith("0x")) rawTxHex else "0x$rawTxHex") },
+            ).jsonPrimitive.content,
+        )
 
-    suspend fun ethGetTransactionReceipt(txHash: String): TransactionReceipt? {
-        val result = rpcCall("eth_getTransactionReceipt", buildJsonArray { add(txHash) })
+    suspend fun ethGetTransactionReceipt(txHash: TxHash): TransactionReceipt? {
+        val result = rpcCall("eth_getTransactionReceipt", buildJsonArray { add(txHash.hex) })
         if (result is JsonPrimitive && result.content == "null") return null
         if (result.toString() == "null") return null
         return json.decodeFromJsonElement(TransactionReceipt.serializer(), result)
@@ -138,14 +142,11 @@ class BaseRpcClient(
         if (looksLikeRevert) {
             val revertBytes = dataHex?.takeIf { it.length >= MIN_HEX_LEN_FOR_BYTES }
                 ?.runCatching { hexToBytes() }?.getOrNull()
-                ?: byteArrayOf()
-            val selector = Selector4.fromBytesPrefix(revertBytes)
-            val solidityString = SolidityErrors.decodeErrorString(revertBytes)
             return RpcException.ExecutionReverted(
                 method = method,
-                selector = selector,
-                data = revertBytes,
-                solidityErrorString = solidityString,
+                selector = revertBytes?.let(Selector4::fromBytesPrefix),
+                data = revertBytes ?: EMPTY_REVERT_DATA,
+                solidityErrorString = revertBytes?.let(SolidityErrors::decodeErrorString),
                 rawMessage = message.orEmpty(),
             )
         }
@@ -167,6 +168,8 @@ class BaseRpcClient(
         private const val METHOD_NOT_FOUND_CODE = -32_601
         private const val INVALID_PARAMS_CODE = -32_602
         private const val MIN_HEX_LEN_FOR_BYTES = 2 // "0x" or single byte
+        private const val HEX_BASE = 16
+        private val EMPTY_REVERT_DATA = ByteArray(0)
     }
 }
 

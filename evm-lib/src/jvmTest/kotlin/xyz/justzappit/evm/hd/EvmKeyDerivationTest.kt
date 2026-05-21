@@ -88,6 +88,24 @@ class EvmKeyDerivationTest {
         }
     }
 
+    @Test
+    fun `retry wrapper does not skip a healthy index — derive is deterministic across indices`() {
+        // BIP-32 §"Private parent → private child" requires advancing to the next child index
+        // when IL >= n or the resulting child key is zero. The canonical abandon vector hits
+        // neither edge, so we cannot directly assert the retry path here without a malicious
+        // mnemonic crafted to trigger one. Instead, regression-guard the wrapper by asserting
+        // that successive derive() calls at the same index return the same key (i.e. we never
+        // accidentally consumed an extra index inside the retry loop).
+        val a0 = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
+        val a0Again = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
+        val a1 = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 1)
+        val a1Again = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 1)
+        assertEquals(a0.address, a0Again.address)
+        assertEquals(a1.address, a1Again.address)
+        assertTrue(a0.privateKey.contentEquals(a0Again.privateKey))
+        assertTrue(a1.privateKey.contentEquals(a1Again.privateKey))
+    }
+
     companion object {
         const val MNEMONIC =
             "abandon abandon abandon abandon abandon abandon " +

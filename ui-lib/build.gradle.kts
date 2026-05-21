@@ -262,6 +262,9 @@ dependencies {
     // ZappMessaging P2P SDK
     implementation(project(":zappmessaging"))
 
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlinx.coroutines.test)
+
     androidTestImplementation(projects.testLib)
     androidTestImplementation(libs.bundles.androidx.test)
     androidTestImplementation(libs.androidx.compose.test.junit)

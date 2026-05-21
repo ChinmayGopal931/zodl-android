@@ -1,15 +1,15 @@
 package xyz.justzappit.offramp.orchestrator
 
 import xyz.justzappit.offramp.p2p.CurrencyCode
-import java.math.BigInteger
+import xyz.justzappit.offramp.p2p.Usdc6
 
 data class OfframpRequest(
     val recipientUpi: String,
-    val usdcAmount: BigInteger,
+    val usdcAmount: Usdc6,
     val currency: CurrencyCode = CurrencyCode.Inr,
 ) {
     init {
         require(recipientUpi.isNotBlank()) { "recipientUpi must not be blank" }
-        require(usdcAmount > BigInteger.ZERO) { "usdcAmount must be positive" }
+        require(usdcAmount > Usdc6.ZERO) { "usdcAmount must be positive" }
     }
 }

@@ -20,6 +20,7 @@ import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.CurrencyCode
+import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.OrderEvents
 import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.OrderSnapshot
@@ -56,7 +57,10 @@ class OfframpOrchestratorTest {
             "eth_estimateGas" -> """{"jsonrpc":"2.0","id":1,"result":"0x5208"}"""
             "eth_sendRawTransaction" -> {
                 rawTxLog += payload["params"]!!.toString().substringAfter('"').substringBefore('"')
-                """{"jsonrpc":"2.0","id":1,"result":"0xtx${rawTxLog.size}"}"""
+                // Synthetic but valid 32-byte hash so TxHash.fromHex parses it. The trailing
+                // byte indexes the broadcast (1..N) for the receipt mock to discriminate on.
+                val tag = rawTxLog.size.toString(16).padStart(2, '0')
+                """{"jsonrpc":"2.0","id":1,"result":"0x${"00".repeat(31)}$tag"}"""
             }
             "eth_getTransactionReceipt" -> receiptFor(payload)
             "eth_call" -> ethCallResponse(payload)
@@ -85,9 +89,18 @@ class OfframpOrchestratorTest {
         orderReader = orderReader,
         router = CircleRouter(random = Random(0), epsilon = 0.0),
         pollIntervalMs = 0,
-        acceptanceTimeoutMs = 5_000,
-        completionTimeoutMs = 5_000,
+        stalledAfterMs = 50,
+        clockMs = ::nextTick,
     )
+
+    // Monotonic per-call counter so tests don't depend on wall-clock advancing under runTest's
+    // virtual scheduler. With stalledAfterMs=50 and a per-call increment of 20, the third
+    // observation flips stalled→true regardless of how the test runtime schedules suspensions.
+    private var tickCounter = 0L
+    private fun nextTick(): Long {
+        tickCounter += 20
+        return tickCounter
+    }
 
     @AfterTest
     fun shutdown() {
@@ -103,8 +116,8 @@ class OfframpOrchestratorTest {
                 status = OrderStatus.COMPLETED,
                 pubkey = MERCHANT_PUBKEY,
                 merchant = MERCHANT_ADDRESS,
-                actualFiatAmount = BigInteger.valueOf(445_000_000),
-                actualUsdcAmount = BigInteger.valueOf(5_062_500),
+                actualFiatAmount = Usdc6.ofMicros(445_000_000),
+                actualUsdcAmount = Usdc6.ofMicros(5_062_500),
                 completedAtEpochSeconds = 1_779_999_999L,
             ),
         )
@@ -112,7 +125,7 @@ class OfframpOrchestratorTest {
         val statuses = orchestrator.run(
             OfframpRequest(
                 recipientUpi = "merchant@upi",
-                usdcAmount = BigInteger.valueOf(5_000_000),
+                usdcAmount = Usdc6.ofMicros(5_000_000),
                 currency = CurrencyCode.Inr,
             ),
         ).toList()
@@ -120,8 +133,8 @@ class OfframpOrchestratorTest {
         assertIs<OfframpStatus.Idle>(statuses.first())
         val completed = statuses.last() as OfframpStatus.Completed
         assertEquals(ORDER_ID, completed.orderId)
-        assertEquals(BigInteger.valueOf(445_000_000), completed.actualFiatAmount)
-        assertEquals(BigInteger.valueOf(5_062_500), completed.actualUsdcAmount)
+        assertEquals(Usdc6.ofMicros(445_000_000), completed.actualFiatAmount)
+        assertEquals(Usdc6.ofMicros(5_062_500), completed.actualUsdcAmount)
         assertEquals(1_779_999_999L, completed.completedAtEpochSeconds)
 
         val classes = statuses.map { it::class.simpleName }
@@ -144,7 +157,7 @@ class OfframpOrchestratorTest {
         val statuses = orchestrator.run(
             OfframpRequest(
                 recipientUpi = "merchant@upi",
-                usdcAmount = BigInteger.valueOf(5_000_000),
+                usdcAmount = Usdc6.ofMicros(5_000_000),
             ),
         ).toList()
         val last = assertIs<OfframpStatus.Failed>(statuses.last())
@@ -153,7 +166,52 @@ class OfframpOrchestratorTest {
     }
 
     @Test
-    fun `cancelled order returns Failed with orderId set + WAITING_FOR_ACCEPTANCE step`() = runTest {
+    fun `transient RPC errors during polling do not fail the flow`() = runTest {
+        // Regression for: a single bad poll mid-flight used to throw out of orderReader.fetchOrder
+        // and bail the orchestrator into Failed, orphaning escrowed USDC. After the FallbackOrderReader
+        // total-fix + orchestrator catch wrap, transient failures collapse to null and polling continues.
+        orderReader.enqueue(null) // primary observer "transiently fails"; reader returns null
+        orderReader.enqueueThrow(RuntimeException("kapow")) // even an outright throw is absorbed
+        orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+        orderReader.enqueue(
+            snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS),
+        )
+
+        val statuses = orchestrator.run(
+            OfframpRequest(
+                recipientUpi = "merchant@upi",
+                usdcAmount = Usdc6.ofMicros(5_000_000),
+            ),
+        ).toList()
+        assertIs<OfframpStatus.Completed>(statuses.last())
+    }
+
+    @Test
+    fun `WaitingForMerchantAcceptance flips stalled=true after stalledAfterMs of polling`() = runTest {
+        // No accepted snapshot enqueued for a while → orchestrator loops returning null. Once we've
+        // been polling longer than stalledAfterMs (50ms in tests, default 5min), the emitted
+        // WaitingForMerchantAcceptance should carry stalled=true. We then drop ACCEPTED + COMPLETED
+        // in to terminate the flow cleanly.
+        repeat(5) { orderReader.enqueue(null) }
+        orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+        orderReader.enqueue(
+            snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS),
+        )
+
+        val statuses = orchestrator.run(
+            OfframpRequest(
+                recipientUpi = "merchant@upi",
+                usdcAmount = Usdc6.ofMicros(5_000_000),
+            ),
+        ).toList()
+        val anyStalledAcceptance = statuses
+            .filterIsInstance<OfframpStatus.WaitingForMerchantAcceptance>()
+            .any { it.stalled }
+        assertTrue(anyStalledAcceptance, "expected at least one WaitingForMerchantAcceptance.stalled=true emission")
+    }
+
+    @Test
+    fun `cancelled order during acceptance polling emits Cancelled terminal (not Failed)`() = runTest {
         orderReader.enqueue(
             snapshot(status = OrderStatus.CANCELLED, pubkey = "", merchant = null),
         )
@@ -161,21 +219,23 @@ class OfframpOrchestratorTest {
         val statuses = orchestrator.run(
             OfframpRequest(
                 recipientUpi = "merchant@upi",
-                usdcAmount = BigInteger.valueOf(5_000_000),
+                usdcAmount = Usdc6.ofMicros(5_000_000),
             ),
         ).toList()
-        val last = assertIs<OfframpStatus.Failed>(statuses.last())
+        val last = assertIs<OfframpStatus.Cancelled>(statuses.last())
         assertEquals(ORDER_ID, last.orderId)
-        assertEquals(OfframpStep.WAITING_FOR_ACCEPTANCE, last.step)
-        assertTrue(last.message.contains("cancelled", ignoreCase = true))
+        assertEquals(1_779_500_000L, last.cancelledAtEpochSeconds)
+        // Refunded amount falls back to the placed usdcAmount when subgraph's actualUsdcAmount
+        // is null (it only populates on COMPLETED).
+        assertEquals(Usdc6.ofMicros(5_000_000), last.refundedUsdcAmount)
     }
 
     private fun snapshot(
         status: OrderStatus,
         pubkey: String,
         merchant: String?,
-        actualUsdcAmount: BigInteger? = null,
-        actualFiatAmount: BigInteger? = null,
+        actualUsdcAmount: Usdc6? = null,
+        actualFiatAmount: Usdc6? = null,
         completedAtEpochSeconds: Long? = null,
     ) = OrderSnapshot(
         orderId = ORDER_ID,
@@ -183,8 +243,8 @@ class OfframpOrchestratorTest {
         orderType = OrderType.PAY,
         circleId = BigInteger.ONE,
         userAddress = account.address,
-        usdcAmount = BigInteger.valueOf(5_000_000),
-        fiatAmount = BigInteger.valueOf(445_000_000),
+        usdcAmount = Usdc6.ofMicros(5_000_000),
+        fiatAmount = Usdc6.ofMicros(445_000_000),
         currencyHex = "0x494e520000000000000000000000000000000000000000000000000000000000",
         acceptedMerchantAddress = merchant?.let { Address.parse(it) },
         merchantPubKey = pubkey,
@@ -197,24 +257,45 @@ class OfframpOrchestratorTest {
         cancelledAtEpochSeconds = if (status == OrderStatus.CANCELLED) 1_779_500_000L else null,
         actualUsdcAmount = actualUsdcAmount,
         actualFiatAmount = actualFiatAmount,
-        placedTxHash = "0xtx2",
+        placedTxHash = xyz.justzappit.evm.types.TxHash.fromHex(
+            "0x" + "02".padStart(64, '0'),
+        ),
         placedAtBlockNumber = 16L,
         source = OrderSnapshot.Source.Subgraph,
     )
 
     private class ScriptedOrderReadSource : OrderReadSource {
-        private val queue = ArrayDeque<OrderSnapshot?>()
+        // Items are either an OrderSnapshot, null, or a throwable to raise. ArrayDeque<Any?> with
+        // throwable sentinel keeps the test ergonomic without a separate field.
+        private val queue = ArrayDeque<Any?>()
+
         fun enqueue(vararg snapshots: OrderSnapshot?) {
             snapshots.forEach { queue.addLast(it) }
         }
-        override suspend fun fetchOrder(orderId: BigInteger): OrderSnapshot? =
-            if (queue.isNotEmpty()) queue.removeFirst() else null
+
+        fun enqueueThrow(error: Throwable) {
+            queue.addLast(ThrowSentinel(error))
+        }
+
+        override suspend fun fetchOrder(orderId: BigInteger): OrderSnapshot? {
+            if (queue.isEmpty()) return null
+            return when (val head = queue.removeFirst()) {
+                is ThrowSentinel -> throw head.error
+                is OrderSnapshot -> head
+                null -> null
+                else -> error("unexpected scripted item: $head")
+            }
+        }
+
+        private class ThrowSentinel(val error: Throwable)
     }
 
     private fun receiptFor(payload: JsonObject): String {
         val txParam = payload["params"]!!.toString().substringAfter('"').substringBefore('"')
+        // The mock encodes the broadcast index into the trailing byte of the synthetic hash; the
+        // second broadcast (placeOrder) needs to return the receipt with an OrderPlaced log.
         return when (txParam) {
-            "0xtx2" -> placeOrderReceiptJson()
+            PLACE_ORDER_TX_HASH -> placeOrderReceiptJson()
             else -> simpleSuccessReceiptJson(txParam)
         }
     }
@@ -243,7 +324,7 @@ class OfframpOrchestratorTest {
         val orderIdTopic = "0x" + ORDER_ID.toString(16).padStart(64, '0')
         return """
             {"jsonrpc":"2.0","id":1,"result":{
-              "transactionHash":"0xtx2",
+              "transactionHash":"$PLACE_ORDER_TX_HASH",
               "blockNumber":"0x10",
               "status":"0x1",
               "gasUsed":"0x5208",
@@ -256,7 +337,7 @@ class OfframpOrchestratorTest {
                             "0x${"0".repeat(64)}"],
                   "data":"0x",
                   "blockNumber":"0x10",
-                  "transactionHash":"0xtx2",
+                  "transactionHash":"$PLACE_ORDER_TX_HASH",
                   "logIndex":"0x0"
                 }
               ]
@@ -273,6 +354,9 @@ class OfframpOrchestratorTest {
                 "70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1"
         const val MERCHANT_ADDRESS = "0x1111111111111111111111111111111111111111"
         val ORDER_ID: BigInteger = BigInteger.valueOf(7)
+
+        // Synthetic 32-byte hash whose trailing byte (0x02) matches the second mocked broadcast.
+        private const val PLACE_ORDER_TX_HASH = "0x" + "0000000000000000000000000000000000000000000000000000000000000002"
 
         const val ENCODED_ADDRESS_ARRAY_OF_ONE =
             "0x0000000000000000000000000000000000000000000000000000000000000020" +

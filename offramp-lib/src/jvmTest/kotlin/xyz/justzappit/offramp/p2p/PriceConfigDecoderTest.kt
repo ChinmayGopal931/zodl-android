@@ -20,19 +20,19 @@ class PriceConfigDecoderTest {
         ).hexToBytes()
 
         val cfg = PriceConfigDecoder.decode(raw)
-        assertEquals(BigInteger.valueOf(91_000_000L), cfg.buyPrice)
-        assertEquals(BigInteger.valueOf(89_000_000L), cfg.sellPrice)
-        assertEquals(BigInteger.ZERO, cfg.buyPriceOffset)
-        assertEquals(BigInteger.valueOf(1_500_000L), cfg.baseSpread)
+        assertEquals(Usdc6.ofMicros(91_000_000L), cfg.buyPrice)
+        assertEquals(Usdc6.ofMicros(89_000_000L), cfg.sellPrice)
+        assertEquals(Usdc6.ZERO, cfg.buyPriceOffset)
+        assertEquals(Usdc6.ofMicros(1_500_000L), cfg.baseSpread)
     }
 
     @Test
     fun `sellPriceAsRate scales by 6 decimals`() {
         val cfg = PriceConfig(
-            buyPrice = BigInteger.ZERO,
-            sellPrice = BigInteger.valueOf(89_178_176L),
-            buyPriceOffset = BigInteger.ZERO,
-            baseSpread = BigInteger.ZERO,
+            buyPrice = Usdc6.ZERO,
+            sellPrice = Usdc6.ofMicros(89_178_176L),
+            buyPriceOffset = Usdc6.ZERO,
+            baseSpread = Usdc6.ZERO,
         )
         // compareTo because BigDecimal.equals is scale-sensitive (89.178176 != 89.17817600).
         assertEquals(0, BigDecimal("89.178176").compareTo(cfg.sellPriceAsRate()))
@@ -41,10 +41,10 @@ class PriceConfigDecoderTest {
     @Test
     fun `fiatForUsdc multiplies by the sell rate`() {
         val cfg = PriceConfig(
-            buyPrice = BigInteger.ZERO,
-            sellPrice = BigInteger.valueOf(89_178_176L),
-            buyPriceOffset = BigInteger.ZERO,
-            baseSpread = BigInteger.ZERO,
+            buyPrice = Usdc6.ZERO,
+            sellPrice = Usdc6.ofMicros(89_178_176L),
+            buyPriceOffset = Usdc6.ZERO,
+            baseSpread = Usdc6.ZERO,
         )
         // 5 × 89.178176 = 445.89088 → 445.89 (HALF_UP at 2dp).
         assertEquals(BigDecimal("445.89"), cfg.fiatForUsdc(BigDecimal("5")))
@@ -53,10 +53,10 @@ class PriceConfigDecoderTest {
     @Test
     fun `usdcForFiat divides by the sell rate`() {
         val cfg = PriceConfig(
-            buyPrice = BigInteger.ZERO,
-            sellPrice = BigInteger.valueOf(89_178_176L),
-            buyPriceOffset = BigInteger.ZERO,
-            baseSpread = BigInteger.ZERO,
+            buyPrice = Usdc6.ZERO,
+            sellPrice = Usdc6.ofMicros(89_178_176L),
+            buyPriceOffset = Usdc6.ZERO,
+            baseSpread = Usdc6.ZERO,
         )
         // 100 / 89.178176 ≈ 1.12135057… → 1.1214 (HALF_UP at 4dp).
         assertEquals(BigDecimal("1.1214"), cfg.usdcForFiat(BigDecimal("100")))

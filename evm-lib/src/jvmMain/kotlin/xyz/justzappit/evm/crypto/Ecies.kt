@@ -130,6 +130,13 @@ object Ecies {
         }
     }
 
+    /**
+     * Key derivation deliberately uses plain SHA-512(sharedSecret) instead of HKDF, matching the
+     * [eth-crypto](https://github.com/pubkey/eth-crypto/blob/master/src/encrypt-with-public-key.ts)
+     * convention that p2p.me's relays interoperate with. Replacing this with NIST SP 800-56 / SEC1
+     * standard ECIES (HKDF + info string) will break wire-format compatibility with every existing
+     * counterparty — do NOT "fix" this without coordinating a hard fork of the relay protocol.
+     */
     private fun deriveKeys(sharedSecret: ByteArray): Pair<ByteArray, ByteArray> {
         val hash = MessageDigest.getInstance("SHA-512").digest(sharedSecret)
         return hash.copyOfRange(0, FIELD_BYTES) to hash.copyOfRange(FIELD_BYTES, hash.size)

@@ -11,6 +11,7 @@ import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.RpcException
 import xyz.justzappit.evm.signer.EoaSigner
+import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.util.toHex
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.p2p.CircleRouter
@@ -25,7 +26,17 @@ import xyz.justzappit.offramp.p2p.OrderType
 import xyz.justzappit.offramp.p2p.PlaceOrderArgs
 import xyz.justzappit.offramp.p2p.RelayIdentities
 import xyz.justzappit.offramp.p2p.SubgraphClient
+import xyz.justzappit.offramp.p2p.Usdc6
 import java.math.BigInteger
+
+/**
+ * Surface for the VM layer to depend on. Decouples the UI VM from the concrete RPC/signer wiring
+ * so tests can substitute a scripted flow without standing up a real RPC stack.
+ */
+interface OfframpDriver {
+    fun run(request: OfframpRequest): Flow<OfframpStatus>
+    fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus>
+}
 
 class OfframpOrchestrator(
     private val rpc: BaseRpcClient,
@@ -36,13 +47,25 @@ class OfframpOrchestrator(
     private val orderReader: OrderReadSource,
     private val router: CircleRouter = CircleRouter(),
     private val pollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
-    private val acceptanceTimeoutMs: Long = DEFAULT_ACCEPTANCE_TIMEOUT_MS,
-    private val completionTimeoutMs: Long = DEFAULT_COMPLETION_TIMEOUT_MS,
-) {
-    fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
+    /**
+     * After this duration of polling with no terminal transition, the WaitingFor* status emits
+     * with `stalled = true` so the UI can hint that the order is taking longer than usual. There
+     * is no client-side timeout — the order remains live on-chain until merchant acceptance,
+     * completion, or the contract's own auto-cancel (~72h per Diamond.getOrderExpiryTime).
+     * Killing flows on a client clock would orphan the user's escrowed USDC.
+     */
+    private val stalledAfterMs: Long = DEFAULT_STALLED_AFTER_MS,
+    /**
+     * Clock used to compute the stalled-flag deadline. Defaults to wall-clock; tests inject a
+     * controllable monotonic counter because `runTest`'s virtual time does not advance
+     * `clockMs()`.
+     */
+    private val clockMs: () -> Long = System::currentTimeMillis,
+) : OfframpDriver {
+    override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
         var orderId: BigInteger? = null
         var currentStep = OfframpStep.INITIALIZATION
-        var lastTxHash: String? = null
+        var lastTxHash: TxHash? = null
         emit(OfframpStatus.Idle)
 
         try {
@@ -118,13 +141,13 @@ class OfframpOrchestrator(
      * implies approve + placeOrder both already landed). Earlier-step resumes are out of scope for
      * v1; if [checkpoint.orderId] is null the caller must restart fresh via [run].
      */
-    fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
+    override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
         val orderId = requireNotNull(checkpoint.orderIdBig) {
             "OfframpOrchestrator.resume requires a checkpoint with orderId — got currentStep=${checkpoint.currentStep}"
         }
         val request = checkpoint.toRequest()
         var currentStep = checkpoint.currentStep
-        var lastTxHash: String? = checkpoint.setUpiTxHash ?: checkpoint.placeOrderTxHash
+        var lastTxHash: TxHash? = checkpoint.setUpiTxHash ?: checkpoint.placeOrderTxHash
         emit(OfframpStatus.Idle)
         try {
             awaitMerchantAndComplete(
@@ -144,12 +167,18 @@ class OfframpOrchestrator(
     private suspend fun FlowCollector<OfframpStatus>.awaitMerchantAndComplete(
         orderId: BigInteger,
         request: OfframpRequest,
-        knownSetUpiHash: String?,
+        knownSetUpiHash: TxHash?,
         onStep: (OfframpStep) -> Unit,
-        onTxHash: (String) -> Unit,
+        onTxHash: (TxHash) -> Unit,
     ) {
         onStep(OfframpStep.WAITING_FOR_ACCEPTANCE)
-        val accepted = pollForAcceptance(orderId)
+        val accepted = when (val r = pollForAcceptance(orderId)) {
+            is PollOutcome.Cancelled -> {
+                emitCancelled(orderId, r.snapshot)
+                return
+            }
+            is PollOutcome.Matched -> r.snapshot
+        }
         val acceptedMerchant = requireNotNull(accepted.acceptedMerchantAddress) {
             "Order $orderId reached ACCEPTED but acceptedMerchantAddress is null"
         }
@@ -176,19 +205,52 @@ class OfframpOrchestrator(
                 txHash = setUpiHash,
                 merchantAddress = acceptedMerchant,
                 merchantPubKey = accepted.merchantPubKey,
+                acceptedAtEpochSeconds = accepted.acceptedAtEpochSeconds,
             ),
         )
         require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
 
         onStep(OfframpStep.WAITING_FOR_COMPLETION)
-        val finished = pollForCompletion(orderId)
+        val finished = when (val r = pollForCompletion(orderId, accepted)) {
+            is PollOutcome.Cancelled -> {
+                emitCancelled(orderId, r.snapshot, fallbackAccepted = accepted)
+                return
+            }
+            is PollOutcome.Matched -> r.snapshot
+        }
         emit(
             OfframpStatus.Completed(
                 orderId = orderId,
                 acceptedMerchant = finished.acceptedMerchantAddress ?: acceptedMerchant,
                 actualUsdcAmount = finished.actualUsdcAmount,
                 actualFiatAmount = finished.actualFiatAmount,
+                placedAtEpochSeconds = finished.placedAtEpochSeconds ?: accepted.placedAtEpochSeconds,
+                acceptedAtEpochSeconds = finished.acceptedAtEpochSeconds ?: accepted.acceptedAtEpochSeconds,
+                paidAtEpochSeconds = finished.paidAtEpochSeconds,
                 completedAtEpochSeconds = finished.completedAtEpochSeconds,
+            ),
+        )
+    }
+
+    private suspend fun FlowCollector<OfframpStatus>.emitCancelled(
+        orderId: BigInteger,
+        snapshot: OrderSnapshot,
+        fallbackAccepted: OrderSnapshot? = null,
+    ) {
+        emit(
+            OfframpStatus.Cancelled(
+                orderId = orderId,
+                cancelledAtEpochSeconds = snapshot.cancelledAtEpochSeconds,
+                acceptedMerchant = snapshot.acceptedMerchantAddress
+                    ?: fallbackAccepted?.acceptedMerchantAddress,
+                // On cancellation the contract refunds the placed USDC; subgraph's actualUsdcAmount
+                // is only populated on COMPLETED, so fall back to the originally-placed amount.
+                refundedUsdcAmount = snapshot.actualUsdcAmount ?: snapshot.usdcAmount,
+                placedAtEpochSeconds = snapshot.placedAtEpochSeconds
+                    ?: fallbackAccepted?.placedAtEpochSeconds,
+                acceptedAtEpochSeconds = snapshot.acceptedAtEpochSeconds
+                    ?: fallbackAccepted?.acceptedAtEpochSeconds,
+                paidAtEpochSeconds = snapshot.paidAtEpochSeconds,
             ),
         )
     }
@@ -205,75 +267,100 @@ class OfframpOrchestrator(
                 currency = request.currency,
                 user = account.address,
                 usdtAmount = request.usdcAmount,
-                fiatAmount = BigInteger.ZERO,
+                fiatAmount = Usdc6.ZERO,
                 orderType = OrderType.PAY,
             ),
         )
         OrderReader.decodeAddressArrayNonEmpty(ret)
     }.getOrDefault(false)
 
-    private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): OrderSnapshot =
+    private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): PollOutcome =
         pollOrderUntil(
             orderId = orderId,
-            timeoutMs = acceptanceTimeoutMs,
-            timeoutMessage = "merchant did not accept order $orderId in time",
-            buildStatus = { attempt, lastSeen ->
+            buildStatus = { attempt, lastSeen, stalled ->
                 OfframpStatus.WaitingForMerchantAcceptance(
                     orderId = orderId,
                     pollAttempts = attempt,
                     lastObservedStatus = lastSeen,
+                    stalled = stalled,
                 )
             },
             predicate = { it.isAccepted },
         )
 
-    private suspend fun FlowCollector<OfframpStatus>.pollForCompletion(orderId: BigInteger): OrderSnapshot =
+    private suspend fun FlowCollector<OfframpStatus>.pollForCompletion(
+        orderId: BigInteger,
+        accepted: OrderSnapshot,
+    ): PollOutcome =
         pollOrderUntil(
             orderId = orderId,
-            timeoutMs = completionTimeoutMs,
-            timeoutMessage = "order $orderId did not complete in time",
-            buildStatus = { attempt, lastSeen ->
+            buildStatus = { attempt, lastSeen, stalled ->
                 OfframpStatus.WaitingForCompletion(
                     orderId = orderId,
                     pollAttempts = attempt,
                     lastObservedStatus = lastSeen,
+                    stalled = stalled,
+                    acceptedAtEpochSeconds = accepted.acceptedAtEpochSeconds,
+                    paidAtEpochSeconds = null,
                 )
             },
             predicate = { it.status == OrderStatus.COMPLETED },
         )
 
+    /**
+     * Polls [orderReader] indefinitely until [predicate] matches or the order is observed in the
+     * CANCELLED state (which is a normal terminal — the contract has refunded the user's USDC
+     * on-chain — not an error). There is no client-side deadline; see [stalledAfterMs] for the
+     * UX-side "this is taking a while" signal.
+     *
+     * Transient RPC failures inside [orderReader] are silently absorbed (the fallback reader logs
+     * them) and the loop continues. A single bad poll must not kill an order whose USDC is
+     * already escrowed on-chain.
+     */
     private suspend fun FlowCollector<OfframpStatus>.pollOrderUntil(
         orderId: BigInteger,
-        timeoutMs: Long,
-        timeoutMessage: String,
-        buildStatus: (Int, OrderStatus?) -> OfframpStatus,
+        buildStatus: (Int, OrderStatus?, Boolean) -> OfframpStatus,
         predicate: (OrderSnapshot) -> Boolean,
-    ): OrderSnapshot {
+    ): PollOutcome {
         var attempt = 0
-        emit(buildStatus(attempt, null))
-        val deadline = System.currentTimeMillis() + timeoutMs
-        while (System.currentTimeMillis() < deadline) {
+        val startedAtMs = clockMs()
+        emit(buildStatus(attempt, null, false))
+        while (true) {
             attempt++
-            val snapshot = orderReader.fetchOrder(orderId)
+            val stalled = clockMs() - startedAtMs >= stalledAfterMs
+            val snapshot = try {
+                orderReader.fetchOrder(orderId)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Throwable) {
+                // FallbackOrderReader already logs primary + fallback failures; the orchestrator
+                // just keeps polling. Returning null here lets the existing snapshot==null branch
+                // re-emit the WaitingFor* status without changing observed on-chain state.
+                null
+            }
             if (snapshot != null) {
                 if (snapshot.status == OrderStatus.CANCELLED) {
-                    error("Order $orderId was cancelled by the merchant")
+                    return PollOutcome.Cancelled(snapshot)
                 }
-                if (predicate(snapshot)) return snapshot
-                emit(buildStatus(attempt, snapshot.status))
+                if (predicate(snapshot)) return PollOutcome.Matched(snapshot)
+                emit(buildStatus(attempt, snapshot.status, stalled))
             } else {
-                emit(buildStatus(attempt, null))
+                emit(buildStatus(attempt, null, stalled))
             }
             delay(pollIntervalMs)
         }
-        error(timeoutMessage)
+    }
+
+    private sealed class PollOutcome {
+        data class Matched(val snapshot: OrderSnapshot) : PollOutcome()
+        data class Cancelled(val snapshot: OrderSnapshot) : PollOutcome()
     }
 
     private fun buildFailedStatus(
         error: Throwable,
         orderId: BigInteger?,
         step: OfframpStep,
-        lastTxHash: String?,
+        lastTxHash: TxHash?,
     ): OfframpStatus.Failed = when (error) {
         is RpcException.ExecutionReverted -> OfframpStatus.Failed(
             message = error.message ?: "execution reverted",
@@ -282,6 +369,7 @@ class OfframpOrchestrator(
             txHash = lastTxHash,
             revertSelector = error.selector,
             knownRevertReason = KnownReverts.explain(error),
+            sdkErrorName = KnownReverts.sdkName(error),
             solidityErrorString = error.solidityErrorString,
             cause = error,
         )
@@ -297,7 +385,6 @@ class OfframpOrchestrator(
     companion object {
         private const val ASSIGN_UP_TO = 3L
         private const val DEFAULT_POLL_INTERVAL_MS = 3_000L
-        private const val DEFAULT_ACCEPTANCE_TIMEOUT_MS = 5L * 60 * 1000
-        private const val DEFAULT_COMPLETION_TIMEOUT_MS = 30L * 60 * 1000
+        private const val DEFAULT_STALLED_AFTER_MS = 5L * 60 * 1000
     }
 }

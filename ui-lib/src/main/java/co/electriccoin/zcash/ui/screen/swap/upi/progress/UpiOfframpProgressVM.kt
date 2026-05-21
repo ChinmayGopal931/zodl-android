@@ -2,69 +2,75 @@ package co.electriccoin.zcash.ui.screen.swap.upi.progress
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.OfframpRepository
+import co.electriccoin.zcash.ui.common.usecase.GetOrderFeeDetailsUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.KnownRevertReason
-import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
-import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
+import xyz.justzappit.offramp.orchestrator.OfframpDriver
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
 import xyz.justzappit.offramp.orchestrator.OfframpStep
 import xyz.justzappit.offramp.orchestrator.step
+import xyz.justzappit.offramp.p2p.OrderFeeDetails
+import xyz.justzappit.offramp.p2p.Usdc6
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @Suppress("TooManyFunctions")
 internal class UpiOfframpProgressVM(
     private val args: UpiOfframpProgressArgs,
-    private val orchestrator: OfframpOrchestrator,
+    private val orchestrator: OfframpDriver,
     private val network: P2pNetworkConfig,
     private val account: EvmKey,
     private val navigationRouter: NavigationRouter,
     private val offrampRepo: OfframpRepository,
+    private val getOrderFeeDetails: GetOrderFeeDetailsUseCase,
 ) : ViewModel() {
-    private val latestStatus = MutableStateFlow<OfframpStatus>(OfframpStatus.Idle)
+    private val request: OfframpRequest = OfframpRequest(
+        recipientUpi = args.recipientUpi,
+        usdcAmount = Usdc6(BigInteger(args.usdcAmountMicro)),
+        currency = args.currency,
+    )
 
-    val state: StateFlow<UpiOfframpProgressState> = latestStatus
-        .map(::buildState)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = buildState(OfframpStatus.Idle),
-        )
+    private val persister = OfframpCheckpointPersister(repo = offrampRepo, request = request)
 
-    init {
-        viewModelScope.launch { runOrder() }
-    }
+    private val feeDetails = MutableStateFlow<OrderFeeDetails?>(null)
 
-    private suspend fun runOrder() {
-        val request = OfframpRequest(
-            recipientUpi = args.recipientUpi,
-            usdcAmount = BigInteger(args.usdcAmountMicro),
-            currency = args.currency,
-        )
+    /**
+     * Shared so multiple downstream collectors (state-builder, persister side effect, fee-details
+     * fetcher) read a single underlying orchestrator run. `replay = 1` so late subscribers (the
+     * fee-details fetcher launches from `init {}`) see the current status immediately.
+     */
+    private val statusSource: SharedFlow<OfframpStatus> = flow {
         val existing = offrampRepo.getInFlight()
-        val source: Flow<OfframpStatus> = if (existing != null && existing.orderIdBig != null) {
+        val upstream = if (existing != null && existing.orderIdBig != null) {
             Twig.info { "UpiOfframpProgress resuming order ${existing.orderId} from ${existing.currentStep}" }
+            persister.seedFrom(existing)
             orchestrator.resume(existing)
         } else {
             if (existing != null) {
@@ -73,82 +79,65 @@ internal class UpiOfframpProgressVM(
             }
             orchestrator.run(request)
         }
-        source
+        upstream
             .onEach { status ->
                 Twig.info { "UpiOfframpProgress status=$status" }
-                latestStatus.update { status }
-                persistOrClear(status, request)
+                persister.onStatus(status)
             }
-            .collect { /* state already updated in onEach */ }
-    }
+            .collect { emit(it) }
+    }.shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
-    private suspend fun persistOrClear(status: OfframpStatus, request: OfframpRequest) {
-        when (status) {
-            is OfframpStatus.Completed, is OfframpStatus.Failed -> offrampRepo.clear()
-            else -> {
-                val orderId = orderIdOf(status) ?: return
-                val previous = offrampRepo.getInFlight()
-                offrampRepo.save(
-                    OfframpCheckpoint(
-                        orderId = orderId.toString(),
-                        currentStep = status.step,
-                        approveTxHash = previous?.approveTxHash,
-                        placeOrderTxHash = (status as? OfframpStatus.PlacingOrder)?.txHash
-                            ?: previous?.placeOrderTxHash,
-                        setUpiTxHash = (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
-                            ?: previous?.setUpiTxHash,
-                        recipientUpi = request.recipientUpi,
-                        usdcAmountMicroDecimal = request.usdcAmount.toString(),
-                        currency = request.currency,
-                        createdAtMillis = previous?.createdAtMillis ?: System.currentTimeMillis(),
-                    ),
-                )
-            }
+    init {
+        // Fee details: refetch whenever orderId or status-class changes. Distinct-until-changed
+        // throttles the WaitingForCompletion poll loop (which emits every 3s) down to one fetch
+        // per genuine state transition.
+        viewModelScope.launch {
+            statusSource
+                .mapNotNull { status -> extractOrderId(status)?.let { it to status::class } }
+                .distinctUntilChanged()
+                .collect { (orderId, _) ->
+                    getOrderFeeDetails(orderId)?.let { feeDetails.value = it }
+                }
         }
     }
 
-    private fun orderIdOf(status: OfframpStatus): BigInteger? = when (status) {
-        is OfframpStatus.WaitingForMerchantAcceptance -> status.orderId
-        is OfframpStatus.SendingEncryptedUpi -> status.orderId
-        is OfframpStatus.WaitingForCompletion -> status.orderId
-        else -> null
-    }
+    val state: StateFlow<UpiOfframpProgressState> =
+        combine(statusSource, feeDetails) { status, fees -> buildState(status, fees) }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.Eagerly,
+                initialValue = buildState(OfframpStatus.Idle, null),
+            )
 
-    private fun buildState(status: OfframpStatus): UpiOfframpProgressState {
+    private fun buildState(status: OfframpStatus, fees: OrderFeeDetails?): UpiOfframpProgressState {
         val orderId = extractOrderId(status)
-        val summary = UpiOfframpOrderSummary(
-            amountUsdcDisplay = stringRes(
-                R.string.upi_offramp_progress_amount_usdc,
-                formatUsdc(args.usdcAmountMicro),
-            ),
-            recipient = args.recipientUpi,
-            orderId = orderId?.toString(),
-            networkName = network.name.replaceFirstChar { it.uppercase() },
-            signerAddress = account.address.checksumHex,
-            signerExplorerUrl = explorerUrl(addressPath(account.address)),
-        )
+        val summary = buildSummary(status, orderId)
 
         val title = when (status) {
             is OfframpStatus.Completed -> stringRes(R.string.upi_offramp_progress_title_completed)
+            is OfframpStatus.Cancelled -> stringRes(R.string.upi_offramp_progress_title_cancelled)
             is OfframpStatus.Failed -> stringRes(R.string.upi_offramp_progress_title_failed)
             else -> stringRes(R.string.upi_offramp_progress_title_in_progress)
         }
 
         val subtitle: StringResource? = when (status) {
             is OfframpStatus.Completed -> stringRes(R.string.upi_offramp_progress_subtitle_completed)
+            is OfframpStatus.Cancelled -> stringRes(R.string.upi_offramp_progress_subtitle_cancelled)
             is OfframpStatus.Failed -> null
             else -> stringRes(R.string.upi_offramp_progress_subtitle_recipient, args.recipientUpi)
         }
 
         val steps = buildSteps(status)
         val failure = (status as? OfframpStatus.Failed)?.let(::buildFailureCard)
+        val cancelled = (status as? OfframpStatus.Cancelled)?.let(::buildCancelledCard)
+        val feeBreakdown = buildFeeBreakdown(fees)
 
         val primary = when (status) {
             is OfframpStatus.Completed -> ButtonState(
                 text = stringRes(R.string.upi_offramp_progress_done_button),
                 onClick = { navigationRouter.back() },
             )
-            is OfframpStatus.Failed -> ButtonState(
+            is OfframpStatus.Cancelled, is OfframpStatus.Failed -> ButtonState(
                 text = stringRes(R.string.upi_offramp_progress_close_button),
                 onClick = { navigationRouter.back() },
             )
@@ -159,10 +148,71 @@ internal class UpiOfframpProgressVM(
             title = title,
             subtitle = subtitle,
             summary = summary,
+            feeBreakdown = feeBreakdown,
             steps = steps,
             failure = failure,
+            cancelled = cancelled,
             primaryButton = primary,
             onBack = { navigationRouter.back() },
+        )
+    }
+
+    private fun buildSummary(status: OfframpStatus, orderId: BigInteger?): UpiOfframpOrderSummary {
+        val completionDuration = (status as? OfframpStatus.Completed)?.let {
+            completionDurationString(it.placedAtEpochSeconds, it.completedAtEpochSeconds)
+        }
+        val terminalTimestamp = when (status) {
+            is OfframpStatus.Completed -> status.completedAtEpochSeconds?.let(::formatTerminalTimestamp)
+            is OfframpStatus.Cancelled -> status.cancelledAtEpochSeconds?.let(::formatTerminalTimestamp)
+            else -> null
+        }
+        val merchantAddress = when (status) {
+            is OfframpStatus.Completed -> status.acceptedMerchant.checksumHex
+            is OfframpStatus.Cancelled -> status.acceptedMerchant?.checksumHex
+            else -> null
+        }
+        return UpiOfframpOrderSummary(
+            amountUsdcDisplay = stringRes(
+                R.string.upi_offramp_progress_amount_usdc,
+                formatUsdc(args.usdcAmountMicro),
+            ),
+            recipient = args.recipientUpi,
+            orderId = orderId?.toString(),
+            networkName = network.name.replaceFirstChar { it.uppercase(Locale.ROOT) },
+            signerAddress = account.address.checksumHex,
+            signerExplorerUrl = explorerUrl(addressPath(account.address)),
+            completionDuration = completionDuration,
+            terminalTimestamp = terminalTimestamp,
+            merchantAddress = merchantAddress,
+            merchantExplorerUrl = merchantAddress?.let { explorerUrl("/address/$it") },
+        )
+    }
+
+    private fun buildFeeBreakdown(fees: OrderFeeDetails?): UpiOfframpFeeBreakdown? {
+        if (fees == null) return null
+        // Pre-acceptance the contract returns all-zeros; rendering that gives a misleading
+        // "fee = 0.00 USDC" line. Only surface the card once at least one value is meaningful.
+        if (fees.fixedFeePaid == Usdc6.ZERO && fees.actualUsdcAmount == Usdc6.ZERO) return null
+        val youSend = fees.actualUsdcAmount.takeIf { it > Usdc6.ZERO }
+            ?.let { stringRes(R.string.upi_offramp_fee_breakdown_amount_usdc, formatUsdcDisplay(it)) }
+        val fee = fees.fixedFeePaid.takeIf { it > Usdc6.ZERO }
+            ?.let { stringRes(R.string.upi_offramp_fee_breakdown_amount_usdc, formatUsdcDisplay(it)) }
+        val youReceive = fees.actualFiatAmount.takeIf { it > Usdc6.ZERO }
+            ?.let { stringRes(R.string.upi_offramp_fee_breakdown_amount_inr, formatUsdcDisplay(it)) }
+        return UpiOfframpFeeBreakdown(youSend = youSend, fee = fee, youReceive = youReceive)
+    }
+
+    private fun buildCancelledCard(cancelled: OfframpStatus.Cancelled): UpiOfframpCancelledCard {
+        val refundedAmount = cancelled.refundedUsdcAmount?.let {
+            stringRes(R.string.upi_offramp_cancelled_refunded, formatUsdcDisplay(it))
+        }
+        val cancelledAt = cancelled.cancelledAtEpochSeconds?.let {
+            stringRes(R.string.upi_offramp_cancelled_at, formatTerminalTimestampValue(it))
+        }
+        return UpiOfframpCancelledCard(
+            refundedAmount = refundedAmount,
+            cancelledAt = cancelledAt,
+            tip = stringRes(R.string.upi_offramp_cancelled_tip),
         )
     }
 
@@ -171,26 +221,47 @@ internal class UpiOfframpProgressVM(
         is OfframpStatus.SendingEncryptedUpi -> status.orderId
         is OfframpStatus.WaitingForCompletion -> status.orderId
         is OfframpStatus.Completed -> status.orderId
+        is OfframpStatus.Cancelled -> status.orderId
         is OfframpStatus.Failed -> status.orderId
         else -> null
     }
 
     private fun buildFailureCard(failed: OfframpStatus.Failed): UpiOfframpFailureCard {
         val rawForUi = failed.message.take(MAX_RAW_MESSAGE_LEN)
+        val txHashHex = failed.txHash?.hex
         return UpiOfframpFailureCard(
             stepLabel = stepLabel(failed.step),
             decodedReason = decodedReason(failed),
             rawSelector = failed.revertSelector?.hex,
             rawMessage = rawForUi,
-            txHash = failed.txHash,
-            txExplorerUrl = failed.txHash?.let { explorerUrl(txPath(it)) },
+            txHash = txHashHex,
+            txExplorerUrl = txHashHex?.let { explorerUrl(txPath(it)) },
         )
     }
 
-    private fun decodedReason(failed: OfframpStatus.Failed): StringResource? = when (val reason = failed.knownRevertReason) {
-        KnownRevertReason.InsufficientReputation -> stringRes(R.string.upi_offramp_revert_insufficient_reputation)
-        KnownRevertReason.NoMerchantLiquidity -> stringRes(R.string.upi_offramp_revert_no_merchant_liquidity)
-        null -> failed.solidityErrorString?.let(::stringRes)
+    private fun decodedReason(failed: OfframpStatus.Failed): StringResource? {
+        failed.knownRevertReason?.let { return stringRes(curatedRevertStringRes(it)) }
+        failed.sdkErrorName?.let {
+            return stringRes(R.string.upi_offramp_revert_sdk_long_tail, it)
+        }
+        return failed.solidityErrorString?.let(::stringRes)
+    }
+
+    private fun curatedRevertStringRes(reason: KnownRevertReason): Int = when (reason) {
+        KnownRevertReason.BuyOrderAmountExceedsLimit -> R.string.upi_offramp_revert_buy_order_amount_exceeds_limit
+        KnownRevertReason.InsufficientReputation -> R.string.upi_offramp_revert_insufficient_reputation
+        KnownRevertReason.ZkVerificationRequired -> R.string.upi_offramp_revert_zk_verification_required
+        KnownRevertReason.OrderAmountExceedsLimit -> R.string.upi_offramp_revert_order_amount_exceeds_limit
+        KnownRevertReason.SellAmountExceedsFiatLimit -> R.string.upi_offramp_revert_sell_amount_exceeds_fiat_limit
+        KnownRevertReason.CurrencyNotSupported -> R.string.upi_offramp_revert_currency_not_supported
+        KnownRevertReason.UserIsBlacklisted -> R.string.upi_offramp_revert_user_is_blacklisted
+        KnownRevertReason.ExchangeNotOperational -> R.string.upi_offramp_revert_exchange_not_operational
+        KnownRevertReason.NotEnoughEligibleMerchants -> R.string.upi_offramp_revert_not_enough_eligible_merchants
+        KnownRevertReason.OrderExpired -> R.string.upi_offramp_revert_order_expired
+        KnownRevertReason.UpiAlreadySent -> R.string.upi_offramp_revert_upi_already_sent
+        KnownRevertReason.InvalidOrderUpi -> R.string.upi_offramp_revert_invalid_order_upi
+        KnownRevertReason.OrderNotAccepted -> R.string.upi_offramp_revert_order_not_accepted
+        KnownRevertReason.UsdcTransferFailed -> R.string.upi_offramp_revert_usdc_transfer_failed
     }
 
     private fun buildSteps(status: OfframpStatus): List<UpiOfframpStep> {
@@ -199,13 +270,13 @@ internal class UpiOfframpProgressVM(
         val failedStep = (status as? OfframpStatus.Failed)?.step
 
         return order.mapIndexed { index, step ->
-            val stepStatus = computeStepStatus(index, step, order, currentStep, failedStep)
-            val txHash = txHashFor(status, step)
+            val stepStatus = computeStepStatus(index, step, order, currentStep, failedStep, status)
+            val txHashHex = txHashFor(status, step)?.hex
             UpiOfframpStep(
                 label = stringRes(stepLabelRes(step)),
                 status = stepStatus,
-                txHash = txHash,
-                txExplorerUrl = txHash?.let { explorerUrl(txPath(it)) },
+                txHash = txHashHex,
+                txExplorerUrl = txHashHex?.let { explorerUrl(txPath(it)) },
                 detailLines = stepDetail(status, step),
             )
         }
@@ -217,12 +288,23 @@ internal class UpiOfframpProgressVM(
         order: List<OfframpStep>,
         currentStep: OfframpStep?,
         failedStep: OfframpStep?,
+        status: OfframpStatus,
     ): UpiOfframpStepStatus {
         if (failedStep != null) {
             val failedAt = uiIndexFor(failedStep, order)
             return when {
                 index == failedAt -> UpiOfframpStepStatus.Failed
                 index < failedAt -> UpiOfframpStepStatus.Completed
+                else -> UpiOfframpStepStatus.Pending
+            }
+        }
+        // Cancelled is terminal: the WAITING_FOR_COMPLETION row didn't complete (paint Failed);
+        // everything before it did happen on-chain (paint Completed).
+        if (status is OfframpStatus.Cancelled) {
+            val cancelledAt = uiIndexFor(OfframpStep.WAITING_FOR_COMPLETION, order)
+            return when {
+                index == cancelledAt -> UpiOfframpStepStatus.Failed
+                index < cancelledAt -> UpiOfframpStepStatus.Completed
                 else -> UpiOfframpStepStatus.Pending
             }
         }
@@ -262,7 +344,7 @@ internal class UpiOfframpProgressVM(
         OfframpStep.WAITING_FOR_COMPLETION -> R.string.upi_offramp_step_wait_completion
     }
 
-    private fun txHashFor(status: OfframpStatus, step: OfframpStep): String? = when (step) {
+    private fun txHashFor(status: OfframpStatus, step: OfframpStep): TxHash? = when (step) {
         OfframpStep.APPROVING_USDC -> (status as? OfframpStatus.ApprovingUsdc)?.txHash
         OfframpStep.PLACING_ORDER -> (status as? OfframpStatus.PlacingOrder)?.txHash
         OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
@@ -279,39 +361,81 @@ internal class UpiOfframpProgressVM(
             }
         }.orEmpty()
         OfframpStep.APPROVING_USDC -> (status as? OfframpStatus.ApprovingUsdc)?.let {
-            listOf(stringRes(R.string.upi_offramp_detail_amount, formatUsdc(it.amount.toString())))
+            listOf(stringRes(R.string.upi_offramp_detail_amount, formatUsdc(it.amount.micros.toString())))
         }.orEmpty()
         OfframpStep.PLACING_ORDER -> (status as? OfframpStatus.PlacingOrder)?.let {
             listOf(
                 stringRes(R.string.upi_offramp_detail_circle_id, it.circleId.toString()),
-                stringRes(R.string.upi_offramp_detail_amount, formatUsdc(it.amount.toString())),
+                stringRes(R.string.upi_offramp_detail_amount, formatUsdc(it.amount.micros.toString())),
             )
         }.orEmpty()
-        OfframpStep.WAITING_FOR_ACCEPTANCE -> (status as? OfframpStatus.WaitingForMerchantAcceptance)?.let {
+        OfframpStep.WAITING_FOR_ACCEPTANCE -> buildAcceptanceDetails(status)
+        OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.let {
+            buildList {
+                add(stringRes(R.string.upi_offramp_detail_merchant, it.merchantAddress.checksumHex))
+                it.acceptedAtEpochSeconds?.let { ts ->
+                    add(stringRes(R.string.upi_offramp_detail_accepted_at, formatTimestampValue(ts)))
+                }
+            }
+        }.orEmpty()
+        OfframpStep.WAITING_FOR_COMPLETION -> buildCompletionDetails(status)
+        else -> emptyList()
+    }
+
+    private fun buildAcceptanceDetails(status: OfframpStatus): List<StringResource> =
+        (status as? OfframpStatus.WaitingForMerchantAcceptance)?.let {
             buildList {
                 add(stringRes(R.string.upi_offramp_detail_polling_attempts, it.pollAttempts))
                 it.lastObservedStatus?.let { last ->
                     add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
                 }
+                if (it.stalled) add(stringRes(R.string.upi_offramp_detail_stalled))
             }
         }.orEmpty()
-        OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.let {
-            listOf(stringRes(R.string.upi_offramp_detail_merchant, it.merchantAddress.checksumHex))
-        }.orEmpty()
-        OfframpStep.WAITING_FOR_COMPLETION -> when (status) {
-            is OfframpStatus.WaitingForCompletion -> buildList {
-                add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
-                status.lastObservedStatus?.let { last ->
-                    add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
-                }
+
+    private fun buildCompletionDetails(status: OfframpStatus): List<StringResource> = when (status) {
+        is OfframpStatus.WaitingForCompletion -> buildList {
+            add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
+            status.lastObservedStatus?.let { last ->
+                add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
             }
-            is OfframpStatus.Completed -> listOf(
-                stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant.checksumHex),
-            )
-            else -> emptyList()
+            status.acceptedAtEpochSeconds?.let { ts ->
+                add(stringRes(R.string.upi_offramp_detail_accepted_at, formatTimestampValue(ts)))
+            }
+            status.paidAtEpochSeconds?.let { ts ->
+                add(stringRes(R.string.upi_offramp_detail_paid_at, formatTimestampValue(ts)))
+            }
+            if (status.stalled) add(stringRes(R.string.upi_offramp_detail_stalled))
+        }
+        is OfframpStatus.Completed -> buildList {
+            add(stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant.checksumHex))
+            status.paidAtEpochSeconds?.let { ts ->
+                add(stringRes(R.string.upi_offramp_detail_paid_at, formatTimestampValue(ts)))
+            }
+            status.completedAtEpochSeconds?.let { ts ->
+                add(stringRes(R.string.upi_offramp_detail_completed_at, formatTimestampValue(ts)))
+            }
         }
         else -> emptyList()
     }
+
+    private fun completionDurationString(placedSec: Long?, completedSec: Long?): StringResource? {
+        if (placedSec == null || completedSec == null || completedSec <= placedSec) return null
+        val totalSeconds = completedSec - placedSec
+        val minutes = totalSeconds / SECONDS_PER_MINUTE
+        val seconds = totalSeconds % SECONDS_PER_MINUTE
+        val text = if (minutes == 0L) "${seconds}s" else "${minutes}m${seconds}s"
+        return stringRes(R.string.upi_offramp_completion_duration, text)
+    }
+
+    private fun formatTerminalTimestamp(epochSeconds: Long): StringResource =
+        stringRes(R.string.upi_offramp_terminal_at, formatTerminalTimestampValue(epochSeconds))
+
+    private fun formatTerminalTimestampValue(epochSeconds: Long): String =
+        terminalDateFormat.format(Date(epochSeconds * MILLIS_PER_SECOND))
+
+    private fun formatTimestampValue(epochSeconds: Long): String =
+        clockFormat.format(Date(epochSeconds * MILLIS_PER_SECOND))
 
     private fun explorerUrl(path: String): String =
         network.baseExplorerUrl.trimEnd('/') + path
@@ -324,8 +448,22 @@ internal class UpiOfframpProgressVM(
         return BigDecimal(micros).movePointLeft(USDC_DECIMALS).toPlainString()
     }
 
+    private fun formatUsdcDisplay(value: Usdc6): String = formatUsdc(value.micros.toString())
+
     companion object {
         private const val USDC_DECIMALS = 6
         private const val MAX_RAW_MESSAGE_LEN = 500
+        private const val SECONDS_PER_MINUTE = 60L
+        private const val MILLIS_PER_SECOND = 1_000L
+
+        // Locale-stable formats so screenshots / fixtures don't drift across devices.
+        private val terminalDateFormat: SimpleDateFormat =
+            SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.US).apply {
+                timeZone = TimeZone.getDefault()
+            }
+        private val clockFormat: SimpleDateFormat =
+            SimpleDateFormat("HH:mm:ss", Locale.US).apply {
+                timeZone = TimeZone.getDefault()
+            }
     }
 }

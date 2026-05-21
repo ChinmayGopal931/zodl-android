@@ -4,6 +4,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.TxHash
 import java.math.BigInteger
 
 class SubgraphOrderReader(
@@ -26,8 +27,8 @@ class SubgraphOrderReader(
             circleId = node.requireString("circleId").toBigInteger(),
             userAddress = parseNullableAddress(node.requireString("userAddress"))
                 ?: Address.ZERO,
-            usdcAmount = node.requireString("usdcAmount").toBigInteger(),
-            fiatAmount = node.requireString("fiatAmount").toBigInteger(),
+            usdcAmount = Usdc6(node.requireString("usdcAmount").toBigInteger()),
+            fiatAmount = Usdc6(node.requireString("fiatAmount").toBigInteger()),
             currencyHex = node.requireString("currency"),
             acceptedMerchantAddress = parseNullableAddress(node.optionalString("acceptedMerchantAddress")),
             merchantPubKey = node.optionalString("pubkey").orEmpty(),
@@ -38,9 +39,9 @@ class SubgraphOrderReader(
             paidAtEpochSeconds = parseEpochSecondsOrNull(node.optionalString("paidAt")),
             completedAtEpochSeconds = parseEpochSecondsOrNull(node.optionalString("completedAt")),
             cancelledAtEpochSeconds = parseEpochSecondsOrNull(node.optionalString("cancelledAt")),
-            actualUsdcAmount = node.optionalString("actualUsdcAmount")?.takeIf { it != "0" }?.toBigInteger(),
-            actualFiatAmount = node.optionalString("actualFiatAmount")?.takeIf { it != "0" }?.toBigInteger(),
-            placedTxHash = node.optionalString("transactionHash")?.takeIf { it.isNotBlank() },
+            actualUsdcAmount = node.optionalString("actualUsdcAmount")?.takeIf { it != "0" }?.toBigInteger()?.let(::Usdc6),
+            actualFiatAmount = node.optionalString("actualFiatAmount")?.takeIf { it != "0" }?.toBigInteger()?.let(::Usdc6),
+            placedTxHash = node.optionalString("transactionHash")?.takeIf { it.isNotBlank() }?.let(TxHash::fromHex),
             placedAtBlockNumber = node.optionalString("blockNumber")?.toLongOrNull(),
             source = OrderSnapshot.Source.Subgraph,
         )

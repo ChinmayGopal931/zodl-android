@@ -89,6 +89,7 @@
     <string name="upi_offramp_rate_label">1 USDC ≈ ₹%1$s (estimado)</string>
     <string name="upi_offramp_upi_id_label">UPI ID</string>
     <string name="upi_offramp_upi_id_placeholder">comercio@banco</string>
+    <string name="upi_offramp_scan_qr_cd">Escanear código QR UPI</string>
     <string name="upi_offramp_estimate_disclaimer">Estimado. El monto final se fija cuando el comerciante acepta.</string>
     <string name="upi_offramp_error_above_cap">Los montos superiores a $99 USDC requieren KYC y aún no son compatibles.</string>
     <string name="upi_offramp_error_invalid_upi">Eso no parece un identificador UPI (esperaba algo como nombre@banco).</string>
@@ -130,6 +131,44 @@
     <string name="upi_offramp_failure_header">Falló en: %1$s</string>
     <string name="upi_offramp_failure_selector">Selector de revert %1$s</string>
 
-    <string name="upi_offramp_revert_insufficient_reputation">Esta cuenta aún no tiene suficientes puntos de reputación. En Sepolia, solicita un RP grant al equipo de p2p.me; en mainnet, completa la verificación social o KYC.</string>
-    <string name="upi_offramp_revert_no_merchant_liquidity">Ningún comerciante tiene liquidez en fiat para esta orden en el círculo seleccionado. Prueba un monto menor, espera a que los comerciantes carguen liquidez, o reintenta para elegir otro círculo.</string>
+    <string name="upi_offramp_revert_buy_order_amount_exceeds_limit">El monto excede tu límite por transacción. El límite crece con los puntos de reputación — completa la verificación en app.p2p.me/limits.</string>
+    <string name="upi_offramp_revert_insufficient_reputation">Tu cuenta aún no tiene puntos de reputación. Completa la verificación social o KYC en app.p2p.me/limits antes de realizar órdenes.</string>
+    <string name="upi_offramp_revert_zk_verification_required">Este monto requiere verificación KYC. Verifica en app.p2p.me/limits.</string>
+    <string name="upi_offramp_revert_order_amount_exceeds_limit">El monto excede el tope global por orden.</string>
+    <string name="upi_offramp_revert_sell_amount_exceeds_fiat_limit">El monto excede tu límite fiat diario.</string>
+    <string name="upi_offramp_revert_currency_not_supported">Esta moneda aún no está desplegada en esta red.</string>
+    <string name="upi_offramp_revert_user_is_blacklisted">Tu cuenta está bloqueada por el exchange. Contacta a soporte de p2p.me.</string>
+    <string name="upi_offramp_revert_exchange_not_operational">p2p.me está temporalmente pausado. Inténtalo más tarde.</string>
+    <string name="upi_offramp_revert_not_enough_eligible_merchants">Ningún comerciante tiene liquidez fiat para esta orden ahora. Prueba un monto menor, espera a que los comerciantes carguen liquidez, o reintenta.</string>
+    <string name="upi_offramp_revert_order_expired">El comerciante no actuó a tiempo. Tus USDC han sido reembolsados.</string>
+    <string name="upi_offramp_revert_upi_already_sent">Esta orden ya tiene una dirección de pago UPI. Esto es un bug — por favor repórtalo.</string>
+    <string name="upi_offramp_revert_invalid_order_upi">El comerciante rechazó el UPI cifrado. Esto puede indicar un problema de formato — por favor repórtalo.</string>
+    <string name="upi_offramp_revert_order_not_accepted">La orden aún no está aceptada. Inténtalo en un momento.</string>
+    <string name="upi_offramp_revert_usdc_transfer_failed">La transferencia de USDC falló. Verifica tu saldo y autorización.</string>
+    <string name="upi_offramp_revert_sdk_long_tail">Error del contrato: %1$s</string>
+
+    <string name="upi_offramp_detail_stalled">Tardando más de lo habitual — tus USDC permanecen depositados en el contrato hasta que el comerciante acepte o la orden se autocancele (~72 horas).</string>
+
+    <string name="upi_offramp_detail_accepted_at">Aceptada a las %1$s</string>
+    <string name="upi_offramp_detail_paid_at">Pago confirmado a las %1$s</string>
+    <string name="upi_offramp_detail_completed_at">Completada a las %1$s</string>
+
+    <string name="upi_offramp_completion_duration">Completada en %1$s</string>
+    <string name="upi_offramp_terminal_at">%1$s</string>
+    <string name="upi_offramp_summary_completion">Completada en</string>
+    <string name="upi_offramp_summary_time">Hora</string>
+    <string name="upi_offramp_summary_merchant">Pagado a</string>
+
+    <string name="upi_offramp_fee_breakdown_header">Desglose de la orden</string>
+    <string name="upi_offramp_fee_breakdown_you_send">Tú envías</string>
+    <string name="upi_offramp_fee_breakdown_fee">Comisión de red y comerciante</string>
+    <string name="upi_offramp_fee_breakdown_you_receive">Tú recibes</string>
+    <string name="upi_offramp_fee_breakdown_amount_usdc">%1$s USDC</string>
+    <string name="upi_offramp_fee_breakdown_amount_inr">₹%1$s</string>
+
+    <string name="upi_offramp_progress_title_cancelled">Orden cancelada</string>
+    <string name="upi_offramp_progress_subtitle_cancelled">Ningún comerciante completó esta orden a tiempo. Tus USDC han sido reembolsados on-chain.</string>
+    <string name="upi_offramp_cancelled_refunded">%1$s USDC reembolsados a tu cuenta de offramp</string>
+    <string name="upi_offramp_cancelled_at">Cancelada a las %1$s</string>
+    <string name="upi_offramp_cancelled_tip">Consejo: pide al comerciante que genere el QR UPI solo después de que esta pantalla se abra, para que la orden se complete antes de expirar.</string>
 </resources>

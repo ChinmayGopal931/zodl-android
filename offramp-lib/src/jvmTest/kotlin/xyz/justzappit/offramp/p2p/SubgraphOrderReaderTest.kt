@@ -42,8 +42,8 @@ class SubgraphOrderReaderTest {
         assertEquals(OrderType.PAY, snapshot.orderType)
         assertEquals(OrderStatus.PLACED, snapshot.status)
         assertEquals(BigInteger.ONE, snapshot.circleId)
-        assertEquals(BigInteger.valueOf(10_000_000), snapshot.usdcAmount)
-        assertEquals(BigInteger.valueOf(890_000_000), snapshot.fiatAmount)
+        assertEquals(Usdc6.ofMicros(10_000_000), snapshot.usdcAmount)
+        assertEquals(Usdc6.ofMicros(890_000_000), snapshot.fiatAmount)
         // "0x00000000" returned by subgraph means zero-address — should normalize to null.
         assertNull(snapshot.acceptedMerchantAddress)
         assertEquals("", snapshot.merchantPubKey)
@@ -52,9 +52,12 @@ class SubgraphOrderReaderTest {
         assertNull(snapshot.paidAtEpochSeconds)
         assertNull(snapshot.completedAtEpochSeconds)
         assertNull(snapshot.cancelledAtEpochSeconds)
-        assertEquals(BigInteger.valueOf(10_125_000), snapshot.actualUsdcAmount)
-        assertEquals(BigInteger.valueOf(890_000_000), snapshot.actualFiatAmount)
-        assertEquals("0xee7f94f3e2b719f79dc22fae7fef4ee95694996307c31f9643d0bcb79eb5eb71", snapshot.placedTxHash)
+        assertEquals(Usdc6.ofMicros(10_125_000), snapshot.actualUsdcAmount)
+        assertEquals(Usdc6.ofMicros(890_000_000), snapshot.actualFiatAmount)
+        assertEquals(
+            xyz.justzappit.evm.types.TxHash.fromHex("0xee7f94f3e2b719f79dc22fae7fef4ee95694996307c31f9643d0bcb79eb5eb71"),
+            snapshot.placedTxHash,
+        )
         assertEquals(OrderSnapshot.Source.Subgraph, snapshot.source)
         assertTrue(!snapshot.isAccepted)
     }
@@ -126,7 +129,7 @@ class SubgraphOrderReaderTest {
               "encUpi":"","encMerchantUpi":"",
               "actualUsdcAmount":"5062500","actualFiatAmount":"445000000",
               "blockNumber":"41800000","blockTimestamp":"1779399000",
-              "transactionHash":"0xabcd"
+              "transactionHash":"0x000000000000000000000000000000000000000000000000000000000000abcd"
             }]}}
         """
 
@@ -140,7 +143,7 @@ class SubgraphOrderReaderTest {
               "acceptedMerchantAddress":"0x","pubkey":"","encUpi":"","encMerchantUpi":"",
               "actualUsdcAmount":"0","actualFiatAmount":"0",
               "blockNumber":"41810000","blockTimestamp":"1779490000",
-              "transactionHash":"0xdead"
+              "transactionHash":"0x000000000000000000000000000000000000000000000000000000000000dead"
             }]}}
         """
     }

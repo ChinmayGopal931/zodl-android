@@ -1,18 +1,77 @@
 package xyz.justzappit.offramp.orchestrator
 
 /**
- * Enumerated p2p.me revert reasons the offramp flow recognises. The UI layer maps each variant
- * to a localised `R.string.*` resource; this module stays free of English copy.
+ * Curated subset of [KnownContractErrors] that the PAY offramp flow can surface with a localised,
+ * user-actionable message. Add a variant here only if the UI knows how to explain it; otherwise
+ * let the orchestrator fall through to the raw SDK error name from [KnownContractErrors.nameFor].
+ *
+ * Names match the canonical p2p.me SDK constants (`user-app-client/src/lib/errors.ts contractErrors`)
+ * for cross-referencing. The UI layer maps each variant to a `R.string.*` resource; this module
+ * stays free of English copy.
  */
 enum class KnownRevertReason {
     /**
-     * BUY orders (and PAY orders from fresh addresses) require an RP grant from the p2p.me team
-     * on Sepolia, or social/KYC verification on mainnet. Selector `0x91da284f`.
+     * `placeOrder` reverts because the user's USDC tx limit (RP × multiplier) is below the
+     * requested amount. Selector `0x91da284f`. Discord 2026-04-23 (Bucky): new mainnet users will
+     * hit this until they complete social/KYC verification at app.p2p.me/limits.
      */
+    BuyOrderAmountExceedsLimit,
+
+    /** `placeOrder` reverts because the user has zero RP. Selector `0x412dd2b1`. */
     InsufficientReputation,
 
+    /** This amount requires ZK KYC verification. Selector `0x65f577de`. */
+    ZkVerificationRequired,
+
+    /** Exceeds the global per-order cap (independent of RP). Selector `0xf42e41a1`. */
+    OrderAmountExceedsLimit,
+
+    /** Exceeds the user's daily fiat sell/pay limit. Selector `0xbba2edf9`. */
+    SellAmountExceedsFiatLimit,
+
+    /** The chosen currency isn't deployed on this network. Selector `0x02a6fdd2`. */
+    CurrencyNotSupported,
+
+    /** The account is blocklisted by the exchange. Selector `0xebb6f34b`. */
+    UserIsBlacklisted,
+
+    /** The exchange is paused (admin-triggered). Selector `0x4bbac5de`. */
+    ExchangeNotOperational,
+
     /**
-     * No merchant has fiat liquidity for this order in the selected circle. Selector `0x5d04ff4c`.
+     * No merchant in the chosen circle has fiat liquidity for this order right now.
+     * Selector `0x5d04ff4c`.
      */
-    NoMerchantLiquidity,
+    NotEnoughEligibleMerchants,
+
+    /** The order timed out on-chain (merchant didn't act within the expiry window). Selector `0xc56873ba`. */
+    OrderExpired,
+
+    /**
+     * `setSellOrderUpi` reverts because the UPI has already been sent for this order — i.e. a
+     * resume path re-broadcast a tx that was already mined. Indicates a bug in our idempotency
+     * tracking. Selector `0xc1654697`.
+     */
+    UpiAlreadySent,
+
+    /**
+     * The merchant SDK rejected our encrypted UPI handle. Strongly indicates a wire-format bug
+     * in our ECIES port (compressed/uncompressed pubkey or HMAC scope mismatch). Selector
+     * `0xaa60ec26`.
+     */
+    InvalidOrderUpi,
+
+    /**
+     * `setSellOrderUpi` was called before the merchant accepted the order. Indicates a race
+     * where our polling missed the ACCEPTED → re-cancelled transition. Selector `0x6b1b90b4`.
+     */
+    OrderNotAccepted,
+
+    /**
+     * USDC `transferFrom` inside the order tx failed — typically allowance < amount or balance
+     * < amount. The Diamond emits three different selectors depending on whether the ERC-20
+     * returned `false`, reverted with `Error(string)`, or panicked.
+     * Selectors `0x149f9fca` / `0x47bfece5` / `0x279bbc0c`.
+     */
+    UsdcTransferFailed,
 }

@@ -5,7 +5,7 @@ import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -47,15 +47,20 @@ class FallbackOrderReaderTest {
     }
 
     @Test
-    fun `propagates secondary exception if primary also threw`() = runTest {
+    fun `absorbs both failures and returns null when primary and fallback both throw`() = runTest {
+        // The reader must be total — if both layers fail, return null so the orchestrator's
+        // poll loop re-emits the WaitingFor* status without bailing. A 30-min completion wait
+        // can't be killed by a single bad RPC blip.
+        val warnings = mutableListOf<String>()
         val composite = FallbackOrderReader(
             primary = throwing(IllegalStateException("subgraph 503")),
             fallback = throwing(IllegalStateException("rpc 502")),
+            logger = { msg, _ -> warnings += msg },
         )
-        val ex = assertFailsWith<IllegalStateException> {
-            composite.fetchOrder(BigInteger.ONE)
-        }
-        assertTrue(ex.message!!.contains("rpc 502"))
+        assertNull(composite.fetchOrder(BigInteger.ONE))
+        assertEquals(2, warnings.size, "both layers should have logged their failure")
+        assertTrue(warnings.any { it.contains("Primary") })
+        assertTrue(warnings.any { it.contains("Fallback") })
     }
 
     private fun snapshot(source: OrderSnapshot.Source) = OrderSnapshot(
@@ -64,8 +69,8 @@ class FallbackOrderReaderTest {
         orderType = OrderType.PAY,
         circleId = BigInteger.ONE,
         userAddress = Address.ZERO,
-        usdcAmount = BigInteger.ZERO,
-        fiatAmount = BigInteger.ZERO,
+        usdcAmount = Usdc6.ZERO,
+        fiatAmount = Usdc6.ZERO,
         currencyHex = "0x" + "00".repeat(32),
         acceptedMerchantAddress = null,
         merchantPubKey = "",

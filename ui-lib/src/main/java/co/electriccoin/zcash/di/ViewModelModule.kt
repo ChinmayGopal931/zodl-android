@@ -85,6 +85,7 @@ import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteVM
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageVM
 import co.electriccoin.zcash.ui.screen.swap.upi.UpiOfframpVM
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressVM
+import co.electriccoin.zcash.ui.screen.swap.upi.scan.ScanUpiVM
 import co.electriccoin.zcash.ui.screen.tabs.viewmodel.WalletSyncStateVM
 import co.electriccoin.zcash.ui.screen.taxexport.TaxExportViewModel
 import co.electriccoin.zcash.ui.screen.texunsupported.TEXUnsupportedVM
@@ -173,6 +174,7 @@ val viewModelModule =
         viewModelOf(::SwapVM)
         viewModelOf(::UpiOfframpVM)
         viewModelOf(::UpiOfframpProgressVM)
+        viewModelOf(::ScanUpiVM)
         viewModelOf(::UnifiedSendViewModel)
         viewModelOf(::SwapQuoteVM)
         viewModelOf(::ScanGenericAddressVM)

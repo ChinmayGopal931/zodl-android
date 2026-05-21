@@ -18,12 +18,12 @@ enum class OrderType(val onChain: Int) {
 
 data class PlaceOrderArgs(
     val relayPubKeyEthCrypto: String,
-    val usdcAmount: BigInteger,
+    val usdcAmount: Usdc6,
     val recipientAddress: Address,
     val orderType: OrderType,
     val currency: CurrencyCode,
     val circleId: BigInteger,
-    val fiatAmountLimit: BigInteger = BigInteger.ZERO,
+    val fiatAmountLimit: Usdc6 = Usdc6.ZERO,
     val preferredPaymentChannelConfigId: BigInteger = BigInteger.ZERO,
 )
 
@@ -35,7 +35,7 @@ object DiamondCalls {
 
         val abiArgs = listOf<AbiArg>(
             AbiString(pubKey),
-            AbiUint(args.usdcAmount),
+            AbiUint(args.usdcAmount.micros),
             AbiAddress(args.recipientAddress),
             AbiUint8(args.orderType.onChain),
             AbiString(""),
@@ -43,7 +43,7 @@ object DiamondCalls {
             AbiEncoder.bytes32String(args.currency.code),
             AbiUint(args.preferredPaymentChannelConfigId),
             AbiUint(args.circleId),
-            AbiUint(args.fiatAmountLimit),
+            AbiUint(args.fiatAmountLimit.micros),
         )
         return AbiEncoder.encodeFunctionCall(
             "placeOrder(string,uint256,address,uint8,string,string,bytes32,uint256,uint256,uint256)",
@@ -70,6 +70,12 @@ object DiamondCalls {
             listOf(AbiUint(orderId)),
         )
 
+    fun getAdditionalOrderDetailsCalldata(orderId: BigInteger): ByteArray =
+        AbiEncoder.encodeFunctionCall(
+            "getAdditionalOrderDetails(uint256)",
+            listOf(AbiUint(orderId)),
+        )
+
     fun getPriceConfigCalldata(currency: CurrencyCode): ByteArray =
         AbiEncoder.encodeFunctionCall(
             "getPriceConfig(bytes32)",
@@ -81,8 +87,8 @@ object DiamondCalls {
         assignUpTo: BigInteger,
         currency: CurrencyCode,
         user: Address,
-        usdtAmount: BigInteger,
-        fiatAmount: BigInteger,
+        usdtAmount: Usdc6,
+        fiatAmount: Usdc6,
         orderType: OrderType,
         preferredPCConfigId: BigInteger = BigInteger.ZERO,
     ): ByteArray = AbiEncoder.encodeFunctionCall(
@@ -92,8 +98,8 @@ object DiamondCalls {
             AbiUint(assignUpTo),
             AbiEncoder.bytes32String(currency.code),
             AbiAddress(user),
-            AbiUint(usdtAmount),
-            AbiUint(fiatAmount),
+            AbiUint(usdtAmount.micros),
+            AbiUint(fiatAmount.micros),
             AbiInt(BigInteger.valueOf(orderType.onChain.toLong())),
             AbiUint(preferredPCConfigId),
         ),

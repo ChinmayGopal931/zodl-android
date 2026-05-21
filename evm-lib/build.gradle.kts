@@ -30,6 +30,7 @@ kotlin {
                 implementation(libs.ktor.okhttp)
                 implementation(libs.ktor.negotiation)
                 implementation(libs.ktor.json)
+                implementation(libs.ktor.logging)
             }
         }
         getByName("jvmTest") {

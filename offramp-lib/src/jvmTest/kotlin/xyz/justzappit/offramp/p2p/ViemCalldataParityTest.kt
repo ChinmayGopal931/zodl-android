@@ -17,7 +17,7 @@ class ViemCalldataParityTest {
     fun `approve calldata matches viem`() {
         val got = Erc20Calls.approveCalldata(
             spender = Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2"),
-            amount = BigInteger.valueOf(1_000_000),
+            amount = Usdc6.ofMicros(1_000_000),
         ).toHex()
         assertEquals(VIEM_APPROVE.removePrefix("0x"), got)
     }
@@ -27,7 +27,7 @@ class ViemCalldataParityTest {
         val got = DiamondCalls.placeOrderCalldata(
             PlaceOrderArgs(
                 relayPubKeyEthCrypto = RELAY_PUBKEY,
-                usdcAmount = BigInteger.valueOf(5_000_000),
+                usdcAmount = Usdc6.ofMicros(5_000_000),
                 recipientAddress = Address.parse("0x000000000000000000000000000000000000dead"),
                 orderType = OrderType.PAY,
                 currency = CurrencyCode.Inr,
@@ -65,8 +65,8 @@ class ViemCalldataParityTest {
             assignUpTo = BigInteger.valueOf(3),
             currency = CurrencyCode.Inr,
             user = Address.parse("0x000000000000000000000000000000000000beef"),
-            usdtAmount = BigInteger.valueOf(5_000_000),
-            fiatAmount = BigInteger.valueOf(418_000_000),
+            usdtAmount = Usdc6.ofMicros(5_000_000),
+            fiatAmount = Usdc6.ofMicros(418_000_000),
             orderType = OrderType.PAY,
         ).toHex()
         assertEquals(VIEM_GET_ASSIGNABLE.removePrefix("0x"), got)

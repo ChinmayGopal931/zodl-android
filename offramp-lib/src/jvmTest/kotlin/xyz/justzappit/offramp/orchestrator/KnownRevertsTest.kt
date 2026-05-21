@@ -6,34 +6,129 @@ import xyz.justzappit.evm.rpc.RpcException
 import xyz.justzappit.evm.util.hexToBytes
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class KnownRevertsTest {
 
+    // -- Curated KnownRevertReason mappings --------------------------------------------------
+
     @Test
-    fun `explain maps 0x91da284f to InsufficientReputation`() {
-        val ex = revertedWith("0x91da284f")
-        assertEquals(KnownRevertReason.InsufficientReputation, KnownReverts.explain(ex))
+    fun `0x91da284f maps to BuyOrderAmountExceedsLimit (was misnamed InsufficientReputation)`() {
+        // Regression: prior to the wholesale-port refactor, this selector was labelled
+        // InsufficientReputation. The SDK's canonical name is BuyOrderAmountExceedsLimit; the
+        // _functional_ "you need more RP" effect comes from txLimit = RP × multiplier, so the
+        // user copy is similar — but the enum + sdkErrorName must match the SDK.
+        assertEquals(KnownRevertReason.BuyOrderAmountExceedsLimit, KnownReverts.explain(revertedWith("0x91da284f")))
+        assertEquals("BUY_ORDER_AMOUNT_EXCEEDS_LIMIT", KnownReverts.sdkName(revertedWith("0x91da284f")))
     }
 
     @Test
-    fun `explain maps 0x5d04ff4c to NoMerchantLiquidity`() {
-        val ex = revertedWith("0x5d04ff4c")
-        assertEquals(KnownRevertReason.NoMerchantLiquidity, KnownReverts.explain(ex))
+    fun `0x412dd2b1 maps to InsufficientReputation (the real RP=0 case)`() {
+        assertEquals(KnownRevertReason.InsufficientReputation, KnownReverts.explain(revertedWith("0x412dd2b1")))
+        assertEquals("INSUFFICIENT_RP", KnownReverts.sdkName(revertedWith("0x412dd2b1")))
     }
 
     @Test
-    fun `explain returns null for unknown selectors`() {
-        val ex = revertedWith("0xdeadbeef")
-        assertNull(KnownReverts.explain(ex))
+    fun `0x5d04ff4c maps to NotEnoughEligibleMerchants`() {
+        assertEquals(KnownRevertReason.NotEnoughEligibleMerchants, KnownReverts.explain(revertedWith("0x5d04ff4c")))
     }
 
     @Test
-    fun `selector-only overload also resolves`() {
+    fun `all three USDC-transfer-failed selectors collapse to one curated reason`() {
+        val selectors = listOf("0x149f9fca", "0x47bfece5", "0x279bbc0c")
+        for (s in selectors) {
+            assertEquals(
+                KnownRevertReason.UsdcTransferFailed,
+                KnownReverts.explain(revertedWith(s)),
+                "selector $s should map to UsdcTransferFailed",
+            )
+        }
+    }
+
+    @Test
+    fun `setSellOrderUpi-phase selectors are curated`() {
+        assertEquals(KnownRevertReason.UpiAlreadySent, KnownReverts.explain(revertedWith("0xc1654697")))
+        assertEquals(KnownRevertReason.InvalidOrderUpi, KnownReverts.explain(revertedWith("0xaa60ec26")))
+        assertEquals(KnownRevertReason.OrderNotAccepted, KnownReverts.explain(revertedWith("0x6b1b90b4")))
+        assertEquals(KnownRevertReason.OrderExpired, KnownReverts.explain(revertedWith("0xc56873ba")))
+    }
+
+    @Test
+    fun `placeOrder-phase guardrail selectors are curated`() {
+        assertEquals(KnownRevertReason.ZkVerificationRequired, KnownReverts.explain(revertedWith("0x65f577de")))
+        assertEquals(KnownRevertReason.OrderAmountExceedsLimit, KnownReverts.explain(revertedWith("0xf42e41a1")))
+        assertEquals(KnownRevertReason.SellAmountExceedsFiatLimit, KnownReverts.explain(revertedWith("0xbba2edf9")))
+        assertEquals(KnownRevertReason.CurrencyNotSupported, KnownReverts.explain(revertedWith("0x02a6fdd2")))
+        assertEquals(KnownRevertReason.UserIsBlacklisted, KnownReverts.explain(revertedWith("0xebb6f34b")))
+        assertEquals(KnownRevertReason.ExchangeNotOperational, KnownReverts.explain(revertedWith("0x4bbac5de")))
+    }
+
+    @Test
+    fun `selector-only overload also resolves curated reasons`() {
         val selector = Selector4.fromHex("0x91da284f")
-        assertEquals(KnownRevertReason.InsufficientReputation, KnownReverts.explain(selector))
+        assertEquals(KnownRevertReason.BuyOrderAmountExceedsLimit, KnownReverts.explain(selector))
         assertNull(KnownReverts.explain(null))
     }
+
+    // -- Wholesale KnownContractErrors long-tail (uncurated but still labelled) --------------
+
+    @Test
+    fun `uncurated selector still resolves to an SDK error name via the wholesale table`() {
+        // OrderAlreadyCompleted is one of ~115 selectors we don't curate — it should not produce
+        // a KnownRevertReason but must produce a non-null sdkName so the UI can show "Contract
+        // error: ORDER_ALREADY_MARKED_COMPLETED" instead of a raw 4-byte selector.
+        val r = revertedWith("0x03683687")
+        assertNull(KnownReverts.explain(r))
+        assertEquals("ORDER_ALREADY_MARKED_COMPLETED", KnownReverts.sdkName(r))
+    }
+
+    @Test
+    fun `KnownContractErrors covers every curated selector`() {
+        // Sanity: every selector in our curated map should also exist in the wholesale table.
+        // If this fails, the curated map drifted from the SDK and a re-run of
+        // generate-revert-selectors.ts is overdue.
+        val curatedSelectors = listOf(
+            "0x91da284f", "0x412dd2b1", "0x65f577de", "0xf42e41a1", "0xbba2edf9",
+            "0x02a6fdd2", "0xebb6f34b", "0x4bbac5de", "0x5d04ff4c", "0xc56873ba",
+            "0xc1654697", "0xaa60ec26", "0x6b1b90b4",
+            "0x149f9fca", "0x47bfece5", "0x279bbc0c",
+        )
+        for (s in curatedSelectors) {
+            assertNotNull(
+                KnownContractErrors.nameFor(Selector4.fromHex(s)),
+                "Curated selector $s missing from KnownContractErrors — regenerate the wholesale table",
+            )
+        }
+    }
+
+    @Test
+    fun `KnownContractErrors table is non-trivially populated`() {
+        // Guards against a future bad regen of the generator producing an empty table.
+        assertTrue(KnownContractErrors.size >= 120, "expected ≥120 mapped selectors, got ${KnownContractErrors.size}")
+    }
+
+    @Test
+    fun `KnownContractErrors returns null for genuinely unknown selectors`() {
+        assertNull(KnownContractErrors.nameFor(Selector4.fromHex("0xdeadbeef")))
+        assertNull(KnownContractErrors.nameFor(null))
+    }
+
+    @Test
+    fun `explain returns null for selectors outside the curated set`() {
+        // 0x03683687 = ORDER_ALREADY_MARKED_COMPLETED — known by SDK but not actionable enough
+        // to be in KnownRevertReason. explain() must say null; sdkName() must still resolve.
+        assertNull(KnownReverts.explain(revertedWith("0x03683687")))
+    }
+
+    @Test
+    fun `explain returns null for a completely unknown selector`() {
+        assertNull(KnownReverts.explain(revertedWith("0xdeadbeef")))
+        assertNull(KnownReverts.sdkName(revertedWith("0xdeadbeef")))
+    }
+
+    // -- SolidityErrors regression preserved -------------------------------------------------
 
     @Test
     fun `SolidityErrors decodes an Error(string) payload`() {

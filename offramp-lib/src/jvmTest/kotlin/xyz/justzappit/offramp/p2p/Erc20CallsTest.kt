@@ -12,7 +12,7 @@ class Erc20CallsTest {
         // approve(diamond=0xce868398..., amount=1_000_000) — same hex any ERC-20 client emits.
         val calldata = Erc20Calls.approveCalldata(
             spender = Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2"),
-            amount = BigInteger.valueOf(1_000_000),
+            amount = Usdc6.ofMicros(1_000_000),
         ).toHex()
         assertEquals(
             "095ea7b3" +

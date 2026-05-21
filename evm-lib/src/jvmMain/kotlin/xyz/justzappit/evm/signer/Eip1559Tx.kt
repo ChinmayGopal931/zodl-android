@@ -3,17 +3,18 @@ package xyz.justzappit.evm.signer
 import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
 data class Eip1559Tx(
     val chainId: ChainId,
     val nonce: BigInteger,
-    val maxPriorityFeePerGas: BigInteger,
-    val maxFeePerGas: BigInteger,
+    val maxPriorityFeePerGas: Wei,
+    val maxFeePerGas: Wei,
     val gasLimit: BigInteger,
     val to: Address,
-    val value: BigInteger,
+    val value: Wei,
     val data: ByteArray,
 ) {
     fun signingPayload(): ByteArray = TX_TYPE_EIP1559 + Rlp.encode(toRlpList())
@@ -57,11 +58,11 @@ data class Eip1559Tx(
     private fun toRlpList(): RlpItem = rlpList(
         rlpInt(chainId.value),
         rlpInt(nonce),
-        rlpInt(maxPriorityFeePerGas),
-        rlpInt(maxFeePerGas),
+        rlpInt(maxPriorityFeePerGas.value),
+        rlpInt(maxFeePerGas.value),
         rlpInt(gasLimit),
         rlpBytes(to.bytes),
-        rlpInt(value),
+        rlpInt(value.value),
         rlpBytes(data),
         rlpList(emptyList()),
     )

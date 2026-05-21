@@ -14,6 +14,8 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.TxHash
+import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 import kotlin.test.AfterTest
@@ -57,9 +59,9 @@ class BaseRpcClientTest {
     }
 
     @Test
-    fun `ethGasPrice decodes hex to BigInteger`() = runTest {
+    fun `ethGasPrice decodes hex to Wei`() = runTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0x3b9aca00"}"""
-        assertEquals(BigInteger("1000000000"), rpc.ethGasPrice())
+        assertEquals(Wei(BigInteger("1000000000")), rpc.ethGasPrice())
     }
 
     @Test
@@ -88,14 +90,15 @@ class BaseRpcClientTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0x5208"}"""
         val from = Address.parse("0x000000000000000000000000000000000000F70F")
         val to = Address.parse("0x0000000000000000000000000000000000000010")
-        val gas = rpc.ethEstimateGas(from = from, to = to, value = BigInteger.valueOf(1_000))
+        val gas = rpc.ethEstimateGas(from = from, to = to, value = Wei.ofLong(1_000))
         assertEquals(BigInteger.valueOf(21_000), gas)
     }
 
     @Test
-    fun `ethSendRawTransaction prepends 0x when missing and returns tx hash`() = runTest {
-        nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0xtxhash"}"""
-        assertEquals("0xtxhash", rpc.ethSendRawTransaction("aabbcc"))
+    fun `ethSendRawTransaction prepends 0x when missing and parses result into TxHash`() = runTest {
+        val resultHex = "0x" + "ab".repeat(32)
+        nextResponse = """{"jsonrpc":"2.0","id":1,"result":"$resultHex"}"""
+        assertEquals(TxHash.fromHex(resultHex), rpc.ethSendRawTransaction("aabbcc"))
         val params = handledRequests.last()["params"]!!.toString()
         assertTrue(params.contains("0xaabbcc"))
     }
@@ -103,14 +106,15 @@ class BaseRpcClientTest {
     @Test
     fun `ethGetTransactionReceipt returns null when result is null`() = runTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":null}"""
-        assertNull(rpc.ethGetTransactionReceipt("0xtx"))
+        assertNull(rpc.ethGetTransactionReceipt(TxHash.fromHex("0x" + "01".repeat(32))))
     }
 
     @Test
     fun `ethGetTransactionReceipt parses success`() = runTest {
+        val txHex = "0x" + "01".repeat(32)
         nextResponse = """
             {"jsonrpc":"2.0","id":1,"result":{
-              "transactionHash":"0xtx",
+              "transactionHash":"$txHex",
               "blockNumber":"0x10",
               "status":"0x1",
               "gasUsed":"0x5208",
@@ -118,8 +122,8 @@ class BaseRpcClientTest {
               "logs":[]
             }}
         """.trimIndent()
-        val receipt = rpc.ethGetTransactionReceipt("0xtx")!!
-        assertEquals("0xtx", receipt.transactionHash)
+        val receipt = rpc.ethGetTransactionReceipt(TxHash.fromHex(txHex))!!
+        assertEquals(txHex, receipt.transactionHash)
         assertTrue(receipt.success)
         assertEquals("0x5208", receipt.gasUsed)
     }
