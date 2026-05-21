@@ -15,6 +15,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.bouncycastle.crypto.digests.KeccakDigest
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.util.toHex
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -62,10 +64,10 @@ class EoaSignerTest {
     @Test
     fun `sendTransaction signs, broadcasts, and the broadcast raw tx ecrecovers to the EOA`() = runTest {
         val account = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
-        val signer = EoaSigner(rpc, chainId = 84_532L, account = account)
+        val signer = EoaSigner(rpc, chainId = ChainId.BASE_SEPOLIA, account = account)
 
         val txHash = signer.sendTransaction(
-            to = "0x000000000000000000000000000000000000dEaD",
+            to = Address.parse("0x000000000000000000000000000000000000dEaD"),
             value = java.math.BigInteger.valueOf(1_000),
         )
         assertEquals("0xfakehash", txHash)
@@ -79,14 +81,14 @@ class EoaSignerTest {
         // Parse out (yParity, r, s) from the tail of the signed payload, then reconstruct the
         // unsigned signing-payload to recompute the hash, then ecrecover.
         val unsigned = unsignedSigningPayload(
-            chainId = 84_532L,
+            chainId = ChainId.BASE_SEPOLIA,
             nonce = java.math.BigInteger.valueOf(5),
             tip = java.math.BigInteger("1000000000"),
             baseFee = java.math.BigInteger("2000000000"),
             gasLimit = java.math.BigInteger.valueOf(21_000)
                 .multiply(java.math.BigInteger.valueOf(120))
                 .divide(java.math.BigInteger.valueOf(100)),
-            to = "0x000000000000000000000000000000000000dEaD",
+            to = Address.parse("0x000000000000000000000000000000000000dEaD"),
             value = java.math.BigInteger.valueOf(1_000),
             data = byteArrayOf(),
         )
@@ -97,14 +99,14 @@ class EoaSignerTest {
         val pubXY = recovered.affineXCoord.encoded + recovered.affineYCoord.encoded
         val recoveredAddress = "0x" + keccak256(pubXY).copyOfRange(12, 32).toHex()
 
-        assertEquals(account.address.lowercase(), recoveredAddress.lowercase())
+        assertEquals(account.address.lowercaseHex, recoveredAddress.lowercase())
     }
 
     @Test
     fun `fee math - maxFeePerGas equals base times multiplier plus tip`() = runTest {
         val account = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
-        val signer = EoaSigner(rpc, chainId = 84_532L, account = account)
-        signer.sendTransaction(to = "0x000000000000000000000000000000000000dEaD")
+        val signer = EoaSigner(rpc, chainId = ChainId.BASE_SEPOLIA, account = account)
+        signer.sendTransaction(to = Address.parse("0x000000000000000000000000000000000000dEaD"))
 
         val rawHex = sentRawTxs.first().removePrefix("0x")
         // We can't easily parse RLP here without an RLP decoder, but the round-trip-via-recover
@@ -124,12 +126,12 @@ class EoaSignerTest {
     }
 
     private fun unsignedSigningPayload(
-        chainId: Long,
+        chainId: ChainId,
         nonce: java.math.BigInteger,
         tip: java.math.BigInteger,
         baseFee: java.math.BigInteger,
         gasLimit: java.math.BigInteger,
-        to: String,
+        to: Address,
         value: java.math.BigInteger,
         data: ByteArray,
     ): ByteArray {

@@ -1,5 +1,6 @@
 package xyz.justzappit.offramp.config
 
+import xyz.justzappit.evm.types.Address
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -33,7 +34,7 @@ class P2pConfigProviderTest {
         assertEquals(P2pNetworks.MAINNET_CHAIN_ID, cfg.chainId)
         assertEquals("https://mainnet.example", cfg.rpcUrl)
         assertEquals("https://graph.example", cfg.subgraphUrl)
-        assertEquals(P2pNetworks.MAINNET_USDC_ADDRESS, cfg.usdcAddress)
+        assertEquals(Address.parse(P2pNetworks.MAINNET_USDC_ADDRESS), cfg.usdcAddress)
     }
 
     @Test
@@ -54,11 +55,11 @@ class P2pConfigProviderTest {
         assertFailsWith<IllegalArgumentException> {
             P2pNetworkConfig(
                 name = "x",
-                chainId = 1,
+                chainId = xyz.justzappit.evm.types.ChainId(1),
                 rpcUrl = "",
-                diamondAddress = "0x0",
-                usdcAddress = "0x0",
-                reputationManagerAddress = "0x0",
+                diamondAddress = Address.ZERO,
+                usdcAddress = Address.ZERO,
+                reputationManagerAddress = Address.ZERO,
                 subgraphUrl = "https://s",
                 baseExplorerUrl = "https://e",
             )
@@ -70,11 +71,11 @@ class P2pConfigProviderTest {
         assertFailsWith<IllegalArgumentException> {
             P2pNetworkConfig(
                 name = "x",
-                chainId = 1,
+                chainId = xyz.justzappit.evm.types.ChainId(1),
                 rpcUrl = "https://r",
-                diamondAddress = "0x0",
-                usdcAddress = "0x0",
-                reputationManagerAddress = "0x0",
+                diamondAddress = Address.ZERO,
+                usdcAddress = Address.ZERO,
+                reputationManagerAddress = Address.ZERO,
                 subgraphUrl = "",
                 baseExplorerUrl = "https://e",
             )

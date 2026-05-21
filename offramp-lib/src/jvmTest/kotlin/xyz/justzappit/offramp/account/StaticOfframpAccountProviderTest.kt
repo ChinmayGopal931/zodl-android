@@ -1,6 +1,7 @@
 package xyz.justzappit.offramp.account
 
 import kotlinx.coroutines.test.runTest
+import xyz.justzappit.evm.types.Address
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -11,7 +12,7 @@ class StaticOfframpAccountProviderTest {
         val source = SeedPhraseSource { MNEMONIC }
         val provider = StaticOfframpAccountProvider(source, fixedAccountIndex = 0)
         val key = provider.nextOfframpAccount()
-        assertEquals("0x9858EfFD232B4033E47d90003D41EC34EcaEda94", key.address)
+        assertEquals(Address.parse("0x9858EfFD232B4033E47d90003D41EC34EcaEda94"), key.address)
     }
 
     @Test

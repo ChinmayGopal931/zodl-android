@@ -1,36 +1,30 @@
 package xyz.justzappit.evm.signer
 
-import org.bouncycastle.crypto.digests.KeccakDigest
-import xyz.justzappit.evm.util.hexToBytes
+import xyz.justzappit.evm.abi.keccak256
+import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
 data class Eip1559Tx(
-    val chainId: Long,
+    val chainId: ChainId,
     val nonce: BigInteger,
     val maxPriorityFeePerGas: BigInteger,
     val maxFeePerGas: BigInteger,
     val gasLimit: BigInteger,
-    val to: String,
+    val to: Address,
     val value: BigInteger,
     val data: ByteArray,
 ) {
-    init {
-        require(to.startsWith("0x") && to.length == ADDRESS_HEX_LEN) {
-            "to must be a 0x-prefixed 20-byte address, got '$to'"
-        }
-    }
-
-    fun signingPayload(): ByteArray = TX_TYPE_EIP1559 + Rlp.encode(toRlpList(includeSignature = false))
+    fun signingPayload(): ByteArray = TX_TYPE_EIP1559 + Rlp.encode(toRlpList())
 
     fun encodeSigned(sig: EcdsaSignature): ByteArray {
-        val items = toRlpList(includeSignature = false) as RlpItem.L
-        val signedItems = items.items + listOf(
+        val items = (toRlpList() as RlpItem.L).items + listOf(
             rlpInt(sig.yParity.toLong()),
             rlpInt(sig.r),
             rlpInt(sig.s),
         )
-        return TX_TYPE_EIP1559 + Rlp.encode(RlpItem.L(signedItems))
+        return TX_TYPE_EIP1559 + Rlp.encode(RlpItem.L(items))
     }
 
     fun signingHash(): ByteArray = keccak256(signingPayload())
@@ -60,30 +54,20 @@ data class Eip1559Tx(
         return h
     }
 
-    private fun toRlpList(@Suppress("SameParameterValue") includeSignature: Boolean): RlpItem {
-        check(!includeSignature) { "Use encodeSigned to attach a signature" }
-        return rlpList(
-            rlpInt(chainId),
-            rlpInt(nonce),
-            rlpInt(maxPriorityFeePerGas),
-            rlpInt(maxFeePerGas),
-            rlpInt(gasLimit),
-            rlpBytes(to.removePrefix("0x").hexToBytes()),
-            rlpInt(value),
-            rlpBytes(data),
-            rlpList(emptyList()),
-        )
-    }
+    private fun toRlpList(): RlpItem = rlpList(
+        rlpInt(chainId.value),
+        rlpInt(nonce),
+        rlpInt(maxPriorityFeePerGas),
+        rlpInt(maxFeePerGas),
+        rlpInt(gasLimit),
+        rlpBytes(to.bytes),
+        rlpInt(value),
+        rlpBytes(data),
+        rlpList(emptyList()),
+    )
 
     companion object {
         private val TX_TYPE_EIP1559 = byteArrayOf(0x02)
-        private const val ADDRESS_HEX_LEN = 42
-
-        private fun keccak256(data: ByteArray): ByteArray {
-            val d = KeccakDigest(256)
-            d.update(data, 0, data.size)
-            return ByteArray(d.digestSize).also { d.doFinal(it, 0) }
-        }
     }
 }
 

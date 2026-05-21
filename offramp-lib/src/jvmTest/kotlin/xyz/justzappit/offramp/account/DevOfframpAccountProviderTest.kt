@@ -10,8 +10,8 @@ class DevOfframpAccountProviderTest {
     @Test
     fun `dev EOA derives a deterministic mixed-case checksummed address`() = runTest {
         val key = DevOfframpAccountProvider.nextOfframpAccount()
-        assertTrue(key.address.startsWith("0x"))
-        assertEquals(42, key.address.length)
+        assertTrue(key.address.checksumHex.startsWith("0x"))
+        assertEquals(42, key.address.checksumHex.length)
         assertEquals(DevOfframpAccountProvider.address, key.address)
         println("DEV STATIC EOA ADDRESS (Sepolia): ${key.address}")
     }

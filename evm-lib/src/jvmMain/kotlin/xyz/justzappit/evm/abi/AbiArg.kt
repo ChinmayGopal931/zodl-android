@@ -1,6 +1,6 @@
 package xyz.justzappit.evm.abi
 
-import xyz.justzappit.evm.util.hexToBytes
+import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 
 sealed interface AbiArg {
@@ -33,15 +33,10 @@ data class AbiInt(val value: BigInteger) : AbiArg {
     override fun tail(): ByteArray = EMPTY
 }
 
-data class AbiAddress(val address: String) : AbiArg {
-    val bytes: ByteArray = address.removePrefix("0x").lowercase().hexToBytes().also {
-        require(it.size == ADDRESS_BYTES) { "address must be 20 bytes, got ${it.size}: $address" }
-    }
+data class AbiAddress(val address: Address) : AbiArg {
     override val isDynamic = false
-    override fun head(): ByteArray = ByteArray(WORD - ADDRESS_BYTES) + bytes
+    override fun head(): ByteArray = ByteArray(WORD - ADDRESS_BYTES) + address.bytes
     override fun tail(): ByteArray = EMPTY
-    override fun equals(other: Any?): Boolean = other is AbiAddress && bytes.contentEquals(other.bytes)
-    override fun hashCode(): Int = bytes.contentHashCode()
 }
 
 data class AbiBytes32(val value: ByteArray) : AbiArg {

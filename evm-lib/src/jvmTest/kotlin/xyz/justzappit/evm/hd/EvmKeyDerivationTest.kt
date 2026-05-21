@@ -1,5 +1,6 @@
 package xyz.justzappit.evm.hd
 
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.toHex
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -13,7 +14,7 @@ class EvmKeyDerivationTest {
         // Industry-wide BIP-44 Ethereum vector. Same address is produced by MetaMask,
         // Ledger, Trezor, ethers, viem, web3j against this mnemonic at m/44'/60'/0'/0/0.
         val key = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
-        assertEquals("0x9858EfFD232B4033E47d90003D41EC34EcaEda94", key.address)
+        assertEquals(Address.parse("0x9858EfFD232B4033E47d90003D41EC34EcaEda94"), key.address)
     }
 
     @Test
@@ -36,10 +37,10 @@ class EvmKeyDerivationTest {
     @Test
     fun `address is EIP-55 checksummed`() {
         val key = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
-        assertTrue(key.address.startsWith("0x"))
-        assertEquals(42, key.address.length)
+        assertTrue(key.address.checksumHex.startsWith("0x"))
+        assertEquals(42, key.address.checksumHex.length)
         // The canonical vector has mixed case; pure-lowercase output would be a bug.
-        assertNotEquals(key.address, key.address.lowercase())
+        assertNotEquals(key.address.checksumHex, key.address.lowercaseHex)
     }
 
     @Test

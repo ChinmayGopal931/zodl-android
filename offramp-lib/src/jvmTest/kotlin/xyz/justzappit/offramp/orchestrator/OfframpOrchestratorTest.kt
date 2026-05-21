@@ -16,8 +16,10 @@ import kotlinx.serialization.json.jsonPrimitive
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.signer.EoaSigner
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.p2p.CircleRouter
+import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.OrderEvents
 import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.OrderSnapshot
@@ -111,7 +113,7 @@ class OfframpOrchestratorTest {
             OfframpRequest(
                 recipientUpi = "merchant@upi",
                 usdcAmount = BigInteger.valueOf(5_000_000),
-                currency = "INR",
+                currency = CurrencyCode.Inr,
             ),
         ).toList()
 
@@ -180,11 +182,11 @@ class OfframpOrchestratorTest {
         status = status,
         orderType = OrderType.PAY,
         circleId = BigInteger.ONE,
-        userAddress = account.address.lowercase(),
+        userAddress = account.address,
         usdcAmount = BigInteger.valueOf(5_000_000),
         fiatAmount = BigInteger.valueOf(445_000_000),
         currencyHex = "0x494e520000000000000000000000000000000000000000000000000000000000",
-        acceptedMerchantAddress = merchant,
+        acceptedMerchantAddress = merchant?.let { Address.parse(it) },
         merchantPubKey = pubkey,
         encryptedUserUpi = "",
         encryptedMerchantUpi = "",
@@ -237,7 +239,7 @@ class OfframpOrchestratorTest {
     """.trimIndent()
 
     private fun placeOrderReceiptJson(): String {
-        val userTopic = "0x" + "0".repeat(24) + account.address.removePrefix("0x").lowercase()
+        val userTopic = "0x" + "0".repeat(24) + account.address.lowercaseHex.removePrefix("0x")
         val orderIdTopic = "0x" + ORDER_ID.toString(16).padStart(64, '0')
         return """
             {"jsonrpc":"2.0","id":1,"result":{
@@ -247,7 +249,7 @@ class OfframpOrchestratorTest {
               "gasUsed":"0x5208",
               "logs":[
                 {
-                  "address":"${network.diamondAddress.lowercase()}",
+                  "address":"${network.diamondAddress.lowercaseHex}",
                   "topics":["${OrderEvents.ORDER_PLACED_TOPIC}",
                             "$orderIdTopic",
                             "$userTopic",

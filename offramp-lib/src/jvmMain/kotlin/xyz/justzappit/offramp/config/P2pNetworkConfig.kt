@@ -1,12 +1,15 @@
 package xyz.justzappit.offramp.config
 
+import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.ChainId
+
 data class P2pNetworkConfig(
     val name: String,
-    val chainId: Long,
+    val chainId: ChainId,
     val rpcUrl: String,
-    val diamondAddress: String,
-    val usdcAddress: String,
-    val reputationManagerAddress: String,
+    val diamondAddress: Address,
+    val usdcAddress: Address,
+    val reputationManagerAddress: Address,
     val subgraphUrl: String,
     val baseExplorerUrl: String,
 ) {
@@ -21,22 +24,22 @@ data class P2pNetworkConfig(
 object P2pNetworks {
     val SEPOLIA = P2pNetworkConfig(
         name = SEPOLIA_NAME,
-        chainId = SEPOLIA_CHAIN_ID,
+        chainId = ChainId.BASE_SEPOLIA,
         rpcUrl = "https://sepolia.base.org",
-        diamondAddress = "0xce868398FDaDcA368EAc203222874D6888532aE2",
-        usdcAddress = "0xDABa329Ed949f28F64019f22c33c3B253B2Ded60",
-        reputationManagerAddress = "0x45919D69E2154F46b6f6eA42ae23d2e9ee21B66f",
+        diamondAddress = Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2"),
+        usdcAddress = Address.parse("0xDABa329Ed949f28F64019f22c33c3B253B2Ded60"),
+        reputationManagerAddress = Address.parse("0x45919D69E2154F46b6f6eA42ae23d2e9ee21B66f"),
         subgraphUrl = "https://api.studio.thegraph.com/query/110312/indexer-one/version/latest",
         baseExplorerUrl = "https://sepolia.basescan.org",
     )
 
     fun mainnet(rpcUrl: String, subgraphUrl: String): P2pNetworkConfig = P2pNetworkConfig(
         name = MAINNET_NAME,
-        chainId = MAINNET_CHAIN_ID,
+        chainId = ChainId.BASE_MAINNET,
         rpcUrl = rpcUrl,
-        diamondAddress = MAINNET_DIAMOND_ADDRESS,
-        usdcAddress = MAINNET_USDC_ADDRESS,
-        reputationManagerAddress = MAINNET_REPUTATION_MANAGER_ADDRESS,
+        diamondAddress = Address.parse(MAINNET_DIAMOND_ADDRESS),
+        usdcAddress = Address.parse(MAINNET_USDC_ADDRESS),
+        reputationManagerAddress = Address.parse(MAINNET_REPUTATION_MANAGER_ADDRESS),
         subgraphUrl = subgraphUrl,
         baseExplorerUrl = MAINNET_BASE_EXPLORER_URL,
     )
@@ -44,11 +47,9 @@ object P2pNetworks {
     const val SEPOLIA_NAME = "sepolia"
     const val MAINNET_NAME = "mainnet"
 
-    const val MAINNET_CHAIN_ID = 8_453L
+    val MAINNET_CHAIN_ID: ChainId = ChainId.BASE_MAINNET
     const val MAINNET_DIAMOND_ADDRESS = "0x4cad6eC90e65baBec9335cAd728DDC610c316368"
     const val MAINNET_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
     const val MAINNET_REPUTATION_MANAGER_ADDRESS = "0xCF613e08EE1B4c2669DdCf06A7d22c9856f6Aa1D"
     const val MAINNET_BASE_EXPLORER_URL = "https://basescan.org"
-
-    private const val SEPOLIA_CHAIN_ID = 84_532L
 }

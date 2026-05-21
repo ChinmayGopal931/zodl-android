@@ -9,6 +9,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.test.runTest
+import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -63,7 +64,7 @@ class SubgraphOrderReaderTest {
         nextResponse = ORDER_99_ACCEPTED
         val snapshot = reader.fetchOrder(BigInteger.valueOf(99))!!
         assertEquals(OrderStatus.ACCEPTED, snapshot.status)
-        assertEquals("0x0000000000000000000000000000000000abcdef", snapshot.acceptedMerchantAddress)
+        assertEquals(Address.parse("0x0000000000000000000000000000000000abcdef"), snapshot.acceptedMerchantAddress)
         assertEquals(MERCHANT_PUBKEY, snapshot.merchantPubKey)
         assertTrue(snapshot.isAccepted)
         assertEquals(1_779_400_000L, snapshot.acceptedAtEpochSeconds)

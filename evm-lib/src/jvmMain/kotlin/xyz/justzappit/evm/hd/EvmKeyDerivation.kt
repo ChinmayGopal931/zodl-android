@@ -1,9 +1,9 @@
 package xyz.justzappit.evm.hd
 
-import org.bouncycastle.crypto.digests.KeccakDigest
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.spec.ECParameterSpec
-import xyz.justzappit.evm.util.toHex
+import xyz.justzappit.evm.abi.keccak256
+import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 import java.text.Normalizer
 import javax.crypto.Mac
@@ -14,7 +14,7 @@ import javax.crypto.spec.SecretKeySpec
 data class EvmKey(
     val privateKey: ByteArray,
     val publicKey: ByteArray,
-    val address: String,
+    val address: Address,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -109,35 +109,9 @@ object EvmKeyDerivation {
     private fun compressedPub(privBytes: ByteArray): ByteArray =
         curve.g.multiply(BigInteger(1, privBytes)).normalize().getEncoded(true)
 
-    private fun addressFromPub(pubXY: ByteArray): String {
+    private fun addressFromPub(pubXY: ByteArray): Address {
         val hash = keccak256(pubXY)
-        val addressBytes = hash.copyOfRange(hash.size - ADDRESS_BYTES, hash.size)
-        return toEip55(addressBytes)
-    }
-
-    private fun toEip55(addressBytes: ByteArray): String {
-        val lower = addressBytes.toHex()
-        val hashHex = keccak256(lower.toByteArray(Charsets.US_ASCII)).toHex()
-        return buildString(2 + lower.length) {
-            append("0x")
-            for (i in lower.indices) {
-                val c = lower[i]
-                if (c.isDigit()) {
-                    append(c)
-                } else {
-                    val nibble = Character.digit(hashHex[i], 16)
-                    append(if (nibble >= 8) c.uppercaseChar() else c)
-                }
-            }
-        }
-    }
-
-    private fun keccak256(data: ByteArray): ByteArray {
-        val d = KeccakDigest(256)
-        d.update(data, 0, data.size)
-        val out = ByteArray(d.digestSize)
-        d.doFinal(out, 0)
-        return out
+        return Address.fromBytes(hash.copyOfRange(hash.size - ADDRESS_BYTES, hash.size))
     }
 
     private fun hmacSha512(key: ByteArray, data: ByteArray): ByteArray =

@@ -1,6 +1,7 @@
 package xyz.justzappit.offramp.p2p
 
 import xyz.justzappit.evm.abi.FunctionSelector
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 import kotlin.test.Test
@@ -13,9 +14,9 @@ class DiamondCallsTest {
         val args = PlaceOrderArgs(
             relayPubKeyEthCrypto = "00".repeat(64),
             usdcAmount = BigInteger.valueOf(5_000_000),
-            recipientAddress = "0x000000000000000000000000000000000000dEaD",
+            recipientAddress = Address.parse("0x000000000000000000000000000000000000dEaD"),
             orderType = OrderType.PAY,
-            currency = "INR",
+            currency = CurrencyCode.Inr,
             circleId = BigInteger.ONE,
         )
         val data = DiamondCalls.placeOrderCalldata(args)
@@ -37,9 +38,9 @@ class DiamondCallsTest {
         val args = PlaceOrderArgs(
             relayPubKeyEthCrypto = "ab".repeat(64),
             usdcAmount = BigInteger.TEN,
-            recipientAddress = "0x000000000000000000000000000000000000dEaD",
+            recipientAddress = Address.parse("0x000000000000000000000000000000000000dEaD"),
             orderType = OrderType.PAY,
-            currency = "INR",
+            currency = CurrencyCode.Inr,
             circleId = BigInteger.ONE,
         )
         val hex = DiamondCalls.placeOrderCalldata(args).toHex()
@@ -53,9 +54,9 @@ class DiamondCallsTest {
         val args = PlaceOrderArgs(
             relayPubKeyEthCrypto = "cd".repeat(64),
             usdcAmount = BigInteger.TEN,
-            recipientAddress = "0x000000000000000000000000000000000000dEaD",
+            recipientAddress = Address.parse("0x000000000000000000000000000000000000dEaD"),
             orderType = OrderType.BUY,
-            currency = "INR",
+            currency = CurrencyCode.Inr,
             circleId = BigInteger.ONE,
         )
         val hex = DiamondCalls.placeOrderCalldata(args).toHex()
@@ -88,8 +89,8 @@ class DiamondCallsTest {
         val data = DiamondCalls.getAssignableMerchantsFromCircleCalldata(
             circleId = BigInteger.ONE,
             assignUpTo = BigInteger.valueOf(3),
-            currency = "INR",
-            user = "0x000000000000000000000000000000000000bEEf",
+            currency = CurrencyCode.Inr,
+            user = Address.parse("0x000000000000000000000000000000000000bEEf"),
             usdtAmount = BigInteger.valueOf(5_000_000),
             fiatAmount = BigInteger.valueOf(418_000_000),
             orderType = OrderType.PAY,

@@ -21,6 +21,8 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import xyz.justzappit.evm.abi.Selector4
 import xyz.justzappit.evm.abi.SolidityErrors
+import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
@@ -33,8 +35,8 @@ class BaseRpcClient(
     private val nextId = AtomicLong(1)
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
-    suspend fun ethChainId(): Long =
-        hexToBigInteger(rpcCall("eth_chainId", emptyJsonArray).jsonPrimitive.content).toLong()
+    suspend fun ethChainId(): ChainId =
+        ChainId(hexToBigInteger(rpcCall("eth_chainId", emptyJsonArray).jsonPrimitive.content).toLong())
 
     suspend fun ethGasPrice(): BigInteger =
         hexToBigInteger(rpcCall("eth_gasPrice", emptyJsonArray).jsonPrimitive.content)
@@ -42,23 +44,23 @@ class BaseRpcClient(
     suspend fun ethMaxPriorityFeePerGas(): BigInteger =
         hexToBigInteger(rpcCall("eth_maxPriorityFeePerGas", emptyJsonArray).jsonPrimitive.content)
 
-    suspend fun ethGetTransactionCount(address: String, blockTag: String = "pending"): BigInteger =
+    suspend fun ethGetTransactionCount(address: Address, blockTag: String = "pending"): BigInteger =
         hexToBigInteger(
             rpcCall(
                 "eth_getTransactionCount",
                 buildJsonArray {
-                    add(address)
+                    add(address.checksumHex)
                     add(blockTag)
                 },
             ).jsonPrimitive.content,
         )
 
-    suspend fun ethCall(to: String, data: ByteArray, blockTag: String = "latest"): ByteArray =
+    suspend fun ethCall(to: Address, data: ByteArray, blockTag: String = "latest"): ByteArray =
         rpcCall(
             "eth_call",
             buildJsonArray {
                 addJsonObject {
-                    put("to", to)
+                    put("to", to.checksumHex)
                     put("data", "0x" + data.toHex())
                 }
                 add(blockTag)
@@ -66,8 +68,8 @@ class BaseRpcClient(
         ).jsonPrimitive.content.removePrefix("0x").let { if (it.isEmpty()) byteArrayOf() else it.hexToBytes() }
 
     suspend fun ethEstimateGas(
-        from: String,
-        to: String,
+        from: Address,
+        to: Address,
         value: BigInteger = BigInteger.ZERO,
         data: ByteArray = byteArrayOf(),
     ): BigInteger = hexToBigInteger(
@@ -75,8 +77,8 @@ class BaseRpcClient(
             "eth_estimateGas",
             buildJsonArray {
                 addJsonObject {
-                    put("from", from)
-                    put("to", to)
+                    put("from", from.checksumHex)
+                    put("to", to.checksumHex)
                     put("value", "0x" + value.toString(16))
                     put("data", "0x" + data.toHex())
                 }

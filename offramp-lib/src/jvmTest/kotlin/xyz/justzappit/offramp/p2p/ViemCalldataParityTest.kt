@@ -1,5 +1,6 @@
 package xyz.justzappit.offramp.p2p
 
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 import kotlin.test.Test
@@ -15,7 +16,7 @@ class ViemCalldataParityTest {
     @Test
     fun `approve calldata matches viem`() {
         val got = Erc20Calls.approveCalldata(
-            spender = "0xce868398FDaDcA368EAc203222874D6888532aE2",
+            spender = Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2"),
             amount = BigInteger.valueOf(1_000_000),
         ).toHex()
         assertEquals(VIEM_APPROVE.removePrefix("0x"), got)
@@ -27,9 +28,9 @@ class ViemCalldataParityTest {
             PlaceOrderArgs(
                 relayPubKeyEthCrypto = RELAY_PUBKEY,
                 usdcAmount = BigInteger.valueOf(5_000_000),
-                recipientAddress = "0x000000000000000000000000000000000000dead",
+                recipientAddress = Address.parse("0x000000000000000000000000000000000000dead"),
                 orderType = OrderType.PAY,
-                currency = "INR",
+                currency = CurrencyCode.Inr,
                 circleId = BigInteger.ONE,
             ),
         ).toHex()
@@ -53,7 +54,7 @@ class ViemCalldataParityTest {
 
     @Test
     fun `getPriceConfig calldata matches viem`() {
-        val got = DiamondCalls.getPriceConfigCalldata("INR").toHex()
+        val got = DiamondCalls.getPriceConfigCalldata(CurrencyCode.Inr).toHex()
         assertEquals(VIEM_GET_PRICE_CONFIG.removePrefix("0x"), got)
     }
 
@@ -62,8 +63,8 @@ class ViemCalldataParityTest {
         val got = DiamondCalls.getAssignableMerchantsFromCircleCalldata(
             circleId = BigInteger.ONE,
             assignUpTo = BigInteger.valueOf(3),
-            currency = "INR",
-            user = "0x000000000000000000000000000000000000beef",
+            currency = CurrencyCode.Inr,
+            user = Address.parse("0x000000000000000000000000000000000000beef"),
             usdtAmount = BigInteger.valueOf(5_000_000),
             fiatAmount = BigInteger.valueOf(418_000_000),
             orderType = OrderType.PAY,

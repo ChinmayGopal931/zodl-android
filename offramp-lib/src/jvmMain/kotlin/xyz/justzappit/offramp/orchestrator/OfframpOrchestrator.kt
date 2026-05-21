@@ -47,7 +47,7 @@ class OfframpOrchestrator(
 
         try {
             val relay = RelayIdentities.generate()
-            val currencyHex = "0x" + AbiEncoder.bytes32String(request.currency).value.toHex()
+            val currencyHex = "0x" + AbiEncoder.bytes32String(request.currency.code).value.toHex()
 
             currentStep = FailedStep.SELECTING_CIRCLE
             val circles = subgraph.circlesForRouting(currencyHex)

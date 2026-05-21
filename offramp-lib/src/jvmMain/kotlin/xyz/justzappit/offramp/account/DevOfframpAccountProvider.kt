@@ -2,6 +2,7 @@ package xyz.justzappit.offramp.account
 
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.hd.EvmKeyDerivation
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.hexToBytes
 
 // TESTNET ONLY. Private key is checked into source — anyone with this repo can spend
@@ -15,7 +16,7 @@ object DevOfframpAccountProvider : OfframpAccountProvider {
         EvmKeyDerivation.fromPrivateKey(DEV_PRIVATE_KEY_HEX.removePrefix("0x").hexToBytes())
     }
 
-    val address: String get() = key.address
+    val address: Address get() = key.address
 
     override suspend fun nextOfframpAccount(): EvmKey = key
 }

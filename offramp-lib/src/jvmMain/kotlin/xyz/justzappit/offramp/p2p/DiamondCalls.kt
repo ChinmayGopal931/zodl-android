@@ -7,6 +7,7 @@ import xyz.justzappit.evm.abi.AbiInt
 import xyz.justzappit.evm.abi.AbiString
 import xyz.justzappit.evm.abi.AbiUint
 import xyz.justzappit.evm.abi.AbiUint8
+import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 
 enum class OrderType(val onChain: Int) {
@@ -18,9 +19,9 @@ enum class OrderType(val onChain: Int) {
 data class PlaceOrderArgs(
     val relayPubKeyEthCrypto: String,
     val usdcAmount: BigInteger,
-    val recipientAddress: String,
+    val recipientAddress: Address,
     val orderType: OrderType,
-    val currency: String,
+    val currency: CurrencyCode,
     val circleId: BigInteger,
     val fiatAmountLimit: BigInteger = BigInteger.ZERO,
     val preferredPaymentChannelConfigId: BigInteger = BigInteger.ZERO,
@@ -39,7 +40,7 @@ object DiamondCalls {
             AbiUint8(args.orderType.onChain),
             AbiString(""),
             AbiString(userPubKey),
-            AbiEncoder.bytes32String(args.currency),
+            AbiEncoder.bytes32String(args.currency.code),
             AbiUint(args.preferredPaymentChannelConfigId),
             AbiUint(args.circleId),
             AbiUint(args.fiatAmountLimit),
@@ -69,17 +70,17 @@ object DiamondCalls {
             listOf(AbiUint(orderId)),
         )
 
-    fun getPriceConfigCalldata(currency: String): ByteArray =
+    fun getPriceConfigCalldata(currency: CurrencyCode): ByteArray =
         AbiEncoder.encodeFunctionCall(
             "getPriceConfig(bytes32)",
-            listOf(AbiEncoder.bytes32String(currency)),
+            listOf(AbiEncoder.bytes32String(currency.code)),
         )
 
     fun getAssignableMerchantsFromCircleCalldata(
         circleId: BigInteger,
         assignUpTo: BigInteger,
-        currency: String,
-        user: String,
+        currency: CurrencyCode,
+        user: Address,
         usdtAmount: BigInteger,
         fiatAmount: BigInteger,
         orderType: OrderType,
@@ -89,7 +90,7 @@ object DiamondCalls {
         listOf(
             AbiUint(circleId),
             AbiUint(assignUpTo),
-            AbiEncoder.bytes32String(currency),
+            AbiEncoder.bytes32String(currency.code),
             AbiAddress(user),
             AbiUint(usdtAmount),
             AbiUint(fiatAmount),

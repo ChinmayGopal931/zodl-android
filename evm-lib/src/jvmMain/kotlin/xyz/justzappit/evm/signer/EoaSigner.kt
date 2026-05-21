@@ -5,18 +5,20 @@ import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.TransactionReceipt
 import xyz.justzappit.evm.rpc.hexToBigInteger
+import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
 class EoaSigner(
     private val rpc: BaseRpcClient,
-    private val chainId: Long,
+    private val chainId: ChainId,
     private val account: EvmKey,
     private val baseFeeMultiplier: Int = DEFAULT_BASE_FEE_MULTIPLIER,
     private val gasLimitBufferPercent: Int = DEFAULT_GAS_BUFFER_PCT,
 ) {
     suspend fun sendTransaction(
-        to: String,
+        to: Address,
         value: BigInteger = BigInteger.ZERO,
         data: ByteArray = byteArrayOf(),
         gasLimitOverride: BigInteger? = null,

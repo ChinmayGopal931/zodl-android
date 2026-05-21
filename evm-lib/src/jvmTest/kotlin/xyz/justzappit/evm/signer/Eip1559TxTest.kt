@@ -2,6 +2,8 @@ package xyz.justzappit.evm.signer
 
 import org.bouncycastle.crypto.digests.KeccakDigest
 import xyz.justzappit.evm.hd.EvmKeyDerivation
+import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
@@ -46,19 +48,19 @@ class Eip1559TxTest {
         assertNotNull(recovered)
         val pubXY = recovered.affineXCoord.encoded + recovered.affineYCoord.encoded
         val recoveredAddress = "0x" + keccak256(pubXY).copyOfRange(12, 32).toHex()
-        assertEquals(key.address.lowercase(), recoveredAddress.lowercase())
+        assertEquals(key.address.lowercaseHex, recoveredAddress.lowercase())
     }
 
     @Test
     fun `chainId zero-encoding never sneaks in as 0x80 for the value field`() {
         // value=0 should encode as 0x80 (rlpEmpty), not as 0x00.
         val tx = Eip1559Tx(
-            chainId = 84_532L,
+            chainId = ChainId.BASE_SEPOLIA,
             nonce = BigInteger.ZERO,
             maxPriorityFeePerGas = BigInteger.ONE,
             maxFeePerGas = BigInteger.TEN,
             gasLimit = BigInteger.valueOf(21_000),
-            to = "0x000000000000000000000000000000000000dEaD",
+            to = Address.parse("0x000000000000000000000000000000000000dEaD"),
             value = BigInteger.ZERO,
             data = byteArrayOf(),
         )
@@ -70,12 +72,12 @@ class Eip1559TxTest {
     fun `invalid to address is rejected`() {
         kotlin.runCatching {
             Eip1559Tx(
-                chainId = 1L,
+                chainId = ChainId(1L),
                 nonce = BigInteger.ZERO,
                 maxPriorityFeePerGas = BigInteger.ONE,
                 maxFeePerGas = BigInteger.ONE,
                 gasLimit = BigInteger.ONE,
-                to = "0xnotanaddress",
+                to = Address.parse("0xnotanaddress"),
                 value = BigInteger.ZERO,
                 data = byteArrayOf(),
             )
@@ -94,12 +96,12 @@ class Eip1559TxTest {
         toAddress: String = "0x000000000000000000000000000000000000dEaD",
         callData: ByteArray = byteArrayOf(),
     ) = Eip1559Tx(
-        chainId = 84_532L,
+        chainId = ChainId.BASE_SEPOLIA,
         nonce = BigInteger.valueOf(7),
         maxPriorityFeePerGas = BigInteger.valueOf(1_000_000L),
         maxFeePerGas = BigInteger.valueOf(50_000_000L),
         gasLimit = BigInteger.valueOf(100_000L),
-        to = toAddress,
+        to = Address.parse(toAddress),
         value = BigInteger.valueOf(123_456_789L),
         data = callData,
     )

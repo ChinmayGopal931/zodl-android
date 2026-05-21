@@ -1,5 +1,6 @@
 package xyz.justzappit.evm.abi
 
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
@@ -54,7 +55,7 @@ class AbiEncoderTest {
 
     @Test
     fun `address encodes left-padded with 12 zero bytes`() {
-        val addr = "0xce868398FDaDcA368EAc203222874D6888532aE2"
+        val addr = Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2")
         val encoded = AbiEncoder.encode(listOf(AbiAddress(addr))).toHex()
         assertEquals("000000000000000000000000ce868398fdadca368eac203222874d6888532ae2", encoded)
     }
@@ -109,7 +110,7 @@ class AbiEncoderTest {
         val calldata = AbiEncoder.encodeFunctionCall(
             "approve(address,uint256)",
             listOf(
-                AbiAddress("0xce868398FDaDcA368EAc203222874D6888532aE2"),
+                AbiAddress(Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2")),
                 AbiUint(BigInteger.valueOf(1_000_000)),
             ),
         ).toHex()
@@ -177,7 +178,7 @@ class AbiEncoderTest {
 
     @Test
     fun `invalid address length is rejected`() {
-        assertFailsWith<IllegalArgumentException> { AbiAddress("0xabcd") }
+        assertFailsWith<IllegalArgumentException> { Address.parse("0xabcd") }
     }
 
     @Test
@@ -209,7 +210,7 @@ class AbiEncoderTest {
         val args = listOf<AbiArg>(
             AbiString("a".repeat(128)),
             AbiUint(BigInteger.valueOf(5_000_000)),
-            AbiAddress("0x000000000000000000000000000000000000dEaD"),
+            AbiAddress(Address.parse("0x000000000000000000000000000000000000dEaD")),
             AbiUint8(2),
             AbiString(""),
             AbiString(""),

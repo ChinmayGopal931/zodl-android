@@ -1,6 +1,7 @@
 package xyz.justzappit.offramp.orchestrator
 
 import xyz.justzappit.evm.abi.Selector4
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.p2p.OrderStatus
 import java.math.BigInteger
 
@@ -32,7 +33,7 @@ sealed class OfframpStatus {
     data class SendingEncryptedUpi(
         val orderId: BigInteger,
         val txHash: String,
-        val merchantAddress: String,
+        val merchantAddress: Address,
         val merchantPubKey: String,
     ) : OfframpStatus()
 
@@ -44,7 +45,7 @@ sealed class OfframpStatus {
 
     data class Completed(
         val orderId: BigInteger,
-        val acceptedMerchant: String,
+        val acceptedMerchant: Address,
         val actualUsdcAmount: BigInteger? = null,
         val actualFiatAmount: BigInteger? = null,
         val completedAtEpochSeconds: Long? = null,

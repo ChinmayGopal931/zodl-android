@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 import kotlin.test.AfterTest
@@ -48,10 +49,10 @@ class BaseRpcClientTest {
     }
 
     @Test
-    fun `ethChainId decodes hex result to Long`() = runTest {
+    fun `ethChainId decodes hex result to ChainId`() = runTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0x14a34"}"""
         val chainId = rpc.ethChainId()
-        assertEquals(84_532L, chainId)
+        assertEquals(xyz.justzappit.evm.types.ChainId.BASE_SEPOLIA, chainId)
         assertEquals("eth_chainId", handledRequests.last()["method"]!!.jsonPrimitive.content)
     }
 
@@ -64,17 +65,19 @@ class BaseRpcClientTest {
     @Test
     fun `ethGetTransactionCount sends address and tag`() = runTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0x2a"}"""
-        val nonce = rpc.ethGetTransactionCount("0xabc", blockTag = "latest")
+        val address = Address.parse("0x0000000000000000000000000000000000000abc")
+        val nonce = rpc.ethGetTransactionCount(address, blockTag = "latest")
         assertEquals(BigInteger.valueOf(42), nonce)
         val params = handledRequests.last()["params"]!!.toString()
-        assertTrue(params.contains("0xabc"))
+        assertTrue(params.contains(address.checksumHex))
         assertTrue(params.contains("latest"))
     }
 
     @Test
     fun `ethCall hex-encodes data with 0x prefix and decodes returned bytes`() = runTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0xdeadbeef"}"""
-        val result = rpc.ethCall("0xto", byteArrayOf(0x01, 0x02))
+        val to = Address.parse("0x0000000000000000000000000000000000000010")
+        val result = rpc.ethCall(to, byteArrayOf(0x01, 0x02))
         assertEquals("deadbeef", result.toHex())
         val sentParams = handledRequests.last()["params"]!!.toString()
         assertTrue(sentParams.contains("\"0x0102\""), "expected hex-encoded data in params, got $sentParams")
@@ -83,7 +86,9 @@ class BaseRpcClientTest {
     @Test
     fun `ethEstimateGas sends from to value data tuple`() = runTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0x5208"}"""
-        val gas = rpc.ethEstimateGas(from = "0xfrom", to = "0xto", value = BigInteger.valueOf(1_000))
+        val from = Address.parse("0x000000000000000000000000000000000000F70F")
+        val to = Address.parse("0x0000000000000000000000000000000000000010")
+        val gas = rpc.ethEstimateGas(from = from, to = to, value = BigInteger.valueOf(1_000))
         assertEquals(BigInteger.valueOf(21_000), gas)
     }
 

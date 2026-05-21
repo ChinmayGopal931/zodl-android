@@ -1,5 +1,6 @@
 package xyz.justzappit.offramp.p2p
 
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
@@ -19,7 +20,7 @@ enum class OrderStatus(val onChain: Int) {
 
 data class OrderRead(
     val status: OrderStatus,
-    val acceptedMerchant: String,
+    val acceptedMerchant: Address?,
     val merchantPubKey: String,
 )
 
@@ -32,10 +33,16 @@ object OrderReader {
         val tupleStart = TOP_LEVEL_OFFSET_SLOT * WORD
         val tuple = returnData.copyOfRange(tupleStart, returnData.size)
 
-        val acceptedMerchantRaw = "0x" + tuple.slice(slotRange(FIELD_ACCEPTED_MERCHANT))
-            .toByteArray().copyOfRange(WORD - ADDRESS_BYTES, WORD).toHex()
-        val userRaw = "0x" + tuple.slice(slotRange(FIELD_USER))
-            .toByteArray().copyOfRange(WORD - ADDRESS_BYTES, WORD).toHex()
+        val acceptedMerchantBytes = tuple.slice(slotRange(FIELD_ACCEPTED_MERCHANT))
+            .toByteArray().copyOfRange(WORD - ADDRESS_BYTES, WORD)
+        val acceptedMerchant = if (acceptedMerchantBytes.all { it == 0.toByte() }) {
+            null
+        } else {
+            Address.fromBytes(acceptedMerchantBytes)
+        }
+        val userAddress = Address.fromBytes(
+            tuple.slice(slotRange(FIELD_USER)).toByteArray().copyOfRange(WORD - ADDRESS_BYTES, WORD),
+        )
 
         val statusSlot = tuple.copyOfRange(FIELD_STATUS * WORD, (FIELD_STATUS + 1) * WORD)
         val statusByte = statusSlot.last().toInt() and 0xff
@@ -82,11 +89,11 @@ object OrderReader {
             status = status,
             orderType = orderType,
             circleId = circleId,
-            userAddress = userRaw,
+            userAddress = userAddress,
             usdcAmount = usdcAmount,
             fiatAmount = fiatAmount,
             currencyHex = currencyHex,
-            acceptedMerchantAddress = parseNullableAddress(acceptedMerchantRaw),
+            acceptedMerchantAddress = acceptedMerchant,
             merchantPubKey = merchantPubKey,
             encryptedUserUpi = encryptedUserUpi,
             encryptedMerchantUpi = encryptedMerchantUpi,
@@ -112,8 +119,13 @@ object OrderReader {
         val tupleStart = TOP_LEVEL_OFFSET_SLOT * WORD
         val tuple = returnData.copyOfRange(tupleStart, returnData.size)
 
-        val acceptedMerchant = "0x" + tuple.slice(slotRange(FIELD_ACCEPTED_MERCHANT))
-            .toByteArray().copyOfRange(WORD - ADDRESS_BYTES, WORD).toHex()
+        val acceptedMerchantBytes = tuple.slice(slotRange(FIELD_ACCEPTED_MERCHANT))
+            .toByteArray().copyOfRange(WORD - ADDRESS_BYTES, WORD)
+        val acceptedMerchant = if (acceptedMerchantBytes.all { it == 0.toByte() }) {
+            null
+        } else {
+            Address.fromBytes(acceptedMerchantBytes)
+        }
 
         val statusSlot = tuple.copyOfRange(FIELD_STATUS * WORD, (FIELD_STATUS + 1) * WORD)
         val statusByte = statusSlot.last().toInt() and 0xff

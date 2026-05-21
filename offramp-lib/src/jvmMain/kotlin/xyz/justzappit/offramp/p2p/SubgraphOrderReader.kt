@@ -3,6 +3,7 @@ package xyz.justzappit.offramp.p2p
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 
 class SubgraphOrderReader(
@@ -23,7 +24,8 @@ class SubgraphOrderReader(
             status = OrderStatus.fromOnChain(statusValue),
             orderType = orderTypeFromOnChain(typeValue),
             circleId = node.requireString("circleId").toBigInteger(),
-            userAddress = node.requireString("userAddress"),
+            userAddress = parseNullableAddress(node.requireString("userAddress"))
+                ?: Address.ZERO,
             usdcAmount = node.requireString("usdcAmount").toBigInteger(),
             fiatAmount = node.requireString("fiatAmount").toBigInteger(),
             currencyHex = node.requireString("currency"),

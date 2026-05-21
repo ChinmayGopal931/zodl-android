@@ -1,5 +1,6 @@
 package xyz.justzappit.offramp.p2p
 
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.hexToBytes
 import java.math.BigInteger
 import kotlin.test.Test
@@ -21,7 +22,7 @@ class OrderReaderTest {
         )
         val order = OrderReader.decodeOrder(data)
         assertEquals(OrderStatus.ACCEPTED, order.status)
-        assertEquals(merchant, order.acceptedMerchant)
+        assertEquals(Address.parse(merchant), order.acceptedMerchant)
         assertEquals(pubKey, order.merchantPubKey)
     }
 

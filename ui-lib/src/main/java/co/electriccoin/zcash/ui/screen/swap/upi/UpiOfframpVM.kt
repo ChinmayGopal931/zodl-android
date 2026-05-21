@@ -14,6 +14,7 @@ import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
+import xyz.justzappit.offramp.p2p.CurrencyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -56,7 +57,7 @@ internal class UpiOfframpVM(
 
     private suspend fun refreshRate() {
         val newRate = getRate(CURRENCY) ?: return
-        Twig.info { "UpiOfframpVM: live sellPrice for $CURRENCY = $newRate" }
+        Twig.info { "UpiOfframpVM: live sellPrice for ${CURRENCY.code} = $newRate" }
         rate.update { newRate }
         rederiveAfterRateChange(newRate)
     }
@@ -170,7 +171,7 @@ internal class UpiOfframpVM(
     }
 
     companion object {
-        private const val CURRENCY = "INR"
+        private val CURRENCY = CurrencyCode.Inr
 
         // Matches the FE: priceConfig?.sellPrice ?? 85.
         private val FALLBACK_RATE: BigDecimal = BigDecimal("85")

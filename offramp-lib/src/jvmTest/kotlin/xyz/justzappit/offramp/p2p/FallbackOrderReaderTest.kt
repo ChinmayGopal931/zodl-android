@@ -1,6 +1,7 @@
 package xyz.justzappit.offramp.p2p
 
 import kotlinx.coroutines.test.runTest
+import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,7 +63,7 @@ class FallbackOrderReaderTest {
         status = OrderStatus.PLACED,
         orderType = OrderType.PAY,
         circleId = BigInteger.ONE,
-        userAddress = "0x" + "00".repeat(20),
+        userAddress = Address.ZERO,
         usdcAmount = BigInteger.ZERO,
         fiatAmount = BigInteger.ZERO,
         currencyHex = "0x" + "00".repeat(32),

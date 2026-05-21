@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import xyz.justzappit.evm.hd.EvmKey
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.FailedStep
 import xyz.justzappit.offramp.orchestrator.KnownRevertReason
@@ -75,7 +76,7 @@ internal class UpiOfframpProgressVM(
             recipient = args.recipientUpi,
             orderId = orderId?.toString(),
             networkName = network.name.replaceFirstChar { it.uppercase() },
-            signerAddress = account.address,
+            signerAddress = account.address.checksumHex,
             signerExplorerUrl = explorerUrl(addressPath(account.address)),
         )
 
@@ -247,7 +248,7 @@ internal class UpiOfframpProgressVM(
             }
         }
         key == STEP_SEND_UPI && status is OfframpStatus.SendingEncryptedUpi -> listOf(
-            stringRes(R.string.upi_offramp_detail_merchant, status.merchantAddress),
+            stringRes(R.string.upi_offramp_detail_merchant, status.merchantAddress.checksumHex),
         )
         key == STEP_WAIT_COMPLETION && status is OfframpStatus.WaitingForCompletion -> buildList {
             add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
@@ -256,14 +257,14 @@ internal class UpiOfframpProgressVM(
             }
         }
         key == STEP_WAIT_COMPLETION && status is OfframpStatus.Completed ->
-            listOf(stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant))
+            listOf(stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant.checksumHex))
         else -> emptyList()
     }
 
     private fun explorerUrl(path: String): String =
         network.baseExplorerUrl.trimEnd('/') + path
 
-    private fun addressPath(address: String): String = "/address/$address"
+    private fun addressPath(address: Address): String = "/address/${address.checksumHex}"
     private fun txPath(hash: String): String = "/tx/$hash"
 
     private fun formatUsdc(microString: String): String {
