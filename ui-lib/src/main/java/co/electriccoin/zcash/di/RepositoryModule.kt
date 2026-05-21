@@ -14,6 +14,8 @@ import co.electriccoin.zcash.ui.common.repository.FlexaRepository
 import co.electriccoin.zcash.ui.common.repository.FlexaRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.HomeMessageCacheRepository
 import co.electriccoin.zcash.ui.common.repository.HomeMessageCacheRepositoryImpl
+import co.electriccoin.zcash.ui.common.repository.OfframpRepository
+import co.electriccoin.zcash.ui.common.repository.OfframpRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepository
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.SwapRepository
@@ -56,7 +58,8 @@ val repositoryModule =
         singleOf(::SwapRepositoryImpl) bind SwapRepository::class
         singleOf(::EphemeralAddressRepositoryImpl) bind EphemeralAddressRepository::class
 
-        // UPI offramp data sources and orchestrator.
+        // UPI offramp data sources, orchestrator, and resume-from-checkpoint repository.
+        singleOf(::OfframpRepositoryImpl) bind OfframpRepository::class
         single { CircleRouter() }
         single { SubgraphOrderReader(subgraph = get()) }
         single { OnChainOrderReader(rpc = get(), network = get()) }

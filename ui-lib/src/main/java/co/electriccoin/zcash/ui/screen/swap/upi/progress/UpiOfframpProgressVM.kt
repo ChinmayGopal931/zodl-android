@@ -6,9 +6,11 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.repository.OfframpRepository
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +24,7 @@ import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.KnownRevertReason
+import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
@@ -37,6 +40,7 @@ internal class UpiOfframpProgressVM(
     private val network: P2pNetworkConfig,
     private val account: EvmKey,
     private val navigationRouter: NavigationRouter,
+    private val offrampRepo: OfframpRepository,
 ) : ViewModel() {
     private val latestStatus = MutableStateFlow<OfframpStatus>(OfframpStatus.Idle)
 
@@ -58,13 +62,56 @@ internal class UpiOfframpProgressVM(
             usdcAmount = BigInteger(args.usdcAmountMicro),
             currency = args.currency,
         )
-        orchestrator
-            .run(request)
+        val existing = offrampRepo.getInFlight()
+        val source: Flow<OfframpStatus> = if (existing != null && existing.orderIdBig != null) {
+            Twig.info { "UpiOfframpProgress resuming order ${existing.orderId} from ${existing.currentStep}" }
+            orchestrator.resume(existing)
+        } else {
+            if (existing != null) {
+                Twig.warn { "UpiOfframpProgress: discarding pre-orderId checkpoint at ${existing.currentStep}" }
+                offrampRepo.clear()
+            }
+            orchestrator.run(request)
+        }
+        source
             .onEach { status ->
                 Twig.info { "UpiOfframpProgress status=$status" }
                 latestStatus.update { status }
+                persistOrClear(status, request)
             }
             .collect { /* state already updated in onEach */ }
+    }
+
+    private suspend fun persistOrClear(status: OfframpStatus, request: OfframpRequest) {
+        when (status) {
+            is OfframpStatus.Completed, is OfframpStatus.Failed -> offrampRepo.clear()
+            else -> {
+                val orderId = orderIdOf(status) ?: return
+                val previous = offrampRepo.getInFlight()
+                offrampRepo.save(
+                    OfframpCheckpoint(
+                        orderId = orderId.toString(),
+                        currentStep = status.step,
+                        approveTxHash = previous?.approveTxHash,
+                        placeOrderTxHash = (status as? OfframpStatus.PlacingOrder)?.txHash
+                            ?: previous?.placeOrderTxHash,
+                        setUpiTxHash = (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
+                            ?: previous?.setUpiTxHash,
+                        recipientUpi = request.recipientUpi,
+                        usdcAmountMicroDecimal = request.usdcAmount.toString(),
+                        currency = request.currency,
+                        createdAtMillis = previous?.createdAtMillis ?: System.currentTimeMillis(),
+                    ),
+                )
+            }
+        }
+    }
+
+    private fun orderIdOf(status: OfframpStatus): BigInteger? = when (status) {
+        is OfframpStatus.WaitingForMerchantAcceptance -> status.orderId
+        is OfframpStatus.SendingEncryptedUpi -> status.orderId
+        is OfframpStatus.WaitingForCompletion -> status.orderId
+        else -> null
     }
 
     private fun buildState(status: OfframpStatus): UpiOfframpProgressState {

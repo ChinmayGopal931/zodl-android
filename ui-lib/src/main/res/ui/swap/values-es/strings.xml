@@ -93,6 +93,8 @@
     <string name="upi_offramp_error_above_cap">Los montos superiores a $99 USDC requieren KYC y aún no son compatibles.</string>
     <string name="upi_offramp_error_invalid_upi">Eso no parece un identificador UPI (esperaba algo como nombre@banco).</string>
     <string name="upi_offramp_send_button">Enviar</string>
+    <string name="upi_offramp_resume_button">Reanudar offramp en curso</string>
+    <string name="upi_offramp_error_in_flight">Ya hay un offramp en curso. Reanúdalo antes de iniciar otro.</string>
 
     <string name="upi_offramp_progress_title_in_progress">Enviando al comerciante</string>
     <string name="upi_offramp_progress_title_completed">Pago enviado</string>

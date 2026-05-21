@@ -6,6 +6,7 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.repository.OfframpRepository
 import co.electriccoin.zcash.ui.common.usecase.GetUpiOfframpRateUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
@@ -14,6 +15,7 @@ import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
+import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.p2p.CurrencyCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -29,16 +31,26 @@ import java.math.RoundingMode
 internal class UpiOfframpVM(
     private val navigationRouter: NavigationRouter,
     private val getRate: GetUpiOfframpRateUseCase,
+    private val offrampRepo: OfframpRepository,
 ) : ViewModel() {
     private val primary = MutableStateFlow(UpiOfframpAmountSide.INR)
     private val usdcState = MutableStateFlow(NumberTextFieldInnerState())
     private val inrState = MutableStateFlow(NumberTextFieldInnerState())
     private val upiText = MutableStateFlow("")
     private val rate = MutableStateFlow(FALLBACK_RATE)
+    private val inFlight = MutableStateFlow<OfframpCheckpoint?>(null)
 
     val state: StateFlow<UpiOfframpState> =
-        combine(primary, usdcState, inrState, upiText, rate) { side, usdc, inr, upi, currentRate ->
-            buildState(side, usdc, inr, upi, currentRate)
+        combine(primary, usdcState, inrState, upiText, rate, inFlight) { values ->
+            @Suppress("UNCHECKED_CAST", "MagicNumber")
+            buildState(
+                side = values[0] as UpiOfframpAmountSide,
+                usdc = values[1] as NumberTextFieldInnerState,
+                inr = values[2] as NumberTextFieldInnerState,
+                upi = values[3] as String,
+                currentRate = values[4] as BigDecimal,
+                inFlightCheckpoint = values[5] as OfframpCheckpoint?,
+            )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
@@ -48,11 +60,15 @@ internal class UpiOfframpVM(
                 inr = inrState.value,
                 upi = upiText.value,
                 currentRate = rate.value,
+                inFlightCheckpoint = inFlight.value,
             ),
         )
 
     init {
         viewModelScope.launch { refreshRate() }
+        viewModelScope.launch {
+            offrampRepo.observeInFlight().collect { checkpoint -> inFlight.update { checkpoint } }
+        }
     }
 
     private suspend fun refreshRate() {
@@ -87,10 +103,29 @@ internal class UpiOfframpVM(
         inr: NumberTextFieldInnerState,
         upi: String,
         currentRate: BigDecimal,
+        inFlightCheckpoint: OfframpCheckpoint?,
     ): UpiOfframpState {
         val usdcAmount = usdc.amount
-        val validationError = validate(usdcAmount, upi)
+        val validationError = if (inFlightCheckpoint != null) {
+            stringRes(R.string.upi_offramp_error_in_flight)
+        } else {
+            validate(usdcAmount, upi)
+        }
         val rateDisplay = currentRate.stripTrailingZeros().toPlainString()
+        val sendButtonText = if (inFlightCheckpoint != null) {
+            stringRes(R.string.upi_offramp_resume_button)
+        } else {
+            stringRes(R.string.upi_offramp_send_button)
+        }
+        val sendEnabled = if (inFlightCheckpoint != null) {
+            true
+        } else {
+            validationError == null &&
+                usdcAmount != null &&
+                usdcAmount > BigDecimal.ZERO &&
+                upi.isNotBlank() &&
+                UPI_HANDLE_REGEX.matches(upi)
+        }
         return UpiOfframpState(
             primary = side,
             usdcInput = NumberTextFieldState(innerState = usdc, onValueChange = ::onUsdcChange),
@@ -98,17 +133,17 @@ internal class UpiOfframpVM(
             onSwapSides = ::onSwapSides,
             rateText = stringRes(R.string.upi_offramp_rate_label, rateDisplay),
             upiField = TextFieldState(stringRes(upi)) { newValue -> onUpiChange(newValue) },
-            infoText = if (validationError == null && usdcAmount != null && usdcAmount > BigDecimal.ZERO) {
+            infoText = if (inFlightCheckpoint == null &&
+                validationError == null &&
+                usdcAmount != null &&
+                usdcAmount > BigDecimal.ZERO
+            ) {
                 stringRes(R.string.upi_offramp_estimate_disclaimer)
             } else null,
             errorText = validationError,
             sendButton = ButtonState(
-                text = stringRes(R.string.upi_offramp_send_button),
-                isEnabled = validationError == null &&
-                    usdcAmount != null &&
-                    usdcAmount > BigDecimal.ZERO &&
-                    upi.isNotBlank() &&
-                    UPI_HANDLE_REGEX.matches(upi),
+                text = sendButtonText,
+                isEnabled = sendEnabled,
                 onClick = ::onSendClick,
             ),
         )
@@ -156,6 +191,18 @@ internal class UpiOfframpVM(
     }
 
     private fun onSendClick() {
+        // If a checkpoint is in flight, jump back into the progress screen — it'll resume.
+        val existing = inFlight.value
+        if (existing != null) {
+            navigationRouter.forward(
+                UpiOfframpProgressArgs(
+                    recipientUpi = existing.recipientUpi,
+                    usdcAmountMicro = existing.usdcAmountMicroDecimal,
+                    currency = existing.currency,
+                ),
+            )
+            return
+        }
         val usdcAmount = usdcState.value.amount ?: return
         if (usdcAmount <= BigDecimal.ZERO || usdcAmount > USDC_CAP) return
         val upi = upiText.value

@@ -99,53 +99,98 @@ class OfframpOrchestrator(
                 userAddress = account.address,
             ) ?: error("placeOrder receipt did not contain an OrderPlaced log")
 
-            currentStep = OfframpStep.WAITING_FOR_ACCEPTANCE
-            val accepted = pollForAcceptance(orderId)
-            val acceptedMerchant = requireNotNull(accepted.acceptedMerchantAddress) {
-                "Order $orderId reached ACCEPTED but acceptedMerchantAddress is null"
-            }
-
-            currentStep = OfframpStep.ENCRYPTING_UPI
-            val cipherHex = Ecies.cipherStringify(
-                Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
-            )
-
-            currentStep = OfframpStep.SENDING_UPI
-            val setUpiHash = signer.sendTransaction(
-                to = network.diamondAddress,
-                data = DiamondCalls.setSellOrderUpiCalldata(
-                    orderId = orderId,
-                    encryptedUpiHex = cipherHex,
-                ),
-            )
-            lastTxHash = setUpiHash
-            emit(
-                OfframpStatus.SendingEncryptedUpi(
-                    orderId = orderId,
-                    txHash = setUpiHash,
-                    merchantAddress = acceptedMerchant,
-                    merchantPubKey = accepted.merchantPubKey,
-                ),
-            )
-            require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
-
-            currentStep = OfframpStep.WAITING_FOR_COMPLETION
-            val finished = pollForCompletion(orderId)
-
-            emit(
-                OfframpStatus.Completed(
-                    orderId = orderId,
-                    acceptedMerchant = finished.acceptedMerchantAddress ?: acceptedMerchant,
-                    actualUsdcAmount = finished.actualUsdcAmount,
-                    actualFiatAmount = finished.actualFiatAmount,
-                    completedAtEpochSeconds = finished.completedAtEpochSeconds,
-                ),
+            awaitMerchantAndComplete(
+                orderId = orderId,
+                request = request,
+                knownSetUpiHash = null,
+                onStep = { currentStep = it },
+                onTxHash = { lastTxHash = it },
             )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
             emit(buildFailedStatus(e, orderId, currentStep, lastTxHash))
         }
+    }
+
+    /**
+     * Resumes an in-flight order from a persisted checkpoint. Assumes the orderId is known (which
+     * implies approve + placeOrder both already landed). Earlier-step resumes are out of scope for
+     * v1; if [checkpoint.orderId] is null the caller must restart fresh via [run].
+     */
+    fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
+        val orderId = requireNotNull(checkpoint.orderIdBig) {
+            "OfframpOrchestrator.resume requires a checkpoint with orderId — got currentStep=${checkpoint.currentStep}"
+        }
+        val request = checkpoint.toRequest()
+        var currentStep = checkpoint.currentStep
+        var lastTxHash: String? = checkpoint.setUpiTxHash ?: checkpoint.placeOrderTxHash
+        emit(OfframpStatus.Idle)
+        try {
+            awaitMerchantAndComplete(
+                orderId = orderId,
+                request = request,
+                knownSetUpiHash = checkpoint.setUpiTxHash,
+                onStep = { currentStep = it },
+                onTxHash = { lastTxHash = it },
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            emit(buildFailedStatus(e, orderId, currentStep, lastTxHash))
+        }
+    }
+
+    private suspend fun FlowCollector<OfframpStatus>.awaitMerchantAndComplete(
+        orderId: BigInteger,
+        request: OfframpRequest,
+        knownSetUpiHash: String?,
+        onStep: (OfframpStep) -> Unit,
+        onTxHash: (String) -> Unit,
+    ) {
+        onStep(OfframpStep.WAITING_FOR_ACCEPTANCE)
+        val accepted = pollForAcceptance(orderId)
+        val acceptedMerchant = requireNotNull(accepted.acceptedMerchantAddress) {
+            "Order $orderId reached ACCEPTED but acceptedMerchantAddress is null"
+        }
+
+        onStep(OfframpStep.ENCRYPTING_UPI)
+        val setUpiHash = knownSetUpiHash ?: run {
+            val cipherHex = Ecies.cipherStringify(
+                Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
+            )
+            onStep(OfframpStep.SENDING_UPI)
+            signer.sendTransaction(
+                to = network.diamondAddress,
+                data = DiamondCalls.setSellOrderUpiCalldata(
+                    orderId = orderId,
+                    encryptedUpiHex = cipherHex,
+                ),
+            )
+        }
+        onTxHash(setUpiHash)
+        onStep(OfframpStep.SENDING_UPI)
+        emit(
+            OfframpStatus.SendingEncryptedUpi(
+                orderId = orderId,
+                txHash = setUpiHash,
+                merchantAddress = acceptedMerchant,
+                merchantPubKey = accepted.merchantPubKey,
+            ),
+        )
+        require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
+
+        onStep(OfframpStep.WAITING_FOR_COMPLETION)
+        val finished = pollForCompletion(orderId)
+        emit(
+            OfframpStatus.Completed(
+                orderId = orderId,
+                acceptedMerchant = finished.acceptedMerchantAddress ?: acceptedMerchant,
+                actualUsdcAmount = finished.actualUsdcAmount,
+                actualFiatAmount = finished.actualFiatAmount,
+                completedAtEpochSeconds = finished.completedAtEpochSeconds,
+            ),
+        )
     }
 
     private suspend fun validateCircleOnChain(
