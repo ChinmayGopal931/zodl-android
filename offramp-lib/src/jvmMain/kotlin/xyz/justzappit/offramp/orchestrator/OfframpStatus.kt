@@ -49,6 +49,9 @@ sealed class OfframpStatus {
     data class Completed(
         val orderId: BigInteger,
         val acceptedMerchant: String,
+        val actualUsdcAmount: BigInteger? = null,
+        val actualFiatAmount: BigInteger? = null,
+        val completedAtEpochSeconds: Long? = null,
     ) : OfframpStatus()
 
     data class Failed(

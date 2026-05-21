@@ -16,7 +16,9 @@ import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.DiamondCalls
 import xyz.justzappit.offramp.p2p.Erc20Calls
 import xyz.justzappit.offramp.p2p.OrderEvents
+import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.OrderReader
+import xyz.justzappit.offramp.p2p.OrderSnapshot
 import xyz.justzappit.offramp.p2p.OrderStatus
 import xyz.justzappit.offramp.p2p.OrderType
 import xyz.justzappit.offramp.p2p.PlaceOrderArgs
@@ -30,6 +32,7 @@ class OfframpOrchestrator(
     private val account: EvmKey,
     private val network: P2pNetworkConfig,
     private val subgraph: SubgraphClient,
+    private val orderReader: OrderReadSource,
     private val router: CircleRouter = CircleRouter(),
     private val pollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
     private val acceptanceTimeoutMs: Long = DEFAULT_ACCEPTANCE_TIMEOUT_MS,
@@ -97,6 +100,9 @@ class OfframpOrchestrator(
 
             currentStep = FailedStep.WAITING_FOR_ACCEPTANCE
             val accepted = pollForAcceptance(orderId)
+            val acceptedMerchant = requireNotNull(accepted.acceptedMerchantAddress) {
+                "Order $orderId reached ACCEPTED but acceptedMerchantAddress is null"
+            }
 
             currentStep = FailedStep.ENCRYPTING_UPI
             val cipherHex = Ecies.cipherStringify(
@@ -116,7 +122,7 @@ class OfframpOrchestrator(
                 OfframpStatus.SendingEncryptedUpi(
                     orderId = orderId,
                     txHash = setUpiHash,
-                    merchantAddress = accepted.acceptedMerchant,
+                    merchantAddress = acceptedMerchant,
                     merchantPubKey = accepted.merchantPubKey,
                 ),
             )
@@ -128,7 +134,10 @@ class OfframpOrchestrator(
             emit(
                 OfframpStatus.Completed(
                     orderId = orderId,
-                    acceptedMerchant = finished.acceptedMerchant,
+                    acceptedMerchant = finished.acceptedMerchantAddress ?: acceptedMerchant,
+                    actualUsdcAmount = finished.actualUsdcAmount,
+                    actualFiatAmount = finished.actualFiatAmount,
+                    completedAtEpochSeconds = finished.completedAtEpochSeconds,
                 ),
             )
         } catch (e: CancellationException) {
@@ -170,7 +179,7 @@ class OfframpOrchestrator(
         OrderReader.decodeAddressArrayNonEmpty(ret)
     }.getOrDefault(false)
 
-    private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): OrderReader.Order =
+    private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): OrderSnapshot =
         pollOrderUntil(
             orderId = orderId,
             timeoutMs = acceptanceTimeoutMs,
@@ -182,12 +191,10 @@ class OfframpOrchestrator(
                     lastObservedStatus = lastSeen,
                 )
             },
-            predicate = {
-                it.status.onChain >= OrderStatus.ACCEPTED.onChain && it.merchantPubKey.isNotEmpty()
-            },
+            predicate = { it.isAccepted },
         )
 
-    private suspend fun FlowCollector<OfframpStatus>.pollForCompletion(orderId: BigInteger): OrderReader.Order =
+    private suspend fun FlowCollector<OfframpStatus>.pollForCompletion(orderId: BigInteger): OrderSnapshot =
         pollOrderUntil(
             orderId = orderId,
             timeoutMs = completionTimeoutMs,
@@ -207,18 +214,23 @@ class OfframpOrchestrator(
         timeoutMs: Long,
         timeoutMessage: String,
         buildStatus: (Int, OrderStatus?) -> OfframpStatus,
-        predicate: (OrderReader.Order) -> Boolean,
-    ): OrderReader.Order {
+        predicate: (OrderSnapshot) -> Boolean,
+    ): OrderSnapshot {
         var attempt = 0
         emit(buildStatus(attempt, null))
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
             attempt++
-            val ret = rpc.ethCall(network.diamondAddress, DiamondCalls.getOrdersByIdCalldata(orderId))
-            val order = OrderReader.decodeOrder(ret)
-            if (order.status == OrderStatus.CANCELLED) error("Order $orderId was cancelled by the merchant")
-            if (predicate(order)) return order
-            emit(buildStatus(attempt, order.status))
+            val snapshot = orderReader.fetchOrder(orderId)
+            if (snapshot != null) {
+                if (snapshot.status == OrderStatus.CANCELLED) {
+                    error("Order $orderId was cancelled by the merchant")
+                }
+                if (predicate(snapshot)) return snapshot
+                emit(buildStatus(attempt, snapshot.status))
+            } else {
+                emit(buildStatus(attempt, null))
+            }
             delay(pollIntervalMs)
         }
         error(timeoutMessage)

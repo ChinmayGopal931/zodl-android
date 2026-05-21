@@ -15,9 +15,14 @@ import xyz.justzappit.offramp.account.OfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.config.P2pNetworks
+import co.electriccoin.zcash.spackle.Twig
 import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.p2p.CircleRouter
+import xyz.justzappit.offramp.p2p.FallbackOrderReader
+import xyz.justzappit.offramp.p2p.OnChainOrderReader
+import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.SubgraphClient
+import xyz.justzappit.offramp.p2p.SubgraphOrderReader
 
 private const val HTTP_CLIENT_QUALIFIER = "offramp_http"
 
@@ -62,6 +67,17 @@ val offrampModule = module {
         )
     }
     single<CircleRouter> { CircleRouter() }
+    single { SubgraphOrderReader(subgraph = get()) }
+    single { OnChainOrderReader(rpc = get(), network = get()) }
+    single<OrderReadSource> {
+        FallbackOrderReader(
+            primary = get<SubgraphOrderReader>(),
+            fallback = get<OnChainOrderReader>(),
+            logger = { msg, cause ->
+                if (cause != null) Twig.warn(cause) { msg } else Twig.warn { msg }
+            },
+        )
+    }
     factory {
         OfframpOrchestrator(
             rpc = get(),
@@ -69,6 +85,7 @@ val offrampModule = module {
             account = get(),
             network = get(),
             subgraph = get(),
+            orderReader = get(),
             router = get(),
         )
     }

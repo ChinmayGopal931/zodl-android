@@ -8,6 +8,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
@@ -43,14 +44,29 @@ class SubgraphClient(
     private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
 
     suspend fun circlesForRouting(currencyBytes32Hex: String): List<CircleForRouting> {
+        val data = query(
+            query = CIRCLES_FOR_ROUTING_QUERY,
+            variables = buildJsonObject { put("currency", currencyBytes32Hex) },
+        )
+        val circles = data["circles"]?.jsonArray ?: error("subgraph response missing 'circles'")
+        return circles
+            .map { json.decodeFromJsonElement(CircleForRouting.serializer(), it) }
+            .filter { (it.metrics.scoreState.activeMerchantsCount.toIntOrNull() ?: 0) > 0 }
+    }
+
+    suspend fun rawOrderById(orderId: String): JsonObject? {
+        val data = query(
+            query = ORDER_BY_ID_QUERY,
+            variables = buildJsonObject { put("orderId", orderId) },
+        )
+        val orders = data["orders_collection"]?.jsonArray ?: return null
+        return orders.firstOrNull()?.jsonObject
+    }
+
+    private suspend fun query(query: String, variables: JsonElement): JsonObject {
         val payload = buildJsonObject {
-            put("query", CIRCLES_FOR_ROUTING_QUERY)
-            put(
-                "variables",
-                buildJsonObject {
-                    put("currency", currencyBytes32Hex)
-                },
-            )
+            put("query", query)
+            put("variables", variables)
         }
         val response: JsonObject = httpClient.post(subgraphUrl) {
             contentType(ContentType.Application.Json)
@@ -58,14 +74,40 @@ class SubgraphClient(
         }.body()
 
         response["errors"]?.let { errs -> error("subgraph errors: $errs") }
-        val data = response["data"]?.jsonObject ?: error("subgraph response missing 'data': $response")
-        val circles = data["circles"]?.jsonArray ?: error("subgraph response missing 'circles'")
-        return circles
-            .map { json.decodeFromJsonElement(CircleForRouting.serializer(), it) }
-            .filter { (it.metrics.scoreState.activeMerchantsCount.toIntOrNull() ?: 0) > 0 }
+        return response["data"]?.jsonObject ?: error("subgraph response missing 'data': $response")
     }
 
     companion object {
+        const val ORDER_BY_ID_QUERY = """
+            query OrderById(${'$'}orderId: BigInt!) {
+              orders_collection(where: { orderId: ${'$'}orderId }) {
+                orderId
+                type
+                status
+                circleId
+                userAddress
+                usdcAmount
+                fiatAmount
+                currency
+                placedAt
+                acceptedAt
+                paidAt
+                completedAt
+                cancelledAt
+                acceptedMerchantAddress
+                pubkey
+                encUpi
+                encMerchantUpi
+                actualUsdcAmount
+                actualFiatAmount
+                blockNumber
+                blockTimestamp
+                transactionHash
+              }
+            }
+        """
+
+
         // Mirrors p2pdotme-sdk/src/orders/internal/routing/subgraph/queries.ts
         const val CIRCLES_FOR_ROUTING_QUERY = """
             query CirclesForRouting(${'$'}currency: Bytes!) {

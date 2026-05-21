@@ -16,12 +16,13 @@ import kotlinx.serialization.json.jsonPrimitive
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.signer.EoaSigner
-import xyz.justzappit.evm.util.hexToBytes
-import xyz.justzappit.evm.util.toHex
 import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.OrderEvents
+import xyz.justzappit.offramp.p2p.OrderReadSource
+import xyz.justzappit.offramp.p2p.OrderSnapshot
 import xyz.justzappit.offramp.p2p.OrderStatus
+import xyz.justzappit.offramp.p2p.OrderType
 import xyz.justzappit.offramp.p2p.SubgraphClient
 import java.math.BigInteger
 import kotlin.random.Random
@@ -38,7 +39,6 @@ class OfframpOrchestratorTest {
 
     private val rpcRequestLog = mutableListOf<String>()
     private val rawTxLog = mutableListOf<String>()
-    private var getOrdersByIdResponses = ArrayDeque<String>()
     private var getAssignableResponse = ENCODED_ADDRESS_ARRAY_OF_ONE
 
     private val rpcEngine = MockEngine { request ->
@@ -73,12 +73,14 @@ class OfframpOrchestratorTest {
     private val rpc = BaseRpcClient(rpcHttp, "http://mock/rpc")
     private val signer = EoaSigner(rpc, chainId = network.chainId, account = account)
     private val subgraph = SubgraphClient(subgraphHttp, "http://mock/graph")
+    private val orderReader = ScriptedOrderReadSource()
     private val orchestrator = OfframpOrchestrator(
         rpc = rpc,
         signer = signer,
         account = account,
         network = network,
         subgraph = subgraph,
+        orderReader = orderReader,
         router = CircleRouter(random = Random(0), epsilon = 0.0),
         pollIntervalMs = 0,
         acceptanceTimeoutMs = 5_000,
@@ -93,10 +95,15 @@ class OfframpOrchestratorTest {
 
     @Test
     fun `happy path emits the full status sequence and ends in Completed`() = runTest {
-        getOrdersByIdResponses = ArrayDeque(
-            listOf(
-                synthOrderHex(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY),
-                synthOrderHex(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY),
+        orderReader.enqueue(
+            snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS),
+            snapshot(
+                status = OrderStatus.COMPLETED,
+                pubkey = MERCHANT_PUBKEY,
+                merchant = MERCHANT_ADDRESS,
+                actualFiatAmount = BigInteger.valueOf(445_000_000),
+                actualUsdcAmount = BigInteger.valueOf(5_062_500),
+                completedAtEpochSeconds = 1_779_999_999L,
             ),
         )
 
@@ -109,47 +116,27 @@ class OfframpOrchestratorTest {
         ).toList()
 
         assertIs<OfframpStatus.Idle>(statuses.first())
-        assertIs<OfframpStatus.Completed>(statuses.last())
         val completed = statuses.last() as OfframpStatus.Completed
         assertEquals(ORDER_ID, completed.orderId)
+        assertEquals(BigInteger.valueOf(445_000_000), completed.actualFiatAmount)
+        assertEquals(BigInteger.valueOf(5_062_500), completed.actualUsdcAmount)
+        assertEquals(1_779_999_999L, completed.completedAtEpochSeconds)
 
-        // Sequence sanity — every important state showed up in order.
         val classes = statuses.map { it::class.simpleName }
-        assertTrue(
-            classes.indexOf("Idle") <
-                classes.indexOf("SelectingCircle"),
-        )
-        assertTrue(
-            classes.indexOf("SelectingCircle") <
-                classes.indexOf("ApprovingUsdc"),
-        )
-        assertTrue(
-            classes.indexOf("ApprovingUsdc") <
-                classes.indexOf("PlacingOrder"),
-        )
-        assertTrue(
-            classes.indexOf("PlacingOrder") <
-                classes.indexOf("WaitingForMerchantAcceptance"),
-        )
-        assertTrue(
-            classes.indexOf("WaitingForMerchantAcceptance") <
-                classes.indexOf("SendingEncryptedUpi"),
-        )
-        assertTrue(
-            classes.indexOf("SendingEncryptedUpi") <
-                classes.indexOf("WaitingForCompletion"),
-        )
-        assertTrue(
-            classes.indexOf("WaitingForCompletion") <
-                classes.indexOf("Completed"),
-        )
+        assertTrue(classes.indexOf("Idle") < classes.indexOf("SelectingCircle"))
+        assertTrue(classes.indexOf("SelectingCircle") < classes.indexOf("ApprovingUsdc"))
+        assertTrue(classes.indexOf("ApprovingUsdc") < classes.indexOf("PlacingOrder"))
+        assertTrue(classes.indexOf("PlacingOrder") < classes.indexOf("WaitingForMerchantAcceptance"))
+        assertTrue(classes.indexOf("WaitingForMerchantAcceptance") < classes.indexOf("SendingEncryptedUpi"))
+        assertTrue(classes.indexOf("SendingEncryptedUpi") < classes.indexOf("WaitingForCompletion"))
+        assertTrue(classes.indexOf("WaitingForCompletion") < classes.indexOf("Completed"))
 
         // 3 broadcasts: approve, placeOrder, setSellOrderUpi.
         assertEquals(3, rawTxLog.size, "expected 3 broadcasts, got ${rawTxLog.size}")
     }
 
     @Test
-    fun `subgraph returning no circles surfaces as Failed`() = runTest {
+    fun `subgraph returning no circles surfaces as Failed with no orderId and SELECTING_CIRCLE step`() = runTest {
         nextSubgraphResponse = """{"data":{"circles":[]}}"""
 
         val statuses = orchestrator.run(
@@ -158,15 +145,15 @@ class OfframpOrchestratorTest {
                 usdcAmount = BigInteger.valueOf(5_000_000),
             ),
         ).toList()
-        val last = statuses.last()
-        assertIs<OfframpStatus.Failed>(last)
+        val last = assertIs<OfframpStatus.Failed>(statuses.last())
         assertEquals(null, last.orderId)
+        assertEquals(FailedStep.SELECTING_CIRCLE, last.step)
     }
 
     @Test
-    fun `merchant cancels order after acceptance window opens - reported as Failed`() = runTest {
-        getOrdersByIdResponses = ArrayDeque(
-            listOf(synthOrderHex(status = OrderStatus.CANCELLED, pubkey = "")),
+    fun `cancelled order returns Failed with orderId set + WAITING_FOR_ACCEPTANCE step`() = runTest {
+        orderReader.enqueue(
+            snapshot(status = OrderStatus.CANCELLED, pubkey = "", merchant = null),
         )
 
         val statuses = orchestrator.run(
@@ -175,34 +162,67 @@ class OfframpOrchestratorTest {
                 usdcAmount = BigInteger.valueOf(5_000_000),
             ),
         ).toList()
-        val last = statuses.last()
-        assertIs<OfframpStatus.Failed>(last)
+        val last = assertIs<OfframpStatus.Failed>(statuses.last())
         assertEquals(ORDER_ID, last.orderId)
+        assertEquals(FailedStep.WAITING_FOR_ACCEPTANCE, last.step)
         assertTrue(last.message.contains("cancelled", ignoreCase = true))
     }
 
+    private fun snapshot(
+        status: OrderStatus,
+        pubkey: String,
+        merchant: String?,
+        actualUsdcAmount: BigInteger? = null,
+        actualFiatAmount: BigInteger? = null,
+        completedAtEpochSeconds: Long? = null,
+    ) = OrderSnapshot(
+        orderId = ORDER_ID,
+        status = status,
+        orderType = OrderType.PAY,
+        circleId = BigInteger.ONE,
+        userAddress = account.address.lowercase(),
+        usdcAmount = BigInteger.valueOf(5_000_000),
+        fiatAmount = BigInteger.valueOf(445_000_000),
+        currencyHex = "0x494e520000000000000000000000000000000000000000000000000000000000",
+        acceptedMerchantAddress = merchant,
+        merchantPubKey = pubkey,
+        encryptedUserUpi = "",
+        encryptedMerchantUpi = "",
+        placedAtEpochSeconds = 1_779_000_000L,
+        acceptedAtEpochSeconds = if (status.onChain >= OrderStatus.ACCEPTED.onChain) 1_779_500_000L else null,
+        paidAtEpochSeconds = null,
+        completedAtEpochSeconds = completedAtEpochSeconds,
+        cancelledAtEpochSeconds = if (status == OrderStatus.CANCELLED) 1_779_500_000L else null,
+        actualUsdcAmount = actualUsdcAmount,
+        actualFiatAmount = actualFiatAmount,
+        placedTxHash = "0xtx2",
+        placedAtBlockNumber = 16L,
+        source = OrderSnapshot.Source.Subgraph,
+    )
+
+    private class ScriptedOrderReadSource : OrderReadSource {
+        private val queue = ArrayDeque<OrderSnapshot?>()
+        fun enqueue(vararg snapshots: OrderSnapshot?) {
+            snapshots.forEach { queue.addLast(it) }
+        }
+        override suspend fun fetchOrder(orderId: BigInteger): OrderSnapshot? =
+            if (queue.isNotEmpty()) queue.removeFirst() else null
+    }
+
     private fun receiptFor(payload: JsonObject): String {
-        // All broadcasts succeed and emit an OrderPlaced event for txHash matching placeOrder
         val txParam = payload["params"]!!.toString().substringAfter('"').substringBefore('"')
         return when (txParam) {
-            "0xtx2" -> placeOrderReceiptJson() // second broadcast = placeOrder
+            "0xtx2" -> placeOrderReceiptJson()
             else -> simpleSuccessReceiptJson(txParam)
         }
     }
 
     private fun ethCallResponse(payload: JsonObject): String {
-        // The data field's first 4 bytes identify the function selector.
         val params = payload["params"]!!.toString()
         return when {
-            // 0xcea99cd6 = getOrdersById
-            params.contains("0xcea99cd6") -> {
-                val next = getOrdersByIdResponses.removeFirst()
-                """{"jsonrpc":"2.0","id":1,"result":"$next"}"""
-            }
-            // 0x36b0ec9a = getAssignableMerchantsFromCircle
             params.contains("0x36b0ec9a") ->
                 """{"jsonrpc":"2.0","id":1,"result":"$getAssignableResponse"}"""
-            else -> error("Unexpected eth_call: $params")
+            else -> error("Unexpected eth_call (no longer poll getOrdersById on-chain): $params")
         }
     }
 
@@ -242,44 +262,6 @@ class OfframpOrchestratorTest {
         """.trimIndent()
     }
 
-    /** Builds a synthetic Order struct encoded as eth_call would return it. */
-    private fun synthOrderHex(status: OrderStatus, pubkey: String): String {
-        val WORD = 32
-        val headSlots = 25
-        val tupleHead = ByteArray(headSlots * WORD)
-
-        // Slot 5: acceptedMerchant — set when ACCEPTED+
-        if (status.onChain >= OrderStatus.ACCEPTED.onChain) {
-            val merchantBytes = "11".repeat(20).hexToBytes()
-            System.arraycopy(merchantBytes, 0, tupleHead, 5 * WORD + (WORD - 20), 20)
-        }
-
-        // Slot 11: status (uint8) — last byte of slot
-        tupleHead[12 * WORD - 1] = status.onChain.toByte()
-
-        // Slot 8: pubkey offset
-        val tupleTail: ByteArray
-        if (pubkey.isNotEmpty()) {
-            val tailOffset = headSlots * WORD
-            val offsetBytes = BigInteger.valueOf(tailOffset.toLong()).toByteArray()
-            System.arraycopy(offsetBytes, 0, tupleHead, 9 * WORD - offsetBytes.size, offsetBytes.size)
-            val pubkeyBytes = pubkey.toByteArray(Charsets.UTF_8)
-            val pad = if (pubkeyBytes.size % WORD == 0) 0 else WORD - (pubkeyBytes.size % WORD)
-            val tail = ByteArray(WORD + pubkeyBytes.size + pad)
-            val lenBytes = BigInteger.valueOf(pubkeyBytes.size.toLong()).toByteArray()
-            System.arraycopy(lenBytes, 0, tail, WORD - lenBytes.size, lenBytes.size)
-            System.arraycopy(pubkeyBytes, 0, tail, WORD, pubkeyBytes.size)
-            tupleTail = tail
-        } else {
-            tupleTail = ByteArray(0)
-        }
-
-        // Top-level offset = 0x20
-        val topOffset = ByteArray(WORD).also { it[WORD - 1] = 0x20.toByte() }
-        val all = topOffset + tupleHead + tupleTail
-        return "0x" + all.toHex()
-    }
-
     companion object {
         const val MNEMONIC =
             "abandon abandon abandon abandon abandon abandon " +
@@ -287,6 +269,7 @@ class OfframpOrchestratorTest {
         const val MERCHANT_PUBKEY =
             "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f" +
                 "70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1"
+        const val MERCHANT_ADDRESS = "0x1111111111111111111111111111111111111111"
         val ORDER_ID: BigInteger = BigInteger.valueOf(7)
 
         const val ENCODED_ADDRESS_ARRAY_OF_ONE =
@@ -304,4 +287,3 @@ class OfframpOrchestratorTest {
         """
     }
 }
-
