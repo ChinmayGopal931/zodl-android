@@ -4,20 +4,17 @@ import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.BuildConfig
 import co.electriccoin.zcash.ui.common.usecase.GetUpiOfframpRateUseCase
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.okhttp.OkHttp
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.serialization.kotlinx.json.json
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.rpc.RpcHttpClient
 import xyz.justzappit.evm.signer.EoaSigner
 import xyz.justzappit.offramp.account.DevOfframpAccountProvider
 import xyz.justzappit.offramp.account.OfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.config.P2pNetworks
-import java.util.Locale
 import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.FallbackOrderReader
@@ -25,15 +22,12 @@ import xyz.justzappit.offramp.p2p.OnChainOrderReader
 import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.SubgraphClient
 import xyz.justzappit.offramp.p2p.SubgraphOrderReader
+import java.util.Locale
 
 private const val HTTP_CLIENT_QUALIFIER = "offramp_http"
 
 val offrampModule = module {
-    single<HttpClient>(named(HTTP_CLIENT_QUALIFIER)) {
-        HttpClient(OkHttp) {
-            install(ContentNegotiation) { json() }
-        }
-    }
+    single<HttpClient>(named(HTTP_CLIENT_QUALIFIER)) { RpcHttpClient.create() }
     single<P2pConfigProvider> {
         when (BuildConfig.P2P_NETWORK.lowercase(Locale.ROOT)) {
             P2pNetworks.MAINNET_NAME -> P2pConfigProvider(
