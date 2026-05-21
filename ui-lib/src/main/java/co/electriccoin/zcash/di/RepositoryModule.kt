@@ -29,8 +29,15 @@ import co.electriccoin.zcash.ui.common.repository.WalletSnapshotRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepository
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepositoryImpl
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
+import xyz.justzappit.offramp.p2p.CircleRouter
+import xyz.justzappit.offramp.p2p.FallbackOrderReader
+import xyz.justzappit.offramp.p2p.OnChainOrderReader
+import xyz.justzappit.offramp.p2p.OrderReadSource
+import xyz.justzappit.offramp.p2p.SubgraphOrderReader
 
 val repositoryModule =
     module {
@@ -48,4 +55,30 @@ val repositoryModule =
         singleOf(::ApplicationStateRepositoryImpl) bind ApplicationStateRepository::class
         singleOf(::SwapRepositoryImpl) bind SwapRepository::class
         singleOf(::EphemeralAddressRepositoryImpl) bind EphemeralAddressRepository::class
+
+        // UPI offramp data sources and orchestrator.
+        single { CircleRouter() }
+        single { SubgraphOrderReader(subgraph = get()) }
+        single { OnChainOrderReader(rpc = get(), network = get()) }
+        single<OrderReadSource> {
+            FallbackOrderReader(
+                primary = get<SubgraphOrderReader>(),
+                fallback = get<OnChainOrderReader>(),
+                logger = { msg, cause ->
+                    val warn: (String, Throwable?) -> Unit = get(named("offramp_warn"))
+                    warn(msg, cause)
+                },
+            )
+        }
+        factory {
+            OfframpOrchestrator(
+                rpc = get(),
+                signer = get(),
+                account = get(),
+                network = get(),
+                subgraph = get(),
+                orderReader = get(),
+                router = get(),
+            )
+        }
     }

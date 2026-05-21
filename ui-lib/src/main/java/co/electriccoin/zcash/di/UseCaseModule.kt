@@ -48,6 +48,7 @@ import co.electriccoin.zcash.ui.common.usecase.GetSlippageUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSupportUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSwapAssetsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSwapStatusUseCase
+import co.electriccoin.zcash.ui.common.usecase.GetUpiOfframpRateUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetTotalSpendableBalanceUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetTransactionDetailByIdUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetTransactionFiltersUseCase
@@ -288,4 +289,7 @@ val useCaseModule =
         factoryOf(::GetSwapStatusUseCase)
         factoryOf(::ExecuteDebugDBQueryUseCase)
         factoryOf(::SwapSupportMapper)
+
+        // UPI offramp use cases.
+        factoryOf(::GetUpiOfframpRateUseCase)
     }
