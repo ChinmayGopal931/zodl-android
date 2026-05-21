@@ -50,6 +50,8 @@ import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsVM
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsVM
 import co.electriccoin.zcash.ui.screen.more.MoreVM
 import co.electriccoin.zcash.ui.screen.offramp.OfframpVM
+import co.electriccoin.zcash.ui.screen.swap.upi.UpiOfframpVM
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressVM
 import co.electriccoin.zcash.ui.screen.onboarding.OnboardingSecurityViewModel
 import co.electriccoin.zcash.ui.screen.qrcode.QrCodeVM
 import co.electriccoin.zcash.ui.screen.receive.ReceiveVM
@@ -171,6 +173,8 @@ val viewModelModule =
         viewModelOf(::SwapAssetPickerVM)
         viewModelOf(::SwapSlippageVM)
         viewModelOf(::SwapVM)
+        viewModelOf(::UpiOfframpVM)
+        viewModelOf(::UpiOfframpProgressVM)
         viewModelOf(::UnifiedSendViewModel)
         viewModelOf(::SwapQuoteVM)
         viewModelOf(::ScanGenericAddressVM)

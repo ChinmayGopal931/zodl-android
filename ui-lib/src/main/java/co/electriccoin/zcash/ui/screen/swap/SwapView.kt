@@ -96,6 +96,7 @@ internal fun SwapView(
     state: SwapState,
     appBarState: ZashiMainTopAppBarState,
     onSideEffect: (amountFocusRequester: FocusRequester) -> Unit = { },
+    embeddedInTabHost: Boolean = false,
 ) {
     val amountFocusRequester = remember { FocusRequester() }
     val c = ZappTheme.colors
@@ -105,15 +106,25 @@ internal fun SwapView(
             Modifier
                 .fillMaxSize()
                 .background(c.bg)
-                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
+                .then(
+                    if (embeddedInTabHost) {
+                        Modifier
+                    } else {
+                        Modifier.windowInsetsPadding(
+                            WindowInsets.statusBars.union(WindowInsets.displayCutout),
+                        )
+                    },
+                ),
     ) {
         // ── Header ──────────────────────────────────────────────────────────
-        ZappScreenHeader(
-            title = stringResource(R.string.swap_title),
-            right = {
-                ZashiIconButton(state.swapInfoButton)
-            },
-        )
+        if (!embeddedInTabHost) {
+            ZappScreenHeader(
+                title = stringResource(R.string.swap_title),
+                right = {
+                    ZashiIconButton(state.swapInfoButton)
+                },
+            )
+        }
 
         // ── Scrollable body ─────────────────────────────────────────────────
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {

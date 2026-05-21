@@ -76,4 +76,37 @@
     <string name="swap_deposit_info_step_2">Envía el monto exacto del activo que se muestra. Enviar menos resultará en un reembolso.</string>
     <string name="swap_deposit_info_step_3">Verifica que estás enviando el activo correcto en la red correcta (por ej., USDC en Solana).</string>
     <string name="swap_deposit_info_step_4">Es mejor enviar desde una wallet que sea tuya. Enviar desde un exchange puede causar demoras o reembolsos.</string>
+
+    <!-- Swap / Offramp tab toggle -->
+    <string name="swap_tab_swap">Swap</string>
+    <string name="swap_tab_offramp">Offramp</string>
+
+    <!-- UPI Offramp -->
+    <string name="upi_offramp_you_send">Envías</string>
+    <string name="upi_offramp_recipient_gets">El destinatario recibe</string>
+    <string name="upi_offramp_token_usdc">USDC</string>
+    <string name="upi_offramp_token_inr">INR</string>
+    <string name="upi_offramp_rate_label">1 USDC ≈ ₹%1$s (estimado)</string>
+    <string name="upi_offramp_upi_id_label">UPI ID</string>
+    <string name="upi_offramp_upi_id_placeholder">comercio@banco</string>
+    <string name="upi_offramp_estimate_disclaimer">Estimado. El monto final se fija cuando el comerciante acepta.</string>
+    <string name="upi_offramp_error_above_cap">Los montos superiores a $99 USDC requieren KYC y aún no son compatibles.</string>
+    <string name="upi_offramp_error_invalid_upi">Eso no parece un identificador UPI (esperaba algo como nombre@banco).</string>
+    <string name="upi_offramp_send_button">Enviar</string>
+
+    <string name="upi_offramp_progress_title_in_progress">Enviando al comerciante</string>
+    <string name="upi_offramp_progress_title_completed">Pago enviado</string>
+    <string name="upi_offramp_progress_title_failed">Algo salió mal</string>
+    <string name="upi_offramp_progress_subtitle_recipient">Destinatario: %1$s</string>
+    <string name="upi_offramp_progress_subtitle_completed">El comerciante confirmó la transferencia UPI.</string>
+    <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
+    <string name="upi_offramp_progress_done_button">Listo</string>
+    <string name="upi_offramp_progress_close_button">Cerrar</string>
+    <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
+    <string name="upi_offramp_step_selecting_circle">Eligiendo grupo de comerciantes</string>
+    <string name="upi_offramp_step_approve">Aprobando USDC</string>
+    <string name="upi_offramp_step_place_order">Creando la orden</string>
+    <string name="upi_offramp_step_wait_acceptance">Esperando que el comerciante acepte</string>
+    <string name="upi_offramp_step_send_upi">Enviando UPI cifrado</string>
+    <string name="upi_offramp_step_wait_completion">Esperando el pago del comerciante</string>
 </resources>

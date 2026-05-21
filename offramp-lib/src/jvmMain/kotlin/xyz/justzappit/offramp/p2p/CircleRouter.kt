@@ -1,0 +1,88 @@
+package xyz.justzappit.offramp.p2p
+
+import java.math.BigInteger
+import kotlin.random.Random
+
+/**
+ * Epsilon-greedy circle selector, 1:1 port of the SDK's `routing.ts`.
+ *
+ * Tries up to MAX_VALIDATION_ATTEMPTS selections; on each pick, calls `validateCircle`
+ * to confirm on-chain eligibility (typically `getAssignableMerchantsFromCircle` returning
+ * a non-empty merchant list). On validation failure, drops the circle and retries.
+ *
+ * Thread-safe via the injected [Random]; pass a seeded Random in tests for determinism.
+ */
+class CircleRouter(
+    private val random: Random = Random.Default,
+    private val epsilon: Double = EPSILON,
+    private val recoveryScale: Double = RECOVERY_SCALE,
+    private val bootstrapMaxWeight: Double = BOOTSTRAP_MAX_WEIGHT,
+    private val maxValidationAttempts: Int = MAX_VALIDATION_ATTEMPTS,
+) {
+    fun circleWeight(c: CircleForRouting): Double {
+        val score = c.metrics.score
+        return when (c.metrics.circleStatus) {
+            "paused" -> score * recoveryScale
+            "bootstrap" -> minOf(score, bootstrapMaxWeight)
+            else -> score
+        }
+    }
+
+    fun filterEligible(circles: List<CircleForRouting>, currency: String): List<CircleForRouting> =
+        circles.filter { it.currency.equals(currency, ignoreCase = true) }
+
+    fun selectCircle(eligible: List<CircleForRouting>): CircleForRouting? {
+        if (eligible.isEmpty()) return null
+        val active = eligible.filter { it.metrics.circleStatus == "active" }
+
+        if (random.nextDouble() < epsilon) {
+            return weightedRandomChoice(eligible, eligible.map(::circleWeight))
+        }
+        if (active.isEmpty()) {
+            return weightedRandomChoice(eligible, eligible.map(::circleWeight))
+        }
+        return weightedRandomChoice(active, active.map { it.metrics.score })
+    }
+
+    suspend fun selectCircleForOrder(
+        circles: List<CircleForRouting>,
+        orderCurrency: String,
+        validateCircle: suspend (BigInteger) -> Boolean,
+    ): BigInteger {
+        val pool = filterEligible(circles, orderCurrency).toMutableList()
+        if (pool.isEmpty()) error("No eligible circles found for currency '$orderCurrency'")
+
+        repeat(maxValidationAttempts) {
+            if (pool.isEmpty()) error("No eligible circles found")
+            val chosen = selectCircle(pool) ?: error("No eligible circles found")
+            val circleId = BigInteger(chosen.circleId)
+            val isValid = runCatching { validateCircle(circleId) }.getOrElse { false }
+            if (isValid) return circleId
+            pool.removeAll { it.circleId == chosen.circleId }
+        }
+        error("Exhausted ${maxValidationAttempts} validation attempts without a valid circle")
+    }
+
+    private fun weightedRandomChoice(
+        circles: List<CircleForRouting>,
+        weights: List<Double>,
+    ): CircleForRouting {
+        val total = weights.sum()
+        if (total <= 0.0) {
+            return circles[random.nextInt(circles.size)]
+        }
+        var pick = random.nextDouble() * total
+        for (i in circles.indices) {
+            pick -= weights[i]
+            if (pick <= 0.0) return circles[i]
+        }
+        return circles.last()
+    }
+
+    companion object {
+        const val EPSILON = 0.25
+        const val RECOVERY_SCALE = 0.3
+        const val BOOTSTRAP_MAX_WEIGHT = 25.0
+        const val MAX_VALIDATION_ATTEMPTS = 3
+    }
+}

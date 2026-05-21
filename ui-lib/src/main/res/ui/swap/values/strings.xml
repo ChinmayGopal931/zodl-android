@@ -83,4 +83,38 @@
     <string name="swap_deposit_info_step_2">Send the exact amount of the asset displayed. Sending less will result in a refund.</string>
     <string name="swap_deposit_info_step_3">Double-check that you are sending the correct asset on the correct network (e.g., USDC on Solana).</string>
     <string name="swap_deposit_info_step_4">It’s best to send from a wallet you own. Sending from an exchange may result in delays or refunds.</string>
+
+    <!-- Swap / Offramp tab toggle -->
+    <string name="swap_tab_swap">Swap</string>
+    <string name="swap_tab_offramp">Offramp</string>
+
+    <!-- UPI Offramp form -->
+    <string name="upi_offramp_you_send">You send</string>
+    <string name="upi_offramp_recipient_gets">Recipient gets</string>
+    <string name="upi_offramp_token_usdc">USDC</string>
+    <string name="upi_offramp_token_inr">INR</string>
+    <string name="upi_offramp_rate_label">1 USDC ≈ ₹%1$s (estimated)</string>
+    <string name="upi_offramp_upi_id_label">UPI ID</string>
+    <string name="upi_offramp_upi_id_placeholder">merchant@upi</string>
+    <string name="upi_offramp_estimate_disclaimer">Estimated. Final amount locks in when the merchant accepts.</string>
+    <string name="upi_offramp_error_above_cap">Amounts above $99 USDC require KYC and aren\'t supported yet.</string>
+    <string name="upi_offramp_error_invalid_upi">That doesn\'t look like a UPI handle (expected something like name@bank).</string>
+    <string name="upi_offramp_send_button">Send</string>
+
+    <!-- UPI Offramp progress screen -->
+    <string name="upi_offramp_progress_title_in_progress">Sending to merchant</string>
+    <string name="upi_offramp_progress_title_completed">Payment sent</string>
+    <string name="upi_offramp_progress_title_failed">Something went wrong</string>
+    <string name="upi_offramp_progress_subtitle_recipient">Recipient: %1$s</string>
+    <string name="upi_offramp_progress_subtitle_completed">The merchant has confirmed the UPI transfer.</string>
+    <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
+    <string name="upi_offramp_progress_done_button">Done</string>
+    <string name="upi_offramp_progress_close_button">Close</string>
+    <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
+    <string name="upi_offramp_step_selecting_circle">Picking a merchant pool</string>
+    <string name="upi_offramp_step_approve">Approving USDC</string>
+    <string name="upi_offramp_step_place_order">Placing the order</string>
+    <string name="upi_offramp_step_wait_acceptance">Waiting for merchant to accept</string>
+    <string name="upi_offramp_step_send_upi">Sending encrypted UPI</string>
+    <string name="upi_offramp_step_wait_completion">Waiting for merchant payment</string>
 </resources>

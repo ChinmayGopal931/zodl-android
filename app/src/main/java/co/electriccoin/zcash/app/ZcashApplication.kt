@@ -18,6 +18,7 @@ import co.electriccoin.zcash.di.metadataModule
 import co.electriccoin.zcash.di.providerModule
 import co.electriccoin.zcash.di.repositoryModule
 import co.electriccoin.zcash.di.useCaseModule
+import co.electriccoin.zcash.di.offrampModule
 import co.electriccoin.zcash.di.viewModelModule
 import co.electriccoin.zcash.di.zappMessagingModule
 import co.electriccoin.zcash.spackle.StrictModeCompat
@@ -74,7 +75,8 @@ class ZcashApplication : CoroutineApplication() {
                 useCaseModule,
                 mapperModule,
                 viewModelModule,
-                zappMessagingModule
+                zappMessagingModule,
+                offrampModule
             )
         }
 

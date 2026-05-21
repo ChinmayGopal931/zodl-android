@@ -136,6 +136,8 @@ import co.electriccoin.zcash.ui.screen.signkeystonetransaction.SignKeystoneTrans
 import co.electriccoin.zcash.ui.screen.signkeystonetransaction.SignKeystoneTransactionScreen
 import co.electriccoin.zcash.ui.screen.swap.SwapArgs
 import co.electriccoin.zcash.ui.screen.swap.SwapScreen
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressScreen
 import co.electriccoin.zcash.ui.screen.swap.ab.AddSwapABContactArgs
 import co.electriccoin.zcash.ui.screen.swap.ab.AddSwapABContactScreen
 import co.electriccoin.zcash.ui.screen.swap.ab.SelectABSwapRecipientArgs
@@ -278,6 +280,7 @@ fun NavGraphBuilder.walletNavGraph(
         dialogComposable<SwapAssetPickerArgs> { SwapAssetPickerScreen(it.toRoute()) }
         dialogComposable<SwapBlockchainPickerArgs> { SwapBlockchainPickerScreen(it.toRoute()) }
         composable<SwapArgs> { SwapScreen() }
+        composable<UpiOfframpProgressArgs> { UpiOfframpProgressScreen(it.toRoute()) }
         dialogComposable<SwapSlippageArgs> { SwapSlippageScreen(it.toRoute()) }
         dialogComposable<SwapInfoArgs> { SwapInfoScreen() }
         dialogComposable<DepositSwapInfoArgs> { DepositSwapInfoScreen() }

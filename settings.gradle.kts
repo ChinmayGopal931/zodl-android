@@ -379,6 +379,10 @@ include("ui-integration-test")
 include("ui-lib")
 include("ui-screenshot-test")
 
+// UPI offramp: EVM primitives + p2p.me protocol (pure-JVM KMP, unit-testable on host)
+include("evm-lib")
+include("offramp-lib")
+
 // ZappMessaging P2P modules (external references)
 include(":zappmessaging")
 project(":zappmessaging").projectDir = file("../zappMessaging/android")
