@@ -69,6 +69,12 @@ object DiamondCalls {
             listOf(AbiUint(orderId)),
         )
 
+    fun getPriceConfigCalldata(currency: String): ByteArray =
+        AbiEncoder.encodeFunctionCall(
+            "getPriceConfig(bytes32)",
+            listOf(AbiEncoder.bytes32String(currency)),
+        )
+
     fun getAssignableMerchantsFromCircleCalldata(
         circleId: BigInteger,
         assignUpTo: BigInteger,

@@ -65,6 +65,27 @@ const getOrdersByIdAbi = [
 	},
 ] as const;
 
+const getPriceConfigAbi = [
+	{
+		type: "function",
+		name: "getPriceConfig",
+		stateMutability: "view",
+		inputs: [{ name: "currency", type: "bytes32" }],
+		outputs: [
+			{
+				name: "",
+				type: "tuple",
+				components: [
+					{ name: "buyPrice", type: "uint256" },
+					{ name: "sellPrice", type: "uint256" },
+					{ name: "buyPriceOffset", type: "uint256" },
+					{ name: "baseSpread", type: "uint256" },
+				],
+			},
+		],
+	},
+] as const;
+
 const getAssignableMerchantsFromCircleAbi = [
 	{
 		type: "function",
@@ -124,6 +145,12 @@ out.getOrdersById = encodeFunctionData({
 	args: [42n],
 });
 
+out.getPriceConfig = encodeFunctionData({
+	abi: getPriceConfigAbi,
+	functionName: "getPriceConfig",
+	args: [stringToHex("INR", { size: 32 })],
+});
+
 out.getAssignableMerchantsFromCircle = encodeFunctionData({
 	abi: getAssignableMerchantsFromCircleAbi,
 	functionName: "getAssignableMerchantsFromCircle",
@@ -147,6 +174,7 @@ out._selector_placeOrder = selector(
 );
 out._selector_setSellOrderUpi = selector("setSellOrderUpi(uint256,string,uint256)");
 out._selector_getOrdersById = selector("getOrdersById(uint256)");
+out._selector_getPriceConfig = selector("getPriceConfig(bytes32)");
 out._selector_getAssignableMerchantsFromCircle = selector(
 	"getAssignableMerchantsFromCircle(uint256,uint256,bytes32,address,uint256,uint256,int256,uint256)",
 );

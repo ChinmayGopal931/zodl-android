@@ -52,6 +52,12 @@ class ViemCalldataParityTest {
     }
 
     @Test
+    fun `getPriceConfig calldata matches viem`() {
+        val got = DiamondCalls.getPriceConfigCalldata("INR").toHex()
+        assertEquals(VIEM_GET_PRICE_CONFIG.removePrefix("0x"), got)
+    }
+
+    @Test
     fun `getAssignableMerchantsFromCircle calldata matches viem`() {
         val got = DiamondCalls.getAssignableMerchantsFromCircleCalldata(
             circleId = BigInteger.ONE,
@@ -111,6 +117,9 @@ class ViemCalldataParityTest {
 
         private const val VIEM_GET_ORDERS_BY_ID =
             "0xcea99cd6000000000000000000000000000000000000000000000000000000000000002a"
+
+        private const val VIEM_GET_PRICE_CONFIG =
+            "0x67c84efd494e520000000000000000000000000000000000000000000000000000000000"
 
         private const val VIEM_GET_ASSIGNABLE =
             "0x36b0ec9a" +

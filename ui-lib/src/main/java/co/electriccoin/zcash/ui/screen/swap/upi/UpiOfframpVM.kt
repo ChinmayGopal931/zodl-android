@@ -3,15 +3,14 @@ package co.electriccoin.zcash.ui.screen.swap.upi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.IconButtonState
-import co.electriccoin.zcash.ui.design.component.InnerTextFieldState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
 import co.electriccoin.zcash.ui.design.component.TextFieldState
-import co.electriccoin.zcash.ui.design.component.TextSelection
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
@@ -21,20 +20,28 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.offramp.config.P2pNetworkConfig
+import xyz.justzappit.offramp.p2p.DiamondCalls
+import xyz.justzappit.offramp.p2p.PriceConfigDecoder
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 internal class UpiOfframpVM(
     private val navigationRouter: NavigationRouter,
+    private val rpc: BaseRpcClient,
+    private val network: P2pNetworkConfig,
 ) : ViewModel() {
     private val primary = MutableStateFlow(UpiOfframpAmountSide.INR)
     private val usdcState = MutableStateFlow(NumberTextFieldInnerState())
     private val inrState = MutableStateFlow(NumberTextFieldInnerState())
     private val upiText = MutableStateFlow("")
+    private val rate = MutableStateFlow(FALLBACK_RATE)
 
     val state: StateFlow<UpiOfframpState> =
-        combine(primary, usdcState, inrState, upiText) { side, usdc, inr, upi ->
-            buildState(side, usdc, inr, upi)
+        combine(primary, usdcState, inrState, upiText, rate) { side, usdc, inr, upi, currentRate ->
+            buildState(side, usdc, inr, upi, currentRate)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
@@ -43,23 +50,61 @@ internal class UpiOfframpVM(
                 usdc = usdcState.value,
                 inr = inrState.value,
                 upi = upiText.value,
+                currentRate = rate.value,
             ),
         )
+
+    init {
+        viewModelScope.launch { fetchPriceConfig() }
+    }
+
+    private suspend fun fetchPriceConfig() {
+        runCatching {
+            val raw = rpc.ethCall(
+                to = network.diamondAddress,
+                data = DiamondCalls.getPriceConfigCalldata(CURRENCY),
+            )
+            PriceConfigDecoder.decode(raw).sellPriceAsRate()
+        }.onSuccess { newRate ->
+            Twig.info { "UpiOfframpVM: live sellPrice for $CURRENCY = $newRate" }
+            rate.value = newRate
+            rederiveAfterRateChange(newRate)
+        }.onFailure { cause ->
+            Twig.warn(cause) { "UpiOfframpVM: getPriceConfig failed, falling back to $FALLBACK_RATE" }
+        }
+    }
+
+    private fun rederiveAfterRateChange(newRate: BigDecimal) {
+        when (primary.value) {
+            UpiOfframpAmountSide.USDC -> usdcState.value.amount?.let { usdc ->
+                inrState.value = NumberTextFieldInnerState.fromAmount(
+                    usdc.multiply(newRate).setScale(INR_DECIMALS, RoundingMode.HALF_UP),
+                )
+            }
+            UpiOfframpAmountSide.INR -> inrState.value.amount?.let { inr ->
+                usdcState.value = NumberTextFieldInnerState.fromAmount(
+                    inr.divide(newRate, USDC_DECIMALS, RoundingMode.HALF_UP),
+                )
+            }
+        }
+    }
 
     private fun buildState(
         side: UpiOfframpAmountSide,
         usdc: NumberTextFieldInnerState,
         inr: NumberTextFieldInnerState,
         upi: String,
+        currentRate: BigDecimal,
     ): UpiOfframpState {
         val usdcAmount = usdc.amount
         val validationError = validate(usdcAmount, upi)
+        val rateDisplay = currentRate.stripTrailingZeros().toPlainString()
         return UpiOfframpState(
             primary = side,
             usdcInput = NumberTextFieldState(innerState = usdc, onValueChange = ::onUsdcChange),
             inrInput = NumberTextFieldState(innerState = inr, onValueChange = ::onInrChange),
             onSwapSides = ::onSwapSides,
-            rateText = stringRes(R.string.upi_offramp_rate_label, RATE_DISPLAY_STRING),
+            rateText = stringRes(R.string.upi_offramp_rate_label, rateDisplay),
             upiField = TextFieldState(stringRes(upi)) { newValue -> onUpiChange(newValue) },
             scanButton = IconButtonState(
                 icon = R.drawable.qr_code_icon,
@@ -92,7 +137,8 @@ internal class UpiOfframpVM(
     private fun onUsdcChange(next: NumberTextFieldInnerState) {
         primary.value = UpiOfframpAmountSide.USDC
         usdcState.value = next
-        val derivedInr = next.amount?.multiply(RATE_INR_PER_USDC)?.setScale(INR_DECIMALS, RoundingMode.HALF_UP)
+        val currentRate = rate.value
+        val derivedInr = next.amount?.multiply(currentRate)?.setScale(INR_DECIMALS, RoundingMode.HALF_UP)
         inrState.value = if (derivedInr == null) {
             NumberTextFieldInnerState()
         } else {
@@ -103,7 +149,8 @@ internal class UpiOfframpVM(
     private fun onInrChange(next: NumberTextFieldInnerState) {
         primary.value = UpiOfframpAmountSide.INR
         inrState.value = next
-        val derivedUsdc = next.amount?.divide(RATE_INR_PER_USDC, USDC_DECIMALS, RoundingMode.HALF_UP)
+        val currentRate = rate.value
+        val derivedUsdc = next.amount?.divide(currentRate, USDC_DECIMALS, RoundingMode.HALF_UP)
         usdcState.value = if (derivedUsdc == null) {
             NumberTextFieldInnerState()
         } else {
@@ -136,15 +183,17 @@ internal class UpiOfframpVM(
             UpiOfframpProgressArgs(
                 recipientUpi = upi,
                 usdcAmountMicro = usdcMicro.toString(),
-                currency = "INR",
+                currency = CURRENCY,
             ),
         )
     }
 
     companion object {
-        // Hardcoded rate for v1 — TODO read getPriceConfig(currency) on-chain or a Coingecko fallback.
-        private val RATE_INR_PER_USDC: BigDecimal = BigDecimal("85.0")
-        private const val RATE_DISPLAY_STRING: String = "85"
+        private const val CURRENCY = "INR"
+
+        // Matches the official FE behaviour: if the on-chain price read fails, fall back to 85.
+        // See user-app-client/src/pages/pay/index.tsx:259 (priceConfig?.sellPrice ?? 85).
+        private val FALLBACK_RATE: BigDecimal = BigDecimal("85")
 
         // v1 spec: PAY orders below $99 USDC bypass the on-chain RP gate.
         private val USDC_CAP: BigDecimal = BigDecimal("99")
