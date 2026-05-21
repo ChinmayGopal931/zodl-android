@@ -9,6 +9,7 @@ import xyz.justzappit.evm.abi.AbiEncoder
 import xyz.justzappit.evm.crypto.Ecies
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.rpc.RpcException
 import xyz.justzappit.evm.signer.EoaSigner
 import xyz.justzappit.evm.util.toHex
 import xyz.justzappit.offramp.config.P2pNetworkConfig
@@ -143,20 +144,7 @@ class OfframpOrchestrator(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            val raw = e.message
-            val selector = KnownReverts.extractSelector(raw)
-            val decoded = KnownReverts.explain(selector) ?: KnownReverts.decodeErrorString(raw)
-            emit(
-                OfframpStatus.Failed(
-                    message = raw ?: e::class.simpleName ?: "Unknown error",
-                    orderId = orderId,
-                    step = currentStep,
-                    txHash = lastTxHash,
-                    revertSelector = selector,
-                    decodedReason = decoded,
-                    cause = e,
-                ),
-            )
+            emit(buildFailedStatus(e, orderId, currentStep, lastTxHash))
         }
     }
 
@@ -234,6 +222,31 @@ class OfframpOrchestrator(
             delay(pollIntervalMs)
         }
         error(timeoutMessage)
+    }
+
+    private fun buildFailedStatus(
+        error: Throwable,
+        orderId: BigInteger?,
+        step: FailedStep,
+        lastTxHash: String?,
+    ): OfframpStatus.Failed = when (error) {
+        is RpcException.ExecutionReverted -> OfframpStatus.Failed(
+            message = error.message ?: "execution reverted",
+            orderId = orderId,
+            step = step,
+            txHash = lastTxHash,
+            revertSelector = error.selector,
+            knownRevertReason = KnownReverts.explain(error),
+            solidityErrorString = error.solidityErrorString,
+            cause = error,
+        )
+        else -> OfframpStatus.Failed(
+            message = error.message ?: error::class.simpleName ?: "Unknown error",
+            orderId = orderId,
+            step = step,
+            txHash = lastTxHash,
+            cause = error,
+        )
     }
 
     companion object {

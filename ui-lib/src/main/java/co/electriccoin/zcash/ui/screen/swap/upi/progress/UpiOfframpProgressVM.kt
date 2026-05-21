@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.FailedStep
+import xyz.justzappit.offramp.orchestrator.KnownRevertReason
 import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
@@ -129,12 +130,18 @@ internal class UpiOfframpProgressVM(
         val rawForUi = failed.message.take(MAX_RAW_MESSAGE_LEN)
         return UpiOfframpFailureCard(
             stepLabel = stepLabel(failed.step),
-            decodedReason = failed.decodedReason?.let(::stringRes),
-            rawSelector = failed.revertSelector,
+            decodedReason = decodedReason(failed),
+            rawSelector = failed.revertSelector?.hex,
             rawMessage = rawForUi,
             txHash = failed.txHash,
             txExplorerUrl = failed.txHash?.let { explorerUrl(txPath(it)) },
         )
+    }
+
+    private fun decodedReason(failed: OfframpStatus.Failed): StringResource? = when (val reason = failed.knownRevertReason) {
+        KnownRevertReason.InsufficientReputation -> stringRes(R.string.upi_offramp_revert_insufficient_reputation)
+        KnownRevertReason.NoMerchantLiquidity -> stringRes(R.string.upi_offramp_revert_no_merchant_liquidity)
+        null -> failed.solidityErrorString?.let(::stringRes)
     }
 
     private fun buildSteps(status: OfframpStatus): List<UpiOfframpStep> {

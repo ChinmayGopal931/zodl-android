@@ -127,4 +127,7 @@
     <string name="upi_offramp_detail_merchant">Comerciante %1$s</string>
     <string name="upi_offramp_failure_header">Falló en: %1$s</string>
     <string name="upi_offramp_failure_selector">Selector de revert %1$s</string>
+
+    <string name="upi_offramp_revert_insufficient_reputation">Esta cuenta aún no tiene suficientes puntos de reputación. En Sepolia, solicita un RP grant al equipo de p2p.me; en mainnet, completa la verificación social o KYC.</string>
+    <string name="upi_offramp_revert_no_merchant_liquidity">Ningún comerciante tiene liquidez en fiat para esta orden en el círculo seleccionado. Prueba un monto menor, espera a que los comerciantes carguen liquidez, o reintenta para elegir otro círculo.</string>
 </resources>

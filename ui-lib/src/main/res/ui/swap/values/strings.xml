@@ -136,4 +136,8 @@
     <string name="upi_offramp_detail_merchant">Merchant %1$s</string>
     <string name="upi_offramp_failure_header">Failed during: %1$s</string>
     <string name="upi_offramp_failure_selector">Revert selector %1$s</string>
+
+    <!-- UPI Offramp known revert reasons (mapped from KnownRevertReason in offramp-lib) -->
+    <string name="upi_offramp_revert_insufficient_reputation">This account doesn\'t have enough reputation points yet. On Sepolia, request an RP grant from the p2p.me team; on mainnet, complete social or KYC verification.</string>
+    <string name="upi_offramp_revert_no_merchant_liquidity">No merchant has fiat liquidity for this order in the selected circle. Try a smaller amount, wait for merchants to fund, or retry to pick a different circle.</string>
 </resources>

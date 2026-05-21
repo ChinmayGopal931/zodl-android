@@ -1,5 +1,6 @@
 package xyz.justzappit.offramp.orchestrator
 
+import xyz.justzappit.evm.abi.Selector4
 import xyz.justzappit.offramp.p2p.OrderStatus
 import java.math.BigInteger
 
@@ -54,8 +55,9 @@ sealed class OfframpStatus {
         val orderId: BigInteger?,
         val step: FailedStep,
         val txHash: String? = null,
-        val revertSelector: String? = null,
-        val decodedReason: String? = null,
+        val revertSelector: Selector4? = null,
+        val knownRevertReason: KnownRevertReason? = null,
+        val solidityErrorString: String? = null,
         val cause: Throwable? = null,
     ) : OfframpStatus()
 }

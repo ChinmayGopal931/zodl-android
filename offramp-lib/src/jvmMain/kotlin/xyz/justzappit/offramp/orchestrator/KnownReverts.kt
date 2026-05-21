@@ -1,54 +1,16 @@
 package xyz.justzappit.offramp.orchestrator
 
-object KnownReverts {
+import xyz.justzappit.evm.abi.Selector4
+import xyz.justzappit.evm.rpc.RpcException
 
-    private val SELECTOR_LOOKUP: Map<String, String> = mapOf(
-        "0x91da284f" to
-            "Insufficient reputation points. BUY orders (and possibly PAY orders for fresh " +
-            "addresses) require an RP grant from the p2p.me team on Sepolia, or social/KYC " +
-            "verification on mainnet.",
-        "0x5d04ff4c" to
-            "No merchant has fiat liquidity for this order in the selected circle. Try a " +
-            "smaller amount, wait for merchants to fund, or retry to pick a different circle.",
-        "0x08c379a0" to
-            // Standard Solidity Error(string) — actual reason follows as ABI-encoded string.
-            "Contract revert with a string reason (see decodedReason for the message).",
+object KnownReverts {
+    private val SELECTOR_LOOKUP: Map<Selector4, KnownRevertReason> = mapOf(
+        Selector4.fromHex("0x91da284f") to KnownRevertReason.InsufficientReputation,
+        Selector4.fromHex("0x5d04ff4c") to KnownRevertReason.NoMerchantLiquidity,
     )
 
-    fun extractSelector(rawError: String?): String? {
-        if (rawError.isNullOrBlank()) return null
-        val match = SELECTOR_PATTERN.find(rawError) ?: return null
-        return match.value.lowercase()
-    }
+    fun explain(reverted: RpcException.ExecutionReverted): KnownRevertReason? =
+        reverted.selector?.let { SELECTOR_LOOKUP[it] }
 
-    fun explain(selector: String?): String? = selector?.lowercase()?.let { SELECTOR_LOOKUP[it] }
-
-    // Decodes the standard Solidity `Error(string)` revert payload (selector 0x08c379a0).
-    fun decodeErrorString(rawError: String?): String? {
-        if (rawError.isNullOrBlank()) return null
-        val payload = ERROR_STRING_PATTERN.find(rawError)?.value ?: return null
-        val hex = payload.removePrefix("0x08c379a0").take(MAX_ERROR_PAYLOAD_HEX)
-        // Skip head (offset=0x20) + length, then read length-bytes of UTF-8.
-        if (hex.length < HEAD_HEX_LEN) return null
-        val lengthHex = hex.substring(OFFSET_HEX_LEN, HEAD_HEX_LEN)
-        val length = runCatching { lengthHex.toInt(HEX_BASE) }.getOrNull() ?: return null
-        if (length <= 0 || length > MAX_STRING_BYTES) return null
-        val dataStart = HEAD_HEX_LEN
-        val dataEnd = dataStart + (length * 2)
-        if (hex.length < dataEnd) return null
-        val data = hex.substring(dataStart, dataEnd)
-        val bytes = ByteArray(length)
-        for (i in 0 until length) {
-            bytes[i] = (data.substring(i * 2, i * 2 + 2).toInt(HEX_BASE) and 0xff).toByte()
-        }
-        return runCatching { bytes.toString(Charsets.UTF_8) }.getOrNull()
-    }
-
-    private val SELECTOR_PATTERN = Regex("0x[0-9a-fA-F]{8}(?![0-9a-fA-F])")
-    private val ERROR_STRING_PATTERN = Regex("0x08c379a0[0-9a-fA-F]{128,}")
-    private const val HEX_BASE = 16
-    private const val OFFSET_HEX_LEN = 64
-    private const val HEAD_HEX_LEN = 128
-    private const val MAX_STRING_BYTES = 1024
-    private const val MAX_ERROR_PAYLOAD_HEX = 8 + (HEAD_HEX_LEN + MAX_STRING_BYTES * 2)
+    fun explain(selector: Selector4?): KnownRevertReason? = selector?.let { SELECTOR_LOOKUP[it] }
 }

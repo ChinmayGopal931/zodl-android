@@ -1,64 +1,63 @@
 package xyz.justzappit.offramp.orchestrator
 
+import xyz.justzappit.evm.abi.Selector4
+import xyz.justzappit.evm.abi.SolidityErrors
+import xyz.justzappit.evm.rpc.RpcException
+import xyz.justzappit.evm.util.hexToBytes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class KnownRevertsTest {
 
     @Test
-    fun `extractSelector pulls the first 8-hex selector from an RPC error message`() {
-        val raw = "RPC eth_sendRawTransaction failed with code=-32000: execution reverted: 0x91da284f"
-        assertEquals("0x91da284f", KnownReverts.extractSelector(raw))
+    fun `explain maps 0x91da284f to InsufficientReputation`() {
+        val ex = revertedWith("0x91da284f")
+        assertEquals(KnownRevertReason.InsufficientReputation, KnownReverts.explain(ex))
     }
 
     @Test
-    fun `extractSelector is case-insensitive but normalises to lowercase`() {
-        assertEquals(
-            "0x91da284f",
-            KnownReverts.extractSelector("reverted: 0x91DA284F"),
-        )
-    }
-
-    @Test
-    fun `extractSelector returns null when no 8-hex token is present`() {
-        assertNull(KnownReverts.extractSelector("RPC connection refused"))
-        assertNull(KnownReverts.extractSelector(""))
-        assertNull(KnownReverts.extractSelector(null))
-    }
-
-    @Test
-    fun `explain returns the RP message for 0x91da284f`() {
-        val msg = KnownReverts.explain("0x91da284f")!!
-        assertTrue(msg.contains("reputation", ignoreCase = true))
-    }
-
-    @Test
-    fun `explain returns the liquidity message for 0x5d04ff4c`() {
-        val msg = KnownReverts.explain("0x5d04ff4c")!!
-        assertTrue(msg.contains("liquidity", ignoreCase = true) || msg.contains("merchant", ignoreCase = true))
+    fun `explain maps 0x5d04ff4c to NoMerchantLiquidity`() {
+        val ex = revertedWith("0x5d04ff4c")
+        assertEquals(KnownRevertReason.NoMerchantLiquidity, KnownReverts.explain(ex))
     }
 
     @Test
     fun `explain returns null for unknown selectors`() {
-        assertNull(KnownReverts.explain("0xdeadbeef"))
+        val ex = revertedWith("0xdeadbeef")
+        assertNull(KnownReverts.explain(ex))
+    }
+
+    @Test
+    fun `selector-only overload also resolves`() {
+        val selector = Selector4.fromHex("0x91da284f")
+        assertEquals(KnownRevertReason.InsufficientReputation, KnownReverts.explain(selector))
         assertNull(KnownReverts.explain(null))
     }
 
     @Test
-    fun `decodeErrorString recovers an embedded message from an Error(string) revert`() {
+    fun `SolidityErrors decodes an Error(string) payload`() {
         // 0x08c379a0 || offset(0x20) || length(0x05) || "hello" || padding
-        val payload = "0x08c379a0" +
-            "0000000000000000000000000000000000000000000000000000000000000020" +
-            "0000000000000000000000000000000000000000000000000000000000000005" +
-            "68656c6c6f000000000000000000000000000000000000000000000000000000"
-        assertEquals("hello", KnownReverts.decodeErrorString(payload))
+        val payload = (
+            "0x08c379a0" +
+                "0000000000000000000000000000000000000000000000000000000000000020" +
+                "0000000000000000000000000000000000000000000000000000000000000005" +
+                "68656c6c6f000000000000000000000000000000000000000000000000000000"
+            ).hexToBytes()
+        assertEquals("hello", SolidityErrors.decodeErrorString(payload))
     }
 
     @Test
-    fun `decodeErrorString returns null for non-Error payloads`() {
-        assertNull(KnownReverts.decodeErrorString("0x91da284f"))
-        assertNull(KnownReverts.decodeErrorString(null))
+    fun `SolidityErrors returns null for non-Error payloads`() {
+        assertNull(SolidityErrors.decodeErrorString("0x91da284f".hexToBytes()))
+        assertNull(SolidityErrors.decodeErrorString(byteArrayOf()))
     }
+
+    private fun revertedWith(selectorHex: String): RpcException.ExecutionReverted = RpcException.ExecutionReverted(
+        method = "eth_call",
+        selector = Selector4.fromHex(selectorHex),
+        data = selectorHex.hexToBytes(),
+        solidityErrorString = null,
+        rawMessage = "execution reverted",
+    )
 }

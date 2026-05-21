@@ -134,13 +134,58 @@ class BaseRpcClientTest {
     }
 
     @Test
-    fun `rpc error result throws RpcException with code and message`() = runTest {
+    fun `code 3 with no data is classified as ExecutionReverted`() = runTest {
         nextResponse = """
-            {"jsonrpc":"2.0","id":1,"error":{"code":-32000,"message":"execution reverted"}}
+            {"jsonrpc":"2.0","id":1,"error":{"code":3,"message":"execution reverted"}}
         """.trimIndent()
-        val ex = assertFailsWith<RpcException> { rpc.ethGasPrice() }
+        val ex = assertFailsWith<RpcException.ExecutionReverted> { rpc.ethGasPrice() }
         assertEquals("eth_gasPrice", ex.method)
-        assertEquals(-32_000, ex.code)
-        assertTrue(ex.message!!.contains("execution reverted"))
+        assertNull(ex.selector)
+        assertNull(ex.solidityErrorString)
+    }
+
+    @Test
+    fun `vendor -32000 plus reverted message is classified as ExecutionReverted`() = runTest {
+        nextResponse = """
+            {"jsonrpc":"2.0","id":1,"error":{"code":-32000,"message":"execution reverted: 0x91da284f"}}
+        """.trimIndent()
+        val ex = assertFailsWith<RpcException.ExecutionReverted> { rpc.ethGasPrice() }
+        assertEquals("eth_gasPrice", ex.method)
+        // No data field — selector cannot be recovered from the message string at this layer.
+        assertNull(ex.selector)
+    }
+
+    @Test
+    fun `ExecutionReverted carries selector and decoded Error(string) when data is present`() = runTest {
+        val payload =
+            "0x08c379a0" +
+                "0000000000000000000000000000000000000000000000000000000000000020" +
+                "0000000000000000000000000000000000000000000000000000000000000005" +
+                "68656c6c6f000000000000000000000000000000000000000000000000000000"
+        nextResponse = """
+            {"jsonrpc":"2.0","id":1,"error":{"code":3,"message":"execution reverted","data":"$payload"}}
+        """.trimIndent()
+        val ex = assertFailsWith<RpcException.ExecutionReverted> { rpc.ethGasPrice() }
+        assertEquals("hello", ex.solidityErrorString)
+        assertEquals("0x08c379a0", ex.selector?.hex)
+    }
+
+    @Test
+    fun `unknown JSON-RPC error code maps to RpcException Unknown`() = runTest {
+        nextResponse = """
+            {"jsonrpc":"2.0","id":1,"error":{"code":-32700,"message":"Parse error"}}
+        """.trimIndent()
+        val ex = assertFailsWith<RpcException.Unknown> { rpc.ethGasPrice() }
+        assertEquals("eth_gasPrice", ex.method)
+        assertEquals(-32_700, ex.code)
+    }
+
+    @Test
+    fun `method not found maps to RpcException MethodNotFound`() = runTest {
+        nextResponse = """
+            {"jsonrpc":"2.0","id":1,"error":{"code":-32601,"message":"Method not found"}}
+        """.trimIndent()
+        val ex = assertFailsWith<RpcException.MethodNotFound> { rpc.ethGasPrice() }
+        assertEquals("eth_gasPrice", ex.method)
     }
 }

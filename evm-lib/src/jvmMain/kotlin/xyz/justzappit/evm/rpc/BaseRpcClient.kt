@@ -19,6 +19,8 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import xyz.justzappit.evm.abi.Selector4
+import xyz.justzappit.evm.abi.SolidityErrors
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
@@ -118,16 +120,52 @@ class BaseRpcClient(
             setBody(payload)
         }.body()
 
-        body["error"]?.let { errEl ->
-            val obj = errEl.jsonObject
-            val code = obj["code"]?.jsonPrimitive?.content?.toIntOrNull()
-            val message = obj["message"]?.jsonPrimitive?.content
-            throw RpcException(method, code, message, body.toString())
-        }
+        body["error"]?.let { errEl -> throw classifyError(method, errEl.jsonObject, body.toString()) }
         return body["result"] ?: error("RPC response missing 'result': $body")
     }
 
+    private fun classifyError(method: String, error: JsonObject, raw: String): RpcException {
+        val code = error["code"]?.jsonPrimitive?.content?.toIntOrNull()
+        val message = error["message"]?.jsonPrimitive?.content
+        val dataHex = (error["data"] as? JsonPrimitive)?.contentOrNullIfStringNull()
+
+        // Execution reverted: geth uses code=3; some vendors use -32000 + "execution reverted" in
+        // the message. If we see either, parse selector/Error(string) from the data field.
+        val looksLikeRevert = code == EXECUTION_REVERTED_CODE ||
+            (message != null && message.contains("execution reverted", ignoreCase = true))
+        if (looksLikeRevert) {
+            val revertBytes = dataHex?.takeIf { it.length >= MIN_HEX_LEN_FOR_BYTES }
+                ?.runCatching { hexToBytes() }?.getOrNull()
+                ?: byteArrayOf()
+            val selector = Selector4.fromBytesPrefix(revertBytes)
+            val solidityString = SolidityErrors.decodeErrorString(revertBytes)
+            return RpcException.ExecutionReverted(
+                method = method,
+                selector = selector,
+                data = revertBytes,
+                solidityErrorString = solidityString,
+                rawMessage = message.orEmpty(),
+            )
+        }
+
+        return when (code) {
+            METHOD_NOT_FOUND_CODE -> RpcException.MethodNotFound(method)
+            INVALID_PARAMS_CODE -> RpcException.InvalidParams(method, message.orEmpty())
+            else -> RpcException.Unknown(method = method, code = code, raw = raw, errorMessage = message)
+        }
+    }
+
+    private fun JsonPrimitive.contentOrNullIfStringNull(): String? =
+        if (isString) content.takeUnless { it.equals("null", ignoreCase = true) } else content
+
     private val emptyJsonArray = JsonArray(emptyList())
+
+    companion object {
+        private const val EXECUTION_REVERTED_CODE = 3
+        private const val METHOD_NOT_FOUND_CODE = -32_601
+        private const val INVALID_PARAMS_CODE = -32_602
+        private const val MIN_HEX_LEN_FOR_BYTES = 2 // "0x" or single byte
+    }
 }
 
 internal fun hexToBigInteger(hex: String): BigInteger {
