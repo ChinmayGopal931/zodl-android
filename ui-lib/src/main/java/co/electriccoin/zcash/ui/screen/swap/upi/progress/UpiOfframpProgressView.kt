@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -30,8 +30,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
@@ -39,7 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.ButtonState
-import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
@@ -102,8 +103,37 @@ internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
                 StepRow(step)
             }
         }
-        BottomBar(state)
+        ZappBottomActionBar(
+            onBack = state.onBack,
+            primaryAction = state.primaryButton?.let { btn ->
+                {
+                    ZappButton(
+                        text = btn.text.getValue(),
+                        enabled = btn.isEnabled,
+                        variant = ZappButtonVariant.Primary,
+                        onClick = btn.onClick,
+                    )
+                }
+            },
+        )
     }
+}
+
+@Composable
+private fun OfframpCard(
+    modifier: Modifier = Modifier,
+    borderColor: Color = ZappTheme.colors.border,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val c = ZappTheme.colors
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(c.surface)
+            .border(BorderStroke(1.dp, borderColor))
+            .padding(CARD_PADDING.dp),
+        content = content,
+    )
 }
 
 @Composable
@@ -111,16 +141,10 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
     val uriHandler = LocalUriHandler.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border))
-            .padding(CARD_PADDING.dp),
-    ) {
+    OfframpCard {
         SummaryRow(
             label = stringResource(R.string.upi_offramp_summary_amount),
-            value = summary.amountUsdcDisplay.getValue() + " USDC",
+            value = summary.amountUsdcDisplay.getValue(),
         )
         Spacer(modifier = Modifier.height(GAP_SM.dp))
         SummaryRow(
@@ -131,7 +155,7 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
             Spacer(modifier = Modifier.height(GAP_SM.dp))
             SummaryRow(
                 label = stringResource(R.string.upi_offramp_summary_order_id),
-                value = "#$orderId",
+                value = stringResource(R.string.upi_offramp_summary_order_id_value, orderId),
             )
         }
         Spacer(modifier = Modifier.height(GAP_SM.dp))
@@ -160,9 +184,11 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
                 style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
             )
             Spacer(modifier = Modifier.height(2.dp))
-            AddressLink(
-                address = summary.merchantAddress,
+            ExplorerLink(
+                value = summary.merchantAddress,
                 url = summary.merchantExplorerUrl,
+                prefix = ADDRESS_ELLIPSIS_PREFIX,
+                suffix = ADDRESS_ELLIPSIS_SUFFIX,
                 uriHandler = uriHandler,
             )
         }
@@ -172,9 +198,11 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
             style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
         )
         Spacer(modifier = Modifier.height(2.dp))
-        AddressLink(
-            address = summary.signerAddress,
+        ExplorerLink(
+            value = summary.signerAddress,
             url = summary.signerExplorerUrl,
+            prefix = ADDRESS_ELLIPSIS_PREFIX,
+            suffix = ADDRESS_ELLIPSIS_SUFFIX,
             uriHandler = uriHandler,
         )
     }
@@ -184,13 +212,7 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
 private fun FeeBreakdownCard(fees: UpiOfframpFeeBreakdown) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border))
-            .padding(CARD_PADDING.dp),
-    ) {
+    OfframpCard {
         BasicText(
             text = stringResource(R.string.upi_offramp_fee_breakdown_header),
             style = t.button.copy(color = c.text, fontWeight = FontWeight.SemiBold),
@@ -214,13 +236,7 @@ private fun FeeBreakdownCard(fees: UpiOfframpFeeBreakdown) {
 private fun CancelledCard(cancelled: UpiOfframpCancelledCard) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border))
-            .padding(CARD_PADDING.dp),
-    ) {
+    OfframpCard {
         cancelled.refundedAmount?.let {
             BasicText(
                 text = it.getValue(),
@@ -265,16 +281,19 @@ private fun SummaryRow(label: String, value: String) {
     }
 }
 
+/** Ellipsized, tappable monospace link to a block explorer (address or tx hash). */
 @Composable
-private fun AddressLink(
-    address: String,
+private fun ExplorerLink(
+    value: String,
     url: String,
-    uriHandler: androidx.compose.ui.platform.UriHandler,
+    prefix: Int,
+    suffix: Int,
+    uriHandler: UriHandler,
 ) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
     BasicText(
-        text = address.ellipsizeMiddle(ADDRESS_ELLIPSIS_PREFIX, ADDRESS_ELLIPSIS_SUFFIX),
+        text = value.ellipsizeMiddle(prefix, suffix),
         style = t.mono.copy(color = c.accent, textDecoration = TextDecoration.Underline),
         modifier = Modifier.clickable(
             interactionSource = remember { MutableInteractionSource() },
@@ -289,13 +308,7 @@ private fun FailureCard(failure: UpiOfframpFailureCard) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
     val uriHandler = LocalUriHandler.current
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.danger))
-            .padding(CARD_PADDING.dp),
-    ) {
+    OfframpCard(borderColor = c.danger) {
         BasicText(
             text = stringResource(R.string.upi_offramp_failure_header, failure.stepLabel.getValue()),
             style = t.button.copy(color = c.danger, fontWeight = FontWeight.SemiBold),
@@ -321,9 +334,11 @@ private fun FailureCard(failure: UpiOfframpFailureCard) {
         )
         if (failure.txHash != null && failure.txExplorerUrl != null) {
             Spacer(modifier = Modifier.height(GAP_SM.dp))
-            TxHashRow(
-                hash = failure.txHash,
+            ExplorerLink(
+                value = failure.txHash,
                 url = failure.txExplorerUrl,
+                prefix = TX_HASH_ELLIPSIS_PREFIX,
+                suffix = TX_HASH_ELLIPSIS_SUFFIX,
                 uriHandler = uriHandler,
             )
         }
@@ -365,33 +380,16 @@ private fun StepRow(step: UpiOfframpStep) {
             }
             if (step.txHash != null && step.txExplorerUrl != null) {
                 Spacer(modifier = Modifier.height(4.dp))
-                TxHashRow(
-                    hash = step.txHash,
+                ExplorerLink(
+                    value = step.txHash,
                     url = step.txExplorerUrl,
+                    prefix = TX_HASH_ELLIPSIS_PREFIX,
+                    suffix = TX_HASH_ELLIPSIS_SUFFIX,
                     uriHandler = uriHandler,
                 )
             }
         }
     }
-}
-
-@Composable
-private fun TxHashRow(
-    hash: String,
-    url: String,
-    uriHandler: androidx.compose.ui.platform.UriHandler,
-) {
-    val c = ZappTheme.colors
-    val t = ZappTheme.typography
-    BasicText(
-        text = hash.ellipsizeMiddle(TX_HASH_ELLIPSIS_PREFIX, TX_HASH_ELLIPSIS_SUFFIX),
-        style = t.mono.copy(color = c.accent, textDecoration = TextDecoration.Underline),
-        modifier = Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = ripple(color = c.accent),
-            onClick = { uriHandler.openUri(url) },
-        ),
-    )
 }
 
 @Composable
@@ -411,31 +409,6 @@ private fun StepIndicator(status: UpiOfframpStepStatus) {
     )
 }
 
-@Composable
-private fun BottomBar(state: UpiOfframpProgressState) {
-    val c = ZappTheme.colors
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = HORIZONTAL_PADDING.dp, vertical = BOTTOM_BAR_VERTICAL_PADDING.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        ZappBackButton(onClick = state.onBack)
-        state.primaryButton?.let { btn ->
-            ZappButton(
-                text = btn.text.getValue(),
-                enabled = btn.isEnabled,
-                variant = ZappButtonVariant.Primary,
-                onClick = btn.onClick,
-            )
-        }
-    }
-}
-
 private fun String.ellipsizeMiddle(prefix: Int, suffix: Int): String {
     if (length <= prefix + suffix + 1) return this
     return take(prefix) + "…" + takeLast(suffix)
@@ -443,7 +416,6 @@ private fun String.ellipsizeMiddle(prefix: Int, suffix: Int): String {
 
 private const val HORIZONTAL_PADDING = 18
 private const val VERTICAL_PADDING = 16
-private const val BOTTOM_BAR_VERTICAL_PADDING = 12
 private const val CARD_PADDING = 14
 private const val GAP_SM = 6
 private const val GAP_MD = 10

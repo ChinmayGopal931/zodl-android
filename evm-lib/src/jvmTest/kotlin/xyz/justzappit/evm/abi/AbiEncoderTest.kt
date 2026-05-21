@@ -204,6 +204,16 @@ class AbiEncoderTest {
     }
 
     @Test
+    fun `int256 accepts signed boundaries and rejects out-of-range`() {
+        val max = BigInteger.TWO.pow(255) - BigInteger.ONE // 2^255 - 1
+        val min = BigInteger.TWO.pow(255).negate() // -2^255
+        AbiInt(max)
+        AbiInt(min)
+        assertFailsWith<IllegalArgumentException> { AbiInt(max + BigInteger.ONE) } // 2^255
+        assertFailsWith<IllegalArgumentException> { AbiInt(min - BigInteger.ONE) } // -2^255 - 1
+    }
+
+    @Test
     fun `placeOrder argument shape produces valid calldata with right total length`() {
         // Sanity-check encoder doesn't drop bytes for the real shape we care about.
         // Layout: 10 head slots (320) + dynamic tails for 3 strings + 1 bytes32 head + …

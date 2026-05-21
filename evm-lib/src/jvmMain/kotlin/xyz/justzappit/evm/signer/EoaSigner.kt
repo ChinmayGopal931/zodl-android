@@ -4,9 +4,9 @@ import kotlinx.coroutines.delay
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.TransactionReceipt
-import xyz.justzappit.evm.rpc.hexToBigInteger
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.evm.types.Gas
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.toHex
@@ -23,18 +23,18 @@ class EoaSigner(
         to: Address,
         value: Wei = Wei.ZERO,
         data: ByteArray = byteArrayOf(),
-        gasLimitOverride: BigInteger? = null,
+        gasLimitOverride: Gas? = null,
     ): TxHash {
         val nonce = rpc.ethGetTransactionCount(account.address, blockTag = "pending")
         val tip: Wei = rpc.ethMaxPriorityFeePerGas()
         val block = rpc.ethGetBlockByNumber(blockTag = "latest")
-        val baseFee: Wei = block.baseFeePerGas?.let { Wei(hexToBigInteger(it)) }
+        val baseFee: Wei = block.baseFee
             ?: error("baseFeePerGas missing in latest block — chain may be pre-EIP-1559")
         val maxFee: Wei = baseFee * baseFeeMultiplier + tip
         val gasLimit = gasLimitOverride
             ?: rpc.ethEstimateGas(account.address, to, value, data)
-                .multiply(BigInteger.valueOf(100L + gasLimitBufferPercent))
-                .divide(BigInteger.valueOf(100L))
+                .times(BigInteger.valueOf(100L + gasLimitBufferPercent))
+                .div(BigInteger.valueOf(100L))
 
         val tx = Eip1559Tx(
             chainId = chainId,

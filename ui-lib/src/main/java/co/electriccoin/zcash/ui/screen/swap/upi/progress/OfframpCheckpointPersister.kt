@@ -5,8 +5,8 @@ import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
+import xyz.justzappit.offramp.orchestrator.orderId
 import xyz.justzappit.offramp.orchestrator.step
-import java.math.BigInteger
 
 /**
  * Owns the in-memory tx-hash cache + writes to [OfframpRepository] for one in-flight offramp.
@@ -55,7 +55,7 @@ internal class OfframpCheckpointPersister(
             is OfframpStatus.Cancelled,
             is OfframpStatus.Failed -> repo.clear()
             else -> {
-                val orderId = orderIdOf(status) ?: return
+                val orderId = status.orderId ?: return
                 val previous = repo.getInFlight()
                 repo.save(
                     OfframpCheckpoint(
@@ -73,12 +73,5 @@ internal class OfframpCheckpointPersister(
                 )
             }
         }
-    }
-
-    private fun orderIdOf(status: OfframpStatus): BigInteger? = when (status) {
-        is OfframpStatus.WaitingForMerchantAcceptance -> status.orderId
-        is OfframpStatus.SendingEncryptedUpi -> status.orderId
-        is OfframpStatus.WaitingForCompletion -> status.orderId
-        else -> null
     }
 }

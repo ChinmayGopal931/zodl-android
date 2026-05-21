@@ -21,7 +21,9 @@ data class AbiUint(val value: BigInteger) : AbiArg {
 
 data class AbiInt(val value: BigInteger) : AbiArg {
     init {
-        require(value.bitLength() <= MAX_UINT_BITS) { "int exceeds 256 bits" }
+        // bitLength() excludes the sign bit, so a signed int256 in [-2^255, 2^255-1] has
+        // bitLength <= 255; anything wider would silently wrap under two's complement below.
+        require(value.bitLength() <= MAX_INT_SIGNED_BITS) { "int256 out of range, got $value" }
     }
     override val isDynamic = false
     override fun head(): ByteArray {
@@ -110,6 +112,7 @@ internal fun padded(size: Int): Int = if (size % WORD == 0) size else size + WOR
 
 internal const val WORD = 32
 private const val MAX_UINT_BITS = 256
+private const val MAX_INT_SIGNED_BITS = 255
 private const val ADDRESS_BYTES = 20
 private const val UINT8_MAX = 255
 private val EMPTY = ByteArray(0)

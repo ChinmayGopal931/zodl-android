@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.types.Address
@@ -31,6 +32,7 @@ import xyz.justzappit.offramp.orchestrator.OfframpDriver
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
 import xyz.justzappit.offramp.orchestrator.OfframpStep
+import xyz.justzappit.offramp.orchestrator.orderId
 import xyz.justzappit.offramp.orchestrator.step
 import xyz.justzappit.offramp.p2p.OrderFeeDetails
 import xyz.justzappit.offramp.p2p.Usdc6
@@ -93,10 +95,10 @@ internal class UpiOfframpProgressVM(
         // per genuine state transition.
         viewModelScope.launch {
             statusSource
-                .mapNotNull { status -> extractOrderId(status)?.let { it to status::class } }
+                .mapNotNull { status -> status.orderId?.let { it to status::class } }
                 .distinctUntilChanged()
                 .collect { (orderId, _) ->
-                    getOrderFeeDetails(orderId)?.let { feeDetails.value = it }
+                    getOrderFeeDetails(orderId)?.let { details -> feeDetails.update { details } }
                 }
         }
     }
@@ -110,7 +112,7 @@ internal class UpiOfframpProgressVM(
             )
 
     private fun buildState(status: OfframpStatus, fees: OrderFeeDetails?): UpiOfframpProgressState {
-        val orderId = extractOrderId(status)
+        val orderId = status.orderId
         val summary = buildSummary(status, orderId)
 
         val title = when (status) {
@@ -214,16 +216,6 @@ internal class UpiOfframpProgressVM(
             cancelledAt = cancelledAt,
             tip = stringRes(R.string.upi_offramp_cancelled_tip),
         )
-    }
-
-    private fun extractOrderId(status: OfframpStatus): BigInteger? = when (status) {
-        is OfframpStatus.WaitingForMerchantAcceptance -> status.orderId
-        is OfframpStatus.SendingEncryptedUpi -> status.orderId
-        is OfframpStatus.WaitingForCompletion -> status.orderId
-        is OfframpStatus.Completed -> status.orderId
-        is OfframpStatus.Cancelled -> status.orderId
-        is OfframpStatus.Failed -> status.orderId
-        else -> null
     }
 
     private fun buildFailureCard(failed: OfframpStatus.Failed): UpiOfframpFailureCard {

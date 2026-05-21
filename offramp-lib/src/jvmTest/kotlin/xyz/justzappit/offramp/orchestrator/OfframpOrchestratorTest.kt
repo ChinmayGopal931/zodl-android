@@ -230,6 +230,55 @@ class OfframpOrchestratorTest {
         assertEquals(Usdc6.ofMicros(5_000_000), last.refundedUsdcAmount)
     }
 
+    @Test
+    fun `resume does not re-send setSellOrderUpi when the order has advanced past ACCEPTED`() = runTest {
+        // Process died after the setSellOrderUpi tx landed but before its hash was checkpointed, so
+        // the checkpoint has no setUpiTxHash. On resume the order is already PAID; re-sending would
+        // revert with UpiAlreadySent. The orchestrator must skip straight to completion polling.
+        orderReader.enqueue(snapshot(status = OrderStatus.PAID, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+        orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+
+        val statuses = orchestrator.resume(resumeCheckpoint(setUpiTxHash = null)).toList()
+
+        assertIs<OfframpStatus.Completed>(statuses.last())
+        assertEquals(0, rawTxLog.size, "resume must not broadcast setSellOrderUpi when UPI is already on-chain")
+        assertTrue(
+            statuses.none { it is OfframpStatus.SendingEncryptedUpi },
+            "no SendingEncryptedUpi should be emitted when the UPI tx is skipped",
+        )
+    }
+
+    @Test
+    fun `resume does not re-send setSellOrderUpi when encryptedUserUpi is already populated`() = runTest {
+        // Same race, detected via the on-chain field rather than the status: the order is still
+        // ACCEPTED but encUpi is already set, so the tx landed and we must not re-broadcast.
+        orderReader.enqueue(
+            snapshot(
+                status = OrderStatus.ACCEPTED,
+                pubkey = MERCHANT_PUBKEY,
+                merchant = MERCHANT_ADDRESS,
+                encryptedUserUpi = "0xdeadbeef",
+            ),
+        )
+        orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+
+        val statuses = orchestrator.resume(resumeCheckpoint(setUpiTxHash = null)).toList()
+
+        assertIs<OfframpStatus.Completed>(statuses.last())
+        assertEquals(0, rawTxLog.size, "resume must not broadcast setSellOrderUpi when encUpi is already on-chain")
+    }
+
+    private fun resumeCheckpoint(setUpiTxHash: xyz.justzappit.evm.types.TxHash?) = OfframpCheckpoint(
+        orderId = ORDER_ID.toString(),
+        currentStep = OfframpStep.WAITING_FOR_ACCEPTANCE,
+        placeOrderTxHash = xyz.justzappit.evm.types.TxHash.fromHex("0x" + "02".padStart(64, '0')),
+        setUpiTxHash = setUpiTxHash,
+        recipientUpi = "merchant@upi",
+        usdcAmountMicroDecimal = "5000000",
+        currency = CurrencyCode.Inr,
+        createdAtMillis = 0,
+    )
+
     private fun snapshot(
         status: OrderStatus,
         pubkey: String,
@@ -237,6 +286,7 @@ class OfframpOrchestratorTest {
         actualUsdcAmount: Usdc6? = null,
         actualFiatAmount: Usdc6? = null,
         completedAtEpochSeconds: Long? = null,
+        encryptedUserUpi: String = "",
     ) = OrderSnapshot(
         orderId = ORDER_ID,
         status = status,
@@ -248,7 +298,7 @@ class OfframpOrchestratorTest {
         currencyHex = "0x494e520000000000000000000000000000000000000000000000000000000000",
         acceptedMerchantAddress = merchant?.let { Address.parse(it) },
         merchantPubKey = pubkey,
-        encryptedUserUpi = "",
+        encryptedUserUpi = encryptedUserUpi,
         encryptedMerchantUpi = "",
         placedAtEpochSeconds = 1_779_000_000L,
         acceptedAtEpochSeconds = if (status.onChain >= OrderStatus.ACCEPTED.onChain) 1_779_500_000L else null,

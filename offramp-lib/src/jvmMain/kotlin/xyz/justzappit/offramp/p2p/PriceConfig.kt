@@ -1,7 +1,7 @@
 package xyz.justzappit.offramp.p2p
 
+import xyz.justzappit.evm.abi.AbiDecoder
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.math.RoundingMode
 
 /**
@@ -33,23 +33,15 @@ data class PriceConfig(
 object PriceConfigDecoder {
     // Decodes the return value of getPriceConfig(bytes32) — four packed uint256 words.
     fun decode(returnData: ByteArray): PriceConfig {
-        require(returnData.size >= MIN_RETURN_BYTES) {
-            "PriceConfig return data too short: ${returnData.size} bytes (need $MIN_RETURN_BYTES)"
-        }
+        val d = AbiDecoder(returnData)
+        d.requireWords(FOUR_WORDS)
         return PriceConfig(
-            buyPrice = Usdc6(word(returnData, 0)),
-            sellPrice = Usdc6(word(returnData, 1)),
-            buyPriceOffset = Usdc6(word(returnData, 2)),
-            baseSpread = Usdc6(word(returnData, 3)),
+            buyPrice = Usdc6(d.uint(0)),
+            sellPrice = Usdc6(d.uint(1)),
+            buyPriceOffset = Usdc6(d.uint(2)),
+            baseSpread = Usdc6(d.uint(3)),
         )
     }
 
-    private fun word(buf: ByteArray, index: Int): BigInteger {
-        val start = index * WORD
-        return BigInteger(1, buf.copyOfRange(start, start + WORD))
-    }
-
-    private const val WORD = 32
     private const val FOUR_WORDS = 4
-    private const val MIN_RETURN_BYTES = WORD * FOUR_WORDS
 }

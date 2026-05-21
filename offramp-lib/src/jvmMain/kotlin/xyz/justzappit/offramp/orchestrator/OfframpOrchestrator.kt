@@ -14,6 +14,7 @@ import xyz.justzappit.evm.signer.EoaSigner
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.util.toHex
 import xyz.justzappit.offramp.config.P2pNetworkConfig
+import xyz.justzappit.offramp.p2p.CircleId
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.DiamondCalls
 import xyz.justzappit.offramp.p2p.Erc20Calls
@@ -79,7 +80,7 @@ class OfframpOrchestrator(
             val circleId = router.selectCircleForOrder(
                 circles = circles,
                 orderCurrency = currencyHex,
-            ) { id -> validateCircleOnChain(id, request) }
+            ) { id -> validateCircleOnChain(id, request) }.value
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
             currentStep = OfframpStep.APPROVING_USDC
@@ -184,31 +185,42 @@ class OfframpOrchestrator(
         }
 
         onStep(OfframpStep.ENCRYPTING_UPI)
-        val setUpiHash = knownSetUpiHash ?: run {
-            val cipherHex = Ecies.cipherStringify(
-                Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
-            )
+        // Resume safety: if the encrypted UPI is already on-chain — the setSellOrderUpi tx landed
+        // before its hash was checkpointed, or the order already advanced past ACCEPTED — re-sending
+        // it reverts with UpiAlreadySent. Broadcast only when we have not already done so.
+        val upiAlreadyOnChain = accepted.encryptedUserUpi.isNotBlank() ||
+            accepted.status.onChain >= OrderStatus.PAID.onChain
+        val setUpiHash: TxHash? = when {
+            knownSetUpiHash != null -> knownSetUpiHash
+            upiAlreadyOnChain -> null
+            else -> {
+                val cipherHex = Ecies.cipherStringify(
+                    Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
+                )
+                onStep(OfframpStep.SENDING_UPI)
+                signer.sendTransaction(
+                    to = network.diamondAddress,
+                    data = DiamondCalls.setSellOrderUpiCalldata(
+                        orderId = orderId,
+                        encryptedUpiHex = cipherHex,
+                    ),
+                )
+            }
+        }
+        if (setUpiHash != null) {
+            onTxHash(setUpiHash)
             onStep(OfframpStep.SENDING_UPI)
-            signer.sendTransaction(
-                to = network.diamondAddress,
-                data = DiamondCalls.setSellOrderUpiCalldata(
+            emit(
+                OfframpStatus.SendingEncryptedUpi(
                     orderId = orderId,
-                    encryptedUpiHex = cipherHex,
+                    txHash = setUpiHash,
+                    merchantAddress = acceptedMerchant,
+                    merchantPubKey = accepted.merchantPubKey,
+                    acceptedAtEpochSeconds = accepted.acceptedAtEpochSeconds,
                 ),
             )
+            require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
         }
-        onTxHash(setUpiHash)
-        onStep(OfframpStep.SENDING_UPI)
-        emit(
-            OfframpStatus.SendingEncryptedUpi(
-                orderId = orderId,
-                txHash = setUpiHash,
-                merchantAddress = acceptedMerchant,
-                merchantPubKey = accepted.merchantPubKey,
-                acceptedAtEpochSeconds = accepted.acceptedAtEpochSeconds,
-            ),
-        )
-        require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
 
         onStep(OfframpStep.WAITING_FOR_COMPLETION)
         val finished = when (val r = pollForCompletion(orderId, accepted)) {
@@ -256,13 +268,13 @@ class OfframpOrchestrator(
     }
 
     private suspend fun validateCircleOnChain(
-        circleId: BigInteger,
+        circleId: CircleId,
         request: OfframpRequest,
     ): Boolean = runCatching {
         val ret = rpc.ethCall(
             to = network.diamondAddress,
             data = DiamondCalls.getAssignableMerchantsFromCircleCalldata(
-                circleId = circleId,
+                circleId = circleId.value,
                 assignUpTo = BigInteger.valueOf(ASSIGN_UP_TO),
                 currency = request.currency,
                 user = account.address,

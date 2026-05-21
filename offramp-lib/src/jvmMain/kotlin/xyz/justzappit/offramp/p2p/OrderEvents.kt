@@ -1,9 +1,11 @@
 package xyz.justzappit.offramp.p2p
 
+import xyz.justzappit.evm.abi.AbiAddress
 import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.rpc.EvmLog
 import xyz.justzappit.evm.rpc.TransactionReceipt
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
@@ -38,15 +40,12 @@ object OrderEvents {
         return topicToBigInteger(log.topics[1])
     }
 
-    private fun topicToBigInteger(topic: String): BigInteger =
-        BigInteger(1, topic.removePrefix("0x").chunked(2).map { it.toInt(16).toByte() }.toByteArray())
+    private fun topicToBigInteger(topic: String): BigInteger = BigInteger(1, topic.hexToBytes())
 
-    private fun padAddressTopic(address: Address): String {
-        val raw = address.lowercaseHex.removePrefix(Address.PREFIX)
-        return "0x" + "0".repeat(TOPIC_HEX_LEN - raw.length) + raw
-    }
+    // An indexed `address` event arg is ABI-encoded as a left-padded 32-byte word — exactly what
+    // AbiAddress.head() produces.
+    private fun padAddressTopic(address: Address): String = "0x" + AbiAddress(address).head().toHex()
 
-    private const val TOPIC_HEX_LEN = 64
     private const val INDEXED_PARAMS = 3
     private const val REQUIRED_TOPICS = INDEXED_PARAMS + 1
 

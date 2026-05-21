@@ -9,6 +9,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.RoundingMode
 
 /**
  * A 6-decimal token amount, stored in micro-units (1 USDC = 1_000_000 micro-USDC). Used for both
@@ -43,11 +44,11 @@ value class Usdc6(val micros: BigInteger) : Comparable<Usdc6> {
 
         /**
          * Construct from a whole-token decimal amount (i.e. 5.50 USDC). Rounds half-up at the
-         * sixth decimal place; values with more than 6 decimals lose precision silently — pass an
-         * already-rounded [BigDecimal] if that matters at the callsite.
+         * sixth decimal place; inputs with more than 6 decimals round (not truncate) to the
+         * nearest micro.
          */
         fun ofWhole(whole: BigDecimal): Usdc6 =
-            Usdc6(whole.movePointRight(DECIMALS).toBigInteger())
+            Usdc6(whole.movePointRight(DECIMALS).setScale(0, RoundingMode.HALF_UP).toBigInteger())
     }
 
     object Usdc6Serializer : KSerializer<Usdc6> {

@@ -129,6 +129,20 @@ enum class OfframpStep {
     }
 }
 
+/** The on-chain order id once the flow has placed one, else null (pre-order steps + Idle). */
+val OfframpStatus.orderId: BigInteger? get() = when (this) {
+    is OfframpStatus.WaitingForMerchantAcceptance -> orderId
+    is OfframpStatus.SendingEncryptedUpi -> orderId
+    is OfframpStatus.WaitingForCompletion -> orderId
+    is OfframpStatus.Completed -> orderId
+    is OfframpStatus.Cancelled -> orderId
+    is OfframpStatus.Failed -> orderId
+    OfframpStatus.Idle,
+    is OfframpStatus.SelectingCircle,
+    is OfframpStatus.ApprovingUsdc,
+    is OfframpStatus.PlacingOrder -> null
+}
+
 /** Derives the canonical [OfframpStep] from any [OfframpStatus] instance. */
 val OfframpStatus.step: OfframpStep get() = when (this) {
     OfframpStatus.Idle -> OfframpStep.INITIALIZATION

@@ -5,6 +5,7 @@ import xyz.justzappit.evm.util.hexToBytes
 import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -43,6 +44,30 @@ class OrderReaderTest {
         )
         val order = OrderReader.decodeOrder(data)
         assertEquals("", order.merchantPubKey)
+    }
+
+    @Test
+    fun `decodeOrder returns empty pubkey for a valid zero-length string`() {
+        // A real empty string (valid offset, length 0) is legitimately empty, not corrupt.
+        val data = synthOrderReturnData(status = OrderStatus.PLACED, pubkey = "")
+        assertEquals("", OrderReader.decodeOrder(data).merchantPubKey)
+    }
+
+    @Test
+    fun `decodeOrder throws when a dynamic-string offset points outside the tuple`() {
+        val data = synthOrderReturnData(status = OrderStatus.ACCEPTED, pubkey = "abc".repeat(20))
+        // Tuple slot 8 holds the pubkey offset; in the full buffer that is word index 9 (slot 0 is
+        // the top-level offset). Point it past the end of the tuple — must fail, not silently "".
+        putUintWord(data, wordIndex = 9, value = BigInteger.valueOf(0xFFFF))
+        assertFails { OrderReader.decodeOrder(data) }
+    }
+
+    @Test
+    fun `decodeOrder throws when a dynamic-string length overruns the tuple`() {
+        val data = synthOrderReturnData(status = OrderStatus.ACCEPTED, pubkey = "abc".repeat(20))
+        // pubkey tail sits 25 words into the tuple; its length word is at full word index 26.
+        putUintWord(data, wordIndex = 26, value = BigInteger.valueOf(0xFFFF))
+        assertFails { OrderReader.decodeOrder(data) }
     }
 
     @Test
@@ -106,6 +131,16 @@ class OrderReaderTest {
         // Top-level offset = 0x20 (pointing past itself to the tuple data)
         val topOffset = ByteArray(word).also { it[word - 1] = 0x20.toByte() }
         return topOffset + tupleHead + tupleTail
+    }
+
+    /** Overwrites the 32-byte word at [wordIndex] with [value], right-aligned (big-endian uint). */
+    private fun putUintWord(data: ByteArray, wordIndex: Int, value: BigInteger) {
+        val word = 32
+        val start = wordIndex * word
+        for (i in start until start + word) data[i] = 0
+        val bytes = value.toByteArray()
+        val src = if (bytes.size > word) bytes.copyOfRange(bytes.size - word, bytes.size) else bytes
+        System.arraycopy(src, 0, data, start + word - src.size, src.size)
     }
 
     private fun encodeAddressArray(addresses: List<String>): ByteArray {

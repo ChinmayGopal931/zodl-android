@@ -1,6 +1,7 @@
 package xyz.justzappit.evm.rpc
 
 import kotlinx.serialization.Serializable
+import xyz.justzappit.evm.types.Wei
 
 @Serializable
 data class TransactionReceipt(
@@ -31,4 +32,7 @@ data class BlockHeader(
     val number: String,
     val timestamp: String,
     val baseFeePerGas: String? = null,
-)
+) {
+    /** The EIP-1559 base fee as a typed [Wei] amount, or null on a pre-EIP-1559 block. */
+    val baseFee: Wei? get() = baseFeePerGas?.let { Wei(hexToBigInteger(it)) }
+}

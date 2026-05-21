@@ -1,6 +1,5 @@
 package xyz.justzappit.offramp.p2p
 
-import java.math.BigInteger
 import kotlin.random.Random
 
 // Epsilon-greedy circle selector, 1:1 port of the SDK's routing.ts.
@@ -13,9 +12,9 @@ class CircleRouter(
 ) {
     fun circleWeight(c: CircleForRouting): Double {
         val score = c.metrics.score
-        return when (c.metrics.circleStatus) {
-            "paused" -> score * recoveryScale
-            "bootstrap" -> minOf(score, bootstrapMaxWeight)
+        return when (c.metrics.status) {
+            CircleStatus.PAUSED -> score * recoveryScale
+            CircleStatus.BOOTSTRAP -> minOf(score, bootstrapMaxWeight)
             else -> score
         }
     }
@@ -25,7 +24,7 @@ class CircleRouter(
 
     fun selectCircle(eligible: List<CircleForRouting>): CircleForRouting? {
         if (eligible.isEmpty()) return null
-        val active = eligible.filter { it.metrics.circleStatus == "active" }
+        val active = eligible.filter { it.metrics.status == CircleStatus.ACTIVE }
 
         if (random.nextDouble() < epsilon) {
             return weightedRandomChoice(eligible, eligible.map(::circleWeight))
@@ -39,20 +38,19 @@ class CircleRouter(
     suspend fun selectCircleForOrder(
         circles: List<CircleForRouting>,
         orderCurrency: String,
-        validateCircle: suspend (BigInteger) -> Boolean,
-    ): BigInteger {
+        validateCircle: suspend (CircleId) -> Boolean,
+    ): CircleId {
         val pool = filterEligible(circles, orderCurrency).toMutableList()
         if (pool.isEmpty()) error("No eligible circles found for currency '$orderCurrency'")
 
         repeat(maxValidationAttempts) {
             if (pool.isEmpty()) error("No eligible circles found")
             val chosen = selectCircle(pool) ?: error("No eligible circles found")
-            val circleId = BigInteger(chosen.circleId)
-            val isValid = runCatching { validateCircle(circleId) }.getOrElse { false }
-            if (isValid) return circleId
-            pool.removeAll { it.circleId == chosen.circleId }
+            val isValid = runCatching { validateCircle(chosen.id) }.getOrElse { false }
+            if (isValid) return chosen.id
+            pool.removeAll { it.id == chosen.id }
         }
-        error("Exhausted ${maxValidationAttempts} validation attempts without a valid circle")
+        error("Exhausted $maxValidationAttempts validation attempts without a valid circle")
     }
 
     private fun weightedRandomChoice(

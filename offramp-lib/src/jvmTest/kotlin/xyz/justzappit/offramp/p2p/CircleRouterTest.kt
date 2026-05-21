@@ -73,7 +73,7 @@ class CircleRouterTest {
         )
         val chosen = router.selectCircleForOrder(circles, inrCurrency, validateCircle = { true })
         // Heavily-weighted #1 should win with seed 0; either way it must be a valid id.
-        assertEquals(true, chosen == BigInteger.ONE || chosen == BigInteger.valueOf(2))
+        assertEquals(true, chosen.value == BigInteger.ONE || chosen.value == BigInteger.valueOf(2))
     }
 
     @Test
@@ -90,7 +90,7 @@ class CircleRouterTest {
             calls > 1
         }
         assertEquals(2, calls)
-        assertEquals(true, firstId == BigInteger.ONE || firstId == BigInteger.valueOf(2))
+        assertEquals(true, firstId.value == BigInteger.ONE || firstId.value == BigInteger.valueOf(2))
     }
 
     @Test
@@ -120,6 +120,6 @@ class CircleRouterTest {
         )
         // Should not throw even with no active circles.
         val chosen = router.selectCircleForOrder(circles, inrCurrency) { true }
-        assertEquals(true, chosen == BigInteger.ONE || chosen == BigInteger.valueOf(2))
+        assertEquals(true, chosen.value == BigInteger.ONE || chosen.value == BigInteger.valueOf(2))
     }
 }

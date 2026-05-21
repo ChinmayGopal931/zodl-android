@@ -115,10 +115,11 @@
     <string name="upi_offramp_step_send_upi">Enviando UPI cifrado</string>
     <string name="upi_offramp_step_wait_completion">Esperando el pago del comerciante</string>
 
-    <string name="upi_offramp_progress_amount_usdc">%1$s</string>
+    <string name="upi_offramp_progress_amount_usdc">%1$s USDC</string>
     <string name="upi_offramp_summary_amount">Cantidad</string>
     <string name="upi_offramp_summary_recipient">Destinatario</string>
     <string name="upi_offramp_summary_order_id">ID de orden</string>
+    <string name="upi_offramp_summary_order_id_value">#%1$s</string>
     <string name="upi_offramp_summary_network">Red</string>
     <string name="upi_offramp_summary_signer">Desde</string>
     <string name="upi_offramp_detail_candidates">%1$d círculo(s) candidato(s)</string>

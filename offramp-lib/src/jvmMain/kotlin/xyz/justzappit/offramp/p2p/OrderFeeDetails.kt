@@ -1,6 +1,6 @@
 package xyz.justzappit.offramp.p2p
 
-import java.math.BigInteger
+import xyz.justzappit.evm.abi.AbiDecoder
 
 /**
  * Post-execution detail bundle the p2p.me Diamond returns from `getAdditionalOrderDetails(uint256)`.
@@ -31,33 +31,24 @@ object OrderFeeDetailsDecoder {
      * Each is left-padded to 32 bytes per ABI spec.
      */
     fun decode(returnData: ByteArray): OrderFeeDetails {
-        require(returnData.size >= EXPECTED_BYTES) {
-            "OrderFeeDetails return data too short: ${returnData.size} bytes (need $EXPECTED_BYTES)"
-        }
+        val d = AbiDecoder(returnData)
+        d.requireWords(TUPLE_FIELDS)
         return OrderFeeDetails(
-            fixedFeePaid = Usdc6(word(returnData, FIELD_FIXED_FEE_PAID)),
-            tipsPaid = Usdc6(word(returnData, FIELD_TIPS_PAID)),
-            acceptedAtEpochSeconds = word(returnData, FIELD_ACCEPTED_TS).toLong().takeIf { it > 0 },
-            paidAtEpochSeconds = word(returnData, FIELD_PAID_TS).toLong().takeIf { it > 0 },
+            fixedFeePaid = Usdc6(d.uint(FIELD_FIXED_FEE_PAID)),
+            tipsPaid = Usdc6(d.uint(FIELD_TIPS_PAID)),
+            acceptedAtEpochSeconds = d.uint(FIELD_ACCEPTED_TS).toLong().takeIf { it > 0 },
+            paidAtEpochSeconds = d.uint(FIELD_PAID_TS).toLong().takeIf { it > 0 },
             // FIELD_RESERVED2 intentionally skipped — contract reserves it for future use.
-            actualUsdcAmount = Usdc6(word(returnData, FIELD_ACTUAL_USDC)),
-            actualFiatAmount = Usdc6(word(returnData, FIELD_ACTUAL_FIAT)),
+            actualUsdcAmount = Usdc6(d.uint(FIELD_ACTUAL_USDC)),
+            actualFiatAmount = Usdc6(d.uint(FIELD_ACTUAL_FIAT)),
         )
     }
 
-    private fun word(buf: ByteArray, index: Int): BigInteger {
-        val start = index * WORD
-        return BigInteger(1, buf.copyOfRange(start, start + WORD))
-    }
-
-    private const val WORD = 32
     private const val FIELD_FIXED_FEE_PAID = 0
     private const val FIELD_TIPS_PAID = 1
     private const val FIELD_ACCEPTED_TS = 2
     private const val FIELD_PAID_TS = 3
-    private const val FIELD_RESERVED2 = 4 // skipped
     private const val FIELD_ACTUAL_USDC = 5
     private const val FIELD_ACTUAL_FIAT = 6
     private const val TUPLE_FIELDS = 7
-    private const val EXPECTED_BYTES = TUPLE_FIELDS * WORD
 }

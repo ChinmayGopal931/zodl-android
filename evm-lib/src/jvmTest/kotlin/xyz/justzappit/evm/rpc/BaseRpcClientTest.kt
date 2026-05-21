@@ -28,16 +28,16 @@ import kotlin.test.assertTrue
 class BaseRpcClientTest {
     private val handledRequests = mutableListOf<JsonObject>()
     private var nextResponse: String = ""
+    private var nextStatus: HttpStatusCode = HttpStatusCode.OK
+    private var nextHeaders = headersOf(HttpHeaders.ContentType, "application/json")
+    private var nextThrow: Throwable? = null
 
     private val client = HttpClient(
         MockEngine { request ->
+            nextThrow?.let { throw it }
             val bodyBytes = (request.body as io.ktor.http.content.OutgoingContent.ByteArrayContent).bytes()
             handledRequests += Json.parseToJsonElement(bodyBytes.decodeToString()) as JsonObject
-            respond(
-                content = nextResponse,
-                status = HttpStatusCode.OK,
-                headers = headersOf(HttpHeaders.ContentType, "application/json"),
-            )
+            respond(content = nextResponse, status = nextStatus, headers = nextHeaders)
         },
     ) {
         install(ContentNegotiation) { json() }
@@ -48,6 +48,22 @@ class BaseRpcClientTest {
     @AfterTest
     fun shutdown() {
         client.close()
+    }
+
+    @Test
+    fun `HTTP 429 surfaces as RpcException RateLimited with parsed Retry-After`() = runTest {
+        nextStatus = HttpStatusCode.TooManyRequests
+        nextHeaders = headersOf(HttpHeaders.RetryAfter, "2")
+        val e = assertFailsWith<RpcException.RateLimited> { rpc.ethChainId() }
+        assertEquals("eth_chainId", e.method)
+        assertEquals(2_000L, e.retryAfterMillis)
+    }
+
+    @Test
+    fun `transport IOException surfaces as RpcException TransportError`() = runTest {
+        nextThrow = java.io.IOException("connection reset")
+        val e = assertFailsWith<RpcException.TransportError> { rpc.ethChainId() }
+        assertEquals("eth_chainId", e.method)
     }
 
     @Test
@@ -69,7 +85,7 @@ class BaseRpcClientTest {
         nextResponse = """{"jsonrpc":"2.0","id":1,"result":"0x2a"}"""
         val address = Address.parse("0x0000000000000000000000000000000000000abc")
         val nonce = rpc.ethGetTransactionCount(address, blockTag = "latest")
-        assertEquals(BigInteger.valueOf(42), nonce)
+        assertEquals(BigInteger.valueOf(42), nonce.value)
         val params = handledRequests.last()["params"]!!.toString()
         assertTrue(params.contains(address.checksumHex))
         assertTrue(params.contains("latest"))
@@ -91,7 +107,7 @@ class BaseRpcClientTest {
         val from = Address.parse("0x000000000000000000000000000000000000F70F")
         val to = Address.parse("0x0000000000000000000000000000000000000010")
         val gas = rpc.ethEstimateGas(from = from, to = to, value = Wei.ofLong(1_000))
-        assertEquals(BigInteger.valueOf(21_000), gas)
+        assertEquals(BigInteger.valueOf(21_000), gas.value)
     }
 
     @Test

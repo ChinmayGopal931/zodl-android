@@ -124,10 +124,11 @@
     <string name="upi_offramp_step_wait_completion">Waiting for merchant payment</string>
 
     <!-- UPI Offramp progress — summary + detail lines + failure card -->
-    <string name="upi_offramp_progress_amount_usdc">%1$s</string>
+    <string name="upi_offramp_progress_amount_usdc">%1$s USDC</string>
     <string name="upi_offramp_summary_amount">Amount</string>
     <string name="upi_offramp_summary_recipient">Recipient</string>
     <string name="upi_offramp_summary_order_id">Order ID</string>
+    <string name="upi_offramp_summary_order_id_value">#%1$s</string>
     <string name="upi_offramp_summary_network">Network</string>
     <string name="upi_offramp_summary_signer">From</string>
     <string name="upi_offramp_detail_candidates">%1$d candidate circle(s) from subgraph</string>

@@ -4,6 +4,8 @@ import org.bouncycastle.crypto.digests.KeccakDigest
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.evm.types.Gas
+import xyz.justzappit.evm.types.Nonce
 import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
@@ -57,10 +59,10 @@ class Eip1559TxTest {
         // value=0 should encode as 0x80 (rlpEmpty), not as 0x00.
         val tx = Eip1559Tx(
             chainId = ChainId.BASE_SEPOLIA,
-            nonce = BigInteger.ZERO,
+            nonce = Nonce(BigInteger.ZERO),
             maxPriorityFeePerGas = Wei(BigInteger.ONE),
             maxFeePerGas = Wei(BigInteger.TEN),
-            gasLimit = BigInteger.valueOf(21_000),
+            gasLimit = Gas(BigInteger.valueOf(21_000)),
             to = Address.parse("0x000000000000000000000000000000000000dEaD"),
             value = Wei.ZERO,
             data = byteArrayOf(),
@@ -74,10 +76,10 @@ class Eip1559TxTest {
         kotlin.runCatching {
             Eip1559Tx(
                 chainId = ChainId(1L),
-                nonce = BigInteger.ZERO,
+                nonce = Nonce(BigInteger.ZERO),
                 maxPriorityFeePerGas = Wei(BigInteger.ONE),
                 maxFeePerGas = Wei(BigInteger.ONE),
-                gasLimit = BigInteger.ONE,
+                gasLimit = Gas(BigInteger.ONE),
                 to = Address.parse("0xnotanaddress"),
                 value = Wei.ZERO,
                 data = byteArrayOf(),
@@ -100,10 +102,10 @@ class Eip1559TxTest {
         //   to=0x000000000000000000000000000000000000dEaD, value=0, data=empty, accessList=[]
         val tx = Eip1559Tx(
             chainId = ChainId.BASE_SEPOLIA,
-            nonce = BigInteger.valueOf(2),
+            nonce = Nonce(BigInteger.valueOf(2)),
             maxPriorityFeePerGas = Wei.ofLong(1_000_000_000L),
             maxFeePerGas = Wei.ofLong(2_000_000_000L),
-            gasLimit = BigInteger.valueOf(21_000L),
+            gasLimit = Gas(BigInteger.valueOf(21_000L)),
             to = Address.parse("0x000000000000000000000000000000000000dEaD"),
             value = Wei.ZERO,
             data = byteArrayOf(),
@@ -172,10 +174,10 @@ class Eip1559TxTest {
         callData: ByteArray = byteArrayOf(),
     ) = Eip1559Tx(
         chainId = ChainId.BASE_SEPOLIA,
-        nonce = BigInteger.valueOf(7),
+        nonce = Nonce(BigInteger.valueOf(7)),
         maxPriorityFeePerGas = Wei.ofLong(1_000_000L),
         maxFeePerGas = Wei.ofLong(50_000_000L),
-        gasLimit = BigInteger.valueOf(100_000L),
+        gasLimit = Gas(BigInteger.valueOf(100_000L)),
         to = Address.parse(toAddress),
         value = Wei.ofLong(123_456_789L),
         data = callData,

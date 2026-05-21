@@ -44,15 +44,19 @@ internal class UpiOfframpVM(
     private val inFlight = MutableStateFlow<OfframpCheckpoint?>(null)
 
     val state: StateFlow<UpiOfframpState> =
-        combine(primary, usdcState, inrState, upiText, rate, inFlight) { values ->
-            @Suppress("UNCHECKED_CAST", "MagicNumber")
+        combine(
+            combine(primary, usdcState, inrState) { side, usdc, inr -> Triple(side, usdc, inr) },
+            upiText,
+            rate,
+            inFlight,
+        ) { amounts, upi, currentRate, checkpoint ->
             buildState(
-                side = values[0] as UpiOfframpAmountSide,
-                usdc = values[1] as NumberTextFieldInnerState,
-                inr = values[2] as NumberTextFieldInnerState,
-                upi = values[3] as String,
-                currentRate = values[4] as BigDecimal,
-                inFlightCheckpoint = values[5] as OfframpCheckpoint?,
+                side = amounts.first,
+                usdc = amounts.second,
+                inr = amounts.third,
+                upi = upi,
+                currentRate = currentRate,
+                inFlightCheckpoint = checkpoint,
             )
         }.stateIn(
             scope = viewModelScope,

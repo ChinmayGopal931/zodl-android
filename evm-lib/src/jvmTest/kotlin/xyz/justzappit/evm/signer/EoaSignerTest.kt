@@ -140,10 +140,10 @@ class EoaSignerTest {
         val maxFee = baseFee.multiply(java.math.BigInteger.valueOf(2)).add(tip)
         val tx = Eip1559Tx(
             chainId = chainId,
-            nonce = nonce,
+            nonce = xyz.justzappit.evm.types.Nonce(nonce),
             maxPriorityFeePerGas = Wei(tip),
             maxFeePerGas = Wei(maxFee),
-            gasLimit = gasLimit,
+            gasLimit = xyz.justzappit.evm.types.Gas(gasLimit),
             to = to,
             value = Wei(value),
             data = data,

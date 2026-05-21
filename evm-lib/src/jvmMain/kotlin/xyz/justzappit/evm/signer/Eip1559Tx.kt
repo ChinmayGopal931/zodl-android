@@ -3,16 +3,17 @@ package xyz.justzappit.evm.signer
 import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.evm.types.Gas
+import xyz.justzappit.evm.types.Nonce
 import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.toHex
-import java.math.BigInteger
 
 data class Eip1559Tx(
     val chainId: ChainId,
-    val nonce: BigInteger,
+    val nonce: Nonce,
     val maxPriorityFeePerGas: Wei,
     val maxFeePerGas: Wei,
-    val gasLimit: BigInteger,
+    val gasLimit: Gas,
     val to: Address,
     val value: Wei,
     val data: ByteArray,
@@ -57,10 +58,10 @@ data class Eip1559Tx(
 
     private fun toRlpList(): RlpItem = rlpList(
         rlpInt(chainId.value),
-        rlpInt(nonce),
+        rlpInt(nonce.value),
         rlpInt(maxPriorityFeePerGas.value),
         rlpInt(maxFeePerGas.value),
-        rlpInt(gasLimit),
+        rlpInt(gasLimit.value),
         rlpBytes(to.bytes),
         rlpInt(value.value),
         rlpBytes(data),
