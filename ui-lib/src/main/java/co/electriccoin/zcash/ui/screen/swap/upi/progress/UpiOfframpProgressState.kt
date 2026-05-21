@@ -7,15 +7,36 @@ enum class UpiOfframpStepStatus { Pending, InProgress, Completed, Failed }
 
 data class UpiOfframpStep(
     val label: StringResource,
-    val detail: StringResource? = null,
     val status: UpiOfframpStepStatus,
+    val txHash: String? = null,
+    val txExplorerUrl: String? = null,
+    val detailLines: List<StringResource> = emptyList(),
+)
+
+data class UpiOfframpOrderSummary(
+    val amountUsdcDisplay: StringResource,
+    val recipient: String,
+    val orderId: String?,
+    val networkName: String,
+    val signerAddress: String,
+    val signerExplorerUrl: String,
+)
+
+data class UpiOfframpFailureCard(
+    val stepLabel: StringResource,
+    val decodedReason: StringResource?,
+    val rawSelector: String?,
+    val rawMessage: String,
+    val txHash: String?,
+    val txExplorerUrl: String?,
 )
 
 internal data class UpiOfframpProgressState(
     val title: StringResource,
     val subtitle: StringResource?,
+    val summary: UpiOfframpOrderSummary?,
     val steps: List<UpiOfframpStep>,
+    val failure: UpiOfframpFailureCard?,
     val primaryButton: ButtonState?,
-    val secondaryButton: ButtonState?,
     val onBack: () -> Unit,
 )

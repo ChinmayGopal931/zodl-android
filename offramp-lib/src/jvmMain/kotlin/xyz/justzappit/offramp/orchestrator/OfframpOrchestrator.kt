@@ -3,6 +3,7 @@ package xyz.justzappit.offramp.orchestrator
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import xyz.justzappit.evm.abi.AbiEncoder
 import xyz.justzappit.evm.crypto.Ecies
@@ -36,27 +37,34 @@ class OfframpOrchestrator(
 ) {
     fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
         var orderId: BigInteger? = null
+        var currentStep = FailedStep.INITIALIZATION
+        var lastTxHash: String? = null
         emit(OfframpStatus.Idle)
 
         try {
             val relay = RelayIdentities.generate()
             val currencyHex = "0x" + AbiEncoder.bytes32String(request.currency).value.toHex()
 
+            currentStep = FailedStep.SELECTING_CIRCLE
             val circles = subgraph.circlesForRouting(currencyHex)
-            emit(OfframpStatus.SelectingCircle(circles.size))
+            emit(OfframpStatus.SelectingCircle(candidateCount = circles.size))
 
             val circleId = router.selectCircleForOrder(
                 circles = circles,
                 orderCurrency = currencyHex,
             ) { id -> validateCircleOnChain(id, request) }
+            emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
+            currentStep = FailedStep.APPROVING_USDC
             val approveHash = signer.sendTransaction(
                 to = network.usdcAddress,
                 data = Erc20Calls.approveCalldata(network.diamondAddress, request.usdcAmount),
             )
-            emit(OfframpStatus.ApprovingUsdc(approveHash))
+            lastTxHash = approveHash
+            emit(OfframpStatus.ApprovingUsdc(txHash = approveHash, amount = request.usdcAmount))
             require(signer.awaitReceipt(approveHash).success) { "USDC approve reverted" }
 
+            currentStep = FailedStep.PLACING_ORDER
             val placeOrderHash = signer.sendTransaction(
                 to = network.diamondAddress,
                 data = DiamondCalls.placeOrderCalldata(
@@ -70,7 +78,14 @@ class OfframpOrchestrator(
                     ),
                 ),
             )
-            emit(OfframpStatus.PlacingOrder(placeOrderHash))
+            lastTxHash = placeOrderHash
+            emit(
+                OfframpStatus.PlacingOrder(
+                    txHash = placeOrderHash,
+                    circleId = circleId,
+                    amount = request.usdcAmount,
+                ),
+            )
             val placeReceipt = signer.awaitReceipt(placeOrderHash)
             require(placeReceipt.success) { "placeOrder reverted" }
 
@@ -80,13 +95,15 @@ class OfframpOrchestrator(
                 userAddress = account.address,
             ) ?: error("placeOrder receipt did not contain an OrderPlaced log")
 
-            emit(OfframpStatus.WaitingForMerchantAcceptance(orderId))
+            currentStep = FailedStep.WAITING_FOR_ACCEPTANCE
             val accepted = pollForAcceptance(orderId)
 
+            currentStep = FailedStep.ENCRYPTING_UPI
             val cipherHex = Ecies.cipherStringify(
                 Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
             )
 
+            currentStep = FailedStep.SENDING_UPI
             val setUpiHash = signer.sendTransaction(
                 to = network.diamondAddress,
                 data = DiamondCalls.setSellOrderUpiCalldata(
@@ -94,17 +111,43 @@ class OfframpOrchestrator(
                     encryptedUpiHex = cipherHex,
                 ),
             )
-            emit(OfframpStatus.SendingEncryptedUpi(orderId, setUpiHash))
+            lastTxHash = setUpiHash
+            emit(
+                OfframpStatus.SendingEncryptedUpi(
+                    orderId = orderId,
+                    txHash = setUpiHash,
+                    merchantAddress = accepted.acceptedMerchant,
+                    merchantPubKey = accepted.merchantPubKey,
+                ),
+            )
             require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
 
-            emit(OfframpStatus.WaitingForCompletion(orderId))
-            pollForCompletion(orderId)
+            currentStep = FailedStep.WAITING_FOR_COMPLETION
+            val finished = pollForCompletion(orderId)
 
-            emit(OfframpStatus.Completed(orderId))
+            emit(
+                OfframpStatus.Completed(
+                    orderId = orderId,
+                    acceptedMerchant = finished.acceptedMerchant,
+                ),
+            )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
-            emit(OfframpStatus.Failed(e.message ?: e::class.simpleName ?: "Unknown error", orderId, e))
+            val raw = e.message
+            val selector = KnownReverts.extractSelector(raw)
+            val decoded = KnownReverts.explain(selector) ?: KnownReverts.decodeErrorString(raw)
+            emit(
+                OfframpStatus.Failed(
+                    message = raw ?: e::class.simpleName ?: "Unknown error",
+                    orderId = orderId,
+                    step = currentStep,
+                    txHash = lastTxHash,
+                    revertSelector = selector,
+                    decodedReason = decoded,
+                    cause = e,
+                ),
+            )
         }
     }
 
@@ -127,34 +170,55 @@ class OfframpOrchestrator(
         OrderReader.decodeAddressArrayNonEmpty(ret)
     }.getOrDefault(false)
 
-    private suspend fun pollForAcceptance(orderId: BigInteger): OrderReader.Order =
+    private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): OrderReader.Order =
         pollOrderUntil(
             orderId = orderId,
             timeoutMs = acceptanceTimeoutMs,
             timeoutMessage = "merchant did not accept order $orderId in time",
-        ) { it.status.onChain >= OrderStatus.ACCEPTED.onChain && it.merchantPubKey.isNotEmpty() }
+            buildStatus = { attempt, lastSeen ->
+                OfframpStatus.WaitingForMerchantAcceptance(
+                    orderId = orderId,
+                    pollAttempts = attempt,
+                    lastObservedStatus = lastSeen,
+                )
+            },
+            predicate = {
+                it.status.onChain >= OrderStatus.ACCEPTED.onChain && it.merchantPubKey.isNotEmpty()
+            },
+        )
 
-    private suspend fun pollForCompletion(orderId: BigInteger): OrderReader.Order =
+    private suspend fun FlowCollector<OfframpStatus>.pollForCompletion(orderId: BigInteger): OrderReader.Order =
         pollOrderUntil(
             orderId = orderId,
             timeoutMs = completionTimeoutMs,
             timeoutMessage = "order $orderId did not complete in time",
-        ) { it.status == OrderStatus.COMPLETED }
+            buildStatus = { attempt, lastSeen ->
+                OfframpStatus.WaitingForCompletion(
+                    orderId = orderId,
+                    pollAttempts = attempt,
+                    lastObservedStatus = lastSeen,
+                )
+            },
+            predicate = { it.status == OrderStatus.COMPLETED },
+        )
 
-    private suspend fun pollOrderUntil(
+    private suspend fun FlowCollector<OfframpStatus>.pollOrderUntil(
         orderId: BigInteger,
         timeoutMs: Long,
         timeoutMessage: String,
+        buildStatus: (Int, OrderStatus?) -> OfframpStatus,
         predicate: (OrderReader.Order) -> Boolean,
     ): OrderReader.Order {
+        var attempt = 0
+        emit(buildStatus(attempt, null))
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
+            attempt++
             val ret = rpc.ethCall(network.diamondAddress, DiamondCalls.getOrdersByIdCalldata(orderId))
-            val order = OrderReader.decodeOrder(ret).let {
-                OrderReader.Order(it.status, it.acceptedMerchant, it.merchantPubKey)
-            }
-            if (order.status == OrderStatus.CANCELLED) error("Order $orderId was cancelled")
+            val order = OrderReader.decodeOrder(ret)
+            if (order.status == OrderStatus.CANCELLED) error("Order $orderId was cancelled by the merchant")
             if (predicate(order)) return order
+            emit(buildStatus(attempt, order.status))
             delay(pollIntervalMs)
         }
         error(timeoutMessage)
