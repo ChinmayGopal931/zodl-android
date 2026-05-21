@@ -1,11 +1,15 @@
 package xyz.justzappit.evm.util
 
 fun String.hexToBytes(): ByteArray {
-    val s = if (length % 2 == 1) "0$this" else this
-    val out = ByteArray(s.length / 2)
+    val raw = if (startsWith("0x") || startsWith("0X")) substring(2) else this
+    require(raw.length % 2 == 0) { "hex input must have even length, got ${raw.length}: '$this'" }
+    val out = ByteArray(raw.length / 2)
     var i = 0
-    while (i < s.length) {
-        out[i / 2] = ((Character.digit(s[i], 16) shl 4) + Character.digit(s[i + 1], 16)).toByte()
+    while (i < raw.length) {
+        val hi = Character.digit(raw[i], 16)
+        val lo = Character.digit(raw[i + 1], 16)
+        require(hi >= 0 && lo >= 0) { "hex input contains non-hex character at index $i: '$this'" }
+        out[i / 2] = ((hi shl 4) + lo).toByte()
         i += 2
     }
     return out

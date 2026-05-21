@@ -17,6 +17,7 @@ import xyz.justzappit.offramp.account.OfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.config.P2pNetworks
+import java.util.Locale
 import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.FallbackOrderReader
@@ -34,14 +35,14 @@ val offrampModule = module {
         }
     }
     single<P2pConfigProvider> {
-        when (BuildConfig.P2P_NETWORK.lowercase()) {
-            "mainnet" -> P2pConfigProvider(
-                networkName = "mainnet",
+        when (BuildConfig.P2P_NETWORK.lowercase(Locale.ROOT)) {
+            P2pNetworks.MAINNET_NAME -> P2pConfigProvider(
+                networkName = P2pNetworks.MAINNET_NAME,
                 rpcUrlOverride = BuildConfig.P2P_RPC_URL_BASE_MAINNET.takeIf { it.isNotBlank() },
                 subgraphUrlOverride = BuildConfig.P2P_SUBGRAPH_URL_MAINNET.takeIf { it.isNotBlank() },
             )
             else -> P2pConfigProvider(
-                networkName = "sepolia",
+                networkName = P2pNetworks.SEPOLIA_NAME,
                 rpcUrlOverride = BuildConfig.P2P_RPC_URL_BASE_SEPOLIA.takeIf { it.isNotBlank() }
                     ?: P2pNetworks.SEPOLIA.rpcUrl,
                 subgraphUrlOverride = BuildConfig.P2P_SUBGRAPH_URL_SEPOLIA.takeIf { it.isNotBlank() }
@@ -58,8 +59,19 @@ val offrampModule = module {
         val cfg = get<P2pNetworkConfig>()
         SubgraphClient(httpClient = get(named(HTTP_CLIENT_QUALIFIER)), subgraphUrl = cfg.subgraphUrl)
     }
-    single<OfframpAccountProvider> { DevOfframpAccountProvider }
-    single<EvmKey> { DevOfframpAccountProvider.key }
+    single<OfframpAccountProvider> {
+        val cfg = get<P2pNetworkConfig>()
+        check(cfg.chainId != P2pNetworks.MAINNET_CHAIN_ID) {
+            "UPI offramp is not wired for mainnet — refusing to expose DevOfframpAccountProvider" +
+                " (would sign mainnet txs with the committed dev key)."
+        }
+        DevOfframpAccountProvider
+    }
+    single<EvmKey> {
+        // Resolve the provider first so its mainnet-safety check runs before the key escapes.
+        get<OfframpAccountProvider>()
+        DevOfframpAccountProvider.key
+    }
     single<EoaSigner> {
         EoaSigner(
             rpc = get(),

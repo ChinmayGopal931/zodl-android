@@ -30,10 +30,10 @@ class P2pConfigProviderTest {
             rpcUrlOverride = "https://mainnet.example",
             subgraphUrlOverride = "https://graph.example",
         ).current()
-        assertEquals(P2pNetworks.MAINNET.chainId, cfg.chainId)
+        assertEquals(P2pNetworks.MAINNET_CHAIN_ID, cfg.chainId)
         assertEquals("https://mainnet.example", cfg.rpcUrl)
         assertEquals("https://graph.example", cfg.subgraphUrl)
-        assertEquals(P2pNetworks.MAINNET.usdcAddress, cfg.usdcAddress)
+        assertEquals(P2pNetworks.MAINNET_USDC_ADDRESS, cfg.usdcAddress)
     }
 
     @Test
@@ -47,5 +47,37 @@ class P2pConfigProviderTest {
     fun `network name is case-insensitive`() {
         val cfg = P2pConfigProvider(networkName = "SEPOLIA").current()
         assertEquals(P2pNetworks.SEPOLIA.chainId, cfg.chainId)
+    }
+
+    @Test
+    fun `P2pNetworkConfig rejects blank rpcUrl`() {
+        assertFailsWith<IllegalArgumentException> {
+            P2pNetworkConfig(
+                name = "x",
+                chainId = 1,
+                rpcUrl = "",
+                diamondAddress = "0x0",
+                usdcAddress = "0x0",
+                reputationManagerAddress = "0x0",
+                subgraphUrl = "https://s",
+                baseExplorerUrl = "https://e",
+            )
+        }
+    }
+
+    @Test
+    fun `P2pNetworkConfig rejects blank subgraphUrl`() {
+        assertFailsWith<IllegalArgumentException> {
+            P2pNetworkConfig(
+                name = "x",
+                chainId = 1,
+                rpcUrl = "https://r",
+                diamondAddress = "0x0",
+                usdcAddress = "0x0",
+                reputationManagerAddress = "0x0",
+                subgraphUrl = "",
+                baseExplorerUrl = "https://e",
+            )
+        }
     }
 }

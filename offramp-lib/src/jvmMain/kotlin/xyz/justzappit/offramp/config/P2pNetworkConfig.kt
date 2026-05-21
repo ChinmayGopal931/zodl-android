@@ -9,11 +9,18 @@ data class P2pNetworkConfig(
     val reputationManagerAddress: String,
     val subgraphUrl: String,
     val baseExplorerUrl: String,
-)
+) {
+    init {
+        require(name.isNotBlank()) { "name must not be blank" }
+        require(rpcUrl.isNotBlank()) { "rpcUrl must not be blank for '$name'" }
+        require(subgraphUrl.isNotBlank()) { "subgraphUrl must not be blank for '$name'" }
+        require(baseExplorerUrl.isNotBlank()) { "baseExplorerUrl must not be blank for '$name'" }
+    }
+}
 
 object P2pNetworks {
     val SEPOLIA = P2pNetworkConfig(
-        name = "sepolia",
+        name = SEPOLIA_NAME,
         chainId = SEPOLIA_CHAIN_ID,
         rpcUrl = "https://sepolia.base.org",
         diamondAddress = "0xce868398FDaDcA368EAc203222874D6888532aE2",
@@ -23,17 +30,25 @@ object P2pNetworks {
         baseExplorerUrl = "https://sepolia.basescan.org",
     )
 
-    val MAINNET = P2pNetworkConfig(
-        name = "mainnet",
+    fun mainnet(rpcUrl: String, subgraphUrl: String): P2pNetworkConfig = P2pNetworkConfig(
+        name = MAINNET_NAME,
         chainId = MAINNET_CHAIN_ID,
-        rpcUrl = "",
-        diamondAddress = "0x4cad6eC90e65baBec9335cAd728DDC610c316368",
-        usdcAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-        reputationManagerAddress = "0xCF613e08EE1B4c2669DdCf06A7d22c9856f6Aa1D",
-        subgraphUrl = "",
-        baseExplorerUrl = "https://basescan.org",
+        rpcUrl = rpcUrl,
+        diamondAddress = MAINNET_DIAMOND_ADDRESS,
+        usdcAddress = MAINNET_USDC_ADDRESS,
+        reputationManagerAddress = MAINNET_REPUTATION_MANAGER_ADDRESS,
+        subgraphUrl = subgraphUrl,
+        baseExplorerUrl = MAINNET_BASE_EXPLORER_URL,
     )
 
+    const val SEPOLIA_NAME = "sepolia"
+    const val MAINNET_NAME = "mainnet"
+
+    const val MAINNET_CHAIN_ID = 8_453L
+    const val MAINNET_DIAMOND_ADDRESS = "0x4cad6eC90e65baBec9335cAd728DDC610c316368"
+    const val MAINNET_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+    const val MAINNET_REPUTATION_MANAGER_ADDRESS = "0xCF613e08EE1B4c2669DdCf06A7d22c9856f6Aa1D"
+    const val MAINNET_BASE_EXPLORER_URL = "https://basescan.org"
+
     private const val SEPOLIA_CHAIN_ID = 84_532L
-    private const val MAINNET_CHAIN_ID = 8_453L
 }

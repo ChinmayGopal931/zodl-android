@@ -24,7 +24,8 @@ object OrderEvents {
                 log.topics[2].equals(userTopic, ignoreCase = true)
         } ?: receipt.logs.firstOrNull { log ->
             log.address.equals(diamondAddress, ignoreCase = true) &&
-                log.topics.firstOrNull()?.equals(ORDER_PLACED_TOPIC, ignoreCase = true) == true
+                log.topics.size >= REQUIRED_TOPICS &&
+                log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true)
         }
         return candidate?.let { topicToBigInteger(it.topics[1]) }
     }

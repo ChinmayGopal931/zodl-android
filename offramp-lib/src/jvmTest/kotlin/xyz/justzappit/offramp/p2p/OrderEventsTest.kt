@@ -79,6 +79,28 @@ class OrderEventsTest {
     }
 
     @Test
+    fun `parseOrderIdFromReceipt ignores malformed logs with too few topics`() {
+        val diamond = "0xce868398fdadca368eac203222874d6888532ae2"
+        val user = "0x9858effd232b4033e47d90003d41ec34ecaeda94"
+        val orderId = BigInteger.valueOf(99)
+        val orderIdTopic = "0x" + orderId.toString(16).padStart(64, '0')
+        // Topic[0] matches OrderPlaced but only one topic — no orderId at topics[1].
+        val malformed = sampleLog(diamond, topics = listOf(OrderEvents.ORDER_PLACED_TOPIC))
+        // A second well-formed log later in the receipt should still resolve.
+        val wellFormed = sampleLog(
+            diamond,
+            topics = listOf(
+                OrderEvents.ORDER_PLACED_TOPIC,
+                orderIdTopic,
+                addressAsTopic(user),
+                addressAsTopic(diamond),
+            ),
+        )
+        val receipt = sampleReceipt(logs = listOf(malformed, wellFormed))
+        assertEquals(orderId, OrderEvents.parseOrderIdFromReceipt(receipt, diamond, user))
+    }
+
+    @Test
     fun `parseOrderIdFromReceipt ignores logs from other contracts`() {
         val diamond = "0xce868398fdadca368eac203222874d6888532ae2"
         val other = "0x0000000000000000000000000000000000000bad"
