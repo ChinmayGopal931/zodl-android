@@ -54,7 +54,7 @@ sealed class OfframpStatus {
     data class Failed(
         val message: String,
         val orderId: BigInteger?,
-        val step: FailedStep,
+        val step: OfframpStep,
         val txHash: String? = null,
         val revertSelector: Selector4? = null,
         val knownRevertReason: KnownRevertReason? = null,
@@ -63,7 +63,11 @@ sealed class OfframpStatus {
     ) : OfframpStatus()
 }
 
-enum class FailedStep {
+/**
+ * Canonical state-machine step. Shared between orchestrator state tracking, [OfframpStatus.Failed.step],
+ * and the UI progress indicator — no parallel encodings.
+ */
+enum class OfframpStep {
     INITIALIZATION,
     SELECTING_CIRCLE,
     APPROVING_USDC,
@@ -72,4 +76,30 @@ enum class FailedStep {
     ENCRYPTING_UPI,
     SENDING_UPI,
     WAITING_FOR_COMPLETION,
+    ;
+
+    companion object {
+        /** Steps surfaced to the UI progress indicator (skips INITIALIZATION + ENCRYPTING_UPI). */
+        val UI_PROGRESS: List<OfframpStep> = listOf(
+            SELECTING_CIRCLE,
+            APPROVING_USDC,
+            PLACING_ORDER,
+            WAITING_FOR_ACCEPTANCE,
+            SENDING_UPI,
+            WAITING_FOR_COMPLETION,
+        )
+    }
+}
+
+/** Derives the canonical [OfframpStep] from any [OfframpStatus] instance. */
+val OfframpStatus.step: OfframpStep get() = when (this) {
+    OfframpStatus.Idle -> OfframpStep.INITIALIZATION
+    is OfframpStatus.SelectingCircle -> OfframpStep.SELECTING_CIRCLE
+    is OfframpStatus.ApprovingUsdc -> OfframpStep.APPROVING_USDC
+    is OfframpStatus.PlacingOrder -> OfframpStep.PLACING_ORDER
+    is OfframpStatus.WaitingForMerchantAcceptance -> OfframpStep.WAITING_FOR_ACCEPTANCE
+    is OfframpStatus.SendingEncryptedUpi -> OfframpStep.SENDING_UPI
+    is OfframpStatus.WaitingForCompletion -> OfframpStep.WAITING_FOR_COMPLETION
+    is OfframpStatus.Completed -> OfframpStep.WAITING_FOR_COMPLETION
+    is OfframpStatus.Failed -> this.step
 }

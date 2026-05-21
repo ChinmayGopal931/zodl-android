@@ -41,7 +41,7 @@ class OfframpOrchestrator(
 ) {
     fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
         var orderId: BigInteger? = null
-        var currentStep = FailedStep.INITIALIZATION
+        var currentStep = OfframpStep.INITIALIZATION
         var lastTxHash: String? = null
         emit(OfframpStatus.Idle)
 
@@ -49,7 +49,7 @@ class OfframpOrchestrator(
             val relay = RelayIdentities.generate()
             val currencyHex = "0x" + AbiEncoder.bytes32String(request.currency.code).value.toHex()
 
-            currentStep = FailedStep.SELECTING_CIRCLE
+            currentStep = OfframpStep.SELECTING_CIRCLE
             val circles = subgraph.circlesForRouting(currencyHex)
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size))
 
@@ -59,7 +59,7 @@ class OfframpOrchestrator(
             ) { id -> validateCircleOnChain(id, request) }
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
-            currentStep = FailedStep.APPROVING_USDC
+            currentStep = OfframpStep.APPROVING_USDC
             val approveHash = signer.sendTransaction(
                 to = network.usdcAddress,
                 data = Erc20Calls.approveCalldata(network.diamondAddress, request.usdcAmount),
@@ -68,7 +68,7 @@ class OfframpOrchestrator(
             emit(OfframpStatus.ApprovingUsdc(txHash = approveHash, amount = request.usdcAmount))
             require(signer.awaitReceipt(approveHash).success) { "USDC approve reverted" }
 
-            currentStep = FailedStep.PLACING_ORDER
+            currentStep = OfframpStep.PLACING_ORDER
             val placeOrderHash = signer.sendTransaction(
                 to = network.diamondAddress,
                 data = DiamondCalls.placeOrderCalldata(
@@ -99,18 +99,18 @@ class OfframpOrchestrator(
                 userAddress = account.address,
             ) ?: error("placeOrder receipt did not contain an OrderPlaced log")
 
-            currentStep = FailedStep.WAITING_FOR_ACCEPTANCE
+            currentStep = OfframpStep.WAITING_FOR_ACCEPTANCE
             val accepted = pollForAcceptance(orderId)
             val acceptedMerchant = requireNotNull(accepted.acceptedMerchantAddress) {
                 "Order $orderId reached ACCEPTED but acceptedMerchantAddress is null"
             }
 
-            currentStep = FailedStep.ENCRYPTING_UPI
+            currentStep = OfframpStep.ENCRYPTING_UPI
             val cipherHex = Ecies.cipherStringify(
                 Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
             )
 
-            currentStep = FailedStep.SENDING_UPI
+            currentStep = OfframpStep.SENDING_UPI
             val setUpiHash = signer.sendTransaction(
                 to = network.diamondAddress,
                 data = DiamondCalls.setSellOrderUpiCalldata(
@@ -129,7 +129,7 @@ class OfframpOrchestrator(
             )
             require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
 
-            currentStep = FailedStep.WAITING_FOR_COMPLETION
+            currentStep = OfframpStep.WAITING_FOR_COMPLETION
             val finished = pollForCompletion(orderId)
 
             emit(
@@ -227,7 +227,7 @@ class OfframpOrchestrator(
     private fun buildFailedStatus(
         error: Throwable,
         orderId: BigInteger?,
-        step: FailedStep,
+        step: OfframpStep,
         lastTxHash: String?,
     ): OfframpStatus.Failed = when (error) {
         is RpcException.ExecutionReverted -> OfframpStatus.Failed(

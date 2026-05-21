@@ -149,7 +149,7 @@ class OfframpOrchestratorTest {
         ).toList()
         val last = assertIs<OfframpStatus.Failed>(statuses.last())
         assertEquals(null, last.orderId)
-        assertEquals(FailedStep.SELECTING_CIRCLE, last.step)
+        assertEquals(OfframpStep.SELECTING_CIRCLE, last.step)
     }
 
     @Test
@@ -166,7 +166,7 @@ class OfframpOrchestratorTest {
         ).toList()
         val last = assertIs<OfframpStatus.Failed>(statuses.last())
         assertEquals(ORDER_ID, last.orderId)
-        assertEquals(FailedStep.WAITING_FOR_ACCEPTANCE, last.step)
+        assertEquals(OfframpStep.WAITING_FOR_ACCEPTANCE, last.step)
         assertTrue(last.message.contains("cancelled", ignoreCase = true))
     }
 

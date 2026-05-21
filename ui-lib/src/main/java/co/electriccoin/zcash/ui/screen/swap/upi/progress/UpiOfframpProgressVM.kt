@@ -21,11 +21,12 @@ import kotlinx.coroutines.launch
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.config.P2pNetworkConfig
-import xyz.justzappit.offramp.orchestrator.FailedStep
 import xyz.justzappit.offramp.orchestrator.KnownRevertReason
 import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
+import xyz.justzappit.offramp.orchestrator.OfframpStep
+import xyz.justzappit.offramp.orchestrator.step
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -146,118 +147,122 @@ internal class UpiOfframpProgressVM(
     }
 
     private fun buildSteps(status: OfframpStatus): List<UpiOfframpStep> {
-        val order = listOf(
-            STEP_SELECTING_CIRCLE,
-            STEP_APPROVE,
-            STEP_PLACE_ORDER,
-            STEP_WAIT_ACCEPTANCE,
-            STEP_SEND_UPI,
-            STEP_WAIT_COMPLETION,
-        )
-        val currentIndex = currentStepIndex(status)
-        val failedIndex = (status as? OfframpStatus.Failed)?.let { failedStepIndex(it.step) }
+        val order = OfframpStep.UI_PROGRESS
+        val currentStep = status.step.takeIf { status !is OfframpStatus.Failed }
+        val failedStep = (status as? OfframpStatus.Failed)?.step
 
-        return order.mapIndexed { index, key ->
-            val stepStatus = when {
-                failedIndex != null && index == failedIndex -> UpiOfframpStepStatus.Failed
-                failedIndex != null && index < failedIndex -> UpiOfframpStepStatus.Completed
-                failedIndex != null -> UpiOfframpStepStatus.Pending
-                index < currentIndex -> UpiOfframpStepStatus.Completed
-                index == currentIndex -> UpiOfframpStepStatus.InProgress
-                else -> UpiOfframpStepStatus.Pending
-            }
-            val txHash = txHashFor(status, key)
+        return order.mapIndexed { index, step ->
+            val stepStatus = computeStepStatus(index, step, order, currentStep, failedStep)
+            val txHash = txHashFor(status, step)
             UpiOfframpStep(
-                label = stringRes(stepLabelRes(key)),
+                label = stringRes(stepLabelRes(step)),
                 status = stepStatus,
                 txHash = txHash,
                 txExplorerUrl = txHash?.let { explorerUrl(txPath(it)) },
-                detailLines = stepDetail(status, key),
+                detailLines = stepDetail(status, step),
             )
         }
     }
 
-    private fun currentStepIndex(status: OfframpStatus): Int = when (status) {
-        is OfframpStatus.Idle -> -1
-        is OfframpStatus.SelectingCircle -> 0
-        is OfframpStatus.ApprovingUsdc -> 1
-        is OfframpStatus.PlacingOrder -> 2
-        is OfframpStatus.WaitingForMerchantAcceptance -> 3
-        is OfframpStatus.SendingEncryptedUpi -> 4
-        is OfframpStatus.WaitingForCompletion -> 5
-        is OfframpStatus.Completed -> 6
-        is OfframpStatus.Failed -> -1
+    private fun computeStepStatus(
+        index: Int,
+        step: OfframpStep,
+        order: List<OfframpStep>,
+        currentStep: OfframpStep?,
+        failedStep: OfframpStep?,
+    ): UpiOfframpStepStatus {
+        if (failedStep != null) {
+            val failedAt = uiIndexFor(failedStep, order)
+            return when {
+                index == failedAt -> UpiOfframpStepStatus.Failed
+                index < failedAt -> UpiOfframpStepStatus.Completed
+                else -> UpiOfframpStepStatus.Pending
+            }
+        }
+        if (currentStep == null) return UpiOfframpStepStatus.Pending
+        val currentIndex = uiIndexFor(currentStep, order)
+        return when {
+            index < currentIndex -> UpiOfframpStepStatus.Completed
+            index == currentIndex -> UpiOfframpStepStatus.InProgress
+            else -> UpiOfframpStepStatus.Pending
+        }
     }
 
-    private fun failedStepIndex(step: FailedStep): Int = when (step) {
-        FailedStep.INITIALIZATION, FailedStep.SELECTING_CIRCLE -> 0
-        FailedStep.APPROVING_USDC -> 1
-        FailedStep.PLACING_ORDER -> 2
-        FailedStep.WAITING_FOR_ACCEPTANCE -> 3
-        FailedStep.ENCRYPTING_UPI, FailedStep.SENDING_UPI -> 4
-        FailedStep.WAITING_FOR_COMPLETION -> 5
+    /**
+     * Maps a canonical [OfframpStep] to its position in [order]. INITIALIZATION collapses to
+     * SELECTING_CIRCLE; ENCRYPTING_UPI collapses to SENDING_UPI (these are internal steps not
+     * surfaced as separate UI rows).
+     */
+    private fun uiIndexFor(step: OfframpStep, order: List<OfframpStep>): Int {
+        val displayed = when (step) {
+            OfframpStep.INITIALIZATION -> OfframpStep.SELECTING_CIRCLE
+            OfframpStep.ENCRYPTING_UPI -> OfframpStep.SENDING_UPI
+            else -> step
+        }
+        return order.indexOf(displayed).coerceAtLeast(0)
     }
 
-    private fun stepLabel(step: FailedStep): StringResource = stringRes(
-        when (step) {
-            FailedStep.INITIALIZATION -> R.string.upi_offramp_step_init
-            FailedStep.SELECTING_CIRCLE -> R.string.upi_offramp_step_selecting_circle
-            FailedStep.APPROVING_USDC -> R.string.upi_offramp_step_approve
-            FailedStep.PLACING_ORDER -> R.string.upi_offramp_step_place_order
-            FailedStep.WAITING_FOR_ACCEPTANCE -> R.string.upi_offramp_step_wait_acceptance
-            FailedStep.ENCRYPTING_UPI -> R.string.upi_offramp_step_encrypting_upi
-            FailedStep.SENDING_UPI -> R.string.upi_offramp_step_send_upi
-            FailedStep.WAITING_FOR_COMPLETION -> R.string.upi_offramp_step_wait_completion
-        },
-    )
+    private fun stepLabel(step: OfframpStep): StringResource = stringRes(stepLabelRes(step))
 
-    private fun stepLabelRes(key: String): Int = when (key) {
-        STEP_SELECTING_CIRCLE -> R.string.upi_offramp_step_selecting_circle
-        STEP_APPROVE -> R.string.upi_offramp_step_approve
-        STEP_PLACE_ORDER -> R.string.upi_offramp_step_place_order
-        STEP_WAIT_ACCEPTANCE -> R.string.upi_offramp_step_wait_acceptance
-        STEP_SEND_UPI -> R.string.upi_offramp_step_send_upi
-        STEP_WAIT_COMPLETION -> R.string.upi_offramp_step_wait_completion
-        else -> R.string.upi_offramp_step_selecting_circle
+    private fun stepLabelRes(step: OfframpStep): Int = when (step) {
+        OfframpStep.INITIALIZATION -> R.string.upi_offramp_step_init
+        OfframpStep.SELECTING_CIRCLE -> R.string.upi_offramp_step_selecting_circle
+        OfframpStep.APPROVING_USDC -> R.string.upi_offramp_step_approve
+        OfframpStep.PLACING_ORDER -> R.string.upi_offramp_step_place_order
+        OfframpStep.WAITING_FOR_ACCEPTANCE -> R.string.upi_offramp_step_wait_acceptance
+        OfframpStep.ENCRYPTING_UPI -> R.string.upi_offramp_step_encrypting_upi
+        OfframpStep.SENDING_UPI -> R.string.upi_offramp_step_send_upi
+        OfframpStep.WAITING_FOR_COMPLETION -> R.string.upi_offramp_step_wait_completion
     }
 
-    private fun txHashFor(status: OfframpStatus, key: String): String? = when {
-        key == STEP_APPROVE && status is OfframpStatus.ApprovingUsdc -> status.txHash
-        key == STEP_PLACE_ORDER && status is OfframpStatus.PlacingOrder -> status.txHash
-        key == STEP_SEND_UPI && status is OfframpStatus.SendingEncryptedUpi -> status.txHash
+    private fun txHashFor(status: OfframpStatus, step: OfframpStep): String? = when (step) {
+        OfframpStep.APPROVING_USDC -> (status as? OfframpStatus.ApprovingUsdc)?.txHash
+        OfframpStep.PLACING_ORDER -> (status as? OfframpStatus.PlacingOrder)?.txHash
+        OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
         else -> null
     }
 
-    private fun stepDetail(status: OfframpStatus, key: String): List<StringResource> = when {
-        key == STEP_SELECTING_CIRCLE && status is OfframpStatus.SelectingCircle -> buildList {
-            add(stringRes(R.string.upi_offramp_detail_candidates, status.candidateCount))
-            status.selectedCircleId?.let {
-                add(stringRes(R.string.upi_offramp_detail_selected_circle, it.toString()))
+    private fun stepDetail(status: OfframpStatus, step: OfframpStep): List<StringResource> = when (step) {
+        OfframpStep.SELECTING_CIRCLE -> (status as? OfframpStatus.SelectingCircle)?.let {
+            buildList {
+                add(stringRes(R.string.upi_offramp_detail_candidates, it.candidateCount))
+                it.selectedCircleId?.let { circle ->
+                    add(stringRes(R.string.upi_offramp_detail_selected_circle, circle.toString()))
+                }
             }
-        }
-        key == STEP_APPROVE && status is OfframpStatus.ApprovingUsdc ->
-            listOf(stringRes(R.string.upi_offramp_detail_amount, formatUsdc(status.amount.toString())))
-        key == STEP_PLACE_ORDER && status is OfframpStatus.PlacingOrder -> listOf(
-            stringRes(R.string.upi_offramp_detail_circle_id, status.circleId.toString()),
-            stringRes(R.string.upi_offramp_detail_amount, formatUsdc(status.amount.toString())),
-        )
-        key == STEP_WAIT_ACCEPTANCE && status is OfframpStatus.WaitingForMerchantAcceptance -> buildList {
-            add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
-            status.lastObservedStatus?.let {
-                add(stringRes(R.string.upi_offramp_detail_last_status, it.name))
+        }.orEmpty()
+        OfframpStep.APPROVING_USDC -> (status as? OfframpStatus.ApprovingUsdc)?.let {
+            listOf(stringRes(R.string.upi_offramp_detail_amount, formatUsdc(it.amount.toString())))
+        }.orEmpty()
+        OfframpStep.PLACING_ORDER -> (status as? OfframpStatus.PlacingOrder)?.let {
+            listOf(
+                stringRes(R.string.upi_offramp_detail_circle_id, it.circleId.toString()),
+                stringRes(R.string.upi_offramp_detail_amount, formatUsdc(it.amount.toString())),
+            )
+        }.orEmpty()
+        OfframpStep.WAITING_FOR_ACCEPTANCE -> (status as? OfframpStatus.WaitingForMerchantAcceptance)?.let {
+            buildList {
+                add(stringRes(R.string.upi_offramp_detail_polling_attempts, it.pollAttempts))
+                it.lastObservedStatus?.let { last ->
+                    add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
+                }
             }
-        }
-        key == STEP_SEND_UPI && status is OfframpStatus.SendingEncryptedUpi -> listOf(
-            stringRes(R.string.upi_offramp_detail_merchant, status.merchantAddress.checksumHex),
-        )
-        key == STEP_WAIT_COMPLETION && status is OfframpStatus.WaitingForCompletion -> buildList {
-            add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
-            status.lastObservedStatus?.let {
-                add(stringRes(R.string.upi_offramp_detail_last_status, it.name))
+        }.orEmpty()
+        OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.let {
+            listOf(stringRes(R.string.upi_offramp_detail_merchant, it.merchantAddress.checksumHex))
+        }.orEmpty()
+        OfframpStep.WAITING_FOR_COMPLETION -> when (status) {
+            is OfframpStatus.WaitingForCompletion -> buildList {
+                add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
+                status.lastObservedStatus?.let { last ->
+                    add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
+                }
             }
+            is OfframpStatus.Completed -> listOf(
+                stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant.checksumHex),
+            )
+            else -> emptyList()
         }
-        key == STEP_WAIT_COMPLETION && status is OfframpStatus.Completed ->
-            listOf(stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant.checksumHex))
         else -> emptyList()
     }
 
@@ -273,12 +278,6 @@ internal class UpiOfframpProgressVM(
     }
 
     companion object {
-        private const val STEP_SELECTING_CIRCLE = "selecting_circle"
-        private const val STEP_APPROVE = "approve"
-        private const val STEP_PLACE_ORDER = "place_order"
-        private const val STEP_WAIT_ACCEPTANCE = "wait_acceptance"
-        private const val STEP_SEND_UPI = "send_upi"
-        private const val STEP_WAIT_COMPLETION = "wait_completion"
         private const val USDC_DECIMALS = 6
         private const val MAX_RAW_MESSAGE_LEN = 500
     }
