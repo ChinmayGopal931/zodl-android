@@ -3,15 +3,7 @@ package xyz.justzappit.offramp.p2p
 import java.math.BigInteger
 import kotlin.random.Random
 
-/**
- * Epsilon-greedy circle selector, 1:1 port of the SDK's `routing.ts`.
- *
- * Tries up to MAX_VALIDATION_ATTEMPTS selections; on each pick, calls `validateCircle`
- * to confirm on-chain eligibility (typically `getAssignableMerchantsFromCircle` returning
- * a non-empty merchant list). On validation failure, drops the circle and retries.
- *
- * Thread-safe via the injected [Random]; pass a seeded Random in tests for determinism.
- */
+// Epsilon-greedy circle selector, 1:1 port of the SDK's routing.ts.
 class CircleRouter(
     private val random: Random = Random.Default,
     private val epsilon: Double = EPSILON,

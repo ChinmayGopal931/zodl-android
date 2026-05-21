@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.offramp.config.P2pNetworkConfig
@@ -26,6 +27,7 @@ import xyz.justzappit.offramp.orchestrator.OfframpStatus
 import java.math.BigDecimal
 import java.math.BigInteger
 
+@Suppress("TooManyFunctions")
 internal class UpiOfframpProgressVM(
     private val args: UpiOfframpProgressArgs,
     private val orchestrator: OfframpOrchestrator,
@@ -57,7 +59,7 @@ internal class UpiOfframpProgressVM(
             .run(request)
             .onEach { status ->
                 Twig.info { "UpiOfframpProgress status=$status" }
-                latestStatus.value = status
+                latestStatus.update { status }
             }
             .collect { /* state already updated in onEach */ }
     }

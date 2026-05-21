@@ -1,7 +1,6 @@
 package xyz.justzappit.evm.signer
 
 import org.bouncycastle.crypto.digests.KeccakDigest
-import org.bouncycastle.jce.ECNamedCurveTable
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
@@ -12,7 +11,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class Eip1559TxTest {
-    private val curve = ECNamedCurveTable.getParameterSpec("secp256k1")
 
     @Test
     fun `signingPayload starts with 0x02 type byte`() {

@@ -4,13 +4,6 @@ import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import java.math.BigInteger
 
-/**
- * Fallback [OrderReadSource]. One `eth_call(getOrdersById)` to the Diamond followed by an
- * ABI decode of the Order tuple. Misses the per-event timestamps and `actualFiatAmount`
- * that the subgraph carries — those fields land as `null` on the returned snapshot.
- *
- * Used when the subgraph is unavailable or doesn't yet have the order indexed.
- */
 class OnChainOrderReader(
     private val rpc: BaseRpcClient,
     private val network: P2pNetworkConfig,

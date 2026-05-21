@@ -1,0 +1,25 @@
+package xyz.justzappit.offramp.p2p
+
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class CircleForRouting(
+    val circleId: String,
+    val currency: String,
+    val metrics: CircleMetrics,
+)
+
+@Serializable
+data class CircleMetrics(
+    // Subgraph emits BigDecimal-as-string; parsed into a Double via [score].
+    val circleScore: String,
+    val circleStatus: String,
+    val scoreState: CircleScoreState,
+) {
+    val score: Double get() = circleScore.toDoubleOrNull() ?: 0.0
+}
+
+@Serializable
+data class CircleScoreState(
+    val activeMerchantsCount: String,
+)

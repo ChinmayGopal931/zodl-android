@@ -1,16 +1,7 @@
 package xyz.justzappit.offramp.orchestrator
 
-/**
- * Translates raw 4-byte EVM error selectors and revert payloads into human-readable
- * messages. Maintained from Discord observations (see `docs/integrations/UPI_Offramp.md` §2)
- * and from the p2p.me ABI errors.
- */
 object KnownReverts {
 
-    /**
-     * Selector → user-facing reason mapping. Selectors are the first 4 bytes of
-     * keccak256(canonicalErrorSignature) — same shape as function selectors.
-     */
     private val SELECTOR_LOOKUP: Map<String, String> = mapOf(
         "0x91da284f" to
             "Insufficient reputation points. BUY orders (and possibly PAY orders for fresh " +
@@ -24,20 +15,15 @@ object KnownReverts {
             "Contract revert with a string reason (see decodedReason for the message).",
     )
 
-    /** Extracts the first `0x........` 8-hex selector found in [rawError], or null. */
     fun extractSelector(rawError: String?): String? {
         if (rawError.isNullOrBlank()) return null
         val match = SELECTOR_PATTERN.find(rawError) ?: return null
         return match.value.lowercase()
     }
 
-    /** Looks up the human-readable reason for a known selector. */
     fun explain(selector: String?): String? = selector?.lowercase()?.let { SELECTOR_LOOKUP[it] }
 
-    /**
-     * Best-effort decode of an `Error(string)` revert (selector 0x08c379a0) payload to
-     * its embedded message. Returns null if the layout doesn't match.
-     */
+    // Decodes the standard Solidity `Error(string)` revert payload (selector 0x08c379a0).
     fun decodeErrorString(rawError: String?): String? {
         if (rawError.isNullOrBlank()) return null
         val payload = ERROR_STRING_PATTERN.find(rawError)?.value ?: return null

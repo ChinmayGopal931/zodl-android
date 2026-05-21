@@ -38,11 +38,15 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
+import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 import co.electriccoin.zcash.ui.design.util.getValue
+import co.electriccoin.zcash.ui.design.util.stringRes
 
 @Composable
 internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
@@ -351,3 +355,93 @@ private const val ADDRESS_ELLIPSIS_PREFIX = 10
 private const val ADDRESS_ELLIPSIS_SUFFIX = 6
 private const val TX_HASH_ELLIPSIS_PREFIX = 12
 private const val TX_HASH_ELLIPSIS_SUFFIX = 8
+
+private val previewSummary = UpiOfframpOrderSummary(
+    amountUsdcDisplay = stringRes("5.00"),
+    recipient = "merchant@upi",
+    orderId = "12345",
+    networkName = "Sepolia",
+    signerAddress = "0x1234567890abcdef1234567890abcdef12345678",
+    signerExplorerUrl = "https://sepolia.basescan.org/address/0x1234567890abcdef1234567890abcdef12345678",
+)
+
+@PreviewScreens
+@Composable
+private fun PreviewInProgress() {
+    ZcashTheme {
+        UpiOfframpProgressView(
+            state = UpiOfframpProgressState(
+                title = stringRes("Sending to merchant"),
+                subtitle = stringRes("Recipient: merchant@upi"),
+                summary = previewSummary,
+                steps = listOf(
+                    UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Approving USDC"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Placing the order"), UpiOfframpStepStatus.InProgress),
+                    UpiOfframpStep(stringRes("Waiting for merchant"), UpiOfframpStepStatus.Pending),
+                ),
+                failure = null,
+                primaryButton = null,
+                onBack = {},
+            ),
+        )
+    }
+}
+
+@PreviewScreens
+@Composable
+private fun PreviewCompleted() {
+    ZcashTheme {
+        UpiOfframpProgressView(
+            state = UpiOfframpProgressState(
+                title = stringRes("Payment sent"),
+                subtitle = stringRes("The merchant has confirmed the UPI transfer."),
+                summary = previewSummary,
+                steps = listOf(
+                    UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Approving USDC"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Placing the order"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Waiting for merchant"), UpiOfframpStepStatus.Completed),
+                ),
+                failure = null,
+                primaryButton = ButtonState(
+                    text = stringRes("Done"),
+                    onClick = {},
+                ),
+                onBack = {},
+            ),
+        )
+    }
+}
+
+@PreviewScreens
+@Composable
+private fun PreviewFailed() {
+    ZcashTheme {
+        UpiOfframpProgressView(
+            state = UpiOfframpProgressState(
+                title = stringRes("Something went wrong"),
+                subtitle = null,
+                summary = previewSummary,
+                steps = listOf(
+                    UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
+                    UpiOfframpStep(stringRes("Approving USDC"), UpiOfframpStepStatus.Failed),
+                    UpiOfframpStep(stringRes("Placing the order"), UpiOfframpStepStatus.Pending),
+                ),
+                failure = UpiOfframpFailureCard(
+                    stepLabel = stringRes("Approving USDC"),
+                    decodedReason = stringRes("Insufficient USDC balance for approval."),
+                    rawSelector = "0x91da284f",
+                    rawMessage = "execution reverted: ERC20: transfer amount exceeds balance",
+                    txHash = "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                    txExplorerUrl = "https://sepolia.basescan.org/tx/0xabcdef",
+                ),
+                primaryButton = ButtonState(
+                    text = stringRes("Close"),
+                    onClick = {},
+                ),
+                onBack = {},
+            ),
+        )
+    }
+}

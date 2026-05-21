@@ -49,11 +49,7 @@ object OrderEvents {
     private const val INDEXED_PARAMS = 3
     private const val REQUIRED_TOPICS = INDEXED_PARAMS + 1
 
-    /**
-     * Mirrors the OrderPlaced event from p2pdotme-sdk/src/contracts/abis/order-flow-facet.ts.
-     * The trailing tuple expands all 22 fields of the Order struct (with an embedded
-     * disputeInfo tuple). If the SDK ever changes the Order shape, recompute this constant.
-     */
+    // Mirrors OrderPlaced from p2pdotme-sdk's order-flow-facet ABI.
     private const val ORDER_PLACED_CANONICAL_SIGNATURE =
         "OrderPlaced(uint256,address,address,uint256,uint8,uint256," +
             "(uint256,uint256,uint256,uint256,uint256,address,address,address," +

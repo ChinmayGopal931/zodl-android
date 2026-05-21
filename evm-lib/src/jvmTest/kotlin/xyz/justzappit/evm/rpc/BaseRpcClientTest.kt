@@ -2,10 +2,8 @@ package xyz.justzappit.evm.rpc
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
-import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.HttpResponseData
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
@@ -146,9 +144,3 @@ class BaseRpcClientTest {
         assertTrue(ex.message!!.contains("execution reverted"))
     }
 }
-
-private suspend fun MockRequestHandleScope.respondText(text: String): HttpResponseData =
-    respond(text, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
-
-private suspend fun io.ktor.http.content.OutgoingContent.ByteArrayContent.bytesAsString(): String =
-    bytes().decodeToString()

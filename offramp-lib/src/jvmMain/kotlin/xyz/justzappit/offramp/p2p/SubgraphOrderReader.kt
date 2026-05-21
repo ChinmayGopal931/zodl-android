@@ -1,17 +1,10 @@
 package xyz.justzappit.offramp.p2p
 
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import java.math.BigInteger
 
-/**
- * Primary [OrderReadSource]. One GraphQL `orders_collection(where: { orderId })` query →
- * full [OrderSnapshot] including per-event timestamps and actual settled amounts that
- * the on-chain reader can't supply in a single call.
- *
- * Lag vs chain head is typically ≤1 block (~2s on Base). Throws on HTTP / parse failures
- * so a [FallbackOrderReader] can route to on-chain.
- */
 class SubgraphOrderReader(
     private val subgraph: SubgraphClient,
 ) : OrderReadSource {
@@ -52,7 +45,7 @@ class SubgraphOrderReader(
     }
 
     private fun orderTypeFromOnChain(onChain: Int): OrderType =
-        OrderType.values().firstOrNull { it.onChain == onChain }
+        OrderType.entries.firstOrNull { it.onChain == onChain }
             ?: error("Unknown OrderType from subgraph: $onChain")
 
     private fun JsonObject.requireString(key: String): String =
@@ -62,6 +55,3 @@ class SubgraphOrderReader(
     private fun JsonObject.optionalString(key: String): String? =
         this[key]?.jsonPrimitive?.contentOrNull
 }
-
-private val kotlinx.serialization.json.JsonPrimitive.contentOrNull: String?
-    get() = if (isString || this.content != "null") this.content else null

@@ -23,8 +23,8 @@ import co.electriccoin.zcash.ui.design.util.LocalNavController
 import co.electriccoin.zcash.ui.design.util.tryRequestFocus
 import co.electriccoin.zcash.ui.screen.swap.upi.UpiOfframpBody
 import kotlinx.serialization.Serializable
-import org.koin.compose.koinInject
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun SwapScreen() {

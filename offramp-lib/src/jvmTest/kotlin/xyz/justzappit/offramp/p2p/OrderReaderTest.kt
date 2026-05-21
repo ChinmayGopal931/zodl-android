@@ -74,56 +74,51 @@ class OrderReaderTest {
         acceptedMerchant: String = "0x" + "ab".repeat(20),
         pubkey: String? = null,
     ): ByteArray {
-        val WORD = 32
-        // We need to support the 11-slot minimum, plus extra slots for the rest of the fields.
-        // For tests we extend the head to 25 slots (matches the real Order tuple's head width
-        // including the embedded disputeInfo). Dynamic data follows.
+        val word = 32
         val headSlots = 25
-        val tupleHead = ByteArray(headSlots * WORD)
+        val tupleHead = ByteArray(headSlots * word)
 
         // Slot 5: acceptedMerchant
         val mBytes = acceptedMerchant.removePrefix("0x").hexToBytes()
-        System.arraycopy(mBytes, 0, tupleHead, 5 * WORD + (WORD - mBytes.size), mBytes.size)
+        System.arraycopy(mBytes, 0, tupleHead, 5 * word + (word - mBytes.size), mBytes.size)
 
         // Slot 11: status (uint8)
-        tupleHead[12 * WORD - 1] = status.onChain.toByte()
+        tupleHead[12 * word - 1] = status.onChain.toByte()
 
         // Slot 8: pubkey offset (or 0 if null pubkey)
         val tupleTail: ByteArray
         if (pubkey != null) {
-            val tailOffset = headSlots * WORD
-            // Write offset BigInteger
+            val tailOffset = headSlots * word
             val offsetBytes = BigInteger.valueOf(tailOffset.toLong()).toByteArray()
-            System.arraycopy(offsetBytes, 0, tupleHead, 9 * WORD - offsetBytes.size, offsetBytes.size)
+            System.arraycopy(offsetBytes, 0, tupleHead, 9 * word - offsetBytes.size, offsetBytes.size)
             val pubKeyBytes = pubkey.toByteArray(Charsets.UTF_8)
-            val pad = if (pubKeyBytes.size % WORD == 0) 0 else WORD - (pubKeyBytes.size % WORD)
-            val tail = ByteArray(WORD + pubKeyBytes.size + pad)
+            val pad = if (pubKeyBytes.size % word == 0) 0 else word - (pubKeyBytes.size % word)
+            val tail = ByteArray(word + pubKeyBytes.size + pad)
             val lenBytes = BigInteger.valueOf(pubKeyBytes.size.toLong()).toByteArray()
-            System.arraycopy(lenBytes, 0, tail, WORD - lenBytes.size, lenBytes.size)
-            System.arraycopy(pubKeyBytes, 0, tail, WORD, pubKeyBytes.size)
+            System.arraycopy(lenBytes, 0, tail, word - lenBytes.size, lenBytes.size)
+            System.arraycopy(pubKeyBytes, 0, tail, word, pubKeyBytes.size)
             tupleTail = tail
         } else {
-            // offset stays at 0
             tupleTail = ByteArray(0)
         }
 
         // Top-level offset = 0x20 (pointing past itself to the tuple data)
-        val topOffset = ByteArray(WORD).also { it[WORD - 1] = 0x20.toByte() }
+        val topOffset = ByteArray(word).also { it[word - 1] = 0x20.toByte() }
         return topOffset + tupleHead + tupleTail
     }
 
     private fun encodeAddressArray(addresses: List<String>): ByteArray {
-        val WORD = 32
-        val out = ByteArray(WORD * (2 + addresses.size))
+        val word = 32
+        val out = ByteArray(word * (2 + addresses.size))
         // offset 32
-        out[WORD - 1] = 0x20.toByte()
+        out[word - 1] = 0x20.toByte()
         // length
         val lenBytes = BigInteger.valueOf(addresses.size.toLong()).toByteArray()
-        System.arraycopy(lenBytes, 0, out, 2 * WORD - lenBytes.size, lenBytes.size)
+        System.arraycopy(lenBytes, 0, out, 2 * word - lenBytes.size, lenBytes.size)
         // addresses
         addresses.forEachIndexed { i, addr ->
             val addrBytes = addr.removePrefix("0x").hexToBytes()
-            System.arraycopy(addrBytes, 0, out, (2 + i) * WORD + (WORD - addrBytes.size), addrBytes.size)
+            System.arraycopy(addrBytes, 0, out, (2 + i) * word + (word - addrBytes.size), addrBytes.size)
         }
         return out
     }

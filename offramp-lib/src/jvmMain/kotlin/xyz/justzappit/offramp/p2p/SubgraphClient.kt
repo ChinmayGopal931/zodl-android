@@ -6,7 +6,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -14,28 +13,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
-
-@Serializable
-data class CircleForRouting(
-    val circleId: String,
-    val currency: String,
-    val metrics: CircleMetrics,
-)
-
-@Serializable
-data class CircleMetrics(
-    // Subgraph emits BigDecimal-as-string; parsed into a Double via [score].
-    val circleScore: String,
-    val circleStatus: String,
-    val scoreState: CircleScoreState,
-) {
-    val score: Double get() = circleScore.toDoubleOrNull() ?: 0.0
-}
-
-@Serializable
-data class CircleScoreState(
-    val activeMerchantsCount: String,
-)
 
 class SubgraphClient(
     private val httpClient: HttpClient,

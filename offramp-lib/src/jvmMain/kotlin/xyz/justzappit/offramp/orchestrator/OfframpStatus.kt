@@ -3,11 +3,6 @@ package xyz.justzappit.offramp.orchestrator
 import xyz.justzappit.offramp.p2p.OrderStatus
 import java.math.BigInteger
 
-/**
- * State emitted by [OfframpOrchestrator]. Each non-terminal state surfaces every datum we
- * have available at that step — tx hashes, on-chain values, poll counters — so the UI can
- * render the most informative progress view possible without re-querying.
- */
 sealed class OfframpStatus {
     object Idle : OfframpStatus()
 
@@ -65,7 +60,6 @@ sealed class OfframpStatus {
     ) : OfframpStatus()
 }
 
-/** Which step of the offramp pipeline failed. Used to render the failure header in UI. */
 enum class FailedStep {
     INITIALIZATION,
     SELECTING_CIRCLE,

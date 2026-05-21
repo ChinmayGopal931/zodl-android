@@ -1,6 +1,8 @@
 package co.electriccoin.zcash.di
 
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.BuildConfig
+import co.electriccoin.zcash.ui.common.usecase.GetUpiOfframpRateUseCase
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -15,7 +17,6 @@ import xyz.justzappit.offramp.account.OfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.config.P2pNetworks
-import co.electriccoin.zcash.spackle.Twig
 import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.FallbackOrderReader
@@ -78,6 +79,7 @@ val offrampModule = module {
             },
         )
     }
+    factory { GetUpiOfframpRateUseCase(rpc = get(), network = get()) }
     factory {
         OfframpOrchestrator(
             rpc = get(),

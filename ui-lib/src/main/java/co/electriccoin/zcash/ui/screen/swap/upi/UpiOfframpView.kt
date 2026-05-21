@@ -24,6 +24,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -31,7 +32,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.IconButtonState
@@ -49,9 +52,8 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.getValue
 import org.koin.androidx.compose.koinViewModel
+import java.math.BigDecimal
 
 @Composable
 internal fun UpiOfframpBody() {
@@ -103,7 +105,7 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 style = ZappTheme.typography.eyebrow.copy(color = c.textMuted),
             )
             Spacer(modifier = Modifier.height(GAP_SM.dp))
-            UpiHandleField(state.upiField, state.scanButton)
+            UpiHandleField(state.upiField)
 
             Spacer(modifier = Modifier.height(GAP_MD.dp))
 
@@ -172,7 +174,7 @@ private fun AmountFieldBlock(
             textStyle = ZappTheme.typography.display.copy(
                 color = c.text,
                 fontWeight = FontWeight.SemiBold,
-                textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                textAlign = TextAlign.End,
             ),
             contentPadding = PaddingValues(horizontal = INNER_FIELD_PADDING.dp, vertical = INNER_FIELD_PADDING.dp),
             placeholder = {
@@ -180,7 +182,7 @@ private fun AmountFieldBlock(
                     modifier = Modifier.fillMaxWidth(),
                     style = ZappTheme.typography.display,
                     fontWeight = FontWeight.SemiBold,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.End,
+                    textAlign = TextAlign.End,
                     contentAlignment = Alignment.CenterEnd,
                 )
             },
@@ -215,7 +217,7 @@ private fun DirectionSwapButton(onClick: () -> Unit) {
 }
 
 @Composable
-private fun UpiHandleField(field: TextFieldState, scan: IconButtonState) {
+private fun UpiHandleField(field: TextFieldState) {
     val c = ZappTheme.colors
     ZashiAddressTextField(
         state = field,
@@ -225,12 +227,6 @@ private fun UpiHandleField(field: TextFieldState, scan: IconButtonState) {
                 text = stringResource(R.string.upi_offramp_upi_id_placeholder),
                 style = ZappTheme.typography.body,
                 color = c.textSubtle,
-            )
-        },
-        suffix = {
-            ZashiImageButton(
-                modifier = Modifier.size(SCAN_BUTTON_SIZE.dp),
-                state = scan,
             )
         },
         keyboardOptions = KeyboardOptions(
@@ -274,7 +270,6 @@ private const val TOKEN_PADDING_H = 12
 private const val TOKEN_PADDING_V = 8
 private const val INNER_FIELD_PADDING = 4
 private const val DIRECTION_BUTTON_SIZE = 40
-private const val SCAN_BUTTON_SIZE = 36
 
 @PreviewScreens
 @Composable
@@ -288,7 +283,6 @@ private fun PreviewEmpty() {
                 onSwapSides = {},
                 rateText = stringRes("1 USDC ≈ ₹85"),
                 upiField = TextFieldState(stringRes("")) {},
-                scanButton = IconButtonState(R.drawable.qr_code_icon) {},
                 infoText = null,
                 errorText = null,
                 sendButton = ButtonState(stringRes("Send")),
@@ -305,17 +299,16 @@ private fun PreviewFilled() {
             state = UpiOfframpState(
                 primary = UpiOfframpAmountSide.INR,
                 usdcInput = NumberTextFieldState(
-                    NumberTextFieldInnerState.fromAmount(java.math.BigDecimal("5.8824")),
+                    NumberTextFieldInnerState.fromAmount(BigDecimal("5.8824")),
                     onValueChange = {},
                 ),
                 inrInput = NumberTextFieldState(
-                    NumberTextFieldInnerState.fromAmount(java.math.BigDecimal("500.00")),
+                    NumberTextFieldInnerState.fromAmount(BigDecimal("500.00")),
                     onValueChange = {},
                 ),
                 onSwapSides = {},
                 rateText = stringRes("1 USDC ≈ ₹85"),
                 upiField = TextFieldState(stringRes("merchant@upi")) {},
-                scanButton = IconButtonState(R.drawable.qr_code_icon) {},
                 infoText = stringRes("Final amount locks when merchant accepts."),
                 errorText = null,
                 sendButton = ButtonState(stringRes("Send"), isEnabled = true),

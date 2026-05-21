@@ -2,15 +2,6 @@ package xyz.justzappit.offramp.p2p
 
 import java.math.BigInteger
 
-/**
- * Strict-typed read model for a single offramp order. The union of fields the subgraph
- * and the on-chain Diamond can provide — nullable where one source can supply a value
- * and the other can't, or where the field is semantically "unset" (e.g. zero timestamp).
- *
- * Authoritative for [status], [acceptedMerchantAddress], and [merchantPubKey]. The
- * "actual*" amounts come from the SDK's `AdditionalOrderDetails` (only the subgraph
- * exposes them in a single read).
- */
 data class OrderSnapshot(
     val orderId: BigInteger,
     val status: OrderStatus,

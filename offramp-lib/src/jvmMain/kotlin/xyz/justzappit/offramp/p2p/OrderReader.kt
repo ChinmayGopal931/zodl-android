@@ -12,7 +12,7 @@ enum class OrderStatus(val onChain: Int) {
 
     companion object {
         fun fromOnChain(value: Int): OrderStatus =
-            values().firstOrNull { it.onChain == value }
+            entries.firstOrNull { it.onChain == value }
                 ?: error("Unknown on-chain OrderStatus: $value")
     }
 }
@@ -25,9 +25,7 @@ data class OrderRead(
 
 object OrderReader {
 
-    typealias Order = OrderRead
-
-    fun decodeOrderSnapshot(returnData: ByteArray, orderId: java.math.BigInteger): OrderSnapshot {
+    fun decodeOrderSnapshot(returnData: ByteArray, orderId: BigInteger): OrderSnapshot {
         require(returnData.size >= TOP_LEVEL_OFFSET_SLOT * WORD + ORDER_TUPLE_MIN_HEAD_FULL) {
             "Order return data too short: ${returnData.size} bytes"
         }
@@ -45,29 +43,35 @@ object OrderReader {
 
         val orderTypeByte = tuple.copyOfRange(FIELD_ORDER_TYPE * WORD, (FIELD_ORDER_TYPE + 1) * WORD)
             .last().toInt() and 0xff
-        val orderType = OrderType.values().firstOrNull { it.onChain == orderTypeByte }
+        val orderType = OrderType.entries.firstOrNull { it.onChain == orderTypeByte }
             ?: error("Unknown OrderType from chain: $orderTypeByte")
 
-        val usdcAmount = java.math.BigInteger(1, tuple.copyOfRange(FIELD_AMOUNT * WORD, (FIELD_AMOUNT + 1) * WORD))
-        val fiatAmount = java.math.BigInteger(1, tuple.copyOfRange(FIELD_FIAT_AMOUNT * WORD, (FIELD_FIAT_AMOUNT + 1) * WORD))
-        val placedTimestamp = java.math.BigInteger(1, tuple.copyOfRange(FIELD_PLACED_TS * WORD, (FIELD_PLACED_TS + 1) * WORD)).toLong()
-        val completedTimestamp = java.math.BigInteger(1, tuple.copyOfRange(FIELD_COMPLETED_TS * WORD, (FIELD_COMPLETED_TS + 1) * WORD)).toLong()
-        val circleId = java.math.BigInteger(1, tuple.copyOfRange(FIELD_CIRCLE_ID * WORD, (FIELD_CIRCLE_ID + 1) * WORD))
+        val usdcAmount = BigInteger(1, tuple.copyOfRange(FIELD_AMOUNT * WORD, (FIELD_AMOUNT + 1) * WORD))
+        val fiatAmount = BigInteger(1, tuple.copyOfRange(FIELD_FIAT_AMOUNT * WORD, (FIELD_FIAT_AMOUNT + 1) * WORD))
+        val placedTimestamp = BigInteger(
+            1,
+            tuple.copyOfRange(FIELD_PLACED_TS * WORD, (FIELD_PLACED_TS + 1) * WORD),
+        ).toLong()
+        val completedTimestamp = BigInteger(
+            1,
+            tuple.copyOfRange(FIELD_COMPLETED_TS * WORD, (FIELD_COMPLETED_TS + 1) * WORD),
+        ).toLong()
+        val circleId = BigInteger(1, tuple.copyOfRange(FIELD_CIRCLE_ID * WORD, (FIELD_CIRCLE_ID + 1) * WORD))
         val currencyHex = "0x" + tuple.copyOfRange(FIELD_CURRENCY * WORD, (FIELD_CURRENCY + 1) * WORD).toHex()
 
-        val pubKeyOffset = java.math.BigInteger(
+        val pubKeyOffset = BigInteger(
             1,
             tuple.copyOfRange(FIELD_PUBKEY * WORD, (FIELD_PUBKEY + 1) * WORD),
         ).toInt()
         val merchantPubKey = decodeStringAt(tuple, pubKeyOffset)
 
-        val encUpiOffset = java.math.BigInteger(
+        val encUpiOffset = BigInteger(
             1,
             tuple.copyOfRange(FIELD_ENC_UPI * WORD, (FIELD_ENC_UPI + 1) * WORD),
         ).toInt()
         val encryptedUserUpi = decodeStringAt(tuple, encUpiOffset)
 
-        val encMerchantUpiOffset = java.math.BigInteger(
+        val encMerchantUpiOffset = BigInteger(
             1,
             tuple.copyOfRange(FIELD_ENC_MERCHANT_UPI * WORD, (FIELD_ENC_MERCHANT_UPI + 1) * WORD),
         ).toInt()
@@ -87,7 +91,7 @@ object OrderReader {
             encryptedUserUpi = encryptedUserUpi,
             encryptedMerchantUpi = encryptedMerchantUpi,
             placedAtEpochSeconds = placedTimestamp.takeIf { it > 0 },
-            // On-chain Order tuple doesn't break out accepted/paid/cancelled — only placed + completed.
+            // On-chain Order tuple only carries placed + completed timestamps.
             acceptedAtEpochSeconds = null,
             paidAtEpochSeconds = null,
             completedAtEpochSeconds = completedTimestamp.takeIf { it > 0 },
@@ -100,9 +104,6 @@ object OrderReader {
             source = OrderSnapshot.Source.OnChain,
         )
     }
-
-    private const val WORD = 32
-    private const val TOP_LEVEL_OFFSET_SLOT = 1
 
     fun decodeOrder(returnData: ByteArray): OrderRead {
         require(returnData.size >= TOP_LEVEL_OFFSET_SLOT * WORD + ORDER_TUPLE_MIN_HEAD) {
@@ -147,7 +148,10 @@ object OrderReader {
 
     private fun slotRange(index: Int): IntRange = (index * WORD) until ((index + 1) * WORD)
 
-    /** Field positions within the Order struct, as ordered in `order-processor-facet.ts`. */
+    private const val WORD = 32
+    private const val TOP_LEVEL_OFFSET_SLOT = 1
+
+    // Field positions within the Order struct, ordered as in order-processor-facet.ts.
     private const val FIELD_AMOUNT = 0
     private const val FIELD_FIAT_AMOUNT = 1
     private const val FIELD_PLACED_TS = 2
@@ -159,18 +163,14 @@ object OrderReader {
     private const val FIELD_STATUS = 11
     private const val FIELD_ORDER_TYPE = 12
 
-    // After the inline disputeInfo (4 static slots) at positions 13..16, the rest of the
-    // Order tuple resumes. The slot indices below account for that inline expansion.
-    private const val FIELD_USER_PUBKEY = 18
+    // Positions 13..16 hold the inline disputeInfo (4 static slots); the rest of the
+    // Order tuple resumes at 17. Slot indices below already account for that.
     private const val FIELD_ENC_MERCHANT_UPI = 19
     private const val FIELD_CURRENCY = 22
     private const val FIELD_CIRCLE_ID = 24
 
     private const val ADDRESS_BYTES = 20
 
-    /** At minimum we read up to slot 11 (status). Anything shorter is malformed. */
     private const val ORDER_TUPLE_MIN_HEAD = (FIELD_STATUS + 1) * WORD
-
-    /** decodeOrderSnapshot reads up to slot 24 (circleId). */
     private const val ORDER_TUPLE_MIN_HEAD_FULL = (FIELD_CIRCLE_ID + 1) * WORD
 }

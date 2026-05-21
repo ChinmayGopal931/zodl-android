@@ -136,8 +136,6 @@ import co.electriccoin.zcash.ui.screen.signkeystonetransaction.SignKeystoneTrans
 import co.electriccoin.zcash.ui.screen.signkeystonetransaction.SignKeystoneTransactionScreen
 import co.electriccoin.zcash.ui.screen.swap.SwapArgs
 import co.electriccoin.zcash.ui.screen.swap.SwapScreen
-import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
-import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressScreen
 import co.electriccoin.zcash.ui.screen.swap.ab.AddSwapABContactArgs
 import co.electriccoin.zcash.ui.screen.swap.ab.AddSwapABContactScreen
 import co.electriccoin.zcash.ui.screen.swap.ab.SelectABSwapRecipientArgs
@@ -164,6 +162,8 @@ import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteArgs
 import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteScreen
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageArgs
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageScreen
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressScreen
 import co.electriccoin.zcash.ui.screen.taxexport.AndroidTaxExport
 import co.electriccoin.zcash.ui.screen.taxexport.TaxExport
 import co.electriccoin.zcash.ui.screen.texunsupported.AndroidTEXUnsupported

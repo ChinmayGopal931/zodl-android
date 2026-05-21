@@ -3,9 +3,9 @@ package co.electriccoin.zcash.ui.screen.swap.upi.progress
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.util.StringResource
 
-enum class UpiOfframpStepStatus { Pending, InProgress, Completed, Failed }
+internal enum class UpiOfframpStepStatus { Pending, InProgress, Completed, Failed }
 
-data class UpiOfframpStep(
+internal data class UpiOfframpStep(
     val label: StringResource,
     val status: UpiOfframpStepStatus,
     val txHash: String? = null,
@@ -13,7 +13,7 @@ data class UpiOfframpStep(
     val detailLines: List<StringResource> = emptyList(),
 )
 
-data class UpiOfframpOrderSummary(
+internal data class UpiOfframpOrderSummary(
     val amountUsdcDisplay: StringResource,
     val recipient: String,
     val orderId: String?,
@@ -22,7 +22,7 @@ data class UpiOfframpOrderSummary(
     val signerExplorerUrl: String,
 )
 
-data class UpiOfframpFailureCard(
+internal data class UpiOfframpFailureCard(
     val stepLabel: StringResource,
     val decodedReason: StringResource?,
     val rawSelector: String?,

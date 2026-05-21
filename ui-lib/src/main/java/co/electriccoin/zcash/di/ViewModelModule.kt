@@ -20,10 +20,8 @@ import co.electriccoin.zcash.ui.screen.chat.list.ChatListVM
 import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationVM
 import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileVM
 import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomVM
-import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsVM
 import co.electriccoin.zcash.ui.screen.chat.scan.ChatScanPublicKeyVM
-import org.koin.android.ext.koin.androidApplication
-import org.koin.core.module.dsl.viewModel
+import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsVM
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerVM
 import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactVM
 import co.electriccoin.zcash.ui.screen.contact.AddZashiABContactVM
@@ -50,8 +48,6 @@ import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsVM
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsVM
 import co.electriccoin.zcash.ui.screen.more.MoreVM
 import co.electriccoin.zcash.ui.screen.offramp.OfframpVM
-import co.electriccoin.zcash.ui.screen.swap.upi.UpiOfframpVM
-import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressVM
 import co.electriccoin.zcash.ui.screen.onboarding.OnboardingSecurityViewModel
 import co.electriccoin.zcash.ui.screen.qrcode.QrCodeVM
 import co.electriccoin.zcash.ui.screen.receive.ReceiveVM
@@ -87,6 +83,8 @@ import co.electriccoin.zcash.ui.screen.swap.picker.SwapAssetPickerVM
 import co.electriccoin.zcash.ui.screen.swap.picker.SwapBlockchainPickerVM
 import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteVM
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageVM
+import co.electriccoin.zcash.ui.screen.swap.upi.UpiOfframpVM
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressVM
 import co.electriccoin.zcash.ui.screen.tabs.viewmodel.WalletSyncStateVM
 import co.electriccoin.zcash.ui.screen.taxexport.TaxExportViewModel
 import co.electriccoin.zcash.ui.screen.texunsupported.TEXUnsupportedVM
