@@ -147,7 +147,6 @@
          Keep aligned with @p2pdotme/user-app-client i18n keys where wording overlaps. -->
     <string name="upi_offramp_revert_buy_order_amount_exceeds_limit">Order amount is above your per-transaction limit. The limit grows with reputation points — complete verification at app.p2p.me/limits.</string>
     <string name="upi_offramp_revert_insufficient_reputation">Your account has no reputation points yet. Complete social or KYC verification at app.p2p.me/limits before placing orders.</string>
-    <string name="upi_offramp_revert_zk_verification_required">This amount requires KYC verification. Verify at app.p2p.me/limits.</string>
     <string name="upi_offramp_revert_order_amount_exceeds_limit">Order amount exceeds the global per-order cap.</string>
     <string name="upi_offramp_revert_sell_amount_exceeds_fiat_limit">Amount exceeds your daily fiat limit.</string>
     <string name="upi_offramp_revert_currency_not_supported">This currency isn\'t deployed on this network yet.</string>

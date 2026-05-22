@@ -435,6 +435,7 @@ class OfframpOrchestrator(
             revertSelector = error.selector,
             knownRevertReason = KnownReverts.explain(error),
             sdkErrorName = KnownReverts.sdkName(error),
+            sdkErrorMessage = KnownReverts.sdkMessage(error),
             solidityErrorString = error.solidityErrorString,
             cause = error,
         )
@@ -451,6 +452,7 @@ class OfframpOrchestrator(
                 revertSelector = selector,
                 knownRevertReason = KnownReverts.explain(selector),
                 sdkErrorName = KnownReverts.sdkName(selector),
+                sdkErrorMessage = KnownReverts.sdkMessage(selector),
                 cause = error,
             )
         }

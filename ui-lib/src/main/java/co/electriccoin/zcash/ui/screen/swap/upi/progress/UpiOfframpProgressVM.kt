@@ -304,7 +304,7 @@ internal class UpiOfframpProgressVM(
 
     private fun decodedReason(failed: OfframpStatus.Failed): StringResource? {
         failed.knownRevertReason?.let { return stringRes(curatedRevertStringRes(it)) }
-        failed.sdkErrorName?.let {
+        (failed.sdkErrorMessage ?: failed.sdkErrorName)?.let {
             return stringRes(R.string.upi_offramp_revert_sdk_long_tail, it)
         }
         return failed.solidityErrorString?.let(::stringRes)
@@ -313,7 +313,6 @@ internal class UpiOfframpProgressVM(
     private fun curatedRevertStringRes(reason: KnownRevertReason): Int = when (reason) {
         KnownRevertReason.BuyOrderAmountExceedsLimit -> R.string.upi_offramp_revert_buy_order_amount_exceeds_limit
         KnownRevertReason.InsufficientReputation -> R.string.upi_offramp_revert_insufficient_reputation
-        KnownRevertReason.ZkVerificationRequired -> R.string.upi_offramp_revert_zk_verification_required
         KnownRevertReason.OrderAmountExceedsLimit -> R.string.upi_offramp_revert_order_amount_exceeds_limit
         KnownRevertReason.SellAmountExceedsFiatLimit -> R.string.upi_offramp_revert_sell_amount_exceeds_fiat_limit
         KnownRevertReason.CurrencyNotSupported -> R.string.upi_offramp_revert_currency_not_supported

@@ -96,6 +96,12 @@ sealed class OfframpStatus {
          * of dumping the raw 4-byte selector for the ~115 errors we don't curate.
          */
         val sdkErrorName: String? = null,
+        /**
+         * Human-readable English copy for [sdkErrorName] from [KnownContractErrorMessages]. The UI
+         * shows this for the long tail so the user reads "Order expired" rather than the raw
+         * `ORDER_EXPIRED` code; `null` when the selector is outside the SDK table.
+         */
+        val sdkErrorMessage: String? = null,
         val solidityErrorString: String? = null,
         val cause: Throwable? = null,
     ) : OfframpStatus()

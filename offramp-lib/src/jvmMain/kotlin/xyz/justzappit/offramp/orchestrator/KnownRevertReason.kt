@@ -5,9 +5,10 @@ package xyz.justzappit.offramp.orchestrator
  * user-actionable message. Add a variant here only if the UI knows how to explain it; otherwise
  * let the orchestrator fall through to the raw SDK error name from [KnownContractErrors.nameFor].
  *
- * Names match the canonical p2p.me SDK constants (`user-app-client/src/lib/errors.ts contractErrors`)
- * for cross-referencing. The UI layer maps each variant to a `R.string.*` resource; this module
- * stays free of English copy.
+ * Names match the canonical p2p.me SDK constants (`p2pdotme-sdk/src/contracts/errors.ts`) for
+ * cross-referencing. The UI layer maps each variant to a `R.string.*` resource; this module stays
+ * free of English copy. (The long-tail [KnownContractErrorMessages] carries SDK copy for the
+ * uncurated errors — that is a deliberate exception, scoped to non-PAY-flow diagnostics.)
  */
 enum class KnownRevertReason {
     /**
@@ -19,9 +20,6 @@ enum class KnownRevertReason {
 
     /** `placeOrder` reverts because the user has zero RP. Selector `0x412dd2b1`. */
     InsufficientReputation,
-
-    /** This amount requires ZK KYC verification. Selector `0x65f577de`. */
-    ZkVerificationRequired,
 
     /** Exceeds the global per-order cap (independent of RP). Selector `0xf42e41a1`. */
     OrderAmountExceedsLimit,

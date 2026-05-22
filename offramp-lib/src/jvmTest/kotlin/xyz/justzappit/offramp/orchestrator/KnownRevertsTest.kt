@@ -57,7 +57,6 @@ class KnownRevertsTest {
 
     @Test
     fun `placeOrder-phase guardrail selectors are curated`() {
-        assertEquals(KnownRevertReason.ZkVerificationRequired, KnownReverts.explain(revertedWith("0x65f577de")))
         assertEquals(KnownRevertReason.OrderAmountExceedsLimit, KnownReverts.explain(revertedWith("0xf42e41a1")))
         assertEquals(KnownRevertReason.SellAmountExceedsFiatLimit, KnownReverts.explain(revertedWith("0xbba2edf9")))
         assertEquals(KnownRevertReason.CurrencyNotSupported, KnownReverts.explain(revertedWith("0x02a6fdd2")))
@@ -75,22 +74,33 @@ class KnownRevertsTest {
     // -- Wholesale KnownContractErrors long-tail (uncurated but still labelled) --------------
 
     @Test
-    fun `uncurated selector still resolves to an SDK error name via the wholesale table`() {
-        // OrderAlreadyCompleted is one of ~115 selectors we don't curate — it should not produce
-        // a KnownRevertReason but must produce a non-null sdkName so the UI can show "Contract
-        // error: ORDER_ALREADY_MARKED_COMPLETED" instead of a raw 4-byte selector.
+    fun `uncurated selector still resolves to an SDK name and message via the wholesale tables`() {
+        // OrderAlreadyCompleted is one of the ~175 selectors we don't curate — it should not produce
+        // a KnownRevertReason but must produce a non-null sdkName + sdkMessage so the UI can show
+        // "Contract error: Order already marked completed" instead of a raw 4-byte selector.
         val r = revertedWith("0x03683687")
         assertNull(KnownReverts.explain(r))
-        assertEquals("ORDER_ALREADY_MARKED_COMPLETED", KnownReverts.sdkName(r))
+        assertEquals("ORDER_ALREADY_COMPLETED", KnownReverts.sdkName(r))
+        assertEquals("Order already marked completed", KnownReverts.sdkMessage(r))
+    }
+
+    @Test
+    fun `ORDER_NOT_ACCEPTED and ORDER_NOT_PLACED are distinct (selector-collision regression)`() {
+        // Regression for the hand-merged table that mapped BOTH 0x6b1b90b4 and 0x58db8ed6 to
+        // "ORDER_NOT_PLACED_TO_BE_ACCEPTED" (and 0x7f61b868 / 0xc1654697 to the same string). The
+        // SDK's errors.ts is now the single source of truth, so every code is distinct.
+        assertEquals("ORDER_NOT_ACCEPTED", KnownContractErrors.nameFor(Selector4.fromHex("0x6b1b90b4")))
+        assertEquals("ORDER_NOT_PLACED", KnownContractErrors.nameFor(Selector4.fromHex("0x58db8ed6")))
+        assertEquals("ORDER_ALREADY_PAID", KnownContractErrors.nameFor(Selector4.fromHex("0x7f61b868")))
+        assertEquals("UPI_ALREADY_SENT", KnownContractErrors.nameFor(Selector4.fromHex("0xc1654697")))
     }
 
     @Test
     fun `KnownContractErrors covers every curated selector`() {
-        // Sanity: every selector in our curated map should also exist in the wholesale table.
-        // If this fails, the curated map drifted from the SDK and a re-run of
-        // generate-revert-selectors.ts is overdue.
+        // Every curated selector must also exist in the wholesale SDK table. If this fails, the
+        // curated map drifted from the SDK and a re-run of generate-revert-selectors.ts is overdue.
         val curatedSelectors = listOf(
-            "0x91da284f", "0x412dd2b1", "0x65f577de", "0xf42e41a1", "0xbba2edf9",
+            "0x91da284f", "0x412dd2b1", "0xf42e41a1", "0xbba2edf9",
             "0x02a6fdd2", "0xebb6f34b", "0x4bbac5de", "0x5d04ff4c", "0xc56873ba",
             "0xc1654697", "0xaa60ec26", "0x6b1b90b4",
             "0x149f9fca", "0x47bfece5", "0x279bbc0c",
@@ -101,6 +111,23 @@ class KnownRevertsTest {
                 "Curated selector $s missing from KnownContractErrors — regenerate the wholesale table",
             )
         }
+    }
+
+    @Test
+    fun `sdkMessage renders human-readable SDK copy for the long tail`() {
+        assertEquals("Order expired", KnownReverts.sdkMessage(revertedWith("0xc56873ba")))
+        assertEquals("Order not placed to be accepted", KnownReverts.sdkMessage(revertedWith("0x6b1b90b4")))
+        assertEquals("USDC transfer failed", KnownReverts.sdkMessage(revertedWith("0x149f9fca")))
+        assertNull(KnownReverts.sdkMessage(revertedWith("0xdeadbeef")))
+    }
+
+    @Test
+    fun `every SDK error code has a message (generators stay in lock-step)`() {
+        // Both tables are generated 1:1 from the same SDK source; equal non-trivial size is the
+        // parity guard. If a future regen adds a selector without a message (or vice-versa), the
+        // counts diverge and this fails.
+        assertEquals(KnownContractErrors.size, KnownContractErrorMessages.size)
+        assertTrue(KnownContractErrorMessages.size >= 120, "expected ≥120 messages, got ${KnownContractErrorMessages.size}")
     }
 
     @Test
@@ -117,7 +144,7 @@ class KnownRevertsTest {
 
     @Test
     fun `explain returns null for selectors outside the curated set`() {
-        // 0x03683687 = ORDER_ALREADY_MARKED_COMPLETED — known by SDK but not actionable enough
+        // 0x03683687 = ORDER_ALREADY_COMPLETED — known by SDK but not actionable enough
         // to be in KnownRevertReason. explain() must say null; sdkName() must still resolve.
         assertNull(KnownReverts.explain(revertedWith("0x03683687")))
     }

@@ -136,7 +136,6 @@
 
     <string name="upi_offramp_revert_buy_order_amount_exceeds_limit">El monto excede tu límite por transacción. El límite crece con los puntos de reputación — completa la verificación en app.p2p.me/limits.</string>
     <string name="upi_offramp_revert_insufficient_reputation">Tu cuenta aún no tiene puntos de reputación. Completa la verificación social o KYC en app.p2p.me/limits antes de realizar órdenes.</string>
-    <string name="upi_offramp_revert_zk_verification_required">Este monto requiere verificación KYC. Verifica en app.p2p.me/limits.</string>
     <string name="upi_offramp_revert_order_amount_exceeds_limit">El monto excede el tope global por orden.</string>
     <string name="upi_offramp_revert_sell_amount_exceeds_fiat_limit">El monto excede tu límite fiat diario.</string>
     <string name="upi_offramp_revert_currency_not_supported">Esta moneda aún no está desplegada en esta red.</string>

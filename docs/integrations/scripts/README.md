@@ -36,20 +36,39 @@ committed and travel with the test.
 ## `generate-revert-selectors.ts`
 
 Regenerates `offramp-lib/.../orchestrator/KnownContractErrors.kt` — the wholesale
-selector → SDK error-name table — by regex-parsing `user-app-client/src/lib/errors.ts`.
-No node_modules required; the script is self-contained.
+selector → canonical error-code table — by regex-parsing
+`p2pdotme-sdk/src/contracts/errors.ts`. No node_modules required; self-contained.
 
 ```sh
 bun /path/to/zodl-android/docs/integrations/scripts/generate-revert-selectors.ts \
-  /path/to/user-app-client \
+  /path/to/p2pdotme-sdk \
   > /path/to/zodl-android/offramp-lib/src/jvmMain/kotlin/xyz/justzappit/offramp/orchestrator/KnownContractErrors.kt
 ```
 
-The path arg defaults to `/Users/chinmaygopal/dev/user-app-client` if omitted.
-Selectors are emitted in stable (alphabetical) order so a re-run with no source
-change produces zero diff. Re-run whenever you sync to a newer `user-app-client`
-release — `KnownRevertsTest` asserts the table stays ≥120 entries and that every
-*curated* selector still exists in the generated table.
+The path arg defaults to `/Users/chinmaygopal/dev/p2pdotme-sdk` if omitted. The SDK
+is the single source of truth: its `contracts/errors.ts` keeps the error *code*
+(selector → `SCREAMING_SNAKE`) separate from the human *message* (in
+`error-messages.ts`, see below). The older `user-app-client/src/lib/errors.ts`
+conflated the two, which produced selector-name collisions — do not point this back
+at it. Selectors are emitted in stable (alphabetical) order so a re-run with no
+source change produces zero diff. Re-run whenever you sync to a newer SDK release —
+`KnownRevertsTest` asserts the table stays ≥120 entries, that every code is distinct,
+and that every SDK-backed curated selector still exists in the generated table.
+
+## `generate-error-messages.ts`
+
+Regenerates `offramp-lib/.../orchestrator/KnownContractErrorMessages.kt` — the
+code → human-readable English map — by regex-parsing
+`p2pdotme-sdk/src/contracts/error-messages.ts`. This is the long-tail fallback copy
+(the curated PAY-flow reverts render localised `R.string.*` text instead). Keep it
+in lock-step with `generate-revert-selectors.ts`: every code in `KnownContractErrors`
+should have a message, and `KnownRevertsTest` asserts the two table sizes are equal.
+
+```sh
+bun /path/to/zodl-android/docs/integrations/scripts/generate-error-messages.ts \
+  /path/to/p2pdotme-sdk \
+  > /path/to/zodl-android/offramp-lib/src/jvmMain/kotlin/xyz/justzappit/offramp/orchestrator/KnownContractErrorMessages.kt
+```
 
 ## `generate-calldata-fixtures.ts`
 

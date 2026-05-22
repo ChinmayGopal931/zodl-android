@@ -8,19 +8,18 @@ import xyz.justzappit.evm.rpc.RpcException
  *
  * 1. [explain] returns a [KnownRevertReason] for selectors we want to surface with a
  *    user-actionable, localised message. Curated against the PAY flow.
- * 2. [sdkName] falls through to the wholesale [KnownContractErrors] table (generated from
- *    `user-app-client/src/lib/errors.ts`) — returns the SDK's canonical error constant string
- *    so the UI can render "Contract error: BUY_ORDER_AMOUNT_EXCEEDS_LIMIT" for anything outside
- *    the curated set instead of dumping a raw 4-byte selector.
+ * 2. [sdkName] / [sdkMessage] fall through to the wholesale [KnownContractErrors] /
+ *    [KnownContractErrorMessages] tables (generated from `p2pdotme-sdk/src/contracts/errors.ts`
+ *    and `error-messages.ts`). [sdkName] returns the canonical code (`ORDER_NOT_ACCEPTED`) for
+ *    logs; [sdkMessage] returns the human string ("Order not placed to be accepted") for the UI.
  *
- * The orchestrator populates both fields on [OfframpStatus.Failed]; the VM prefers the curated
- * `knownRevertReason` over `sdkErrorName` over `solidityErrorString` over the raw `message`.
+ * The orchestrator populates all three fields on [OfframpStatus.Failed]; the VM prefers the curated
+ * `knownRevertReason`, then `sdkErrorMessage`, then `solidityErrorString`, then the raw `message`.
  */
 object KnownReverts {
     private val CURATED: Map<Selector4, KnownRevertReason> = mapOf(
         Selector4.fromHex("0x91da284f") to KnownRevertReason.BuyOrderAmountExceedsLimit,
         Selector4.fromHex("0x412dd2b1") to KnownRevertReason.InsufficientReputation,
-        Selector4.fromHex("0x65f577de") to KnownRevertReason.ZkVerificationRequired,
         Selector4.fromHex("0xf42e41a1") to KnownRevertReason.OrderAmountExceedsLimit,
         Selector4.fromHex("0xbba2edf9") to KnownRevertReason.SellAmountExceedsFiatLimit,
         Selector4.fromHex("0x02a6fdd2") to KnownRevertReason.CurrencyNotSupported,
@@ -48,11 +47,18 @@ object KnownReverts {
 
     fun explain(selector: Selector4?): KnownRevertReason? = selector?.let { CURATED[it] }
 
-    /** Long-tail SDK error name for any selector the wholesale table knows. */
+    /** Long-tail canonical SDK error code for any selector the wholesale table knows. */
     fun sdkName(reverted: RpcException.ExecutionReverted): String? =
         KnownContractErrors.nameFor(reverted.selector)
 
     fun sdkName(selector: Selector4?): String? = KnownContractErrors.nameFor(selector)
+
+    /** Human-readable SDK message for the long tail, e.g. "Order expired" for `0xc56873ba`. */
+    fun sdkMessage(reverted: RpcException.ExecutionReverted): String? =
+        KnownContractErrorMessages.messageFor(KnownContractErrors.nameFor(reverted.selector))
+
+    fun sdkMessage(selector: Selector4?): String? =
+        KnownContractErrorMessages.messageFor(KnownContractErrors.nameFor(selector))
 
     /**
      * Extracts a 4-byte revert selector from a bundler/JSON-RPC error message, if one is present.
