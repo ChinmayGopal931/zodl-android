@@ -12,6 +12,8 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
+import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
+import co.electriccoin.zcash.ui.screen.chat.support.SupportChatConstants
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
@@ -97,6 +99,7 @@ class ChatListVM(
                 ),
         )
 
+
     private fun createState(
         conversations: List<ChatConversation>?,
         blockedKeys: Set<String>,
@@ -108,13 +111,37 @@ class ChatListVM(
         showTosDialog: Boolean,
         leaveTarget: ChatConversation?,
     ): ChatListState {
+        // Separate support conversations from regular ones so the aggregate "Zapp Support"
+        // parent row can be pinned independently of the timestamp-sorted list.
+        // Uses both displayName prefix and participantIds to work on both the
+        // user's device and the support agent's device (where participantIds
+        // does not contain SUPPORT_PUBLIC_KEY — only the user's key).
+        val supportConvs = conversations?.filter { conv ->
+            SupportChatConstants.isSupportConversation(conv.displayName, conv.participantIds)
+        }.orEmpty()
+
         val visibleConversations =
             conversations
                 ?.filter { conv ->
-                    conv.type != ConversationType.DIRECT ||
-                        conv.participantIds.none { it in blockedKeys }
+                    !SupportChatConstants.isSupportConversation(conv.displayName, conv.participantIds) &&
+                        (conv.type != ConversationType.DIRECT ||
+                            conv.participantIds.none { it in blockedKeys })
                 }?.sortedByDescending { it.lastMessageTimestamp ?: 0L }
                 .orEmpty()
+
+        val latestSupportMsg = supportConvs
+            .maxByOrNull { it.lastMessageTimestamp ?: 0L }
+            ?.lastMessage
+            ?.removePrefix(SupportChatConstants.BOT_PREFIX)
+
+        val supportRow =
+            ChatListSupportRowState(
+                isActive = supportConvs.isNotEmpty(),
+                ticketCount = supportConvs.size,
+                lastMessage = latestSupportMsg?.let { stringRes(it) },
+                totalUnreadCount = supportConvs.sumOf { it.unreadCount },
+                onClick = ::onSupportClick,
+            )
 
         return ChatListState(
             title = stringRes(R.string.chat_list_title),
@@ -161,6 +188,7 @@ class ChatListVM(
                         onDismiss = ::onLeaveDismiss,
                     )
                 },
+            supportRow = supportRow,
         )
     }
 
@@ -209,6 +237,8 @@ class ChatListVM(
 
     private fun onNewConversationClick() = navigationRouter.forward(NewConversationArgs)
 
+    private fun onSupportClick() = navigationRouter.forward(SupportTicketListArgs)
+
     private fun onConversationClick(conv: ChatConversation) {
         activeConversationId.value = conv.id
         conversations.update { current ->
@@ -228,7 +258,7 @@ class ChatListVM(
 
     private fun onLeaveConfirm(conv: ChatConversation) {
         leaveTarget.value = null
-        viewModelScope.launch { leaveConversation(conv.id) }
+        viewModelScope.launch { leaveConversation(conv) }
     }
 
     private fun onNetworkChipClick() {
@@ -367,10 +397,10 @@ class ChatListVM(
         }
     }
 
-    private suspend fun leaveConversation(conversationId: String) {
+    private suspend fun leaveConversation(conv: ChatConversation) {
         runChatCall("ChatListVM: leave conversation failed") {
-            sdk.removeConversation(conversationId)
-            conversations.update { it?.filter { conv -> conv.id != conversationId } }
+            sdk.removeConversation(conv.id)
+            conversations.update { it?.filter { c -> c.id != conv.id } }
         }
     }
 

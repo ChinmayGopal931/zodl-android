@@ -10,6 +10,8 @@ import co.electriccoin.zcash.ui.screen.chat.AndroidChatRoom
 import co.electriccoin.zcash.ui.screen.chat.AndroidChatSettings
 import co.electriccoin.zcash.ui.screen.chat.AndroidContactEdit
 import co.electriccoin.zcash.ui.screen.chat.AndroidNewConversation
+import co.electriccoin.zcash.ui.screen.chat.AndroidSupportChat
+import co.electriccoin.zcash.ui.screen.chat.AndroidSupportTicketList
 import co.electriccoin.zcash.ui.screen.chat.ChatContactsArgs
 import co.electriccoin.zcash.ui.screen.chat.ChatHomeArgs
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
@@ -17,6 +19,8 @@ import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.ChatSettingsArgs
 import co.electriccoin.zcash.ui.screen.chat.ContactEditArgs
 import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
+import co.electriccoin.zcash.ui.screen.chat.SupportChatArgs
+import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.scan.ChatScanPublicKeyArgs
 import co.electriccoin.zcash.ui.screen.chat.scan.ChatScanPublicKeyScreen
 
@@ -54,5 +58,11 @@ fun NavGraphBuilder.chatNavGraph(navigationRouter: NavigationRouter) {
     }
     composable<ChatScanPublicKeyArgs> { backStackEntry ->
         ChatScanPublicKeyScreen(args = backStackEntry.toRoute())
+    }
+    composable<SupportTicketListArgs> {
+        AndroidSupportTicketList()
+    }
+    composable<SupportChatArgs> { backStackEntry ->
+        AndroidSupportChat(args = backStackEntry.toRoute())
     }
 }

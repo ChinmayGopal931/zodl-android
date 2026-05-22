@@ -41,6 +41,13 @@ data class ChatRoomInputState(
     val onChange: (String) -> Unit,
     val onSendClick: () -> Unit,
     val onAttachClick: () -> Unit,
+    val replyPreview: ChatRoomReplyPreviewState? = null,
+)
+
+data class ChatRoomReplyPreviewState(
+    val senderName: String,
+    val content: String,
+    val onDismiss: () -> Unit,
 )
 
 data class ChatRoomAttachmentSheetState(

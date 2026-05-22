@@ -16,7 +16,6 @@ import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepository
-import co.electriccoin.zcash.ui.design.util.getPreferredLocale
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.send.model.RecipientAddressState
 import com.flexa.core.Flexa
@@ -83,7 +82,6 @@ class CreateFlexaTransactionUseCase(
                 type = synchronizerProvider.getSynchronizer().validateAddress(address)
             )
 
-        val locale = context.resources.configuration.getPreferredLocale()
         return ZecSend(
             destination =
                 when (recipientAddressState.type) {
@@ -95,7 +93,7 @@ class CreateFlexaTransactionUseCase(
                     null -> WalletAddress.Unified.new(recipientAddressState.address)
                 },
             amount =
-                Zatoshi.fromZecString(transaction.amount, locale)
+                Zatoshi.fromZecString(context, transaction.amount)
                     ?: throw NullPointerException("TX amount is null"),
             memo = Memo(""),
             proposal = null

@@ -19,6 +19,8 @@ import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationScreen
 import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileScreen
 import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomScreen
 import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsScreen
+import co.electriccoin.zcash.ui.screen.chat.support.SupportChatScreen
+import co.electriccoin.zcash.ui.screen.chat.support.SupportTicketListScreen
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -48,6 +50,14 @@ data object ChatSettingsArgs
 @Serializable
 data class ContactEditArgs(
     val publicKey: String
+)
+
+@Serializable
+data object SupportTicketListArgs
+
+@Serializable
+data class SupportChatArgs(
+    val conversationId: String = "",
 )
 
 // ── Entry point composables ─────────────────────────────────────────────
@@ -107,4 +117,14 @@ fun AndroidChatSettings() {
 @Composable
 fun AndroidContactEdit(args: ContactEditArgs) {
     ContactEditScreen(args = args)
+}
+
+@Composable
+fun AndroidSupportTicketList() {
+    SupportTicketListScreen()
+}
+
+@Composable
+fun AndroidSupportChat(args: SupportChatArgs) {
+    SupportChatScreen(args = args)
 }
