@@ -34,8 +34,8 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import xyz.justzappit.offramp.orchestrator.AaOfframpDriver
 import xyz.justzappit.offramp.orchestrator.OfframpDriver
-import xyz.justzappit.offramp.orchestrator.OfframpOrchestrator
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.FallbackOrderReader
 import xyz.justzappit.offramp.p2p.OnChainOrderReader
@@ -75,13 +75,15 @@ val repositoryModule =
             )
         }
         factory<OfframpDriver> {
-            OfframpOrchestrator(
+            AaOfframpDriver(
                 rpc = get(),
-                signer = get(),
-                account = get(),
+                bundler = get(),
                 network = get(),
+                accountProvider = get(),
                 subgraph = get(),
                 orderReader = get(),
+                funding = get(),
+                refund = get(),
                 router = get(),
             )
         }

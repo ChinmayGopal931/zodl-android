@@ -7,13 +7,15 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
 import xyz.justzappit.evm.abi.AbiEncoder
 import xyz.justzappit.evm.crypto.Ecies
-import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.RpcException
-import xyz.justzappit.evm.signer.EoaSigner
+import xyz.justzappit.evm.signer.TxSubmitter
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.util.toHex
 import xyz.justzappit.offramp.config.P2pNetworkConfig
+import xyz.justzappit.offramp.funding.OfframpFunding
+import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.p2p.CircleId
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.DiamondCalls
@@ -37,15 +39,24 @@ import java.math.BigInteger
 interface OfframpDriver {
     fun run(request: OfframpRequest): Flow<OfframpStatus>
     fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus>
+
+    /**
+     * User-initiated cancel + reclaim: cancels the order on-chain (the contract refunds the escrowed
+     * USDC to the account), then routes that USDC back to ZEC (mainnet) or leaves it in the account
+     * (testnet). Emits [OfframpStatus.Cancelled] on success or [OfframpStatus.Failed] on revert.
+     */
+    fun cancelAndRefund(orderId: BigInteger): Flow<OfframpStatus>
 }
 
 class OfframpOrchestrator(
     private val rpc: BaseRpcClient,
-    private val signer: EoaSigner,
-    private val account: EvmKey,
+    private val submitter: TxSubmitter,
+    private val accountAddress: Address,
     private val network: P2pNetworkConfig,
     private val subgraph: SubgraphClient,
     private val orderReader: OrderReadSource,
+    private val funding: OfframpFunding,
+    private val refund: OfframpRefund,
     private val router: CircleRouter = CircleRouter(),
     private val pollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
     /**
@@ -83,23 +94,28 @@ class OfframpOrchestrator(
             ) { id -> validateCircleOnChain(id, request) }.value
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
+            // Funding gate runs only after an assignable merchant is confirmed (above): on mainnet
+            // this bridges ZEC→USDC, on testnet it verifies the account is pre-funded. Either way we
+            // never bridge into a market with no route.
+            funding.ensureFunded(accountAddress, request)
+
             currentStep = OfframpStep.APPROVING_USDC
-            val approveHash = signer.sendTransaction(
+            val approveHash = submitter.sendTransaction(
                 to = network.usdcAddress,
                 data = Erc20Calls.approveCalldata(network.diamondAddress, request.usdcAmount),
             )
             lastTxHash = approveHash
             emit(OfframpStatus.ApprovingUsdc(txHash = approveHash, amount = request.usdcAmount))
-            require(signer.awaitReceipt(approveHash).success) { "USDC approve reverted" }
+            require(submitter.awaitReceipt(approveHash).success) { "USDC approve reverted" }
 
             currentStep = OfframpStep.PLACING_ORDER
-            val placeOrderHash = signer.sendTransaction(
+            val placeOrderHash = submitter.sendTransaction(
                 to = network.diamondAddress,
                 data = DiamondCalls.placeOrderCalldata(
                     PlaceOrderArgs(
                         relayPubKeyEthCrypto = relay.publicKeyHex,
                         usdcAmount = request.usdcAmount,
-                        recipientAddress = account.address,
+                        recipientAddress = accountAddress,
                         orderType = OrderType.PAY,
                         currency = request.currency,
                         circleId = circleId,
@@ -114,13 +130,13 @@ class OfframpOrchestrator(
                     amount = request.usdcAmount,
                 ),
             )
-            val placeReceipt = signer.awaitReceipt(placeOrderHash)
+            val placeReceipt = submitter.awaitReceipt(placeOrderHash)
             require(placeReceipt.success) { "placeOrder reverted" }
 
             orderId = OrderEvents.parseOrderIdFromReceipt(
                 receipt = placeReceipt,
                 diamondAddress = network.diamondAddress,
-                userAddress = account.address,
+                userAddress = accountAddress,
             ) ?: error("placeOrder receipt did not contain an OrderPlaced log")
 
             awaitMerchantAndComplete(
@@ -165,6 +181,43 @@ class OfframpOrchestrator(
         }
     }
 
+    override fun cancelAndRefund(orderId: BigInteger): Flow<OfframpStatus> = flow {
+        try {
+            // The placed amount is what the contract refunds to the account on cancel.
+            val snapshot = runCatching { orderReader.fetchOrder(orderId) }.getOrNull()
+            val refundAmount = snapshot?.usdcAmount ?: Usdc6.ZERO
+
+            val cancelHash = submitter.sendTransaction(
+                to = network.diamondAddress,
+                data = DiamondCalls.cancelOrderCalldata(orderId),
+            )
+            require(submitter.awaitReceipt(cancelHash).success) { "cancelOrder reverted" }
+
+            // Route the refunded USDC back to ZEC (mainnet) or leave it in the account (testnet).
+            val target = refund.pullbackTarget(accountAddress, refundAmount)
+            if (target != null && refundAmount > Usdc6.ZERO) {
+                val transferHash = submitter.sendTransaction(
+                    to = network.usdcAddress,
+                    data = Erc20Calls.transferCalldata(target, refundAmount),
+                )
+                require(submitter.awaitReceipt(transferHash).success) { "USDC pull-back transfer reverted" }
+            }
+
+            emit(
+                OfframpStatus.Cancelled(
+                    orderId = orderId,
+                    cancelledAtEpochSeconds = snapshot?.cancelledAtEpochSeconds,
+                    acceptedMerchant = snapshot?.acceptedMerchantAddress,
+                    refundedUsdcAmount = refundAmount.takeIf { it > Usdc6.ZERO },
+                ),
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            emit(buildFailedStatus(e, orderId, OfframpStep.WAITING_FOR_ACCEPTANCE, null))
+        }
+    }
+
     private suspend fun FlowCollector<OfframpStatus>.awaitMerchantAndComplete(
         orderId: BigInteger,
         request: OfframpRequest,
@@ -198,7 +251,7 @@ class OfframpOrchestrator(
                     Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
                 )
                 onStep(OfframpStep.SENDING_UPI)
-                signer.sendTransaction(
+                submitter.sendTransaction(
                     to = network.diamondAddress,
                     data = DiamondCalls.setSellOrderUpiCalldata(
                         orderId = orderId,
@@ -219,7 +272,7 @@ class OfframpOrchestrator(
                     acceptedAtEpochSeconds = accepted.acceptedAtEpochSeconds,
                 ),
             )
-            require(signer.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
+            require(submitter.awaitReceipt(setUpiHash).success) { "setSellOrderUpi reverted" }
         }
 
         onStep(OfframpStep.WAITING_FOR_COMPLETION)
@@ -277,7 +330,7 @@ class OfframpOrchestrator(
                 circleId = circleId.value,
                 assignUpTo = BigInteger.valueOf(ASSIGN_UP_TO),
                 currency = request.currency,
-                user = account.address,
+                user = accountAddress,
                 usdtAmount = request.usdcAmount,
                 fiatAmount = Usdc6.ZERO,
                 orderType = OrderType.PAY,
@@ -385,6 +438,22 @@ class OfframpOrchestrator(
             solidityErrorString = error.solidityErrorString,
             cause = error,
         )
+        // ERC-4337 reverts surface as an opaque bundler error message ("...reverted during
+        // simulation with reason: 0xea8e4eb5"), not a structured ExecutionReverted. Recover the
+        // selector from the message so AA-path reverts map to the same curated/SDK reasons.
+        is RpcException.Unknown -> {
+            val selector = KnownReverts.selectorFromMessage(error.errorMessage ?: error.raw)
+            OfframpStatus.Failed(
+                message = error.errorMessage ?: error.message ?: "Unknown error",
+                orderId = orderId,
+                step = step,
+                txHash = lastTxHash,
+                revertSelector = selector,
+                knownRevertReason = KnownReverts.explain(selector),
+                sdkErrorName = KnownReverts.sdkName(selector),
+                cause = error,
+            )
+        }
         else -> OfframpStatus.Failed(
             message = error.message ?: error::class.simpleName ?: "Unknown error",
             orderId = orderId,

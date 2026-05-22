@@ -113,6 +113,8 @@
     <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
     <string name="upi_offramp_progress_done_button">Done</string>
     <string name="upi_offramp_progress_close_button">Close</string>
+    <string name="upi_offramp_cancel_button">Cancel &amp; get funds back</string>
+    <string name="upi_offramp_cancel_in_progress">Cancelling…</string>
     <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
     <string name="upi_offramp_step_init">Setup</string>
     <string name="upi_offramp_step_selecting_circle">Picking a merchant pool</string>
@@ -157,6 +159,7 @@
     <string name="upi_offramp_revert_invalid_order_upi">The merchant rejected the encrypted UPI handle. This may signal a wire-format issue — please report.</string>
     <string name="upi_offramp_revert_order_not_accepted">The order isn\'t yet accepted. Try again shortly.</string>
     <string name="upi_offramp_revert_usdc_transfer_failed">USDC transfer failed. Check your balance and allowance.</string>
+    <string name="upi_offramp_revert_not_authorized">This order can\'t be cancelled yet — unaccepted orders expire on their own, and your funds never left your wallet.</string>
     <!-- Long-tail fallback for SDK-known but non-curated contract errors. %1$s is the SDK error
          constant (e.g. ORDER_ALREADY_MARKED_COMPLETED). -->
     <string name="upi_offramp_revert_sdk_long_tail">Contract error: %1$s</string>
@@ -187,7 +190,8 @@
     <!-- Cancelled terminal state (normal on-chain outcome, USDC refunded — not an error) -->
     <string name="upi_offramp_progress_title_cancelled">Order cancelled</string>
     <string name="upi_offramp_progress_subtitle_cancelled">No merchant completed this order in time. Your USDC has been refunded on-chain.</string>
-    <string name="upi_offramp_cancelled_refunded">%1$s USDC refunded to your offramp account</string>
+    <string name="upi_offramp_cancelled_refunded">%1$s USDC returned to your wallet</string>
+    <string name="upi_offramp_cancelled_returned_zec">%1$s USDC is on its way back to ZEC — it will arrive in your wallet shortly</string>
     <string name="upi_offramp_cancelled_at">Cancelled at %1$s</string>
     <string name="upi_offramp_cancelled_tip">Tip: ask the merchant to generate the UPI QR only after this screen opens, so the order completes before it expires.</string>
 </resources>

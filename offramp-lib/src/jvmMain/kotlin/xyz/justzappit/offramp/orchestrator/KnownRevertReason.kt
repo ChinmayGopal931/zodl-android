@@ -74,4 +74,12 @@ enum class KnownRevertReason {
      * Selectors `0x149f9fca` / `0x47bfece5` / `0x279bbc0c`.
      */
     UsdcTransferFailed,
+
+    /**
+     * `cancelOrder` reverts because the caller can't cancel the order in its current state. On this
+     * contract a merely PLACED (unaccepted) order isn't user-cancellable — it auto-expires — and the
+     * funds (never escrowed for an unaccepted PAY order) stay in the user's wallet. Selector
+     * `0xea8e4eb5` (NOT_AUTHORIZED).
+     */
+    NotAuthorized,
 }

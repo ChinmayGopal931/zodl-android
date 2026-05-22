@@ -35,7 +35,13 @@ object KnownReverts {
         Selector4.fromHex("0x149f9fca") to KnownRevertReason.UsdcTransferFailed,
         Selector4.fromHex("0x47bfece5") to KnownRevertReason.UsdcTransferFailed,
         Selector4.fromHex("0x279bbc0c") to KnownRevertReason.UsdcTransferFailed,
+        Selector4.fromHex("0xea8e4eb5") to KnownRevertReason.NotAuthorized,
     )
+
+    // A standalone 4-byte selector embedded in a bundler error message, e.g. the ERC-4337 bundler
+    // reports an on-chain revert as "...reverted during simulation with reason: 0xea8e4eb5". The
+    // negative lookahead avoids matching the leading 4 bytes of a longer hex blob (e.g. an address).
+    private val SELECTOR_IN_MESSAGE = Regex("0x[0-9a-fA-F]{8}(?![0-9a-fA-F])")
 
     fun explain(reverted: RpcException.ExecutionReverted): KnownRevertReason? =
         reverted.selector?.let { CURATED[it] }
@@ -47,4 +53,13 @@ object KnownReverts {
         KnownContractErrors.nameFor(reverted.selector)
 
     fun sdkName(selector: Selector4?): String? = KnownContractErrors.nameFor(selector)
+
+    /**
+     * Extracts a 4-byte revert selector from a bundler/JSON-RPC error message, if one is present.
+     * ERC-4337 reverts surface as an [RpcException.Unknown] message rather than a structured
+     * [RpcException.ExecutionReverted], so this lets the orchestrator recover the selector and map
+     * it through [explain] / [sdkName] just like a node-level revert.
+     */
+    fun selectorFromMessage(message: String?): Selector4? =
+        message?.let { SELECTOR_IN_MESSAGE.find(it)?.value?.let(Selector4::fromHex) }
 }

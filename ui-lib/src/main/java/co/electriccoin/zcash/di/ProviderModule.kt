@@ -64,13 +64,19 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
-import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.rpc.BundlerClient
 import xyz.justzappit.evm.rpc.RpcHttpClient
-import xyz.justzappit.evm.signer.EoaSigner
 import xyz.justzappit.offramp.account.DevOfframpAccountProvider
 import xyz.justzappit.offramp.account.OfframpAccountProvider
+import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
+import xyz.justzappit.offramp.funding.NearBridgeOfframpFunding
+import xyz.justzappit.offramp.funding.NearPullbackOfframpRefund
+import xyz.justzappit.offramp.funding.NoRouteOfframpRefund
+import xyz.justzappit.offramp.funding.OfframpFunding
+import xyz.justzappit.offramp.funding.OfframpRefund
+import xyz.justzappit.offramp.funding.PreFundedOfframpFunding
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.p2p.SubgraphClient
@@ -167,16 +173,36 @@ val providerModule =
             }
             DevOfframpAccountProvider
         }
-        single<EvmKey> {
-            // Resolve the provider first so its mainnet-safety check runs before the key escapes.
-            get<OfframpAccountProvider>()
-            DevOfframpAccountProvider.key
+        single<BundlerClient> {
+            val cfg = get<P2pNetworkConfig>()
+            BundlerClient(
+                httpClient = get(named(OFFRAMP_HTTP_CLIENT_QUALIFIER)),
+                bundlerUrl = BundlerClient.urlFor(cfg.chainId),
+                clientId = BuildConfig.THIRDWEB_CLIENT_ID,
+                entryPoint = cfg.entryPointAddress,
+                chainId = cfg.chainId,
+            )
         }
-        single<EoaSigner> {
-            EoaSigner(
+        single<OfframpFunding> {
+            val cfg = get<P2pNetworkConfig>()
+            // Network toggle: mainnet bridges ZEC→USDC via NEAR; testnet expects a pre-funded account.
+            if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+                NearBridgeOfframpFunding(rpc = get(), usdc = cfg.usdcAddress)
+            } else {
+                PreFundedOfframpFunding(rpc = get(), usdc = cfg.usdcAddress)
+            }
+        }
+        single<OfframpRefund> {
+            val cfg = get<P2pNetworkConfig>()
+            // Network toggle: mainnet pulls USDC→ZEC via NEAR; testnet keeps the USDC in the account.
+            if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) NearPullbackOfframpRefund() else NoRouteOfframpRefund()
+        }
+        single {
+            val cfg = get<P2pNetworkConfig>()
+            SmartOfframpAccountProvider(
+                accountProvider = get(),
                 rpc = get(),
-                chainId = get<P2pNetworkConfig>().chainId,
-                account = get(),
+                accountFactory = cfg.accountFactoryAddress,
             )
         }
 

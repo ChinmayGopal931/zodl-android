@@ -23,9 +23,10 @@ import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import xyz.justzappit.evm.hd.EvmKey
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.types.TxHash
+import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.KnownRevertReason
 import xyz.justzappit.offramp.orchestrator.OfframpDriver
@@ -48,7 +49,7 @@ internal class UpiOfframpProgressVM(
     private val args: UpiOfframpProgressArgs,
     private val orchestrator: OfframpDriver,
     private val network: P2pNetworkConfig,
-    private val account: EvmKey,
+    private val accountProvider: SmartOfframpAccountProvider,
     private val navigationRouter: NavigationRouter,
     private val offrampRepo: OfframpRepository,
     private val getOrderFeeDetails: GetOrderFeeDetailsUseCase,
@@ -62,6 +63,15 @@ internal class UpiOfframpProgressVM(
     private val persister = OfframpCheckpointPersister(repo = offrampRepo, request = request)
 
     private val feeDetails = MutableStateFlow<OrderFeeDetails?>(null)
+
+    // The on-chain identity shown to the user: the ERC-4337 smart account, not the owner EOA.
+    // Resolved once via an async factory call (see init); null until then.
+    private val smartAccountAddress = MutableStateFlow<Address?>(null)
+
+    // User-initiated cancel + reclaim. Once [cancelStatus] holds a terminal status it overrides the
+    // live order status; [isCancelling] gates the button while the cancel UserOp is in flight.
+    private val cancelStatus = MutableStateFlow<OfframpStatus?>(null)
+    private val isCancelling = MutableStateFlow(false)
 
     /**
      * Shared so multiple downstream collectors (state-builder, persister side effect, fee-details
@@ -90,6 +100,12 @@ internal class UpiOfframpProgressVM(
     }.shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
 
     init {
+        viewModelScope.launch {
+            runCatching { accountProvider.resolve().address }
+                .onSuccess { addr -> smartAccountAddress.update { addr } }
+                .onFailure { Twig.warn(it) { "UpiOfframpProgress: failed to resolve smart account address" } }
+        }
+
         // Fee details: refetch whenever orderId or status-class changes. Distinct-until-changed
         // throttles the WaitingForCompletion poll loop (which emits every 3s) down to one fetch
         // per genuine state transition.
@@ -104,16 +120,25 @@ internal class UpiOfframpProgressVM(
     }
 
     val state: StateFlow<UpiOfframpProgressState> =
-        combine(statusSource, feeDetails) { status, fees -> buildState(status, fees) }
+        combine(statusSource, feeDetails, smartAccountAddress, cancelStatus, isCancelling) {
+                status, fees, addr, cancel, cancelling ->
+            // A terminal cancel result overrides the live order status.
+            buildState(cancel ?: status, fees, addr, cancelling)
+        }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.Eagerly,
-                initialValue = buildState(OfframpStatus.Idle, null),
+                initialValue = buildState(OfframpStatus.Idle, null, null, false),
             )
 
-    private fun buildState(status: OfframpStatus, fees: OrderFeeDetails?): UpiOfframpProgressState {
+    private fun buildState(
+        status: OfframpStatus,
+        fees: OrderFeeDetails?,
+        accountAddress: Address?,
+        cancelling: Boolean,
+    ): UpiOfframpProgressState {
         val orderId = status.orderId
-        val summary = buildSummary(status, orderId)
+        val summary = buildSummary(status, orderId, accountAddress)
 
         val title = when (status) {
             is OfframpStatus.Completed -> stringRes(R.string.upi_offramp_progress_title_completed)
@@ -155,11 +180,49 @@ internal class UpiOfframpProgressVM(
             failure = failure,
             cancelled = cancelled,
             primaryButton = primary,
+            cancelButton = cancelButtonFor(status, orderId, cancelling),
             onBack = { navigationRouter.back() },
         )
     }
 
-    private fun buildSummary(status: OfframpStatus, orderId: BigInteger?): UpiOfframpOrderSummary {
+    /**
+     * "Cancel & get funds back" — shown only while the order is in flight (placed, awaiting a
+     * merchant or completion), where an on-chain cancel can still reclaim the escrowed USDC.
+     */
+    private fun cancelButtonFor(status: OfframpStatus, orderId: BigInteger?, cancelling: Boolean): ButtonState? {
+        // Only an *accepted* order has escrowed USDC to reclaim. A merely PLACED order isn't
+        // user-cancellable (the contract reverts NOT_AUTHORIZED) and its funds never left the wallet,
+        // so there's nothing to cancel — it auto-expires. Show the button only once escrowed.
+        val cancellable = status is OfframpStatus.WaitingForCompletion
+        if (!cancellable || orderId == null) return null
+        return ButtonState(
+            text = if (cancelling) {
+                stringRes(R.string.upi_offramp_cancel_in_progress)
+            } else {
+                stringRes(R.string.upi_offramp_cancel_button)
+            },
+            isEnabled = !cancelling,
+            onClick = { onCancelClick(orderId) },
+        )
+    }
+
+    private fun onCancelClick(orderId: BigInteger) {
+        if (isCancelling.value) return
+        viewModelScope.launch {
+            isCancelling.update { true }
+            try {
+                orchestrator.cancelAndRefund(orderId).collect { status -> cancelStatus.update { status } }
+            } finally {
+                isCancelling.update { false }
+            }
+        }
+    }
+
+    private fun buildSummary(
+        status: OfframpStatus,
+        orderId: BigInteger?,
+        accountAddress: Address?,
+    ): UpiOfframpOrderSummary {
         val completionDuration = (status as? OfframpStatus.Completed)?.let {
             completionDurationString(it.placedAtEpochSeconds, it.completedAtEpochSeconds)
         }
@@ -181,8 +244,8 @@ internal class UpiOfframpProgressVM(
             recipient = args.recipientUpi,
             orderId = orderId?.toString(),
             networkName = network.name.replaceFirstChar { it.uppercase(Locale.ROOT) },
-            signerAddress = account.address.checksumHex,
-            signerExplorerUrl = explorerUrl(addressPath(account.address)),
+            signerAddress = accountAddress?.checksumHex,
+            signerExplorerUrl = accountAddress?.let { explorerUrl(addressPath(it)) },
             completionDuration = completionDuration,
             terminalTimestamp = terminalTimestamp,
             merchantAddress = merchantAddress,
@@ -205,8 +268,16 @@ internal class UpiOfframpProgressVM(
     }
 
     private fun buildCancelledCard(cancelled: OfframpStatus.Cancelled): UpiOfframpCancelledCard {
+        // Where the reclaimed funds went: mainnet pulls USDC back to ZEC (NEAR), testnet leaves it in
+        // the self-custodial account (no NEAR route).
+        val returnsToZec = network.chainId == ChainId.BASE_MAINNET
         val refundedAmount = cancelled.refundedUsdcAmount?.let {
-            stringRes(R.string.upi_offramp_cancelled_refunded, formatUsdcDisplay(it))
+            val res = if (returnsToZec) {
+                R.string.upi_offramp_cancelled_returned_zec
+            } else {
+                R.string.upi_offramp_cancelled_refunded
+            }
+            stringRes(res, formatUsdcDisplay(it))
         }
         val cancelledAt = cancelled.cancelledAtEpochSeconds?.let {
             stringRes(R.string.upi_offramp_cancelled_at, formatTerminalTimestampValue(it))
@@ -254,6 +325,7 @@ internal class UpiOfframpProgressVM(
         KnownRevertReason.InvalidOrderUpi -> R.string.upi_offramp_revert_invalid_order_upi
         KnownRevertReason.OrderNotAccepted -> R.string.upi_offramp_revert_order_not_accepted
         KnownRevertReason.UsdcTransferFailed -> R.string.upi_offramp_revert_usdc_transfer_failed
+        KnownRevertReason.NotAuthorized -> R.string.upi_offramp_revert_not_authorized
     }
 
     private fun buildSteps(status: OfframpStatus): List<UpiOfframpStep> {

@@ -105,6 +105,8 @@
     <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
     <string name="upi_offramp_progress_done_button">Listo</string>
     <string name="upi_offramp_progress_close_button">Cerrar</string>
+    <string name="upi_offramp_cancel_button">Cancelar y recuperar fondos</string>
+    <string name="upi_offramp_cancel_in_progress">Cancelando…</string>
     <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
     <string name="upi_offramp_step_init">Preparación</string>
     <string name="upi_offramp_step_selecting_circle">Eligiendo grupo de comerciantes</string>
@@ -146,6 +148,7 @@
     <string name="upi_offramp_revert_invalid_order_upi">El comerciante rechazó el UPI cifrado. Esto puede indicar un problema de formato — por favor repórtalo.</string>
     <string name="upi_offramp_revert_order_not_accepted">La orden aún no está aceptada. Inténtalo en un momento.</string>
     <string name="upi_offramp_revert_usdc_transfer_failed">La transferencia de USDC falló. Verifica tu saldo y autorización.</string>
+    <string name="upi_offramp_revert_not_authorized">Esta orden aún no se puede cancelar — las órdenes no aceptadas expiran solas y tus fondos nunca salieron de tu billetera.</string>
     <string name="upi_offramp_revert_sdk_long_tail">Error del contrato: %1$s</string>
 
     <string name="upi_offramp_detail_stalled">Tardando más de lo habitual — tus USDC permanecen depositados en el contrato hasta que el comerciante acepte o la orden se autocancele (~72 horas).</string>
@@ -169,7 +172,8 @@
 
     <string name="upi_offramp_progress_title_cancelled">Orden cancelada</string>
     <string name="upi_offramp_progress_subtitle_cancelled">Ningún comerciante completó esta orden a tiempo. Tus USDC han sido reembolsados on-chain.</string>
-    <string name="upi_offramp_cancelled_refunded">%1$s USDC reembolsados a tu cuenta de offramp</string>
+    <string name="upi_offramp_cancelled_refunded">%1$s USDC devueltos a tu billetera</string>
+    <string name="upi_offramp_cancelled_returned_zec">%1$s USDC están regresando a ZEC — llegarán a tu billetera en breve</string>
     <string name="upi_offramp_cancelled_at">Cancelada a las %1$s</string>
     <string name="upi_offramp_cancelled_tip">Consejo: pide al comerciante que genere el QR UPI solo después de que esta pantalla se abra, para que la orden se complete antes de expirar.</string>
 </resources>

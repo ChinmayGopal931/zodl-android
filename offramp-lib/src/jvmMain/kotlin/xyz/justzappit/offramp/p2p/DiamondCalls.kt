@@ -64,6 +64,9 @@ object DiamondCalls {
         ),
     )
 
+    fun cancelOrderCalldata(orderId: BigInteger): ByteArray =
+        AbiEncoder.encodeFunctionCall("cancelOrder(uint256)", listOf(AbiUint(orderId)))
+
     fun getOrdersByIdCalldata(orderId: BigInteger): ByteArray =
         AbiEncoder.encodeFunctionCall(
             "getOrdersById(uint256)",

@@ -11,4 +11,13 @@ object Erc20Calls {
             "approve(address,uint256)",
             listOf(AbiAddress(spender), AbiUint(amount.micros)),
         )
+
+    fun balanceOfCalldata(owner: Address): ByteArray =
+        AbiEncoder.encodeFunctionCall("balanceOf(address)", listOf(AbiAddress(owner)))
+
+    fun transferCalldata(to: Address, amount: Usdc6): ByteArray =
+        AbiEncoder.encodeFunctionCall(
+            "transfer(address,uint256)",
+            listOf(AbiAddress(to), AbiUint(amount.micros)),
+        )
 }

@@ -106,6 +106,15 @@ class BaseRpcClient(
             ).jsonPrimitive.content,
         )
 
+    suspend fun ethGetCode(address: Address, blockTag: String = "latest"): ByteArray =
+        rpcCall(
+            "eth_getCode",
+            buildJsonArray {
+                add(address.checksumHex)
+                add(blockTag)
+            },
+        ).jsonPrimitive.content.removePrefix("0x").let { if (it.isEmpty()) byteArrayOf() else it.hexToBytes() }
+
     suspend fun ethGetTransactionReceipt(txHash: TxHash): TransactionReceipt? {
         val result = rpcCall("eth_getTransactionReceipt", buildJsonArray { add(txHash.hex) })
         if (result is JsonPrimitive && result.content == "null") return null

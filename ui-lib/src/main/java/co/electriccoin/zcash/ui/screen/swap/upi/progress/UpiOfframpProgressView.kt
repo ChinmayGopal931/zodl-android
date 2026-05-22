@@ -105,12 +105,17 @@ internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
         }
         ZappBottomActionBar(
             onBack = state.onBack,
-            primaryAction = state.primaryButton?.let { btn ->
+            // In-flight orders show the destructive cancel action; terminal states show Done/Close.
+            primaryAction = (state.cancelButton ?: state.primaryButton)?.let { btn ->
                 {
                     ZappButton(
                         text = btn.text.getValue(),
                         enabled = btn.isEnabled,
-                        variant = ZappButtonVariant.Primary,
+                        variant = if (state.cancelButton != null) {
+                            ZappButtonVariant.Danger
+                        } else {
+                            ZappButtonVariant.Primary
+                        },
                         onClick = btn.onClick,
                     )
                 }
@@ -192,19 +197,21 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
                 uriHandler = uriHandler,
             )
         }
-        Spacer(modifier = Modifier.height(GAP_SM.dp))
-        BasicText(
-            text = stringResource(R.string.upi_offramp_summary_signer),
-            style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
-        )
-        Spacer(modifier = Modifier.height(2.dp))
-        ExplorerLink(
-            value = summary.signerAddress,
-            url = summary.signerExplorerUrl,
-            prefix = ADDRESS_ELLIPSIS_PREFIX,
-            suffix = ADDRESS_ELLIPSIS_SUFFIX,
-            uriHandler = uriHandler,
-        )
+        if (summary.signerAddress != null && summary.signerExplorerUrl != null) {
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+            BasicText(
+                text = stringResource(R.string.upi_offramp_summary_signer),
+                style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            ExplorerLink(
+                value = summary.signerAddress,
+                url = summary.signerExplorerUrl,
+                prefix = ADDRESS_ELLIPSIS_PREFIX,
+                suffix = ADDRESS_ELLIPSIS_SUFFIX,
+                uriHandler = uriHandler,
+            )
+        }
     }
 }
 

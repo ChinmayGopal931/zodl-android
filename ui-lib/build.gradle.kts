@@ -205,6 +205,14 @@ androidComponents {
                 comment = "Mainnet subgraph URL used when P2P_NETWORK=mainnet"
             )
         )
+        variant.buildConfigFields?.put(
+            "THIRDWEB_CLIENT_ID",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("THIRDWEB_CLIENT_ID")?.toString().orEmpty()}\"",
+                comment = "thirdweb publishable Client ID for the offramp ERC-4337 bundler/paymaster"
+            )
+        )
     }
 }
 

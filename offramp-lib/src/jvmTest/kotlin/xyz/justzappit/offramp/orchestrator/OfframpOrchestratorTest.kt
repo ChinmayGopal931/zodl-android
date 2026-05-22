@@ -18,6 +18,8 @@ import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.signer.EoaSigner
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.config.P2pNetworks
+import xyz.justzappit.offramp.funding.OfframpFunding
+import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.Usdc6
@@ -82,11 +84,13 @@ class OfframpOrchestratorTest {
     private val orderReader = ScriptedOrderReadSource()
     private val orchestrator = OfframpOrchestrator(
         rpc = rpc,
-        signer = signer,
-        account = account,
+        submitter = signer,
+        accountAddress = account.address,
         network = network,
         subgraph = subgraph,
         orderReader = orderReader,
+        funding = OfframpFunding { _, _ -> },
+        refund = OfframpRefund { _, _ -> null },
         router = CircleRouter(random = Random(0), epsilon = 0.0),
         pollIntervalMs = 0,
         stalledAfterMs = 50,

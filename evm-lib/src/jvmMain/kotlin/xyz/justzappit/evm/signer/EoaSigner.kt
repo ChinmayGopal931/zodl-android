@@ -6,7 +6,6 @@ import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.TransactionReceipt
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
-import xyz.justzappit.evm.types.Gas
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.toHex
@@ -18,12 +17,13 @@ class EoaSigner(
     private val account: EvmKey,
     private val baseFeeMultiplier: Int = DEFAULT_BASE_FEE_MULTIPLIER,
     private val gasLimitBufferPercent: Int = DEFAULT_GAS_BUFFER_PCT,
-) {
-    suspend fun sendTransaction(
+    private val receiptTimeoutMs: Long = DEFAULT_RECEIPT_TIMEOUT_MS,
+    private val receiptPollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
+) : TxSubmitter {
+    override suspend fun sendTransaction(
         to: Address,
-        value: Wei = Wei.ZERO,
-        data: ByteArray = byteArrayOf(),
-        gasLimitOverride: Gas? = null,
+        value: Wei,
+        data: ByteArray,
     ): TxHash {
         val nonce = rpc.ethGetTransactionCount(account.address, blockTag = "pending")
         val tip: Wei = rpc.ethMaxPriorityFeePerGas()
@@ -31,10 +31,9 @@ class EoaSigner(
         val baseFee: Wei = block.baseFee
             ?: error("baseFeePerGas missing in latest block — chain may be pre-EIP-1559")
         val maxFee: Wei = baseFee * baseFeeMultiplier + tip
-        val gasLimit = gasLimitOverride
-            ?: rpc.ethEstimateGas(account.address, to, value, data)
-                .times(BigInteger.valueOf(100L + gasLimitBufferPercent))
-                .div(BigInteger.valueOf(100L))
+        val gasLimit = rpc.ethEstimateGas(account.address, to, value, data)
+            .times(BigInteger.valueOf(100L + gasLimitBufferPercent))
+            .div(BigInteger.valueOf(100L))
 
         val tx = Eip1559Tx(
             chainId = chainId,
@@ -50,17 +49,13 @@ class EoaSigner(
         return rpc.ethSendRawTransaction("0x" + tx.encodeSigned(sig).toHex())
     }
 
-    suspend fun awaitReceipt(
-        txHash: TxHash,
-        timeoutMs: Long = DEFAULT_RECEIPT_TIMEOUT_MS,
-        pollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
-    ): TransactionReceipt {
-        val deadline = System.currentTimeMillis() + timeoutMs
+    override suspend fun awaitReceipt(txHash: TxHash): TransactionReceipt {
+        val deadline = System.currentTimeMillis() + receiptTimeoutMs
         while (System.currentTimeMillis() < deadline) {
             rpc.ethGetTransactionReceipt(txHash)?.let { return it }
-            delay(pollIntervalMs)
+            delay(receiptPollIntervalMs)
         }
-        error("Timed out after ${timeoutMs}ms waiting for receipt of ${txHash.hex}")
+        error("Timed out after ${receiptTimeoutMs}ms waiting for receipt of ${txHash.hex}")
     }
 
     companion object {

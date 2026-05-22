@@ -128,6 +128,30 @@ class KnownRevertsTest {
         assertNull(KnownReverts.sdkName(revertedWith("0xdeadbeef")))
     }
 
+    // -- ERC-4337 bundler error decoding -----------------------------------------------------
+
+    @Test
+    fun `0xea8e4eb5 maps to NotAuthorized`() {
+        assertEquals(KnownRevertReason.NotAuthorized, KnownReverts.explain(revertedWith("0xea8e4eb5")))
+        assertEquals("NOT_AUTHORIZED", KnownReverts.sdkName(revertedWith("0xea8e4eb5")))
+    }
+
+    @Test
+    fun `selectorFromMessage recovers a selector from a bundler revert message`() {
+        val msg = "UserOperation reverted during simulation with reason: 0xea8e4eb5"
+        val selector = KnownReverts.selectorFromMessage(msg)
+        assertEquals(Selector4.fromHex("0xea8e4eb5"), selector)
+        assertEquals(KnownRevertReason.NotAuthorized, KnownReverts.explain(selector))
+    }
+
+    @Test
+    fun `selectorFromMessage ignores non-selector input`() {
+        assertNull(KnownReverts.selectorFromMessage(null))
+        assertNull(KnownReverts.selectorFromMessage("AA25 invalid account nonce"))
+        // A full 20-byte address must not be mistaken for a 4-byte selector.
+        assertNull(KnownReverts.selectorFromMessage("sender 0xdD53a3Db48e5b69F34Abc1fA3156Dc3d0c269D5E rejected"))
+    }
+
     // -- SolidityErrors regression preserved -------------------------------------------------
 
     @Test

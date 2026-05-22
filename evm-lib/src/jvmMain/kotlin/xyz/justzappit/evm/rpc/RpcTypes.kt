@@ -28,6 +28,26 @@ data class EvmLog(
 )
 
 @Serializable
+data class UserOpGasPrice(
+    val maxFeePerGas: String,
+    val maxPriorityFeePerGas: String,
+)
+
+@Serializable
+data class UserOpGasEstimate(
+    val preVerificationGas: String,
+    val verificationGasLimit: String,
+    val callGasLimit: String,
+)
+
+/** Result of `pm_sponsorUserOperation`; for v0.6 only [paymasterAndData] is used. */
+@Serializable
+data class PaymasterResult(
+    val paymasterAndData: String,
+    val paymaster: String? = null,
+)
+
+@Serializable
 data class BlockHeader(
     val number: String,
     val timestamp: String,

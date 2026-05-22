@@ -18,8 +18,9 @@ internal data class UpiOfframpOrderSummary(
     val recipient: String,
     val orderId: String?,
     val networkName: String,
-    val signerAddress: String,
-    val signerExplorerUrl: String,
+    // Null until the counterfactual smart-account address resolves (one async factory call).
+    val signerAddress: String?,
+    val signerExplorerUrl: String?,
     /** "Completed in 1m 32s" — populated only on a completed order. */
     val completionDuration: StringResource? = null,
     /** "DD MMM YYYY, hh:mm a" formatted timestamp; populated on Completed and Cancelled. */
@@ -69,5 +70,7 @@ internal data class UpiOfframpProgressState(
     val failure: UpiOfframpFailureCard?,
     val cancelled: UpiOfframpCancelledCard?,
     val primaryButton: ButtonState?,
+    /** Destructive "cancel & reclaim" action, shown only while the order is in flight. */
+    val cancelButton: ButtonState? = null,
     val onBack: () -> Unit,
 )
