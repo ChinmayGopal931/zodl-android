@@ -6,10 +6,12 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -17,6 +19,7 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -27,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomInputState
@@ -38,11 +43,19 @@ internal fun InputRow(state: ChatRoomInputState) {
     val attachContentDescription = state.attachContentDescription.getValue()
     val sendContentDescription = state.sendContentDescription.getValue()
 
+    Column(modifier = Modifier.fillMaxWidth().background(c.surface)) {
+        state.replyPreview?.let { reply ->
+            ReplyPreviewStrip(
+                senderName = reply.senderName,
+                content = reply.content,
+                onDismiss = reply.onDismiss,
+            )
+        }
+
     Row(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .background(c.surface)
                 .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -117,6 +130,71 @@ internal fun InputRow(state: ChatRoomInputState) {
                 contentDescription = sendContentDescription,
                 tint = if (state.canSend) c.onAccent else c.textSubtle,
                 modifier = Modifier.size(18.dp),
+            )
+        }
+    }
+    }
+}
+
+@Composable
+private fun ReplyPreviewStrip(
+    senderName: String,
+    content: String,
+    onDismiss: () -> Unit,
+) {
+    val c = ZappTheme.colors
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(c.border),
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(c.surfaceAlt)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .width(3.dp)
+                .height(32.dp)
+                .background(c.accent),
+        )
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp),
+        ) {
+            BasicText(
+                text = stringResource(R.string.chat_room_reply_to_fmt, senderName),
+                style = ZappTheme.typography.chip.copy(color = c.accent),
+                maxLines = 1,
+            )
+            BasicText(
+                text = content,
+                style = ZappTheme.typography.caption.copy(color = c.textMuted),
+                maxLines = 1,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = false, radius = 16.dp, color = c.accent),
+                    onClick = onDismiss,
+                ),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Default.Close,
+                contentDescription = stringResource(R.string.chat_room_reply_dismiss),
+                tint = c.textSubtle,
+                modifier = Modifier.size(16.dp),
             )
         }
     }

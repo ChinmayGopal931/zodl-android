@@ -65,6 +65,7 @@ class ChatRoomVM(
     private val connectionDetails = MutableStateFlow<ConnectionDetailsUi?>(null)
 
     private val messageInput = MutableStateFlow("")
+    private val replyingTo = MutableStateFlow<ChatMessage?>(null)
     private val showAttachmentSheet = MutableStateFlow(false)
     private val showMediaSheet = MutableStateFlow(false)
     private val showNetworkSheet = MutableStateFlow(false)
@@ -91,22 +92,23 @@ class ChatRoomVM(
             combine(connectionStatus, peerCount, dhtHealth, peerOnline) { cs, pc, dh, po ->
                 ConnectionSnapshot(cs, pc, dh, po)
             },
-            combine(messageInput, showAttachmentSheet, showMediaSheet) { input, attach, media ->
-                Triple(input, attach, media)
+            combine(messageInput, replyingTo, showAttachmentSheet, showMediaSheet) { input, reply, attach, media ->
+                InputSnapshot(input, reply, attach, media)
             },
             combine(showNetworkSheet, connectionDetails) { net, details -> net to details },
             combine(showEditContact, showBlockDialog, showReportDialog) { edit, block, report ->
                 Triple(edit, block, report)
             },
-        ) { (conv, msgs, loading), conn, (input, attach, media), (net, details), (edit, block, report) ->
+        ) { (conv, msgs, loading), conn, inputSnap, (net, details), (edit, block, report) ->
             createState(
                 conversation = conv,
                 messages = msgs,
                 isLoading = loading,
                 connection = conn,
-                messageInput = input,
-                showAttachmentSheet = attach,
-                showMediaSheet = media,
+                messageInput = inputSnap.input,
+                replyingTo = inputSnap.reply,
+                showAttachmentSheet = inputSnap.showAttach,
+                showMediaSheet = inputSnap.showMedia,
                 showNetworkSheet = net,
                 connectionDetails = details,
                 showEditContact = edit,
@@ -129,6 +131,7 @@ class ChatRoomVM(
                             peerOnline = null,
                         ),
                     messageInput = "",
+                    replyingTo = null,
                     showAttachmentSheet = false,
                     showMediaSheet = false,
                     showNetworkSheet = false,
@@ -146,12 +149,20 @@ class ChatRoomVM(
         val peerOnline: Boolean?,
     )
 
+    private data class InputSnapshot(
+        val input: String,
+        val reply: ChatMessage?,
+        val showAttach: Boolean,
+        val showMedia: Boolean,
+    )
+
     private fun createState(
         conversation: ChatConversation?,
         messages: List<ChatMessage>,
         isLoading: Boolean,
         connection: ConnectionSnapshot,
         messageInput: String,
+        replyingTo: ChatMessage?,
         showAttachmentSheet: Boolean,
         showMediaSheet: Boolean,
         showNetworkSheet: Boolean,
@@ -188,6 +199,14 @@ class ChatRoomVM(
                     onChange = ::onInputChange,
                     onSendClick = ::onSendTextClick,
                     onAttachClick = ::onAttachClick,
+                    replyPreview =
+                        replyingTo?.let { msg ->
+                            ChatRoomReplyPreviewState(
+                                senderName = msg.senderName ?: if (msg.isFromMe) "You" else "Unknown",
+                                content = msg.content.take(REPLY_PREVIEW_MAX_LENGTH),
+                                onDismiss = ::dismissReply,
+                            )
+                        },
                 ),
             attachmentSheet =
                 if (showAttachmentSheet) {
@@ -462,11 +481,21 @@ class ChatRoomVM(
         messageInput.value = value
     }
 
+    fun onReplyToMessage(message: ChatMessage) {
+        replyingTo.value = message
+    }
+
+    private fun dismissReply() {
+        replyingTo.value = null
+    }
+
     private fun onSendTextClick() {
         val text = messageInput.value.trim()
         if (text.isEmpty()) return
+        val reply = replyingTo.value
         messageInput.value = ""
-        viewModelScope.launch { sendTextMessage(text) }
+        replyingTo.value = null
+        viewModelScope.launch { sendTextMessage(text, reply) }
     }
 
     private fun onAttachClick() {
@@ -599,9 +628,15 @@ class ChatRoomVM(
 
     // ── SDK calls ────────────────────────────────────────────────────────────
 
-    private suspend fun sendTextMessage(text: String) {
+    private suspend fun sendTextMessage(text: String, replyTo: ChatMessage? = null) {
         runChatCall("ChatRoomVM: sendMessage failed") {
-            val zmMessage = sdk.sendMessage(conversationId, text)
+            val zmMessage = sdk.sendMessage(
+                conversationId = conversationId,
+                content = text,
+                replyToId = replyTo?.id,
+                replyToSenderName = replyTo?.senderName,
+                replyToContent = replyTo?.content?.take(REPLY_PREVIEW_MAX_LENGTH),
+            )
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
@@ -616,7 +651,11 @@ class ChatRoomVM(
                     } else {
                         null
                     }
-                if (mimeType.startsWith("image/")) {
+                if (mimeType == GIF_MIME) {
+                    val cached =
+                        FileUtils.copyUriToCache(application, uri) ?: error("Failed to cache GIF")
+                    sendMediaMessage(cached.absolutePath, GIF_MIME, thumbnailData = thumbnail)
+                } else if (mimeType.startsWith("image/")) {
                     val compressed =
                         ImageProcessor.compressImage(application, uri)
                             ?: error("Image compression failed")
@@ -718,8 +757,10 @@ class ChatRoomVM(
         const val STATUS_FAILED = "failed"
         const val PEER_STATUS_ONLINE = "online"
         const val IMAGE_MIME = "image/jpeg"
+        const val GIF_MIME = "image/gif"
         const val LOCATION_MIME = "application/location"
         const val WALLET_ADDRESS_MIME = "application/wallet-address"
         const val FILE_FALLBACK_NAME = "File"
+        const val REPLY_PREVIEW_MAX_LENGTH = 100
     }
 }

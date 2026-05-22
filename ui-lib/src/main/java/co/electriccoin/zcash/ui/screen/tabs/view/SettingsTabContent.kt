@@ -50,6 +50,7 @@ import co.electriccoin.zcash.ui.design.component.zapp.initialsOf
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
+import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
@@ -150,9 +151,7 @@ fun SettingsTabContent(
                         title = "Contact support",
                         subtitle = "Report issues, share feedback",
                         icon = Icons.Default.SupportAgent,
-                        onClick = {
-                            scope.launch { snackbarHostState.showSnackbar("Support chat coming soon.") }
-                        },
+                        onClick = { navigationRouter.forward(SupportTicketListArgs) },
                     )
                 }
 

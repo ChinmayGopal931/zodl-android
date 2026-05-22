@@ -13,13 +13,17 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -27,21 +31,26 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
+import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomState
+import java.util.Calendar
 import kotlinx.coroutines.launch
 
 @Composable
-fun ChatRoomView(
+internal fun ChatRoomView(
     state: ChatRoomState,
+    onReplyToMessage: (ChatMessage) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val c = ZappTheme.colors
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val listItems = remember(state.messages) { buildChatListItems(state.messages) }
+    var viewerMessage by remember { mutableStateOf<ChatMessage?>(null) }
 
-    LaunchedEffect(state.messages.size) {
-        if (state.messages.isNotEmpty()) {
-            coroutineScope.launch { listState.animateScrollToItem(state.messages.size - 1) }
+    LaunchedEffect(listItems.size) {
+        if (listItems.isNotEmpty()) {
+            coroutineScope.launch { listState.animateScrollToItem(listItems.size - 1) }
         }
     }
 
@@ -89,8 +98,23 @@ fun ChatRoomView(
                         }
                     }
                 }
-                items(items = state.messages, key = { it.id }) { message ->
-                    MessageBubble(message = message)
+                itemsIndexed(
+                    items = listItems,
+                    key = { _, item ->
+                        when (item) {
+                            is ChatListItem.DateSeparator -> "sep_${item.dayKey}"
+                            is ChatListItem.Message -> "msg_${item.message.id}"
+                        }
+                    },
+                ) { _, item ->
+                    when (item) {
+                        is ChatListItem.DateSeparator -> ChatDateSeparator(epochMillis = item.epochMillis)
+                        is ChatListItem.Message -> MessageBubble(
+                            message = item.message,
+                            onReplyToMessage = onReplyToMessage,
+                            onImageClick = { viewerMessage = it },
+                        )
+                    }
                 }
             }
 
@@ -153,4 +177,41 @@ fun ChatRoomView(
             onDismiss = it.onDismiss,
         )
     }
+
+    viewerMessage?.let { msg ->
+        ImageViewerOverlay(
+            message = msg,
+            onDismiss = { viewerMessage = null },
+        )
+    }
+}
+
+private sealed interface ChatListItem {
+    data class DateSeparator(val dayKey: Long, val epochMillis: Long) : ChatListItem
+    data class Message(val message: ChatMessage) : ChatListItem
+}
+
+private fun buildChatListItems(messages: List<ChatMessage>): List<ChatListItem> {
+    if (messages.isEmpty()) return emptyList()
+    val items = mutableListOf<ChatListItem>()
+    var lastDayKey = -1L
+    for (message in messages) {
+        val dayKey = message.timestamp.toDayKey()
+        if (dayKey != lastDayKey) {
+            items.add(ChatListItem.DateSeparator(dayKey = dayKey, epochMillis = message.timestamp))
+            lastDayKey = dayKey
+        }
+        items.add(ChatListItem.Message(message))
+    }
+    return items
+}
+
+private fun Long.toDayKey(): Long {
+    val cal = Calendar.getInstance()
+    cal.timeInMillis = this
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    return cal.timeInMillis
 }

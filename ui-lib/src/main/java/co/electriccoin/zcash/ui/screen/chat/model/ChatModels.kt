@@ -71,7 +71,10 @@ data class ChatMessage(
     val thumbnailData: String? = null,
     val mediaLocalPath: String? = null,
     val mediaTransferState: String? = null,
-    val status: MessageStatus? = null
+    val status: MessageStatus? = null,
+    val replyToId: String? = null,
+    val replyToSenderName: String? = null,
+    val replyToContent: String? = null
 ) {
     companion object {
         fun from(zmMsg: ZMMessage) = ChatMessage(
@@ -89,7 +92,10 @@ data class ChatMessage(
             thumbnailData = zmMsg.thumbnailData,
             mediaLocalPath = zmMsg.mediaLocalPath,
             mediaTransferState = zmMsg.mediaTransferState?.name?.lowercase(),
-            status = if (zmMsg.isFromMe) MessageStatus.SENT else null
+            status = if (zmMsg.isFromMe) MessageStatus.SENT else null,
+            replyToId = zmMsg.replyToId,
+            replyToSenderName = zmMsg.replyToSenderName,
+            replyToContent = zmMsg.replyToContent
         )
     }
 }

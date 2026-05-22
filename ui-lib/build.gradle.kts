@@ -180,6 +180,7 @@ dependencies {
     implementation(libs.bundles.androidx.camera)
     implementation(libs.bundles.androidx.compose.core)
     implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
     implementation(libs.play.services.location)
     implementation(libs.bundles.androidx.compose.extended)
     api(libs.bundles.koin)

@@ -16,16 +16,22 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappFab
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRowDivider
@@ -33,7 +39,10 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
 import co.electriccoin.zcash.ui.design.util.getValue
+import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListItemState
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListState
+import co.electriccoin.zcash.ui.screen.chat.list.ChatListSupportRowState
 
 @Composable
 fun ChatListView(
@@ -56,31 +65,34 @@ fun ChatListView(
                 right = { NetworkChip(state = state.networkChip) },
             )
 
-            if (state.items.isEmpty() && state.isLoading) {
-                LoadingState()
-            } else if (state.items.isEmpty()) {
-                EmptyState(
-                    title = state.emptyTitle.getValue(),
-                    subtitle = state.emptySubtitle.getValue(),
-                )
-            } else {
-                val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding =
-                        PaddingValues(
-                            top = 4.dp,
-                            bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
-                        ),
-                ) {
-                    items(items = state.items, key = { it.id }) { item ->
-                        SwipeToLeaveRow(
-                            item = item,
-                            onLeave = item.onLeaveSwipe,
-                        ) {
-                            ConversationItem(item = item)
+            when {
+                state.isLoading && state.items.isEmpty() -> LoadingState(modifier = Modifier.weight(1f))
+
+                else -> {
+                    val navBarBottom =
+                        WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+                    LazyColumn(
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
+                        contentPadding =
+                            PaddingValues(
+                                top = 4.dp,
+                                bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
+                            ),
+                    ) {
+                        item(key = "support_row") {
+                            SupportContactRow(state = state.supportRow)
+                            ZappRowDivider(inset = true)
                         }
-                        ZappRowDivider(inset = true)
+
+                        items(items = state.items, key = { it.id }) { item ->
+                            SwipeToLeaveRow(
+                                item = item,
+                                onLeave = item.onLeaveSwipe,
+                            ) {
+                                ConversationItem(item = item)
+                            }
+                            ZappRowDivider(inset = true)
+                        }
                     }
                 }
             }
@@ -131,39 +143,75 @@ fun ChatListView(
 }
 
 @Composable
-private fun LoadingState() {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+private fun LoadingState(modifier: Modifier = Modifier) {
+    Box(modifier = modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(color = ZappTheme.colors.accent)
     }
 }
 
 @Composable
-private fun EmptyState(title: String, subtitle: String) {
+private fun SupportContactRow(state: ChatListSupportRowState) {
     val c = ZappTheme.colors
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center,
+    Row(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = state.onClick)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(24.dp),
+        Box(
+            modifier =
+                Modifier
+                    .size(44.dp)
+                    .background(c.accent, RectangleShape),
+            contentAlignment = Alignment.Center,
         ) {
             Icon(
-                Icons.AutoMirrored.Filled.Chat,
+                painter = painterResource(R.drawable.ic_launcher_foreground),
                 contentDescription = null,
-                modifier = Modifier.size(56.dp),
-                tint = c.textSubtle,
+                tint = c.onAccent,
+                modifier = Modifier.size(28.dp),
             )
-            Spacer(Modifier.height(12.dp))
+        }
+
+        Spacer(Modifier.size(12.dp))
+
+        Column(modifier = Modifier.weight(1f)) {
             BasicText(
-                text = title,
-                style = ZappTheme.typography.sectionTitle.copy(color = c.text),
+                text = stringRes(R.string.support_chat_title).getValue(),
+                style = ZappTheme.typography.rowTitle.copy(color = c.text),
+                maxLines = 1,
             )
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(2.dp))
             BasicText(
-                text = subtitle,
-                style = ZappTheme.typography.body.copy(color = c.textMuted),
+                text = when {
+                    state.lastMessage != null -> state.lastMessage.getValue()
+                    state.ticketCount > 0 -> stringRes(
+                        R.string.chat_list_support_tickets_fmt,
+                        state.ticketCount,
+                    ).getValue()
+                    else -> stringRes(R.string.support_chat_contact_footer_subtitle).getValue()
+                },
+                style = ZappTheme.typography.rowSubtitle.copy(color = c.textMuted),
+                maxLines = 1,
             )
+        }
+
+        if (state.totalUnreadCount > 0) {
+            Box(
+                modifier =
+                    Modifier
+                        .padding(start = 8.dp)
+                        .background(c.accent, RectangleShape)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+            ) {
+                BasicText(
+                    text = "${state.totalUnreadCount}",
+                    style = ZappTheme.typography.chip.copy(color = c.onAccent),
+                )
+            }
         }
     }
 }
+
