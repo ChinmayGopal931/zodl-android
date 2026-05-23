@@ -1,6 +1,6 @@
 package co.electriccoin.zcash.ui.screen.swap.upi.progress
 
-import co.electriccoin.zcash.ui.common.repository.OfframpRepository
+import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
@@ -9,7 +9,8 @@ import xyz.justzappit.offramp.orchestrator.orderId
 import xyz.justzappit.offramp.orchestrator.step
 
 /**
- * Owns the in-memory tx-hash cache + writes to [OfframpRepository] for one in-flight offramp.
+ * Owns the in-memory tx-hash cache + writes to [OfframpCheckpointStorageProvider] for one
+ * in-flight offramp.
  *
  * The orchestrator emits [OfframpStatus.ApprovingUsdc] and [OfframpStatus.PlacingOrder] before
  * the order has an `orderId`; once `orderId` arrives via [OfframpStatus.WaitingForMerchantAcceptance],
@@ -21,7 +22,7 @@ import xyz.justzappit.offramp.orchestrator.step
  * ViewModel + a Dispatchers.Main + a viewModelScope dispatcher.
  */
 internal class OfframpCheckpointPersister(
-    private val repo: OfframpRepository,
+    private val storage: OfframpCheckpointStorageProvider,
     private val request: OfframpRequest,
 ) {
     private var lastApproveTxHash: TxHash? = null
@@ -57,15 +58,15 @@ internal class OfframpCheckpointPersister(
             is OfframpStatus.Completed,
             is OfframpStatus.Cancelled,
             is OfframpStatus.FundsRecovered,
-            is OfframpStatus.Failed -> repo.clear()
+            is OfframpStatus.Failed -> storage.clear()
             else -> {
                 val orderId = status.orderId
                 // Persist once there's either an order id OR an in-flight bridge to resume — the
                 // bridge deposit address must survive process death so resume re-polls it instead of
                 // opening a second bridge. Pre-bridge steps (Idle/SelectingCircle) carry nothing.
                 if (orderId == null && lastBridgeDepositAddress == null) return
-                val previous = repo.getInFlight()
-                repo.save(
+                val previous = storage.get()
+                storage.store(
                     OfframpCheckpoint(
                         orderId = orderId?.toString(),
                         currentStep = status.step,

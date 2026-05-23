@@ -9,7 +9,6 @@ data class P2pNetworkConfig(
     val rpcUrl: String,
     val diamondAddress: Address,
     val usdcAddress: Address,
-    val reputationManagerAddress: Address,
     val subgraphUrl: String,
     val baseExplorerUrl: String,
     // ERC-4337 v0.6 infra — thirdweb's EntryPoint and prebuilt AccountFactory are deployed at the
@@ -23,18 +22,22 @@ data class P2pNetworkConfig(
         require(subgraphUrl.isNotBlank()) { "subgraphUrl must not be blank for '$name'" }
         require(baseExplorerUrl.isNotBlank()) { "baseExplorerUrl must not be blank for '$name'" }
     }
+
+    /** Block-explorer URL for an EVM address. Pass the hex (with or without checksum case). */
+    fun addressUrl(addressHex: String): String = baseExplorerUrl.trimEnd('/') + "/address/" + addressHex
+
+    /** Block-explorer URL for a transaction hash. */
+    fun txUrl(txHash: String): String = baseExplorerUrl.trimEnd('/') + "/tx/" + txHash
 }
 
 object P2pNetworks {
     // Base Sepolia test deployment with auto-accepting/-completing merchants (p2p team-provided).
-    // reputationManagerAddress is unused by the offramp flow; kept for config completeness.
     val SEPOLIA = P2pNetworkConfig(
         name = SEPOLIA_NAME,
         chainId = ChainId.BASE_SEPOLIA,
         rpcUrl = "https://sepolia.base.org",
         diamondAddress = Address.parse("0xeb0BB8E3c014D915D9B2df03aBB130a1Fb44beb9"),
         usdcAddress = Address.parse("0x4095fE4f1E636f11A95820BA2bB87F335Bd1040d"),
-        reputationManagerAddress = Address.parse("0x45919D69E2154F46b6f6eA42ae23d2e9ee21B66f"),
         subgraphUrl = "https://api.studio.thegraph.com/query/1745491/event-indexer/version/latest",
         baseExplorerUrl = "https://sepolia.basescan.org",
     )
@@ -45,7 +48,6 @@ object P2pNetworks {
         rpcUrl = rpcUrl,
         diamondAddress = Address.parse(MAINNET_DIAMOND_ADDRESS),
         usdcAddress = Address.parse(MAINNET_USDC_ADDRESS),
-        reputationManagerAddress = Address.parse(MAINNET_REPUTATION_MANAGER_ADDRESS),
         subgraphUrl = subgraphUrl,
         baseExplorerUrl = MAINNET_BASE_EXPLORER_URL,
     )
@@ -62,6 +64,5 @@ object P2pNetworks {
 
     const val MAINNET_DIAMOND_ADDRESS = "0x4cad6eC90e65baBec9335cAd728DDC610c316368"
     const val MAINNET_USDC_ADDRESS = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-    const val MAINNET_REPUTATION_MANAGER_ADDRESS = "0xCF613e08EE1B4c2669DdCf06A7d22c9856f6Aa1D"
     const val MAINNET_BASE_EXPLORER_URL = "https://basescan.org"
 }

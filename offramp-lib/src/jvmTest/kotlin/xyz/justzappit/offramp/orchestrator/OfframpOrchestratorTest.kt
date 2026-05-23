@@ -147,8 +147,6 @@ class OfframpOrchestratorTest {
         assertIs<OfframpStatus.Idle>(statuses.first())
         val completed = statuses.last() as OfframpStatus.Completed
         assertEquals(ORDER_ID, completed.orderId)
-        assertEquals(Usdc6.ofMicros(445_000_000), completed.actualFiatAmount)
-        assertEquals(Usdc6.ofMicros(5_062_500), completed.actualUsdcAmount)
         assertEquals(1_779_999_999L, completed.completedAtEpochSeconds)
 
         val classes = statuses.map { it::class.simpleName }

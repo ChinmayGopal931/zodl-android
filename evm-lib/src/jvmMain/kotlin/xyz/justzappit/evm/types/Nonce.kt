@@ -11,8 +11,4 @@ value class Nonce(val value: BigInteger) {
     init {
         require(value.signum() >= 0) { "Nonce must be non-negative, got $value" }
     }
-
-    companion object {
-        fun ofLong(value: Long): Nonce = Nonce(BigInteger.valueOf(value))
-    }
 }

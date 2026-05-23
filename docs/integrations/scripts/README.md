@@ -46,29 +46,16 @@ bun /path/to/zodl-android/docs/integrations/scripts/generate-revert-selectors.ts
 ```
 
 The path arg defaults to `/Users/chinmaygopal/dev/p2pdotme-sdk` if omitted. The SDK
-is the single source of truth: its `contracts/errors.ts` keeps the error *code*
-(selector → `SCREAMING_SNAKE`) separate from the human *message* (in
-`error-messages.ts`, see below). The older `user-app-client/src/lib/errors.ts`
-conflated the two, which produced selector-name collisions — do not point this back
-at it. Selectors are emitted in stable (alphabetical) order so a re-run with no
-source change produces zero diff. Re-run whenever you sync to a newer SDK release —
-`KnownRevertsTest` asserts the table stays ≥120 entries, that every code is distinct,
-and that every SDK-backed curated selector still exists in the generated table.
-
-## `generate-error-messages.ts`
-
-Regenerates `offramp-lib/.../orchestrator/KnownContractErrorMessages.kt` — the
-code → human-readable English map — by regex-parsing
-`p2pdotme-sdk/src/contracts/error-messages.ts`. This is the long-tail fallback copy
-(the curated PAY-flow reverts render localised `R.string.*` text instead). Keep it
-in lock-step with `generate-revert-selectors.ts`: every code in `KnownContractErrors`
-should have a message, and `KnownRevertsTest` asserts the two table sizes are equal.
-
-```sh
-bun /path/to/zodl-android/docs/integrations/scripts/generate-error-messages.ts \
-  /path/to/p2pdotme-sdk \
-  > /path/to/zodl-android/offramp-lib/src/jvmMain/kotlin/xyz/justzappit/offramp/orchestrator/KnownContractErrorMessages.kt
-```
+is the single source of truth: `contracts/errors.ts` provides the error *code*
+(selector → `SCREAMING_SNAKE`) and `contracts/error-messages.ts` the human *message*;
+the generator joins them and emits one `Map<Selector4, Entry(name, message)>`. The
+older `user-app-client/src/lib/errors.ts` conflated the two, which produced
+selector-name collisions — do not point this back at it. Selectors are emitted in
+stable (alphabetical) order so a re-run with no source change produces zero diff.
+The generator fails fast if any selector has no message — keep both SDK files in
+lock-step. Re-run whenever you sync to a newer SDK release — `KnownRevertsTest`
+asserts the table stays ≥120 entries, every code is distinct, and every curated
+selector still exists in the generated table.
 
 ## `thirdweb-refund-smoketest.ts`
 

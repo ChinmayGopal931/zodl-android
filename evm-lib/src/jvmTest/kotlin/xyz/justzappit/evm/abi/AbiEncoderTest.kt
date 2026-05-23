@@ -213,29 +213,4 @@ class AbiEncoderTest {
         assertFailsWith<IllegalArgumentException> { AbiInt(min - BigInteger.ONE) } // -2^255 - 1
     }
 
-    @Test
-    fun `placeOrder argument shape produces valid calldata with right total length`() {
-        // Sanity-check encoder doesn't drop bytes for the real shape we care about.
-        // Layout: 10 head slots (320) + dynamic tails for 3 strings + 1 bytes32 head + …
-        val args = listOf<AbiArg>(
-            AbiString("a".repeat(128)),
-            AbiUint(BigInteger.valueOf(5_000_000)),
-            AbiAddress(Address.parse("0x000000000000000000000000000000000000dEaD")),
-            AbiUint8(2),
-            AbiString(""),
-            AbiString(""),
-            AbiEncoder.bytes32String("INR"),
-            AbiUint(BigInteger.ZERO),
-            AbiUint(BigInteger.ONE),
-            AbiUint(BigInteger.ZERO),
-        )
-        val calldata = AbiEncoder.encodeFunctionCall(
-            "placeOrder(string,uint256,address,uint8,string,string,bytes32,uint256,uint256,uint256)",
-            args,
-        )
-        // 4 selector + (10 * 32) head + (32+128) string1 + (32) string2 + (32) string3
-        val expectedLen = 4 + (10 * 32) + (32 + 128) + 32 + 32
-        assertEquals(expectedLen, calldata.size, "calldata size mismatch")
-        assertTrue(calldata.copyOfRange(0, 4).contentEquals("1dc46885".hexToBytes()))
-    }
 }

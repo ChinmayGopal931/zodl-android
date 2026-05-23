@@ -5,8 +5,9 @@ import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.usecase.GetP2pOrderHistoryUseCase
-import co.electriccoin.zcash.ui.common.usecase.GetP2pSmartAccountBalanceUseCase
+import co.electriccoin.zcash.ui.design.util.ellipsizeMiddle
 import co.electriccoin.zcash.ui.design.util.stringRes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,18 +17,22 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
+import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.OfframpDriver
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
 import xyz.justzappit.offramp.p2p.P2pOrderHistoryItem
 import xyz.justzappit.offramp.p2p.Usdc6
-import xyz.justzappit.evm.types.Address
+import xyz.justzappit.offramp.p2p.getUsdcBalance
 
 internal class P2pTransactionsVM(
     private val navigationRouter: NavigationRouter,
     private val network: P2pNetworkConfig,
-    private val getBalance: GetP2pSmartAccountBalanceUseCase,
+    private val rpc: BaseRpcClient,
+    private val accountProvider: SmartOfframpAccountProvider,
     private val getHistory: GetP2pOrderHistoryUseCase,
     private val driver: OfframpDriver,
 ) : ViewModel() {
@@ -68,11 +73,12 @@ internal class P2pTransactionsVM(
     }
 
     private suspend fun refreshBalance() {
-        val result = getBalance()
-        balance.update {
-            if (result == null) BalanceLoad.Unavailable
-            else BalanceLoad.Loaded(address = result.address, balance = result.balance)
-        }
+        val result = runCatching {
+            val address = accountProvider.resolve().address
+            BalanceLoad.Loaded(address = address, balance = rpc.getUsdcBalance(network.usdcAddress, address))
+        }.onFailure { Twig.warn(it) { "P2pTransactionsVM: balance fetch failed" } }
+            .getOrNull()
+        balance.update { result ?: BalanceLoad.Unavailable }
     }
 
     private fun onRefundClick() {
@@ -143,9 +149,9 @@ internal class P2pTransactionsVM(
         BalanceLoad.Loading -> BalanceState.Loading
         BalanceLoad.Unavailable -> BalanceState.Unavailable
         is BalanceLoad.Loaded -> BalanceState.Loaded(
-            balanceUsdc = stringRes(R.string.p2p_transactions_balance_amount, P2pTransactionsFormat.usdc(bal.balance.micros)),
-            accountAddressShort = P2pTransactionsFormat.shortAddress(bal.address.checksumHex),
-            accountExplorerUrl = P2pTransactionsFormat.explorerAddressUrl(network, bal.address.checksumHex),
+            balanceUsdc = stringRes(R.string.p2p_transactions_balance_amount, bal.balance.toDisplayString(stripTrailingZeros = true)),
+            accountAddressShort = bal.address.checksumHex.ellipsizeMiddle(prefix = ADDRESS_ELLIPSIS_PREFIX, suffix = ADDRESS_ELLIPSIS_SUFFIX),
+            accountExplorerUrl = network.addressUrl(bal.address.checksumHex),
         )
     }
 
@@ -166,7 +172,7 @@ internal class P2pTransactionsVM(
 
     private fun formatBalanceAmount(bal: BalanceLoad) = stringRes(
         R.string.p2p_transactions_balance_amount,
-        P2pTransactionsFormat.usdc((bal as? BalanceLoad.Loaded)?.balance?.micros ?: java.math.BigInteger.ZERO),
+        ((bal as? BalanceLoad.Loaded)?.balance ?: Usdc6.ZERO).toDisplayString(stripTrailingZeros = true),
     )
 
     private fun onBack() = navigationRouter.back()
@@ -188,5 +194,10 @@ internal class P2pTransactionsVM(
         data object Confirming : RefundFlow
         data object InProgress : RefundFlow
         data class Failed(val message: String) : RefundFlow
+    }
+
+    companion object {
+        private const val ADDRESS_ELLIPSIS_PREFIX = 8
+        private const val ADDRESS_ELLIPSIS_SUFFIX = 4
     }
 }

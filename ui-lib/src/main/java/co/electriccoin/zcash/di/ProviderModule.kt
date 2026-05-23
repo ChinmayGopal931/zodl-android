@@ -136,12 +136,10 @@ val providerModule =
                     Twig.debug { "OfframpHttp $message" }
                 }
             }
-            // TEMP-DEBUG: BODY level until we diagnose the thirdweb bundler 500 on cancelOrder.
-            // Revert to INFO once the cancel path is verified — BODY logs every poll's response.
             RpcHttpClient.create(
                 config = RpcHttpClient.Config(
                     logger = twigLogger,
-                    logLevel = io.ktor.client.plugins.logging.LogLevel.BODY,
+                    logLevel = io.ktor.client.plugins.logging.LogLevel.INFO,
                 ),
             )
         }

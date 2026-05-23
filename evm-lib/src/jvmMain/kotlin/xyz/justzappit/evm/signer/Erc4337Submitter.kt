@@ -14,6 +14,7 @@ import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.types.Wei
 import xyz.justzappit.evm.util.hexToBytes
+import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
 
 /**
@@ -116,7 +117,6 @@ class Erc4337Submitter(
         private const val DEFAULT_GAS_BUFFER_PCT = 15
         private const val DEFAULT_RECEIPT_TIMEOUT_MS = 300_000L
         private const val DEFAULT_POLL_INTERVAL_MS = 2_000L
-        private const val FIELD_BYTES = 32
         private const val V_OFFSET = 27
         private const val EIP191_BYTE: Byte = 0x19
 
@@ -130,14 +130,8 @@ class Erc4337Submitter(
             encodeSignature(EcdsaSigner.sign(keccak256("estimate".toByteArray()), BigInteger.ONE))
 
         private fun encodeSignature(sig: EcdsaSignature): ByteArray =
-            padTo32(sig.r.toByteArray()) + padTo32(sig.s.toByteArray()) +
+            sig.r.toByteArray().padLeftToWord() + sig.s.toByteArray().padLeftToWord() +
                 byteArrayOf((sig.yParity + V_OFFSET).toByte())
-
-        private fun padTo32(b: ByteArray): ByteArray = when {
-            b.size == FIELD_BYTES -> b
-            b.size > FIELD_BYTES -> b.copyOfRange(b.size - FIELD_BYTES, b.size)
-            else -> ByteArray(FIELD_BYTES).also { System.arraycopy(b, 0, it, FIELD_BYTES - b.size, b.size) }
-        }
 
         private fun hexToBig(hex: String): BigInteger =
             hex.removePrefix("0x").let { if (it.isEmpty()) BigInteger.ZERO else BigInteger(it, 16) }

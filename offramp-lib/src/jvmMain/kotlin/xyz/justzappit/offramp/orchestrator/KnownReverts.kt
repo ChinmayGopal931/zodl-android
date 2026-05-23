@@ -1,22 +1,24 @@
 package xyz.justzappit.offramp.orchestrator
 
 import xyz.justzappit.evm.abi.Selector4
-import xyz.justzappit.evm.rpc.RpcException
 
 /**
  * Two-layer revert decoder:
  *
  * 1. [explain] returns a [KnownRevertReason] for selectors we want to surface with a
  *    user-actionable, localised message. Curated against the PAY flow.
- * 2. [sdkName] / [sdkMessage] fall through to the wholesale [KnownContractErrors] /
- *    [KnownContractErrorMessages] tables (generated from `p2pdotme-sdk/src/contracts/errors.ts`
- *    and `error-messages.ts`). [sdkName] returns the canonical code (`ORDER_NOT_ACCEPTED`) for
- *    logs; [sdkMessage] returns the human string ("Order not placed to be accepted") for the UI.
+ * 2. [sdkName] / [sdkMessage] fall through to the wholesale [KnownContractErrors] table
+ *    (generated from `p2pdotme-sdk/src/contracts/errors.ts` + `error-messages.ts`).
  *
- * The orchestrator populates all three fields on [OfframpStatus.Failed]; the VM prefers the curated
- * `knownRevertReason`, then `sdkErrorMessage`, then `solidityErrorString`, then the raw `message`.
+ * The orchestrator usually wants all three at once: call [lookup] for a single map probe.
  */
 object KnownReverts {
+    data class Lookup(
+        val reason: KnownRevertReason?,
+        val sdkName: String?,
+        val sdkMessage: String?,
+    )
+
     private val CURATED: Map<Selector4, KnownRevertReason> = mapOf(
         Selector4.fromHex("0x91da284f") to KnownRevertReason.BuyOrderAmountExceedsLimit,
         Selector4.fromHex("0x412dd2b1") to KnownRevertReason.InsufficientReputation,
@@ -42,29 +44,27 @@ object KnownReverts {
     // negative lookahead avoids matching the leading 4 bytes of a longer hex blob (e.g. an address).
     private val SELECTOR_IN_MESSAGE = Regex("0x[0-9a-fA-F]{8}(?![0-9a-fA-F])")
 
-    fun explain(reverted: RpcException.ExecutionReverted): KnownRevertReason? =
-        reverted.selector?.let { CURATED[it] }
+    /** One map probe returning the curated reason + SDK name + SDK message together. */
+    fun lookup(selector: Selector4?): Lookup {
+        val entry = KnownContractErrors.entryFor(selector)
+        return Lookup(
+            reason = selector?.let { CURATED[it] },
+            sdkName = entry?.name,
+            sdkMessage = entry?.message,
+        )
+    }
 
-    fun explain(selector: Selector4?): KnownRevertReason? = selector?.let { CURATED[it] }
+    fun explain(selector: Selector4?): KnownRevertReason? = lookup(selector).reason
 
-    /** Long-tail canonical SDK error code for any selector the wholesale table knows. */
-    fun sdkName(reverted: RpcException.ExecutionReverted): String? =
-        KnownContractErrors.nameFor(reverted.selector)
+    fun sdkName(selector: Selector4?): String? = lookup(selector).sdkName
 
-    fun sdkName(selector: Selector4?): String? = KnownContractErrors.nameFor(selector)
-
-    /** Human-readable SDK message for the long tail, e.g. "Order expired" for `0xc56873ba`. */
-    fun sdkMessage(reverted: RpcException.ExecutionReverted): String? =
-        KnownContractErrorMessages.messageFor(KnownContractErrors.nameFor(reverted.selector))
-
-    fun sdkMessage(selector: Selector4?): String? =
-        KnownContractErrorMessages.messageFor(KnownContractErrors.nameFor(selector))
+    fun sdkMessage(selector: Selector4?): String? = lookup(selector).sdkMessage
 
     /**
      * Extracts a 4-byte revert selector from a bundler/JSON-RPC error message, if one is present.
-     * ERC-4337 reverts surface as an [RpcException.Unknown] message rather than a structured
-     * [RpcException.ExecutionReverted], so this lets the orchestrator recover the selector and map
-     * it through [explain] / [sdkName] just like a node-level revert.
+     * ERC-4337 reverts surface as an [xyz.justzappit.evm.rpc.RpcException.Unknown] message rather than a
+     * structured `ExecutionReverted`, so this lets the orchestrator recover the selector and map it
+     * through [explain] / [sdkName] just like a node-level revert.
      */
     fun selectorFromMessage(message: String?): Selector4? =
         message?.let { SELECTOR_IN_MESSAGE.find(it)?.value?.let(Selector4::fromHex) }

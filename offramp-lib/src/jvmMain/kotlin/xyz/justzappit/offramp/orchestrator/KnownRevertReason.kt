@@ -7,7 +7,7 @@ package xyz.justzappit.offramp.orchestrator
  *
  * Names match the canonical p2p.me SDK constants (`p2pdotme-sdk/src/contracts/errors.ts`) for
  * cross-referencing. The UI layer maps each variant to a `R.string.*` resource; this module stays
- * free of English copy. (The long-tail [KnownContractErrorMessages] carries SDK copy for the
+ * free of English copy. (The long-tail [KnownContractErrors.messageFor] carries SDK copy for the
  * uncurated errors — that is a deliberate exception, scoped to non-PAY-flow diagnostics.)
  */
 enum class KnownRevertReason {

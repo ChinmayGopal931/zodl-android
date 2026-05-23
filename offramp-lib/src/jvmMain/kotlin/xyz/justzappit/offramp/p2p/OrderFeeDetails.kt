@@ -1,6 +1,9 @@
 package xyz.justzappit.offramp.p2p
 
 import xyz.justzappit.evm.abi.AbiDecoder
+import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.types.Address
+import java.math.BigInteger
 
 /**
  * Post-execution detail bundle the p2p.me Diamond returns from `getAdditionalOrderDetails(uint256)`.
@@ -51,4 +54,10 @@ object OrderFeeDetailsDecoder {
     private const val FIELD_ACTUAL_USDC = 5
     private const val FIELD_ACTUAL_FIAT = 6
     private const val TUPLE_FIELDS = 7
+}
+
+/** Calls `diamondAddress.getAdditionalOrderDetails(orderId)` and decodes the fee-bundle tuple. */
+suspend fun BaseRpcClient.getAdditionalOrderDetails(diamondAddress: Address, orderId: BigInteger): OrderFeeDetails {
+    val raw = ethCall(to = diamondAddress, data = DiamondCalls.getAdditionalOrderDetailsCalldata(orderId))
+    return OrderFeeDetailsDecoder.decode(raw)
 }

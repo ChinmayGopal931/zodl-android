@@ -1,6 +1,6 @@
 package co.electriccoin.zcash.ui.screen.swap.upi.progress
 
-import co.electriccoin.zcash.ui.common.repository.OfframpRepository
+import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
@@ -26,7 +26,7 @@ class OfframpCheckpointPersisterTest {
         // triggers persist), the orchestrator had already moved past PlacingOrder, so
         // `(status as? PlacingOrder)?.txHash` was always null, leaving the checkpoint's
         // placeOrderTxHash forever null and breaking the post-resume UI render.
-        val repo = InMemoryOfframpRepository()
+        val repo = InMemoryCheckpointStorage()
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(OfframpStatus.Idle)
@@ -34,7 +34,7 @@ class OfframpCheckpointPersisterTest {
         persister.onStatus(OfframpStatus.PlacingOrder(txHash = PLACE_ORDER_HASH, circleId = BigInteger.ONE, amount = AMOUNT))
         persister.onStatus(OfframpStatus.WaitingForMerchantAcceptance(orderId = ORDER_ID))
 
-        val saved = repo.getInFlight()!!
+        val saved = repo.get()!!
         assertEquals(ORDER_ID.toString(), saved.orderId)
         assertEquals(APPROVE_HASH, saved.approveTxHash)
         assertEquals(PLACE_ORDER_HASH, saved.placeOrderTxHash) // ← would have been null before the fix
@@ -43,7 +43,7 @@ class OfframpCheckpointPersisterTest {
 
     @Test
     fun `setUpiTxHash lands when SendingEncryptedUpi fires`() = runBlocking {
-        val repo = InMemoryOfframpRepository()
+        val repo = InMemoryCheckpointStorage()
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(OfframpStatus.ApprovingUsdc(txHash = APPROVE_HASH, amount = AMOUNT))
@@ -58,7 +58,7 @@ class OfframpCheckpointPersisterTest {
             ),
         )
 
-        val saved = repo.getInFlight()!!
+        val saved = repo.get()!!
         assertEquals(APPROVE_HASH, saved.approveTxHash)
         assertEquals(PLACE_ORDER_HASH, saved.placeOrderTxHash)
         assertEquals(SET_UPI_HASH, saved.setUpiTxHash)
@@ -66,19 +66,19 @@ class OfframpCheckpointPersisterTest {
 
     @Test
     fun `Completed status clears the checkpoint`() = runBlocking {
-        val repo = InMemoryOfframpRepository()
-        repo.save(seededCheckpoint())
+        val repo = InMemoryCheckpointStorage()
+        repo.store(seededCheckpoint())
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(OfframpStatus.Completed(orderId = ORDER_ID, acceptedMerchant = MERCHANT))
 
-        assertNull(repo.getInFlight())
+        assertNull(repo.get())
     }
 
     @Test
     fun `Cancelled status clears the checkpoint`() = runBlocking {
-        val repo = InMemoryOfframpRepository()
-        repo.save(seededCheckpoint())
+        val repo = InMemoryCheckpointStorage()
+        repo.store(seededCheckpoint())
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(
@@ -89,13 +89,13 @@ class OfframpCheckpointPersisterTest {
             ),
         )
 
-        assertNull(repo.getInFlight())
+        assertNull(repo.get())
     }
 
     @Test
     fun `Failed status clears the checkpoint`() = runBlocking {
-        val repo = InMemoryOfframpRepository()
-        repo.save(seededCheckpoint())
+        val repo = InMemoryCheckpointStorage()
+        repo.store(seededCheckpoint())
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(
@@ -106,7 +106,7 @@ class OfframpCheckpointPersisterTest {
             ),
         )
 
-        assertNull(repo.getInFlight())
+        assertNull(repo.get())
     }
 
     @Test
@@ -115,9 +115,9 @@ class OfframpCheckpointPersisterTest {
         // persisted. The new VM resumes from the checkpoint. The orchestrator's resume() does
         // NOT re-emit ApprovingUsdc / PlacingOrder, so without seedFrom() the persister's
         // in-memory cache would be empty and the next save would clobber both hashes with null.
-        val repo = InMemoryOfframpRepository()
+        val repo = InMemoryCheckpointStorage()
         val seeded = seededCheckpoint()
-        repo.save(seeded)
+        repo.store(seeded)
         val persister = OfframpCheckpointPersister(repo, freshRequest())
         persister.seedFrom(seeded)
 
@@ -130,7 +130,7 @@ class OfframpCheckpointPersisterTest {
             ),
         )
 
-        val saved = repo.getInFlight()!!
+        val saved = repo.get()!!
         assertEquals(APPROVE_HASH, saved.approveTxHash)
         assertEquals(PLACE_ORDER_HASH, saved.placeOrderTxHash)
         assertEquals(SET_UPI_HASH, saved.setUpiTxHash)
@@ -141,13 +141,13 @@ class OfframpCheckpointPersisterTest {
         // ApprovingUsdc and PlacingOrder fire before the order has an on-chain id; they must NOT
         // produce a half-formed checkpoint or the user will see a "resume" prompt for an order
         // that never actually got placed.
-        val repo = InMemoryOfframpRepository()
+        val repo = InMemoryCheckpointStorage()
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(OfframpStatus.ApprovingUsdc(txHash = APPROVE_HASH, amount = AMOUNT))
         persister.onStatus(OfframpStatus.PlacingOrder(txHash = PLACE_ORDER_HASH, circleId = BigInteger.ONE, amount = AMOUNT))
 
-        assertNull(repo.getInFlight())
+        assertNull(repo.get())
     }
 
     @Test
@@ -155,13 +155,13 @@ class OfframpCheckpointPersisterTest {
         // The mainnet bridge emits its 1-Click deposit address before any ZEC moves; the persister
         // must checkpoint it (with a null orderId) so a crash mid-bridge resumes by re-polling that
         // address instead of opening a second bridge — the idempotency the orchestrator relies on.
-        val repo = InMemoryOfframpRepository()
+        val repo = InMemoryCheckpointStorage()
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(OfframpStatus.Idle)
         persister.onStatus(OfframpStatus.BridgingFunds(amount = AMOUNT, depositAddress = "near-deposit-abc"))
 
-        val saved = repo.getInFlight()!!
+        val saved = repo.get()!!
         assertNull(saved.orderId)
         assertEquals("near-deposit-abc", saved.bridgeDepositAddress)
         assertEquals(OfframpStep.FUNDING, saved.currentStep)
@@ -169,7 +169,7 @@ class OfframpCheckpointPersisterTest {
 
     @Test
     fun `bridge deposit address survives later saves once the order is placed`() = runBlocking {
-        val repo = InMemoryOfframpRepository()
+        val repo = InMemoryCheckpointStorage()
         val persister = OfframpCheckpointPersister(repo, freshRequest())
 
         persister.onStatus(OfframpStatus.BridgingFunds(amount = AMOUNT, depositAddress = "near-deposit-abc"))
@@ -179,7 +179,7 @@ class OfframpCheckpointPersisterTest {
         )
         persister.onStatus(OfframpStatus.WaitingForMerchantAcceptance(orderId = ORDER_ID))
 
-        val saved = repo.getInFlight()!!
+        val saved = repo.get()!!
         assertEquals(ORDER_ID.toString(), saved.orderId)
         assertEquals("near-deposit-abc", saved.bridgeDepositAddress)
     }
@@ -204,11 +204,11 @@ class OfframpCheckpointPersisterTest {
         createdAtMillis = 1L,
     )
 
-    private class InMemoryOfframpRepository : OfframpRepository {
+    private class InMemoryCheckpointStorage : OfframpCheckpointStorageProvider {
         private val state = MutableStateFlow<OfframpCheckpoint?>(null)
-        override fun observeInFlight() = state
-        override suspend fun getInFlight(): OfframpCheckpoint? = state.value
-        override suspend fun save(checkpoint: OfframpCheckpoint) {
+        override fun observe() = state
+        override suspend fun get(): OfframpCheckpoint? = state.value
+        override suspend fun store(checkpoint: OfframpCheckpoint) {
             state.update { checkpoint }
         }
         override suspend fun clear() {

@@ -37,9 +37,6 @@ class TxHash(bytes: ByteArray) {
             val raw = if (hex.startsWith(PREFIX) || hex.startsWith("0X")) hex.substring(2) else hex
             return TxHash(raw.lowercase(Locale.ROOT).hexToBytes())
         }
-
-        fun fromHexOrNull(hex: String?): TxHash? =
-            hex?.let { runCatching { fromHex(it) }.getOrNull() }
     }
 
     object TxHashSerializer : KSerializer<TxHash> {

@@ -102,22 +102,7 @@ class P2pOrderHistorySource(
 
 /**
  * If [plain] is a `upi://pay?…` URI, returns the `pa=` VPA; otherwise returns the input verbatim
- * (the SELL flow seals a bare VPA into encUpi, not a URI).
+ * (the SELL flow seals a bare VPA into encUpi, not a URI). Thin delegate over [UpiQrParser.extractPa]
+ * to keep a single canonical UPI parser.
  */
-fun extractUpiVpa(plain: String): String {
-    val trimmed = plain.trim()
-    val prefix = "upi://pay?"
-    val params = when {
-        trimmed.startsWith(prefix, ignoreCase = true) -> trimmed.substring(prefix.length)
-        trimmed.contains('?') -> trimmed.substringAfter('?')
-        else -> return trimmed
-    }
-    for (pair in params.split('&')) {
-        val eq = pair.indexOf('=')
-        if (eq <= 0) continue
-        if (pair.substring(0, eq).equals("pa", ignoreCase = true)) {
-            return pair.substring(eq + 1)
-        }
-    }
-    return trimmed
-}
+fun extractUpiVpa(plain: String): String = UpiQrParser.extractPa(plain)

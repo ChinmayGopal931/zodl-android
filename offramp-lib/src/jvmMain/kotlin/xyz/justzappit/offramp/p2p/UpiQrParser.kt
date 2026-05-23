@@ -55,13 +55,13 @@ object UpiQrParser {
         }
 
         val params = parseQueryParams(paramString)
-        val paymentAddress = params["pa"] ?: return UpiQrParseResult.Failure(UpiQrError.MissingPaymentAddress)
+        val paymentAddress = params[PARAM_PAYMENT_ADDRESS] ?: return UpiQrParseResult.Failure(UpiQrError.MissingPaymentAddress)
 
         if (!PARSE_REGEX.matches(paymentAddress)) {
             return UpiQrParseResult.Failure(UpiQrError.InvalidUpiId(paymentAddress))
         }
 
-        val amount = params["am"]?.let { amountStr ->
+        val amount = params[PARAM_AMOUNT]?.let { amountStr ->
             val parsed = runCatching { BigDecimal(amountStr.trim()) }.getOrNull()
             if (parsed == null || parsed.signum() <= 0) {
                 return UpiQrParseResult.Failure(UpiQrError.InvalidAmount(amountStr))
@@ -118,7 +118,24 @@ object UpiQrParser {
         return out.toString()
     }
 
+    /**
+     * Best-effort `pa=` extraction from any UPI-shaped payload (`upi://pay?…`, bare `?…` query, or
+     * a raw VPA). Returns the input verbatim when no `pa` parameter is present, matching the SELL
+     * flow's "bare VPA in encUpi" convention. Use [parseQr] for the structured QR-validation path.
+     */
+    fun extractPa(payload: String): String {
+        val trimmed = payload.trim()
+        val paramString = when {
+            trimmed.startsWith(UPI_URI_PREFIX, ignoreCase = true) -> trimmed.substring(UPI_URI_PREFIX.length)
+            trimmed.contains('?') -> trimmed.substringAfter('?')
+            else -> return trimmed
+        }
+        return parseQueryParams(paramString)[PARAM_PAYMENT_ADDRESS] ?: trimmed
+    }
+
     private const val UPI_URI_PREFIX = "upi://pay?"
+    private const val PARAM_PAYMENT_ADDRESS = "pa"
+    private const val PARAM_AMOUNT = "am"
     private const val HEX_BASE = 16
     private const val HEX_NIBBLE = 4
     private const val PERCENT_ESCAPE_LEN = 3

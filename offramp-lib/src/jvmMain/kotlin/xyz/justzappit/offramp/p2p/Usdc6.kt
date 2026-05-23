@@ -26,6 +26,13 @@ value class Usdc6(val micros: BigInteger) : Comparable<Usdc6> {
 
     val whole: BigDecimal get() = BigDecimal(micros).movePointLeft(DECIMALS)
 
+    /**
+     * Plain decimal display string. When [stripTrailingZeros] is true, `5.000000` renders as `5`
+     * (used by row formatters that prefer compact display); otherwise the full 6dp is preserved.
+     */
+    fun toDisplayString(stripTrailingZeros: Boolean = false): String =
+        if (stripTrailingZeros) whole.stripTrailingZeros().toPlainString() else whole.toPlainString()
+
     operator fun plus(other: Usdc6): Usdc6 = Usdc6(micros + other.micros)
     operator fun minus(other: Usdc6): Usdc6 = Usdc6(micros - other.micros)
     override fun compareTo(other: Usdc6): Int = micros.compareTo(other.micros)

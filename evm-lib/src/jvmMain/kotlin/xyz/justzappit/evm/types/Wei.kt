@@ -16,27 +16,20 @@ import java.math.BigInteger
  */
 @Serializable(with = Wei.WeiSerializer::class)
 @JvmInline
-value class Wei(val value: BigInteger) : Comparable<Wei> {
+value class Wei(val value: BigInteger) {
     init {
         require(value.signum() >= 0) { "Wei must be non-negative, got $value" }
     }
 
     operator fun plus(other: Wei): Wei = Wei(value + other.value)
-    operator fun minus(other: Wei): Wei = Wei(value - other.value)
-    operator fun times(scalar: BigInteger): Wei = Wei(value * scalar)
     operator fun times(scalar: Int): Wei = Wei(value * BigInteger.valueOf(scalar.toLong()))
-    operator fun times(scalar: Long): Wei = Wei(value * BigInteger.valueOf(scalar))
-    override fun compareTo(other: Wei): Int = value.compareTo(other.value)
 
-    val hex: String get() = "0x" + value.toString(HEX_BASE)
     override fun toString(): String = "${value}wei"
 
     companion object {
         val ZERO: Wei = Wei(BigInteger.ZERO)
 
         fun ofLong(value: Long): Wei = Wei(BigInteger.valueOf(value))
-
-        private const val HEX_BASE = 16
     }
 
     object WeiSerializer : KSerializer<Wei> {

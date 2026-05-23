@@ -36,9 +36,7 @@ import co.electriccoin.zcash.ui.common.usecase.GetExchangeRateUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetFilteredActivitiesUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetFlexaStatusUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetHomeMessageUseCase
-import co.electriccoin.zcash.ui.common.usecase.GetOrderFeeDetailsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetP2pOrderHistoryUseCase
-import co.electriccoin.zcash.ui.common.usecase.GetP2pSmartAccountBalanceUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetKeystoneStatusUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetORSwapQuoteUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetPersistableWalletUseCase
@@ -51,7 +49,6 @@ import co.electriccoin.zcash.ui.common.usecase.GetSlippageUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSupportUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSwapAssetsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSwapStatusUseCase
-import co.electriccoin.zcash.ui.common.usecase.GetUpiOfframpRateUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetTotalSpendableBalanceUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetTransactionDetailByIdUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetTransactionFiltersUseCase
@@ -295,9 +292,6 @@ val useCaseModule =
         factoryOf(::SwapSupportMapper)
 
         // UPI offramp use cases.
-        factoryOf(::GetUpiOfframpRateUseCase)
-        factoryOf(::GetOrderFeeDetailsUseCase)
-        factoryOf(::GetP2pSmartAccountBalanceUseCase)
         factoryOf(::GetP2pOrderHistoryUseCase)
         singleOf(::NavigateToScanUpiUseCase)
     }

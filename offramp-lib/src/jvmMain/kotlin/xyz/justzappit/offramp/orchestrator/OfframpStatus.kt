@@ -65,8 +65,6 @@ sealed class OfframpStatus {
     data class Completed(
         val orderId: BigInteger,
         val acceptedMerchant: Address,
-        val actualUsdcAmount: Usdc6? = null,
-        val actualFiatAmount: Usdc6? = null,
         val placedAtEpochSeconds: Long? = null,
         val acceptedAtEpochSeconds: Long? = null,
         val paidAtEpochSeconds: Long? = null,
@@ -82,11 +80,8 @@ sealed class OfframpStatus {
     data class Cancelled(
         val orderId: BigInteger,
         val cancelledAtEpochSeconds: Long?,
-        val acceptedMerchant: Address? = null,
         val refundedUsdcAmount: Usdc6? = null,
-        val placedAtEpochSeconds: Long? = null,
-        val acceptedAtEpochSeconds: Long? = null,
-        val paidAtEpochSeconds: Long? = null,
+        val acceptedMerchant: Address? = null,
     ) : OfframpStatus()
 
     /**
@@ -116,8 +111,8 @@ sealed class OfframpStatus {
          */
         val sdkErrorName: String? = null,
         /**
-         * Human-readable English copy for [sdkErrorName] from [KnownContractErrorMessages]. The UI
-         * shows this for the long tail so the user reads "Order expired" rather than the raw
+         * Human-readable English copy for [sdkErrorName] from [KnownContractErrors]. The UI shows
+         * this for the long tail so the user reads "Order expired" rather than the raw
          * `ORDER_EXPIRED` code; `null` when the selector is outside the SDK table.
          */
         val sdkErrorMessage: String? = null,

@@ -3,8 +3,7 @@ package xyz.justzappit.offramp.funding
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
-import xyz.justzappit.offramp.p2p.Erc20Calls
-import java.math.BigInteger
+import xyz.justzappit.offramp.p2p.getUsdcBalance
 
 /**
  * Makes the smart account hold the USDC an order needs. Called by the orchestrator **after** the
@@ -50,15 +49,10 @@ class PreFundedOfframpFunding(
         resumeHandle: String?,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
     ) {
-        val balance = balanceOf(account)
-        check(balance >= request.usdcAmount.micros) {
-            "Smart account ${account.checksumHex} holds $balance USDC (micros), needs " +
+        val balance = rpc.getUsdcBalance(usdc, account)
+        check(balance >= request.usdcAmount) {
+            "Smart account ${account.checksumHex} holds ${balance.micros} USDC (micros), needs " +
                 "${request.usdcAmount.micros}. Fund it directly — no bridge on testnet."
         }
-    }
-
-    private suspend fun balanceOf(account: Address): BigInteger {
-        val ret = rpc.ethCall(to = usdc, data = Erc20Calls.balanceOfCalldata(account))
-        return if (ret.isEmpty()) BigInteger.ZERO else BigInteger(1, ret)
     }
 }

@@ -112,10 +112,8 @@
     <string name="upi_offramp_progress_title_failed">Something went wrong</string>
     <string name="upi_offramp_progress_subtitle_recipient">Recipient: %1$s</string>
     <string name="upi_offramp_progress_subtitle_completed">The merchant has confirmed the UPI transfer.</string>
-    <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
     <string name="upi_offramp_progress_done_button">Done</string>
     <string name="upi_offramp_progress_close_button">Close</string>
-    <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
     <string name="upi_offramp_step_init">Setup</string>
     <string name="upi_offramp_step_selecting_circle">Picking a merchant pool</string>
     <string name="upi_offramp_step_funding">Bridging funds</string>
@@ -169,7 +167,7 @@
     <!-- Surfaced when a poll loop has been running for a while without a merchant transition. -->
     <string name="upi_offramp_detail_stalled">Still connecting you to a merchant. Your USDC stays in your account; if no merchant accepts, the order auto-cancels on chain.</string>
 
-    <!-- Recovery flow (pullback of stranded USDC via recoverUnplacedFunds) -->
+    <!-- Recovery flow (pullback of stranded USDC via bridgeFundsBackToZec) -->
     <string name="upi_offramp_recover_button">Bridge USDC back to ZEC</string>
     <string name="upi_offramp_recovery_in_progress_title">Bridging USDC back to ZEC</string>
     <string name="upi_offramp_recovery_in_progress_subtitle">Routing your refunded USDC to ZEC via NEAR Intents — this can take a couple of minutes.</string>
@@ -208,8 +206,6 @@
 
     <!-- P2P transactions (settings → wallet) -->
     <string name="p2p_transactions_title">P2P transactions</string>
-    <string name="p2p_transactions_settings_row_title">P2P transactions</string>
-    <string name="p2p_transactions_settings_row_subtitle">Balance and order history</string>
     <string name="p2p_transactions_balance_label">Balance on Base</string>
     <string name="p2p_transactions_balance_amount">%1$s USDC</string>
     <string name="p2p_transactions_balance_unavailable">Balance unavailable</string>
@@ -222,7 +218,6 @@
     <string name="p2p_transactions_refund_dialog_confirm">Refund</string>
     <string name="p2p_transactions_refund_dialog_cancel">Cancel</string>
     <string name="p2p_transactions_account_label">P2P account</string>
-    <string name="p2p_transactions_refresh">Refresh</string>
     <string name="p2p_transactions_empty">No P2P transactions yet.</string>
     <string name="p2p_transactions_error">Couldn\'t load transactions. Pull to refresh.</string>
     <string name="p2p_transactions_row_amount_usdc">%1$s USDC</string>

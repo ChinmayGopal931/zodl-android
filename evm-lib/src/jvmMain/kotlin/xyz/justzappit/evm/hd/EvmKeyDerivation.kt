@@ -4,6 +4,7 @@ import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.spec.ECParameterSpec
 import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
 import java.text.Normalizer
 import javax.crypto.Mac
@@ -122,7 +123,7 @@ object EvmKeyDerivation {
         val parentNum = BigInteger(1, parent.priv)
         val childNum = (ilNum + parentNum).mod(curve.n)
         if (childNum == BigInteger.ZERO) return null
-        return ExtKey(priv = padTo32(childNum.toByteArray()), chainCode = ir)
+        return ExtKey(priv = childNum.toByteArray().padLeftToWord(), chainCode = ir)
     }
 
     private fun compressedPub(privBytes: ByteArray): ByteArray =
@@ -143,9 +144,4 @@ object EvmKeyDerivation {
         (i and 0xff).toByte(),
     )
 
-    private fun padTo32(b: ByteArray): ByteArray = when {
-        b.size == FIELD_BYTES -> b
-        b.size > FIELD_BYTES -> b.copyOfRange(b.size - FIELD_BYTES, b.size)
-        else -> ByteArray(FIELD_BYTES).also { System.arraycopy(b, 0, it, FIELD_BYTES - b.size, b.size) }
-    }
 }

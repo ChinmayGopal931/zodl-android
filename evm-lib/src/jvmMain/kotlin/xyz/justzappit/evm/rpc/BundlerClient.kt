@@ -132,10 +132,6 @@ class BundlerClient(
             put("method", method)
             put("params", params)
         }
-        // TEMP-DEBUG: ktor's BODY-level logging drops thirdweb's HTTP/2 bodies (same root cause as
-        // the bodyAsText() workaround below). Log payload + response body inline so we can diagnose
-        // bundler 500s. Keeping it on until the cancel/recovery flow stops surprising us.
-        println("BundlerClient REQ $method: $payload")
         val response = try {
             httpClient.post(bundlerUrl) {
                 contentType(ContentType.Application.Json)
@@ -153,7 +149,6 @@ class BundlerClient(
         // with "expected JsonObject but was SourceByteReadChannel". Reading the text is content-type-
         // agnostic and also lets us surface the bundler's own error bodies.
         val text = response.bodyAsText()
-        println("BundlerClient RES $method status=${response.status.value} body=$text")
         val element = json.parseToJsonElement(text)
         // JSON-RPC replies are envelopes ({jsonrpc,id,result|error}), but the bundler sometimes
         // returns a bare result value (e.g. eth_sendUserOperation's userOpHash). A non-object reply

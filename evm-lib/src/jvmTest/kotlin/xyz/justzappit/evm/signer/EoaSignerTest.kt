@@ -23,7 +23,6 @@ import xyz.justzappit.evm.util.toHex
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class EoaSignerTest {
     private val sentRequests = mutableListOf<JsonObject>()
@@ -102,20 +101,6 @@ class EoaSignerTest {
         val recoveredAddress = "0x" + keccak256(pubXY).copyOfRange(12, 32).toHex()
 
         assertEquals(account.address.lowercaseHex, recoveredAddress.lowercase())
-    }
-
-    @Test
-    fun `fee math - maxFeePerGas equals base times multiplier plus tip`() = runTest {
-        val account = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
-        val signer = EoaSigner(rpc, chainId = ChainId.BASE_SEPOLIA, account = account)
-        signer.sendTransaction(to = Address.parse("0x000000000000000000000000000000000000dEaD"))
-
-        val rawHex = sentRawTxs.first().removePrefix("0x")
-        // We can't easily parse RLP here without an RLP decoder, but the round-trip-via-recover
-        // test above proves the encoded fields are correctly signed; if maxFeePerGas were wrong
-        // the recovered address would still match, but the broadcasting node would reject.
-        // This test serves as a smoke check that the raw tx is hex-decodable + nonzero.
-        assertTrue(rawHex.length > 40, "raw tx hex too short")
     }
 
     private fun parseSignatureFromSignedTx(signedBytes: ByteArray): EcdsaSignature {

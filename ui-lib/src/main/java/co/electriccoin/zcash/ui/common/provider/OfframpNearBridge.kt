@@ -29,10 +29,9 @@ import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
-import xyz.justzappit.offramp.p2p.Erc20Calls
 import xyz.justzappit.offramp.p2p.Usdc6
+import xyz.justzappit.offramp.p2p.getUsdcBalance
 import java.math.BigDecimal
-import java.math.BigInteger
 
 /**
  * Wallet-side half of the offramp NEAR bridge that offramp-lib (pure JVM) can't provide: the user's
@@ -135,7 +134,7 @@ class NearBridgeOfframpFunding(
         resumeHandle: String?,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
     ) {
-        if (balanceOf(account) >= request.usdcAmount.micros) return
+        if (rpc.getUsdcBalance(usdc, account) >= request.usdcAmount) return
 
         val tokens = swapDataSource.getSupportedTokens()
         val depositAddress = if (resumeHandle != null) {
@@ -147,7 +146,7 @@ class NearBridgeOfframpFunding(
         }
 
         pollUntilSettled(depositAddress, tokens)
-        check(balanceOf(account) >= request.usdcAmount.micros) {
+        check(rpc.getUsdcBalance(usdc, account) >= request.usdcAmount) {
             "NEAR bridge settled but ${account.checksumHex} is still under-funded for the order."
         }
     }
@@ -186,11 +185,6 @@ class NearBridgeOfframpFunding(
                 else -> delay(pollIntervalMs)
             }
         }
-    }
-
-    private suspend fun balanceOf(account: Address): BigInteger {
-        val ret = rpc.ethCall(to = usdc, data = Erc20Calls.balanceOfCalldata(account))
-        return if (ret.isEmpty()) BigInteger.ZERO else BigInteger(1, ret)
     }
 
     private fun zecAsset(tokens: List<SwapAsset>): SwapAsset =

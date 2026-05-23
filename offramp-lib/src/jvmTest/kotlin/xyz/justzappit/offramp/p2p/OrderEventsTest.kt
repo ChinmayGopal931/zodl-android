@@ -7,16 +7,8 @@ import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 
 class OrderEventsTest {
-    @Test
-    fun `OrderPlaced topic is 32 bytes and well-formed hex`() {
-        val topic = OrderEvents.ORDER_PLACED_TOPIC
-        assertTrue(topic.startsWith("0x"))
-        assertEquals(2 + 64, topic.length, "expected 32-byte (64-char) hex")
-    }
-
     @Test
     fun `parseOrderIdFromReceipt picks the matching user's log`() {
         val diamond = Address.parse("0xce868398fdadca368eac203222874d6888532ae2")

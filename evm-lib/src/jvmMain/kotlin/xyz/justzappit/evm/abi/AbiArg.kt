@@ -1,6 +1,7 @@
 package xyz.justzappit.evm.abi
 
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
 
 sealed interface AbiArg {
@@ -15,7 +16,7 @@ data class AbiUint(val value: BigInteger) : AbiArg {
         require(value.bitLength() <= MAX_UINT_BITS) { "uint exceeds 256 bits" }
     }
     override val isDynamic = false
-    override fun head(): ByteArray = padTo32Left(value.toByteArray())
+    override fun head(): ByteArray = value.toByteArray().padLeftToWord()
     override fun tail(): ByteArray = EMPTY
 }
 
@@ -27,10 +28,10 @@ data class AbiInt(val value: BigInteger) : AbiArg {
     }
     override val isDynamic = false
     override fun head(): ByteArray {
-        if (value.signum() >= 0) return padTo32Left(value.toByteArray())
+        if (value.signum() >= 0) return value.toByteArray().padLeftToWord()
         // Two's complement: 2^256 + value
         val twos = BigInteger.ONE.shiftLeft(MAX_UINT_BITS).add(value)
-        return padTo32Left(twos.toByteArray())
+        return twos.toByteArray().padLeftToWord()
     }
     override fun tail(): ByteArray = EMPTY
 }
@@ -57,7 +58,7 @@ data class AbiUint8(val value: Int) : AbiArg {
         require(value in 0..UINT8_MAX) { "uint8 out of range: $value" }
     }
     override val isDynamic = false
-    override fun head(): ByteArray = padTo32Left(byteArrayOf(value.toByte()))
+    override fun head(): ByteArray = byteArrayOf(value.toByte()).padLeftToWord()
     override fun tail(): ByteArray = EMPTY
 }
 
@@ -102,7 +103,7 @@ data class AbiUintArray(val values: List<BigInteger>) : AbiArg {
         val lenBytes = BigInteger.valueOf(values.size.toLong()).toByteArray()
         System.arraycopy(lenBytes, 0, out, WORD - lenBytes.size, lenBytes.size)
         values.forEachIndexed { i, v ->
-            val padded = padTo32Left(v.toByteArray())
+            val padded = v.toByteArray().padLeftToWord()
             System.arraycopy(padded, 0, out, WORD + i * WORD, WORD)
         }
         return out
@@ -121,12 +122,6 @@ data class AbiBytes(val value: ByteArray) : AbiArg {
     }
     override fun equals(other: Any?): Boolean = other is AbiBytes && value.contentEquals(other.value)
     override fun hashCode(): Int = value.contentHashCode()
-}
-
-internal fun padTo32Left(b: ByteArray): ByteArray = when {
-    b.size == WORD -> b
-    b.size > WORD -> b.copyOfRange(b.size - WORD, b.size)
-    else -> ByteArray(WORD).also { System.arraycopy(b, 0, it, WORD - b.size, b.size) }
 }
 
 internal fun padded(size: Int): Int = if (size % WORD == 0) size else size + WORD - (size % WORD)

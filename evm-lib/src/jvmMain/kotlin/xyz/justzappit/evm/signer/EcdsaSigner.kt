@@ -7,6 +7,7 @@ import org.bouncycastle.crypto.signers.ECDSASigner
 import org.bouncycastle.crypto.signers.HMacDSAKCalculator
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.math.ec.ECPoint
+import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
 
 data class EcdsaSignature(val r: BigInteger, val s: BigInteger, val yParity: Byte)
@@ -16,7 +17,6 @@ object EcdsaSigner {
     private val domain = ECDomainParameters(curve.curve, curve.g, curve.n, curve.h)
     private val halfN: BigInteger = curve.n.shiftRight(1)
     private const val HASH_LEN = 32
-    private const val FIELD_BYTES = 32
 
     fun sign(messageHash: ByteArray, privateKey: BigInteger): EcdsaSignature {
         require(messageHash.size == HASH_LEN) { "messageHash must be $HASH_LEN bytes" }
@@ -45,7 +45,7 @@ object EcdsaSigner {
         if (r.signum() <= 0 || s.signum() <= 0 || r >= curve.n || s >= curve.n) return null
         if (r >= curve.curve.field.characteristic) return null
 
-        val xBytes = padTo32(r.toByteArray())
+        val xBytes = r.toByteArray().padLeftToWord()
         val compressed = byteArrayOf((0x02 + recId).toByte()) + xBytes
         val rPoint = try {
             curve.curve.decodePoint(compressed)
@@ -60,9 +60,4 @@ object EcdsaSigner {
         return q
     }
 
-    private fun padTo32(b: ByteArray): ByteArray = when {
-        b.size == FIELD_BYTES -> b
-        b.size > FIELD_BYTES -> b.copyOfRange(b.size - FIELD_BYTES, b.size)
-        else -> ByteArray(FIELD_BYTES).also { System.arraycopy(b, 0, it, FIELD_BYTES - b.size, b.size) }
-    }
 }

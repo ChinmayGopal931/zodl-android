@@ -104,10 +104,8 @@
     <string name="upi_offramp_progress_title_failed">Algo salió mal</string>
     <string name="upi_offramp_progress_subtitle_recipient">Destinatario: %1$s</string>
     <string name="upi_offramp_progress_subtitle_completed">El comerciante confirmó la transferencia UPI.</string>
-    <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
     <string name="upi_offramp_progress_done_button">Listo</string>
     <string name="upi_offramp_progress_close_button">Cerrar</string>
-    <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
     <string name="upi_offramp_step_init">Preparación</string>
     <string name="upi_offramp_step_selecting_circle">Eligiendo grupo de comerciantes</string>
     <string name="upi_offramp_step_funding">Transfiriendo fondos</string>

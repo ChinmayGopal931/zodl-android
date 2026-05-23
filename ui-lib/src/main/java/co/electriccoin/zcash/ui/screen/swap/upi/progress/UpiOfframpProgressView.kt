@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.ButtonState
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBorderedCard
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
@@ -47,6 +48,7 @@ import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.ellipsizeMiddle
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
 
@@ -126,28 +128,11 @@ internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
 }
 
 @Composable
-private fun OfframpCard(
-    modifier: Modifier = Modifier,
-    borderColor: Color = ZappTheme.colors.border,
-    content: @Composable ColumnScope.() -> Unit,
-) {
-    val c = ZappTheme.colors
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, borderColor))
-            .padding(CARD_PADDING.dp),
-        content = content,
-    )
-}
-
-@Composable
 private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
     val uriHandler = LocalUriHandler.current
-    OfframpCard {
+    ZappBorderedCard {
         SummaryRow(
             label = stringResource(R.string.upi_offramp_summary_amount),
             value = summary.amountUsdcDisplay.getValue(),
@@ -220,7 +205,7 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
 private fun FeeBreakdownCard(fees: UpiOfframpFeeBreakdown) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
-    OfframpCard {
+    ZappBorderedCard {
         BasicText(
             text = stringResource(R.string.upi_offramp_fee_breakdown_header),
             style = t.button.copy(color = c.text, fontWeight = FontWeight.SemiBold),
@@ -245,7 +230,7 @@ private fun RecoveryCard(recovery: UpiOfframpRecoveryCard) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
     val uriHandler = LocalUriHandler.current
-    OfframpCard {
+    ZappBorderedCard {
         BasicText(
             text = recovery.amount.getValue(),
             style = t.body.copy(color = c.text, fontWeight = FontWeight.SemiBold),
@@ -274,7 +259,7 @@ private fun RecoveryCard(recovery: UpiOfframpRecoveryCard) {
 private fun CancelledCard(cancelled: UpiOfframpCancelledCard) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
-    OfframpCard {
+    ZappBorderedCard {
         cancelled.refundedAmount?.let {
             BasicText(
                 text = it.getValue(),
@@ -346,7 +331,7 @@ private fun FailureCard(failure: UpiOfframpFailureCard) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
     val uriHandler = LocalUriHandler.current
-    OfframpCard(borderColor = c.danger) {
+    ZappBorderedCard(borderColor = c.danger) {
         BasicText(
             text = stringResource(R.string.upi_offramp_failure_header, failure.stepLabel.getValue()),
             style = t.button.copy(color = c.danger, fontWeight = FontWeight.SemiBold),
@@ -445,11 +430,6 @@ private fun StepIndicator(status: UpiOfframpStepStatus) {
             .size(STEP_INDICATOR_SIZE.dp)
             .background(color),
     )
-}
-
-private fun String.ellipsizeMiddle(prefix: Int, suffix: Int): String {
-    if (length <= prefix + suffix + 1) return this
-    return take(prefix) + "…" + takeLast(suffix)
 }
 
 private const val HORIZONTAL_PADDING = 18

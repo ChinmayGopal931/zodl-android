@@ -22,6 +22,7 @@ import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.DiamondCalls
 import xyz.justzappit.offramp.p2p.Erc20Calls
 import xyz.justzappit.offramp.p2p.InMemoryRelayIdentityStore
+import xyz.justzappit.offramp.p2p.getUsdcBalance
 import xyz.justzappit.offramp.p2p.OrderEvents
 import xyz.justzappit.offramp.p2p.OnChainOrderReader
 import xyz.justzappit.offramp.p2p.OrderReadSource
@@ -315,10 +316,8 @@ class OfframpOrchestrator(
         return onChain.merchantPubKey
     }
 
-    private suspend fun usdcBalanceOf(account: Address): BigInteger {
-        val ret = rpc.ethCall(to = network.usdcAddress, data = Erc20Calls.balanceOfCalldata(account))
-        return if (ret.isEmpty()) BigInteger.ZERO else BigInteger(1, ret)
-    }
+    private suspend fun usdcBalanceOf(account: Address): BigInteger =
+        rpc.getUsdcBalance(network.usdcAddress, account).micros
 
     /**
      * Encrypts the full `upi://pay?…` URI (NOT a bare VPA — bare VPAs trigger the Diamond's
@@ -447,8 +446,6 @@ class OfframpOrchestrator(
             OfframpStatus.Completed(
                 orderId = orderId,
                 acceptedMerchant = finished.acceptedMerchantAddress ?: acceptedMerchant,
-                actualUsdcAmount = finished.actualUsdcAmount,
-                actualFiatAmount = finished.actualFiatAmount,
                 placedAtEpochSeconds = finished.placedAtEpochSeconds ?: accepted.placedAtEpochSeconds,
                 acceptedAtEpochSeconds = finished.acceptedAtEpochSeconds ?: accepted.acceptedAtEpochSeconds,
                 paidAtEpochSeconds = finished.paidAtEpochSeconds,
@@ -466,16 +463,11 @@ class OfframpOrchestrator(
             OfframpStatus.Cancelled(
                 orderId = orderId,
                 cancelledAtEpochSeconds = snapshot.cancelledAtEpochSeconds,
-                acceptedMerchant = snapshot.acceptedMerchantAddress
-                    ?: fallbackAccepted?.acceptedMerchantAddress,
                 // On cancellation the contract refunds the placed USDC; subgraph's actualUsdcAmount
                 // is only populated on COMPLETED, so fall back to the originally-placed amount.
                 refundedUsdcAmount = snapshot.actualUsdcAmount ?: snapshot.usdcAmount,
-                placedAtEpochSeconds = snapshot.placedAtEpochSeconds
-                    ?: fallbackAccepted?.placedAtEpochSeconds,
-                acceptedAtEpochSeconds = snapshot.acceptedAtEpochSeconds
-                    ?: fallbackAccepted?.acceptedAtEpochSeconds,
-                paidAtEpochSeconds = snapshot.paidAtEpochSeconds,
+                acceptedMerchant = snapshot.acceptedMerchantAddress
+                    ?: fallbackAccepted?.acceptedMerchantAddress,
             ),
         )
     }
@@ -595,32 +587,36 @@ class OfframpOrchestrator(
         step: OfframpStep,
         lastTxHash: TxHash?,
     ): OfframpStatus.Failed = when (error) {
-        is RpcException.ExecutionReverted -> OfframpStatus.Failed(
-            message = error.message ?: "execution reverted",
-            orderId = orderId,
-            step = step,
-            txHash = lastTxHash,
-            revertSelector = error.selector,
-            knownRevertReason = KnownReverts.explain(error),
-            sdkErrorName = KnownReverts.sdkName(error),
-            sdkErrorMessage = KnownReverts.sdkMessage(error),
-            solidityErrorString = error.solidityErrorString,
-            cause = error,
-        )
+        is RpcException.ExecutionReverted -> {
+            val lookup = KnownReverts.lookup(error.selector)
+            OfframpStatus.Failed(
+                message = error.message ?: "execution reverted",
+                orderId = orderId,
+                step = step,
+                txHash = lastTxHash,
+                revertSelector = error.selector,
+                knownRevertReason = lookup.reason,
+                sdkErrorName = lookup.sdkName,
+                sdkErrorMessage = lookup.sdkMessage,
+                solidityErrorString = error.solidityErrorString,
+                cause = error,
+            )
+        }
         // ERC-4337 reverts surface as an opaque bundler error message ("...reverted during
         // simulation with reason: 0xea8e4eb5"), not a structured ExecutionReverted. Recover the
         // selector from the message so AA-path reverts map to the same curated/SDK reasons.
         is RpcException.Unknown -> {
             val selector = KnownReverts.selectorFromMessage(error.errorMessage ?: error.raw)
+            val lookup = KnownReverts.lookup(selector)
             OfframpStatus.Failed(
                 message = error.errorMessage ?: error.message ?: "Unknown error",
                 orderId = orderId,
                 step = step,
                 txHash = lastTxHash,
                 revertSelector = selector,
-                knownRevertReason = KnownReverts.explain(selector),
-                sdkErrorName = KnownReverts.sdkName(selector),
-                sdkErrorMessage = KnownReverts.sdkMessage(selector),
+                knownRevertReason = lookup.reason,
+                sdkErrorName = lookup.sdkName,
+                sdkErrorMessage = lookup.sdkMessage,
                 cause = error,
             )
         }

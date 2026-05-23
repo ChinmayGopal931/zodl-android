@@ -1,6 +1,8 @@
 package xyz.justzappit.offramp.p2p
 
 import xyz.justzappit.evm.abi.AbiDecoder
+import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.types.Address
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -44,4 +46,10 @@ object PriceConfigDecoder {
     }
 
     private const val FOUR_WORDS = 4
+}
+
+/** Calls `diamondAddress.getPriceConfig(currency)` and decodes the four-word return. */
+suspend fun BaseRpcClient.getPriceConfig(diamondAddress: Address, currency: CurrencyCode): PriceConfig {
+    val raw = ethCall(to = diamondAddress, data = DiamondCalls.getPriceConfigCalldata(currency))
+    return PriceConfigDecoder.decode(raw)
 }

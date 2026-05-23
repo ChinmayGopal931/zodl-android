@@ -6,8 +6,7 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
-import co.electriccoin.zcash.ui.common.repository.OfframpRepository
-import co.electriccoin.zcash.ui.common.usecase.GetUpiOfframpRateUseCase
+import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanUpiUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
@@ -16,9 +15,12 @@ import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
+import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.UpiQrParser
+import xyz.justzappit.offramp.p2p.getPriceConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,8 +36,9 @@ import java.math.RoundingMode
 
 internal class UpiOfframpVM(
     private val navigationRouter: NavigationRouter,
-    private val getRate: GetUpiOfframpRateUseCase,
-    private val offrampRepo: OfframpRepository,
+    private val rpc: BaseRpcClient,
+    private val network: P2pNetworkConfig,
+    private val checkpointStorage: OfframpCheckpointStorageProvider,
     private val navigateToScanUpi: NavigateToScanUpiUseCase,
 ) : ViewModel() {
     private val primary = MutableStateFlow(UpiOfframpAmountSide.INR)
@@ -82,12 +85,14 @@ internal class UpiOfframpVM(
             }
         }
         viewModelScope.launch {
-            offrampRepo.observeInFlight().collect { checkpoint -> inFlight.update { checkpoint } }
+            checkpointStorage.observe().collect { checkpoint -> inFlight.update { checkpoint } }
         }
     }
 
     private suspend fun refreshRate() {
-        val newRate = getRate(CURRENCY) ?: return
+        val newRate = runCatching { rpc.getPriceConfig(network.diamondAddress, CURRENCY).sellPriceAsRate() }
+            .onFailure { Twig.warn(it) { "UpiOfframpVM: getPriceConfig(${CURRENCY.code}) failed" } }
+            .getOrNull() ?: return
         Twig.info { "UpiOfframpVM: live sellPrice for ${CURRENCY.code} = $newRate" }
         rate.update { newRate }
         rederiveAfterRateChange(newRate)
@@ -167,7 +172,7 @@ internal class UpiOfframpVM(
     }
 
     private fun onDiscardInFlight() {
-        viewModelScope.launch { offrampRepo.clear() }
+        viewModelScope.launch { checkpointStorage.clear() }
     }
 
     private fun validate(usdc: BigDecimal?, upi: String): StringResource? {

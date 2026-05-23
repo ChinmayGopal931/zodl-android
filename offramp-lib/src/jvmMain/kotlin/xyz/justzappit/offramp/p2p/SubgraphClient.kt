@@ -73,9 +73,9 @@ class SubgraphClient(
     }
 
     companion object {
-        const val ORDER_BY_ID_QUERY = """
-            query OrderById(${'$'}orderId: BigInt!) {
-              orders_collection(where: { orderId: ${'$'}orderId }) {
+        // Shared selection set for [ORDER_BY_ID_QUERY] and [USER_ORDERS_QUERY] — keeps the two
+        // entry points byte-aligned on the fields the snapshot parser expects.
+        private const val ORDER_FIELDS = """
                 orderId
                 type
                 status
@@ -97,11 +97,14 @@ class SubgraphClient(
                 actualFiatAmount
                 blockNumber
                 blockTimestamp
-                transactionHash
+                transactionHash"""
+
+        const val ORDER_BY_ID_QUERY = """
+            query OrderById(${'$'}orderId: BigInt!) {
+              orders_collection(where: { orderId: ${'$'}orderId }) {$ORDER_FIELDS
               }
             }
         """
-
 
         // Mirrors user-app-client's ORDERS_COLLECTION_WITH_DATE_FILTER_QUERY but without a date
         // window: this drives the all-time history list shown in the P2P transactions screen.
@@ -113,29 +116,7 @@ class SubgraphClient(
                 skip: ${'$'}skip
                 orderBy: placedAt
                 orderDirection: desc
-              ) {
-                orderId
-                type
-                status
-                circleId
-                userAddress
-                usdcAmount
-                fiatAmount
-                currency
-                placedAt
-                acceptedAt
-                paidAt
-                completedAt
-                cancelledAt
-                acceptedMerchantAddress
-                pubkey
-                encUpi
-                encMerchantUpi
-                actualUsdcAmount
-                actualFiatAmount
-                blockNumber
-                blockTimestamp
-                transactionHash
+              ) {$ORDER_FIELDS
               }
             }
         """

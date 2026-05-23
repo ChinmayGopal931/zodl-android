@@ -1,5 +1,6 @@
 package xyz.justzappit.evm.abi
 
+import xyz.justzappit.evm.util.padLeftToWord
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger
 
@@ -11,7 +12,7 @@ object AbiEncoder {
 
         for (arg in args) {
             if (arg.isDynamic) {
-                out.write(padTo32Left(BigInteger.valueOf(dynOffset.toLong()).toByteArray()))
+                out.write(BigInteger.valueOf(dynOffset.toLong()).toByteArray().padLeftToWord())
                 dynOffset += arg.tail().size
             } else {
                 out.write(arg.head())

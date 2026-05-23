@@ -61,7 +61,7 @@ internal data class UpiOfframpCancelledCard(
     val tip: StringResource,
 )
 
-/** Shown after a successful pullback (recoverUnplacedFunds → FundsRecovered). */
+/** Shown after a successful pullback (bridgeFundsBackToZec → FundsRecovered). */
 internal data class UpiOfframpRecoveryCard(
     val amount: StringResource,
     val target: String?,

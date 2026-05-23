@@ -34,6 +34,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBorderedCard
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
@@ -108,13 +109,7 @@ internal fun P2pTransactionsView(state: P2pTransactionsState) {
 @Composable
 private fun BalanceCard(state: BalanceState, refund: RefundUiState, isRefreshing: Boolean) {
     val c = ZappTheme.colors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .padding(CARD_PADDING.dp),
-    ) {
+    ZappBorderedCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             BasicText(
                 text = stringResource(R.string.p2p_transactions_balance_label),
@@ -280,14 +275,7 @@ private fun AccountAddressRow(addressShort: String, explorerUrl: String?) {
 @Composable
 private fun TransactionCard(row: P2pTransactionRow) {
     val c = ZappTheme.colors
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .padding(CARD_PADDING.dp),
-        verticalArrangement = Arrangement.spacedBy(GAP_SM.dp),
-    ) {
+    ZappBorderedCard(verticalArrangement = Arrangement.spacedBy(GAP_SM.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             BasicText(
                 text = row.typeLabel.getValue(),
@@ -350,7 +338,6 @@ private fun StatusPill(label: String, tone: P2pTransactionRow.StatusTone) {
 
 private const val HORIZONTAL_PADDING = 14
 private const val SECTION_GAP = 16
-private const val CARD_PADDING = 14
 private const val GAP_SM = 6
 private const val GAP_MD = 12
 private const val SPINNER_SIZE = 18

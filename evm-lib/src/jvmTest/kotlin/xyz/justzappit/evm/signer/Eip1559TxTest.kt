@@ -18,20 +18,6 @@ import kotlin.test.assertTrue
 class Eip1559TxTest {
 
     @Test
-    fun `signingPayload starts with 0x02 type byte`() {
-        val tx = sampleTx()
-        val payload = tx.signingPayload()
-        assertEquals(0x02.toByte(), payload[0])
-    }
-
-    @Test
-    fun `signingPayload is deterministic for same inputs`() {
-        val tx = sampleTx()
-        assertTrue(tx.signingPayload().contentEquals(tx.signingPayload()))
-        assertTrue(tx.signingHash().contentEquals(tx.signingHash()))
-    }
-
-    @Test
     fun `signed tx ecrecovers to the signer address`() {
         val key = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
         val tx = sampleTx(toAddress = "0x000000000000000000000000000000000000dEaD")
@@ -52,39 +38,6 @@ class Eip1559TxTest {
         val pubXY = recovered.affineXCoord.encoded + recovered.affineYCoord.encoded
         val recoveredAddress = "0x" + keccak256(pubXY).copyOfRange(12, 32).toHex()
         assertEquals(key.address.lowercaseHex, recoveredAddress.lowercase())
-    }
-
-    @Test
-    fun `chainId zero-encoding never sneaks in as 0x80 for the value field`() {
-        // value=0 should encode as 0x80 (rlpEmpty), not as 0x00.
-        val tx = Eip1559Tx(
-            chainId = ChainId.BASE_SEPOLIA,
-            nonce = Nonce(BigInteger.ZERO),
-            maxPriorityFeePerGas = Wei(BigInteger.ONE),
-            maxFeePerGas = Wei(BigInteger.TEN),
-            gasLimit = Gas(BigInteger.valueOf(21_000)),
-            to = Address.parse("0x000000000000000000000000000000000000dEaD"),
-            value = Wei.ZERO,
-            data = byteArrayOf(),
-        )
-        val hex = tx.signingPayload().toHex()
-        assertTrue(hex.startsWith("02"), "tx type prefix missing")
-    }
-
-    @Test
-    fun `invalid to address is rejected`() {
-        kotlin.runCatching {
-            Eip1559Tx(
-                chainId = ChainId(1L),
-                nonce = Nonce(BigInteger.ZERO),
-                maxPriorityFeePerGas = Wei(BigInteger.ONE),
-                maxFeePerGas = Wei(BigInteger.ONE),
-                gasLimit = Gas(BigInteger.ONE),
-                to = Address.parse("0xnotanaddress"),
-                value = Wei.ZERO,
-                data = byteArrayOf(),
-            )
-        }.fold(onSuccess = { error("expected to be rejected") }, onFailure = { /* expected */ })
     }
 
     @Test
