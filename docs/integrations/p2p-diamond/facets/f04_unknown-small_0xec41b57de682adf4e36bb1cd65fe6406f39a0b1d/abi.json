@@ -1,0 +1,66 @@
+[
+  {
+    "type": "function",
+    "name": "Unresolved_7206f373",
+    "inputs": [
+      {
+        "name": "arg0",
+        "type": "uint256"
+      },
+      {
+        "name": "arg1",
+        "type": "uint256"
+      },
+      {
+        "name": "arg2",
+        "type": "address"
+      },
+      {
+        "name": "arg3",
+        "type": "uint256"
+      },
+      {
+        "name": "arg4",
+        "type": "uint256"
+      },
+      {
+        "name": "arg5",
+        "type": "uint256"
+      },
+      {
+        "name": "arg6",
+        "type": "uint256"
+      },
+      {
+        "name": "arg7",
+        "type": "uint256"
+      },
+      {
+        "name": "arg8",
+        "type": "uint256"
+      },
+      {
+        "name": "arg9",
+        "type": "uint256"
+      },
+      {
+        "name": "arg10",
+        "type": "uint256"
+      },
+      {
+        "name": "arg11",
+        "type": "uint256"
+      },
+      {
+        "name": "arg12",
+        "type": "uint256"
+      },
+      {
+        "name": "arg13",
+        "type": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "pure"
+  }
+]

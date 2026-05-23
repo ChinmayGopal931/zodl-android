@@ -142,13 +142,7 @@ class OfframpOrchestratorTest {
             ),
         )
 
-        val statuses = orchestrator.run(
-            OfframpRequest(
-                recipientUpi = "merchant@upi",
-                usdcAmount = Usdc6.ofMicros(5_000_000),
-                currency = CurrencyCode.Inr,
-            ),
-        ).toList()
+        val statuses = orchestrator.run(payRequest()).toList()
 
         assertIs<OfframpStatus.Idle>(statuses.first())
         val completed = statuses.last() as OfframpStatus.Completed
@@ -174,12 +168,7 @@ class OfframpOrchestratorTest {
     fun `subgraph returning no circles surfaces as Failed with no orderId and SELECTING_CIRCLE step`() = runTest {
         nextSubgraphResponse = """{"data":{"circles":[]}}"""
 
-        val statuses = orchestrator.run(
-            OfframpRequest(
-                recipientUpi = "merchant@upi",
-                usdcAmount = Usdc6.ofMicros(5_000_000),
-            ),
-        ).toList()
+        val statuses = orchestrator.run(payRequest()).toList()
         val last = assertIs<OfframpStatus.Failed>(statuses.last())
         assertEquals(null, last.orderId)
         assertEquals(OfframpStep.SELECTING_CIRCLE, last.step)
@@ -197,12 +186,7 @@ class OfframpOrchestratorTest {
             snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS),
         )
 
-        val statuses = orchestrator.run(
-            OfframpRequest(
-                recipientUpi = "merchant@upi",
-                usdcAmount = Usdc6.ofMicros(5_000_000),
-            ),
-        ).toList()
+        val statuses = orchestrator.run(payRequest()).toList()
         assertIs<OfframpStatus.Completed>(statuses.last())
     }
 
@@ -218,12 +202,7 @@ class OfframpOrchestratorTest {
             snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS),
         )
 
-        val statuses = orchestrator.run(
-            OfframpRequest(
-                recipientUpi = "merchant@upi",
-                usdcAmount = Usdc6.ofMicros(5_000_000),
-            ),
-        ).toList()
+        val statuses = orchestrator.run(payRequest()).toList()
         val anyStalledAcceptance = statuses
             .filterIsInstance<OfframpStatus.WaitingForMerchantAcceptance>()
             .any { it.stalled }
@@ -253,12 +232,7 @@ class OfframpOrchestratorTest {
             snapshot(status = OrderStatus.CANCELLED, pubkey = "", merchant = null),
         )
 
-        val statuses = orchestrator.run(
-            OfframpRequest(
-                recipientUpi = "merchant@upi",
-                usdcAmount = Usdc6.ofMicros(5_000_000),
-            ),
-        ).toList()
+        val statuses = orchestrator.run(payRequest()).toList()
         val last = assertIs<OfframpStatus.Cancelled>(statuses.last())
         assertEquals(ORDER_ID, last.orderId)
         assertEquals(1_779_500_000L, last.cancelledAtEpochSeconds)
@@ -413,6 +387,7 @@ class OfframpOrchestratorTest {
     private fun payRequest() = OfframpRequest(
         recipientUpi = "merchant@upi",
         usdcAmount = Usdc6.ofMicros(5_000_000),
+        fiatAmount = Usdc6.ofMicros(445_000_000),
         currency = CurrencyCode.Inr,
     )
 
@@ -441,6 +416,7 @@ class OfframpOrchestratorTest {
         bridgeDepositAddress = depositAddress,
         recipientUpi = "merchant@upi",
         usdcAmountMicroDecimal = "5000000",
+        fiatAmountMicroDecimal = "445000000",
         currency = CurrencyCode.Inr,
         createdAtMillis = 0,
     )
@@ -452,6 +428,7 @@ class OfframpOrchestratorTest {
         setUpiTxHash = setUpiTxHash,
         recipientUpi = "merchant@upi",
         usdcAmountMicroDecimal = "5000000",
+        fiatAmountMicroDecimal = "445000000",
         currency = CurrencyCode.Inr,
         createdAtMillis = 0,
     )
@@ -532,11 +509,13 @@ class OfframpOrchestratorTest {
         return when {
             params.contains("0x36b0ec9a") ->
                 """{"jsonrpc":"2.0","id":1,"result":"$getAssignableResponse"}"""
-            params.contains("0x70a08231") -> // ERC-20 balanceOf, used by recoverUnplacedFunds
+            params.contains("0x70a08231") -> // ERC-20 balanceOf
                 """{"jsonrpc":"2.0","id":1,"result":"$nextUsdcBalance"}"""
             params.contains("0x59c69313") -> // isOrderExpired(uint256)
                 """{"jsonrpc":"2.0","id":1,"result":"$nextIsOrderExpired"}"""
-            else -> error("Unexpected eth_call (no longer poll getOrdersById on-chain): $params")
+            params.contains("0x67c84efd") -> // getPriceConfig(bytes32)
+                """{"jsonrpc":"2.0","id":1,"result":"$ENCODED_PRICE_CONFIG_INR"}"""
+            else -> error("Unexpected eth_call: $params")
         }
     }
 
@@ -605,6 +584,14 @@ class OfframpOrchestratorTest {
         const val ENCODED_ZERO = "0x" + "0000000000000000000000000000000000000000000000000000000000000000"
         const val ENCODED_ONE = "0x" + "0000000000000000000000000000000000000000000000000000000000000001"
         const val ENCODED_FIVE_USDC = "0x" + "00000000000000000000000000000000000000000000000000000000004c4b40"
+
+        // Four packed uint256s: buyPrice=91 sellPrice=89 buyPriceOffset=0 baseSpread=1.5 (6-dec micros).
+        const val ENCODED_PRICE_CONFIG_INR =
+            "0x" +
+                "00000000000000000000000000000000000000000000000000000000056c8cc0" +
+                "00000000000000000000000000000000000000000000000000000000054e0840" +
+                "0000000000000000000000000000000000000000000000000000000000000000" +
+                "000000000000000000000000000000000000000000000000000000000016e360"
 
         const val SUBGRAPH_OK_ONE_CIRCLE = """
             {"data":{"circles":[

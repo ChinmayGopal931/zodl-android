@@ -1,9 +1,11 @@
 package xyz.justzappit.offramp.p2p
 
+import kotlinx.serialization.Serializable
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.util.toHex
 import java.security.SecureRandom
 
+@Serializable
 data class RelayIdentity(
     val privateKeyHex: String,
     val publicKeyHex: String,

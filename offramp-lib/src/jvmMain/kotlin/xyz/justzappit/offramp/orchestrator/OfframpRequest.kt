@@ -6,17 +6,24 @@ import xyz.justzappit.offramp.p2p.Usdc6
 data class OfframpRequest(
     val recipientUpi: String,
     val usdcAmount: Usdc6,
-    val currency: CurrencyCode = CurrencyCode.Inr,
     /**
-     * Minimum fiat the order must yield, passed to the Diamond as `placeOrder._fiatAmountLimit` —
-     * the contract's slippage floor (reverts `SLIPPAGE_EXCEEDED` below it). `null` (or [Usdc6.ZERO])
-     * disables the check. The UI computes this from the quoted INR rate with a tolerance so a rate
-     * drift across the (multi-minute) funding bridge can't silently pay the user less than quoted.
+     * User-quoted fiat in 6-decimal micros (e.g. `37_280_000` ⇒ ₹37.28). Goes into the `am=`
+     * field of the `upi://pay?…` URI for setSellOrderUpi. Required: a zero `am` breaks the
+     * SDK-side `parseAmount` and triggers the +4s merchant auto-cancel (§6 of findings).
      */
-    val minFiatAmount: Usdc6? = null,
+    val fiatAmount: Usdc6,
+    val currency: CurrencyCode = CurrencyCode.Inr,
+    /** Optional `pn=` display name. */
+    val payeeName: String? = null,
+    /**
+     * `placeOrder._fiatAmountLimit`: contract slippage floor. Null/ZERO disables it; the UI sets
+     * `floor(fiatAmount × 0.99)` so rate drift across the funding bridge can't underpay the user.
+     */
+    val fiatAmountLimit: Usdc6? = null,
 ) {
     init {
         require(recipientUpi.isNotBlank()) { "recipientUpi must not be blank" }
         require(usdcAmount > Usdc6.ZERO) { "usdcAmount must be positive" }
+        require(fiatAmount > Usdc6.ZERO) { "fiatAmount must be positive" }
     }
 }

@@ -32,6 +32,9 @@ data class OfframpCheckpoint(
     val setUpiTxHash: TxHash? = null,
     val recipientUpi: String,
     val usdcAmountMicroDecimal: String,
+    /** Nullable for back-compat with checkpoints written before fiat was tracked; resume falls back to live sellPrice. */
+    val fiatAmountMicroDecimal: String? = null,
+    val payeeName: String? = null,
     val currency: CurrencyCode,
     val createdAtMillis: Long,
 ) {
@@ -46,14 +49,22 @@ data class OfframpCheckpoint(
         require(runCatching { BigInteger(usdcAmountMicroDecimal) }.isSuccess) {
             "OfframpCheckpoint.usdcAmountMicroDecimal must be a decimal integer, got '$usdcAmountMicroDecimal'"
         }
+        if (fiatAmountMicroDecimal != null) {
+            require(runCatching { BigInteger(fiatAmountMicroDecimal) }.isSuccess) {
+                "OfframpCheckpoint.fiatAmountMicroDecimal must be a decimal integer, got '$fiatAmountMicroDecimal'"
+            }
+        }
     }
 
     val orderIdBig: BigInteger? get() = orderId?.let(::BigInteger)
     val usdcAmount: Usdc6 get() = Usdc6(BigInteger(usdcAmountMicroDecimal))
+    val fiatAmount: Usdc6? get() = fiatAmountMicroDecimal?.let { Usdc6(BigInteger(it)) }
 
-    fun toRequest(): OfframpRequest = OfframpRequest(
+    fun toRequest(fallbackFiatAmount: Usdc6): OfframpRequest = OfframpRequest(
         recipientUpi = recipientUpi,
         usdcAmount = usdcAmount,
+        fiatAmount = fiatAmount ?: fallbackFiatAmount,
+        payeeName = payeeName,
         currency = currency,
     )
 }

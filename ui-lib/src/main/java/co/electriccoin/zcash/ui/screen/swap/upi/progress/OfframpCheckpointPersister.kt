@@ -76,6 +76,8 @@ internal class OfframpCheckpointPersister(
                             ?: previous?.setUpiTxHash,
                         recipientUpi = request.recipientUpi,
                         usdcAmountMicroDecimal = request.usdcAmount.micros.toString(),
+                        fiatAmountMicroDecimal = request.fiatAmount.micros.toString(),
+                        payeeName = request.payeeName,
                         currency = request.currency,
                         createdAtMillis = previous?.createdAtMillis ?: System.currentTimeMillis(),
                     ),

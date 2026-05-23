@@ -187,6 +187,7 @@ class OfframpCheckpointPersisterTest {
     private fun freshRequest() = OfframpRequest(
         recipientUpi = "merchant@upi",
         usdcAmount = AMOUNT,
+        fiatAmount = FIAT_AMOUNT,
         currency = CurrencyCode.Inr,
     )
 
@@ -198,6 +199,7 @@ class OfframpCheckpointPersisterTest {
         setUpiTxHash = null,
         recipientUpi = "merchant@upi",
         usdcAmountMicroDecimal = AMOUNT.micros.toString(),
+        fiatAmountMicroDecimal = FIAT_AMOUNT.micros.toString(),
         currency = CurrencyCode.Inr,
         createdAtMillis = 1L,
     )
@@ -216,6 +218,7 @@ class OfframpCheckpointPersisterTest {
 
     companion object {
         private val AMOUNT = Usdc6.ofMicros(5_000_000)
+        private val FIAT_AMOUNT = Usdc6.ofMicros(445_000_000)
         private val ORDER_ID: BigInteger = BigInteger.valueOf(42)
         private val MERCHANT = Address.parse("0x1111111111111111111111111111111111111111")
         private val APPROVE_HASH = TxHash.fromHex("0x" + "aa".repeat(32))

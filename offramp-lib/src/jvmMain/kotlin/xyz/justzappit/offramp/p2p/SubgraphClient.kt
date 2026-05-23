@@ -40,6 +40,24 @@ class SubgraphClient(
         return orders.firstOrNull()?.jsonObject
     }
 
+    /**
+     * One page of orders for [userAddress] sorted by `placedAt desc`. Mirrors
+     * `OrdersCollectionWithDateFilter` in `user-app-client`; callers walk pages until a page
+     * returns fewer than [first] rows.
+     */
+    suspend fun ordersForUser(userAddress: String, first: Int, skip: Int): List<JsonObject> {
+        val data = query(
+            query = USER_ORDERS_QUERY,
+            variables = buildJsonObject {
+                put("userAddress", userAddress.lowercase())
+                put("first", first)
+                put("skip", skip)
+            },
+        )
+        val orders = data["orders_collection"]?.jsonArray ?: return emptyList()
+        return orders.map { it.jsonObject }
+    }
+
     private suspend fun query(query: String, variables: JsonElement): JsonObject {
         val payload = buildJsonObject {
             put("query", query)
@@ -84,6 +102,43 @@ class SubgraphClient(
             }
         """
 
+
+        // Mirrors user-app-client's ORDERS_COLLECTION_WITH_DATE_FILTER_QUERY but without a date
+        // window: this drives the all-time history list shown in the P2P transactions screen.
+        const val USER_ORDERS_QUERY = """
+            query UserOrders(${'$'}userAddress: String!, ${'$'}first: Int!, ${'$'}skip: Int!) {
+              orders_collection(
+                where: { userAddress: ${'$'}userAddress }
+                first: ${'$'}first
+                skip: ${'$'}skip
+                orderBy: placedAt
+                orderDirection: desc
+              ) {
+                orderId
+                type
+                status
+                circleId
+                userAddress
+                usdcAmount
+                fiatAmount
+                currency
+                placedAt
+                acceptedAt
+                paidAt
+                completedAt
+                cancelledAt
+                acceptedMerchantAddress
+                pubkey
+                encUpi
+                encMerchantUpi
+                actualUsdcAmount
+                actualFiatAmount
+                blockNumber
+                blockTimestamp
+                transactionHash
+              }
+            }
+        """
 
         // Mirrors p2pdotme-sdk/src/orders/internal/routing/subgraph/queries.ts
         const val CIRCLES_FOR_ROUTING_QUERY = """

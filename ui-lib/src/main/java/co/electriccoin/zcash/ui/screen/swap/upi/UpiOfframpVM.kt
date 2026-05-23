@@ -23,9 +23,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -72,7 +74,13 @@ internal class UpiOfframpVM(
         )
 
     init {
-        viewModelScope.launch { refreshRate() }
+        viewModelScope.launch {
+            // §5f: refetch every 30s so the quote tracks the rate the contract will stamp.
+            while (isActive) {
+                refreshRate()
+                delay(RATE_REFRESH_INTERVAL_MS)
+            }
+        }
         viewModelScope.launch {
             offrampRepo.observeInFlight().collect { checkpoint -> inFlight.update { checkpoint } }
         }
@@ -90,14 +98,14 @@ internal class UpiOfframpVM(
             UpiOfframpAmountSide.USDC -> usdcState.value.amount?.let { usdc ->
                 inrState.update {
                     NumberTextFieldInnerState.fromAmount(
-                        usdc.multiply(newRate).setScale(INR_DECIMALS, RoundingMode.HALF_UP),
+                        usdc.multiply(newRate).setScale(INR_DECIMALS, RoundingMode.FLOOR),
                     )
                 }
             }
             UpiOfframpAmountSide.INR -> inrState.value.amount?.let { inr ->
                 usdcState.update {
                     NumberTextFieldInnerState.fromAmount(
-                        inr.divide(newRate, USDC_DECIMALS, RoundingMode.HALF_UP),
+                        inr.divide(newRate, USDC_DECIMALS, RoundingMode.FLOOR),
                     )
                 }
             }
@@ -179,12 +187,12 @@ internal class UpiOfframpVM(
                 // USDC side derives from the live rate (matches the SDK's `parseUPI` semantics).
                 primary.update { UpiOfframpAmountSide.INR }
                 inrState.update {
-                    NumberTextFieldInnerState.fromAmount(fiat.setScale(INR_DECIMALS, RoundingMode.HALF_UP))
+                    NumberTextFieldInnerState.fromAmount(fiat.setScale(INR_DECIMALS, RoundingMode.FLOOR))
                 }
                 val currentRate = rate.value
                 usdcState.update {
                     NumberTextFieldInnerState.fromAmount(
-                        fiat.divide(currentRate, USDC_DECIMALS, RoundingMode.HALF_UP),
+                        fiat.divide(currentRate, USDC_DECIMALS, RoundingMode.FLOOR),
                     )
                 }
             }
@@ -195,7 +203,7 @@ internal class UpiOfframpVM(
         primary.update { UpiOfframpAmountSide.USDC }
         usdcState.update { next }
         val currentRate = rate.value
-        val derivedInr = next.amount?.multiply(currentRate)?.setScale(INR_DECIMALS, RoundingMode.HALF_UP)
+        val derivedInr = next.amount?.multiply(currentRate)?.setScale(INR_DECIMALS, RoundingMode.FLOOR)
         inrState.update {
             if (derivedInr == null) NumberTextFieldInnerState() else NumberTextFieldInnerState.fromAmount(derivedInr)
         }
@@ -205,7 +213,7 @@ internal class UpiOfframpVM(
         primary.update { UpiOfframpAmountSide.INR }
         inrState.update { next }
         val currentRate = rate.value
-        val derivedUsdc = next.amount?.divide(currentRate, USDC_DECIMALS, RoundingMode.HALF_UP)
+        val derivedUsdc = next.amount?.divide(currentRate, USDC_DECIMALS, RoundingMode.FLOOR)
         usdcState.update {
             if (derivedUsdc == null) NumberTextFieldInnerState() else NumberTextFieldInnerState.fromAmount(derivedUsdc)
         }
@@ -232,20 +240,27 @@ internal class UpiOfframpVM(
                 UpiOfframpProgressArgs(
                     recipientUpi = existing.recipientUpi,
                     usdcAmountMicro = existing.usdcAmountMicroDecimal,
+                    // Old checkpoints lack fiat — orchestrator resolves a fallback at resume time.
+                    fiatAmountMicro = existing.fiatAmountMicroDecimal ?: existing.usdcAmountMicroDecimal,
+                    payeeName = existing.payeeName,
                     currency = existing.currency,
                 ),
             )
             return
         }
         val usdcAmount = usdcState.value.amount ?: return
+        val inrAmount = inrState.value.amount ?: return
         if (usdcAmount <= BigDecimal.ZERO || usdcAmount > USDC_CAP) return
+        if (inrAmount <= BigDecimal.ZERO) return
         val upi = upiText.value
         if (upi.isBlank() || !UpiQrParser.validateUpiId(upi)) return
         val usdcMicro = usdcAmount.movePointRight(USDC_CONTRACT_DECIMALS).toBigInteger()
+        val fiatMicro = inrAmount.movePointRight(USDC_CONTRACT_DECIMALS).toBigInteger()
         navigationRouter.forward(
             UpiOfframpProgressArgs(
                 recipientUpi = upi,
                 usdcAmountMicro = usdcMicro.toString(),
+                fiatAmountMicro = fiatMicro.toString(),
                 currency = CURRENCY,
             ),
         )
@@ -264,5 +279,6 @@ internal class UpiOfframpVM(
         private const val USDC_DECIMALS = 4
         private const val USDC_CONTRACT_DECIMALS = 6
         private const val INR_DECIMALS = 2
+        private const val RATE_REFRESH_INTERVAL_MS = 30_000L
     }
 }

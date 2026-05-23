@@ -7,5 +7,7 @@ import xyz.justzappit.offramp.p2p.CurrencyCode
 data class UpiOfframpProgressArgs(
     val recipientUpi: String,
     val usdcAmountMicro: String,
+    val fiatAmountMicro: String,
     val currency: CurrencyCode,
+    val payeeName: String? = null,
 )

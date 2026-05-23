@@ -23,6 +23,7 @@ class PreFundedOfframpFundingTest {
     private val request = OfframpRequest(
         recipientUpi = "merchant@upi",
         usdcAmount = Usdc6(BigInteger.valueOf(1_000_000)),
+        fiatAmount = Usdc6(BigInteger.valueOf(85_000_000)),
     )
 
     private fun fundingWithBalance(micros: BigInteger): PreFundedOfframpFunding {

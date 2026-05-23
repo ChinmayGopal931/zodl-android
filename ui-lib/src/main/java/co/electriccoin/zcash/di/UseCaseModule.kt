@@ -37,6 +37,8 @@ import co.electriccoin.zcash.ui.common.usecase.GetFilteredActivitiesUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetFlexaStatusUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetHomeMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetOrderFeeDetailsUseCase
+import co.electriccoin.zcash.ui.common.usecase.GetP2pOrderHistoryUseCase
+import co.electriccoin.zcash.ui.common.usecase.GetP2pSmartAccountBalanceUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetKeystoneStatusUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetORSwapQuoteUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetPersistableWalletUseCase
@@ -295,5 +297,7 @@ val useCaseModule =
         // UPI offramp use cases.
         factoryOf(::GetUpiOfframpRateUseCase)
         factoryOf(::GetOrderFeeDetailsUseCase)
+        factoryOf(::GetP2pSmartAccountBalanceUseCase)
+        factoryOf(::GetP2pOrderHistoryUseCase)
         singleOf(::NavigateToScanUpiUseCase)
     }

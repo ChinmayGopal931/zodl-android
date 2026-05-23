@@ -1,0 +1,19 @@
+[
+  {
+    "type": "function",
+    "name": "Unresolved_65b36b69",
+    "inputs": [
+      {
+        "name": "arg0",
+        "type": "uint256"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "payable"
+  },
+  {
+    "type": "error",
+    "name": "NotSuperAdmin",
+    "inputs": []
+  }
+]

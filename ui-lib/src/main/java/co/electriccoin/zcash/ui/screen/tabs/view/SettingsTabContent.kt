@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -52,6 +53,7 @@ import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
+import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -141,6 +143,13 @@ fun SettingsTabContent(
                             subtitle = "Choose a lightwalletd server",
                             icon = Icons.Default.Cloud,
                             onClick = { navigationRouter.forward(ChooseServerArgs) },
+                        )
+                        ZappRowDivider(inset = true)
+                        ZappRow(
+                            title = "P2P transactions",
+                            subtitle = "Balance and order history",
+                            icon = Icons.Default.SwapHoriz,
+                            onClick = { navigationRouter.forward(P2pTransactionsArgs) },
                         )
                     }
                 }

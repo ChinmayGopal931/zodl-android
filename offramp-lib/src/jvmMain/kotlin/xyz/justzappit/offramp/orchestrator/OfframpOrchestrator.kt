@@ -18,8 +18,10 @@ import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.p2p.CircleId
 import xyz.justzappit.offramp.p2p.CircleRouter
+import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.DiamondCalls
 import xyz.justzappit.offramp.p2p.Erc20Calls
+import xyz.justzappit.offramp.p2p.InMemoryRelayIdentityStore
 import xyz.justzappit.offramp.p2p.OrderEvents
 import xyz.justzappit.offramp.p2p.OnChainOrderReader
 import xyz.justzappit.offramp.p2p.OrderReadSource
@@ -28,9 +30,12 @@ import xyz.justzappit.offramp.p2p.OrderSnapshot
 import xyz.justzappit.offramp.p2p.OrderStatus
 import xyz.justzappit.offramp.p2p.OrderType
 import xyz.justzappit.offramp.p2p.PlaceOrderArgs
-import xyz.justzappit.offramp.p2p.RelayIdentities
+import xyz.justzappit.offramp.p2p.PriceConfigDecoder
+import xyz.justzappit.offramp.p2p.RelayIdentityStore
 import xyz.justzappit.offramp.p2p.SubgraphClient
+import xyz.justzappit.offramp.p2p.UpiPayUri
 import xyz.justzappit.offramp.p2p.Usdc6
+import xyz.justzappit.offramp.p2p.getOrCreate
 import java.math.BigInteger
 
 /**
@@ -89,6 +94,8 @@ class OfframpOrchestrator(
      * this). Defaults to a direct `getOrdersById` reader; injectable for tests.
      */
     private val onChainOrderReader: OrderReadSource = OnChainOrderReader(rpc, network),
+    /** See [RelayIdentityStore]. In-memory default for tests; Android injects an encrypted-prefs store. */
+    private val relayIdentityStore: RelayIdentityStore = InMemoryRelayIdentityStore(),
 ) : OfframpDriver {
     override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
         emit(OfframpStatus.Idle)
@@ -109,7 +116,7 @@ class OfframpOrchestrator(
         var currentStep = OfframpStep.INITIALIZATION
         var lastTxHash: TxHash? = null
         try {
-            val relay = RelayIdentities.generate()
+            val relay = relayIdentityStore.getOrCreate()
             val currencyHex = "0x" + AbiEncoder.bytes32String(request.currency.code).value.toHex()
 
             currentStep = OfframpStep.SELECTING_CIRCLE
@@ -159,7 +166,7 @@ class OfframpOrchestrator(
                         orderType = OrderType.PAY,
                         currency = request.currency,
                         circleId = circleId,
-                        fiatAmountLimit = request.minFiatAmount ?: Usdc6.ZERO,
+                        fiatAmountLimit = request.fiatAmountLimit ?: Usdc6.ZERO,
                     ),
                 ),
             )
@@ -206,7 +213,8 @@ class OfframpOrchestrator(
      */
     override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
         emit(OfframpStatus.Idle)
-        val request = checkpoint.toRequest()
+        val fallbackFiat = checkpoint.fiatAmount ?: resolveFallbackFiat(checkpoint)
+        val request = checkpoint.toRequest(fallbackFiatAmount = fallbackFiat)
         val orderId = checkpoint.orderIdBig
         if (orderId == null) {
             driveNewOrder(request, resumeBridgeHandle = checkpoint.bridgeDepositAddress)
@@ -312,6 +320,78 @@ class OfframpOrchestrator(
         return if (ret.isEmpty()) BigInteger.ZERO else BigInteger(1, ret)
     }
 
+    /**
+     * Encrypts the full `upi://pay?…` URI (NOT a bare VPA — bare VPAs trigger the Diamond's
+     * same-tx auto-cancel) and broadcasts setSellOrderUpi with `updatedAmount = max(parsed.usdc,
+     * placed)`. Dropping below the placed amount strips the merchant's accepted margin and they
+     * auto-cancel +4s later. See §6 of the offramp findings doc.
+     */
+    private suspend fun broadcastSetSellOrderUpi(
+        orderId: BigInteger,
+        accepted: OrderSnapshot,
+        request: OfframpRequest,
+        onStep: (OfframpStep) -> Unit,
+    ): TxHash {
+        val merchantPubKey = verifiedMerchantPubKey(orderId, accepted)
+        val inrAmount = request.fiatAmount.whole
+        val qrUri = UpiPayUri.build(
+            vpa = request.recipientUpi,
+            payeeName = request.payeeName,
+            inrAmount = inrAmount,
+            currencyCode = request.currency.code,
+        )
+
+        val sellPrice = runCatching { readSellPriceInrPerUsdc(request.currency) }.getOrNull()
+        val parsedUsdcMicros = if (sellPrice != null && sellPrice.signum() > 0) {
+            UpiPayUri.parsedUsdcMicros(inrAmount, sellPrice).toBigInteger()
+        } else {
+            request.usdcAmount.micros
+        }
+        val placedMicros = request.usdcAmount.micros
+        val updatedAmount = parsedUsdcMicros.max(placedMicros)
+
+        if (updatedAmount > placedMicros) {
+            // Diamond pulls the delta on setSellOrderUpi → top up allowance to that ceiling first.
+            val topUpHash = submitter.sendTransaction(
+                to = network.usdcAddress,
+                data = Erc20Calls.approveCalldata(network.diamondAddress, Usdc6(updatedAmount)),
+            )
+            require(submitter.awaitReceipt(topUpHash).success) {
+                "USDC allowance top-up reverted (updatedAmount=$updatedAmount > placed=$placedMicros)"
+            }
+        }
+
+        val cipherHex = Ecies.cipherStringify(
+            Ecies.encryptWithPublicKey(merchantPubKey, qrUri),
+        )
+        onStep(OfframpStep.SENDING_UPI)
+        return submitter.sendTransaction(
+            to = network.diamondAddress,
+            data = DiamondCalls.setSellOrderUpiCalldata(
+                orderId = orderId,
+                encryptedUpiHex = cipherHex,
+                updatedAmount = updatedAmount,
+            ),
+        )
+    }
+
+    private suspend fun readSellPriceInrPerUsdc(currency: CurrencyCode): java.math.BigDecimal {
+        val ret = rpc.ethCall(
+            to = network.diamondAddress,
+            data = DiamondCalls.getPriceConfigCalldata(currency),
+        )
+        return PriceConfigDecoder.decode(ret).sellPriceAsRate()
+    }
+
+    private suspend fun resolveFallbackFiat(checkpoint: OfframpCheckpoint): Usdc6 {
+        val rate = runCatching { readSellPriceInrPerUsdc(checkpoint.currency) }.getOrNull()
+        return if (rate != null && rate.signum() > 0) {
+            Usdc6.ofWhole(checkpoint.usdcAmount.whole.multiply(rate))
+        } else {
+            checkpoint.usdcAmount
+        }
+    }
+
     private suspend fun FlowCollector<OfframpStatus>.awaitMerchantAndComplete(
         orderId: BigInteger,
         request: OfframpRequest,
@@ -338,19 +418,7 @@ class OfframpOrchestrator(
         val setUpiHash: TxHash? = when {
             knownSetUpiHash != null -> knownSetUpiHash
             isUpiAlreadyOnChain(orderId, accepted) -> null
-            else -> {
-                val cipherHex = Ecies.cipherStringify(
-                    Ecies.encryptWithPublicKey(verifiedMerchantPubKey(orderId, accepted), request.recipientUpi),
-                )
-                onStep(OfframpStep.SENDING_UPI)
-                submitter.sendTransaction(
-                    to = network.diamondAddress,
-                    data = DiamondCalls.setSellOrderUpiCalldata(
-                        orderId = orderId,
-                        encryptedUpiHex = cipherHex,
-                    ),
-                )
-            }
+            else -> broadcastSetSellOrderUpi(orderId, accepted, request, onStep)
         }
         if (setUpiHash != null) {
             onTxHash(setUpiHash)
