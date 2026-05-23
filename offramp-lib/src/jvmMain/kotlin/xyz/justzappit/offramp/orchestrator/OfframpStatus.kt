@@ -15,6 +15,16 @@ sealed class OfframpStatus {
         val selectedCircleId: BigInteger? = null,
     ) : OfframpStatus()
 
+    /**
+     * Mainnet only: a ZEC→USDC NEAR bridge is in flight to fund the smart account. [depositAddress]
+     * is the 1-Click handle the orchestrator persists so the bridge can be resumed after process
+     * death; null until the quote returns. Testnet skips this (the account is pre-funded).
+     */
+    data class BridgingFunds(
+        val amount: Usdc6,
+        val depositAddress: String? = null,
+    ) : OfframpStatus()
+
     data class ApprovingUsdc(
         val txHash: TxHash,
         val amount: Usdc6,
@@ -30,12 +40,8 @@ sealed class OfframpStatus {
         val orderId: BigInteger,
         val pollAttempts: Int = 0,
         val lastObservedStatus: OrderStatus? = null,
-        /**
-         * Set once we've been polling for [OfframpOrchestrator.stalledAfterMs] without a merchant
-         * accepting. The order is still live on-chain — there is no client-side timeout. UI
-         * surfaces a hint that the user's USDC stays escrowed until on-chain auto-cancel (~72h).
-         */
         val stalled: Boolean = false,
+        val expired: Boolean = false,
     ) : OfframpStatus()
 
     data class SendingEncryptedUpi(
@@ -50,8 +56,8 @@ sealed class OfframpStatus {
         val orderId: BigInteger,
         val pollAttempts: Int = 0,
         val lastObservedStatus: OrderStatus? = null,
-        /** Same semantics as [WaitingForMerchantAcceptance.stalled]. */
         val stalled: Boolean = false,
+        val expired: Boolean = false,
         val acceptedAtEpochSeconds: Long? = null,
         val paidAtEpochSeconds: Long? = null,
     ) : OfframpStatus()
@@ -68,10 +74,10 @@ sealed class OfframpStatus {
     ) : OfframpStatus()
 
     /**
-     * Order observed in on-chain CANCELLED status. This is a normal terminal state — the contract
-     * auto-cancels orders that don't progress within its expiry window (~72h per
-     * Diamond.getOrderExpiryTime), and the USDC has been refunded to the offramp account on-chain.
-     * Distinct from [Failed], which signals a genuine error (revert, RPC death, etc.).
+     * Order observed in on-chain CANCELLED status. Normal terminal: either the user called
+     * cancelOrder themselves, or the executor's order-sweeper auto-cancelled after the Diamond's
+     * 30-min expiry window. USDC has been refunded to the offramp account on-chain. Distinct from
+     * [Failed], which signals a genuine error (revert, RPC death, etc.).
      */
     data class Cancelled(
         val orderId: BigInteger,
@@ -81,6 +87,19 @@ sealed class OfframpStatus {
         val placedAtEpochSeconds: Long? = null,
         val acceptedAtEpochSeconds: Long? = null,
         val paidAtEpochSeconds: Long? = null,
+    ) : OfframpStatus()
+
+    /**
+     * Terminal state for the funded-but-unplaced recovery: a mainnet funding bridge delivered USDC
+     * but the order was never placed (e.g. the route vanished or placeOrder reverted), so the user
+     * pulled the stranded USDC back out of the smart account. [amount] is what was recovered;
+     * [target] is the pull-back destination (a NEAR deposit address on mainnet), null if the USDC was
+     * left in the self-custodial account (testnet / no route).
+     */
+    data class FundsRecovered(
+        val amount: Usdc6,
+        val target: Address? = null,
+        val txHash: TxHash? = null,
     ) : OfframpStatus()
 
     data class Failed(
@@ -114,6 +133,7 @@ sealed class OfframpStatus {
 enum class OfframpStep {
     INITIALIZATION,
     SELECTING_CIRCLE,
+    FUNDING,
     APPROVING_USDC,
     PLACING_ORDER,
     WAITING_FOR_ACCEPTANCE,
@@ -126,6 +146,7 @@ enum class OfframpStep {
         /** Steps surfaced to the UI progress indicator (skips INITIALIZATION + ENCRYPTING_UPI). */
         val UI_PROGRESS: List<OfframpStep> = listOf(
             SELECTING_CIRCLE,
+            FUNDING,
             APPROVING_USDC,
             PLACING_ORDER,
             WAITING_FOR_ACCEPTANCE,
@@ -145,6 +166,8 @@ val OfframpStatus.orderId: BigInteger? get() = when (this) {
     is OfframpStatus.Failed -> orderId
     OfframpStatus.Idle,
     is OfframpStatus.SelectingCircle,
+    is OfframpStatus.BridgingFunds,
+    is OfframpStatus.FundsRecovered,
     is OfframpStatus.ApprovingUsdc,
     is OfframpStatus.PlacingOrder -> null
 }
@@ -153,6 +176,8 @@ val OfframpStatus.orderId: BigInteger? get() = when (this) {
 val OfframpStatus.step: OfframpStep get() = when (this) {
     OfframpStatus.Idle -> OfframpStep.INITIALIZATION
     is OfframpStatus.SelectingCircle -> OfframpStep.SELECTING_CIRCLE
+    is OfframpStatus.BridgingFunds -> OfframpStep.FUNDING
+    is OfframpStatus.FundsRecovered -> OfframpStep.FUNDING
     is OfframpStatus.ApprovingUsdc -> OfframpStep.APPROVING_USDC
     is OfframpStatus.PlacingOrder -> OfframpStep.PLACING_ORDER
     is OfframpStatus.WaitingForMerchantAcceptance -> OfframpStep.WAITING_FOR_ACCEPTANCE

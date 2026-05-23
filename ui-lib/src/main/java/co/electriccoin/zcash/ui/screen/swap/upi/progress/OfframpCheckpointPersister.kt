@@ -26,25 +26,28 @@ internal class OfframpCheckpointPersister(
 ) {
     private var lastApproveTxHash: TxHash? = null
     private var lastPlaceOrderTxHash: TxHash? = null
+    private var lastBridgeDepositAddress: String? = null
 
     /**
-     * Seed from a restored checkpoint so a save mid-resume doesn't drop hashes captured during
-     * the original run (the orchestrator's resume() never re-emits ApprovingUsdc/PlacingOrder).
+     * Seed from a restored checkpoint so a save mid-resume doesn't drop values captured during the
+     * original run (the orchestrator's resume() never re-emits ApprovingUsdc/PlacingOrder/BridgingFunds).
      */
     fun seedFrom(checkpoint: OfframpCheckpoint?) {
         lastApproveTxHash = checkpoint?.approveTxHash
         lastPlaceOrderTxHash = checkpoint?.placeOrderTxHash
+        lastBridgeDepositAddress = checkpoint?.bridgeDepositAddress
     }
 
     suspend fun onStatus(status: OfframpStatus) {
-        captureTxHash(status)
+        capture(status)
         persistOrClear(status)
     }
 
-    private fun captureTxHash(status: OfframpStatus) {
+    private fun capture(status: OfframpStatus) {
         when (status) {
             is OfframpStatus.ApprovingUsdc -> lastApproveTxHash = status.txHash
             is OfframpStatus.PlacingOrder -> lastPlaceOrderTxHash = status.txHash
+            is OfframpStatus.BridgingFunds -> status.depositAddress?.let { lastBridgeDepositAddress = it }
             else -> Unit
         }
     }
@@ -53,14 +56,20 @@ internal class OfframpCheckpointPersister(
         when (status) {
             is OfframpStatus.Completed,
             is OfframpStatus.Cancelled,
+            is OfframpStatus.FundsRecovered,
             is OfframpStatus.Failed -> repo.clear()
             else -> {
-                val orderId = status.orderId ?: return
+                val orderId = status.orderId
+                // Persist once there's either an order id OR an in-flight bridge to resume — the
+                // bridge deposit address must survive process death so resume re-polls it instead of
+                // opening a second bridge. Pre-bridge steps (Idle/SelectingCircle) carry nothing.
+                if (orderId == null && lastBridgeDepositAddress == null) return
                 val previous = repo.getInFlight()
                 repo.save(
                     OfframpCheckpoint(
-                        orderId = orderId.toString(),
+                        orderId = orderId?.toString(),
                         currentStep = status.step,
+                        bridgeDepositAddress = lastBridgeDepositAddress ?: previous?.bridgeDepositAddress,
                         approveTxHash = lastApproveTxHash ?: previous?.approveTxHash,
                         placeOrderTxHash = lastPlaceOrderTxHash ?: previous?.placeOrderTxHash,
                         setUpiTxHash = (status as? OfframpStatus.SendingEncryptedUpi)?.txHash

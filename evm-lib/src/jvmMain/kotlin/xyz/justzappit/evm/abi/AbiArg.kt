@@ -88,6 +88,27 @@ data class AbiString(val value: String) : AbiArg {
     override fun hashCode(): Int = value.hashCode()
 }
 
+data class AbiUintArray(val values: List<BigInteger>) : AbiArg {
+    init {
+        values.forEach {
+            require(it.signum() >= 0) { "uint array element must be non-negative, got $it" }
+            require(it.bitLength() <= MAX_UINT_BITS_ARRAY) { "uint array element exceeds 256 bits" }
+        }
+    }
+    override val isDynamic = true
+    override fun head(): ByteArray = ByteArray(WORD)
+    override fun tail(): ByteArray {
+        val out = ByteArray(WORD + values.size * WORD)
+        val lenBytes = BigInteger.valueOf(values.size.toLong()).toByteArray()
+        System.arraycopy(lenBytes, 0, out, WORD - lenBytes.size, lenBytes.size)
+        values.forEachIndexed { i, v ->
+            val padded = padTo32Left(v.toByteArray())
+            System.arraycopy(padded, 0, out, WORD + i * WORD, WORD)
+        }
+        return out
+    }
+}
+
 data class AbiBytes(val value: ByteArray) : AbiArg {
     override val isDynamic = true
     override fun head(): ByteArray = ByteArray(WORD)
@@ -112,6 +133,7 @@ internal fun padded(size: Int): Int = if (size % WORD == 0) size else size + WOR
 
 internal const val WORD = 32
 private const val MAX_UINT_BITS = 256
+private const val MAX_UINT_BITS_ARRAY = 256
 private const val MAX_INT_SIGNED_BITS = 255
 private const val ADDRESS_BYTES = 20
 private const val UINT8_MAX = 255

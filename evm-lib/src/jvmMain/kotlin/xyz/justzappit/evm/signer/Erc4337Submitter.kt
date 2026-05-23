@@ -84,7 +84,11 @@ class Erc4337Submitter(
             bundler.getUserOperationReceipt(txHash)?.let { return it }
             delay(receiptPollIntervalMs)
         }
-        error("Timed out after ${receiptTimeoutMs}ms waiting for userOp receipt of ${txHash.hex}")
+        val minutes = receiptTimeoutMs / 60_000
+        error(
+            "Bundler did not return a receipt for userOp ${txHash.hex} after ${minutes}m. " +
+                "The operation may still confirm on-chain — check the explorer before retrying.",
+        )
     }
 
     /** EntryPoint.getNonce(sender, key=0): the next sequential nonce; 0 for a counterfactual account. */
@@ -110,7 +114,7 @@ class Erc4337Submitter(
 
     companion object {
         private const val DEFAULT_GAS_BUFFER_PCT = 15
-        private const val DEFAULT_RECEIPT_TIMEOUT_MS = 120_000L
+        private const val DEFAULT_RECEIPT_TIMEOUT_MS = 300_000L
         private const val DEFAULT_POLL_INTERVAL_MS = 2_000L
         private const val FIELD_BYTES = 32
         private const val V_OFFSET = 27

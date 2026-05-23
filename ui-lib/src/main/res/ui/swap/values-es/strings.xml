@@ -91,11 +91,13 @@
     <string name="upi_offramp_upi_id_placeholder">comercio@banco</string>
     <string name="upi_offramp_scan_qr_cd">Escanear código QR UPI</string>
     <string name="upi_offramp_estimate_disclaimer">Estimado. El monto final se fija cuando el comerciante acepta.</string>
-    <string name="upi_offramp_error_above_cap">Los montos superiores a $99 USDC requieren KYC y aún no son compatibles.</string>
+    <string name="upi_offramp_limit_hint">Máximo 100 USDC por retiro.</string>
+    <string name="upi_offramp_error_above_cap">Los montos superiores a 100 USDC no son compatibles para el retiro.</string>
     <string name="upi_offramp_error_invalid_upi">Eso no parece un identificador UPI (esperaba algo como nombre@banco).</string>
     <string name="upi_offramp_send_button">Enviar</string>
     <string name="upi_offramp_resume_button">Reanudar offramp en curso</string>
     <string name="upi_offramp_error_in_flight">Ya hay un offramp en curso. Reanúdalo antes de iniciar otro.</string>
+    <string name="upi_offramp_discard_in_flight">Descartar orden local y empezar de nuevo</string>
 
     <string name="upi_offramp_progress_title_in_progress">Enviando al comerciante</string>
     <string name="upi_offramp_progress_title_completed">Pago enviado</string>
@@ -105,11 +107,10 @@
     <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
     <string name="upi_offramp_progress_done_button">Listo</string>
     <string name="upi_offramp_progress_close_button">Cerrar</string>
-    <string name="upi_offramp_cancel_button">Cancelar y recuperar fondos</string>
-    <string name="upi_offramp_cancel_in_progress">Cancelando…</string>
     <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
     <string name="upi_offramp_step_init">Preparación</string>
     <string name="upi_offramp_step_selecting_circle">Eligiendo grupo de comerciantes</string>
+    <string name="upi_offramp_step_funding">Transfiriendo fondos</string>
     <string name="upi_offramp_step_approve">Aprobando USDC</string>
     <string name="upi_offramp_step_place_order">Creando la orden</string>
     <string name="upi_offramp_step_wait_acceptance">Esperando que el comerciante acepte</string>
@@ -125,6 +126,8 @@
     <string name="upi_offramp_summary_network">Red</string>
     <string name="upi_offramp_summary_signer">Desde</string>
     <string name="upi_offramp_detail_candidates">%1$d círculo(s) candidato(s)</string>
+    <string name="upi_offramp_detail_deposit_addr">Depósito %1$s</string>
+    <string name="upi_offramp_detail_bridging_amount">Puenteando %1$s USDC desde ZEC con NEAR Intents</string>
     <string name="upi_offramp_detail_selected_circle">Círculo seleccionado #%1$s</string>
     <string name="upi_offramp_detail_amount">%1$s USDC</string>
     <string name="upi_offramp_detail_circle_id">Círculo #%1$s</string>
@@ -147,10 +150,18 @@
     <string name="upi_offramp_revert_invalid_order_upi">El comerciante rechazó el UPI cifrado. Esto puede indicar un problema de formato — por favor repórtalo.</string>
     <string name="upi_offramp_revert_order_not_accepted">La orden aún no está aceptada. Inténtalo en un momento.</string>
     <string name="upi_offramp_revert_usdc_transfer_failed">La transferencia de USDC falló. Verifica tu saldo y autorización.</string>
-    <string name="upi_offramp_revert_not_authorized">Esta orden aún no se puede cancelar — las órdenes no aceptadas expiran solas y tus fondos nunca salieron de tu billetera.</string>
+    <string name="upi_offramp_revert_not_authorized">El contrato rechazó la cancelación — es posible que la orden ya esté completada o cancelada.</string>
     <string name="upi_offramp_revert_sdk_long_tail">Error del contrato: %1$s</string>
 
-    <string name="upi_offramp_detail_stalled">Tardando más de lo habitual — tus USDC permanecen depositados en el contrato hasta que el comerciante acepte o la orden se autocancele (~72 horas).</string>
+    <string name="upi_offramp_detail_stalled">Conectándote con un comerciante. Tus USDC siguen en tu cuenta; si nadie acepta, la orden se autocancela on-chain.</string>
+
+    <string name="upi_offramp_recover_button">Puentear USDC a ZEC</string>
+    <string name="upi_offramp_recovery_in_progress_title">Puenteando USDC a ZEC</string>
+    <string name="upi_offramp_recovery_in_progress_subtitle">Enviando tus USDC reembolsados a ZEC mediante NEAR Intents — puede tardar un par de minutos.</string>
+    <string name="upi_offramp_recovery_in_progress_button">Puenteando…</string>
+    <string name="upi_offramp_recovery_done_title">USDC enviado a ZEC</string>
+    <string name="upi_offramp_recovery_amount">%1$s USDC enviado al puente</string>
+    <string name="upi_offramp_recovery_target">Depósito del puente %1$s</string>
 
     <string name="upi_offramp_detail_accepted_at">Aceptada a las %1$s</string>
     <string name="upi_offramp_detail_paid_at">Pago confirmado a las %1$s</string>
@@ -170,7 +181,7 @@
     <string name="upi_offramp_fee_breakdown_amount_inr">₹%1$s</string>
 
     <string name="upi_offramp_progress_title_cancelled">Orden cancelada</string>
-    <string name="upi_offramp_progress_subtitle_cancelled">Ningún comerciante completó esta orden a tiempo. Tus USDC han sido reembolsados on-chain.</string>
+    <string name="upi_offramp_progress_subtitle_cancelled">Ningún comerciante completó esta orden a tiempo. Tus USDC están en tu cuenta de offramp, listos para puentear.</string>
     <string name="upi_offramp_cancelled_refunded">%1$s USDC devueltos a tu billetera</string>
     <string name="upi_offramp_cancelled_returned_zec">%1$s USDC están regresando a ZEC — llegarán a tu billetera en breve</string>
     <string name="upi_offramp_cancelled_at">Cancelada a las %1$s</string>

@@ -40,13 +40,13 @@ class PreFundedOfframpFundingTest {
 
     @Test
     fun `passes when balance covers the order`() = runTest {
-        fundingWithBalance(BigInteger.valueOf(2_000_000)).ensureFunded(account, request)
+        fundingWithBalance(BigInteger.valueOf(2_000_000)).ensureFunded(account, request, resumeHandle = null) {}
     }
 
     @Test
     fun `fails fast with an actionable message when balance is short`() = runTest {
         val e = assertFailsWith<IllegalStateException> {
-            fundingWithBalance(BigInteger.valueOf(500_000)).ensureFunded(account, request)
+            fundingWithBalance(BigInteger.valueOf(500_000)).ensureFunded(account, request, resumeHandle = null) {}
         }
         assertTrue(e.message!!.contains("Fund it directly"), "expected funding hint, got: ${e.message}")
     }

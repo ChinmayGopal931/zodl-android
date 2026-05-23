@@ -154,7 +154,12 @@ internal class UpiOfframpVM(
                 onClick = ::onSendClick,
             ),
             onScanQr = ::onScanQr,
+            onDiscardInFlight = if (inFlightCheckpoint != null) ::onDiscardInFlight else null,
         )
+    }
+
+    private fun onDiscardInFlight() {
+        viewModelScope.launch { offrampRepo.clear() }
     }
 
     private fun validate(usdc: BigDecimal?, upi: String): StringResource? {
@@ -252,8 +257,9 @@ internal class UpiOfframpVM(
         // Matches the FE: priceConfig?.sellPrice ?? 85.
         private val FALLBACK_RATE: BigDecimal = BigDecimal("85")
 
-        // v1 spec: PAY orders below $99 USDC bypass the on-chain RP gate.
-        private val USDC_CAP: BigDecimal = BigDecimal("99")
+        // p2p.me caps a single offramp at 100 USDC. Surfaced proactively in the UI via
+        // R.string.upi_offramp_limit_hint and enforced here as a hard input cap.
+        private val USDC_CAP: BigDecimal = BigDecimal("100")
 
         private const val USDC_DECIMALS = 4
         private const val USDC_CONTRACT_DECIMALS = 6

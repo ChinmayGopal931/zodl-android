@@ -21,4 +21,6 @@ internal data class UpiOfframpState(
     val errorText: StringResource?,
     val sendButton: ButtonState,
     val onScanQr: () -> Unit,
+    /** Local-only escape hatch: forget an in-flight checkpoint without touching the on-chain order. */
+    val onDiscardInFlight: (() -> Unit)? = null,
 )

@@ -71,6 +71,8 @@ class OfframpOrchestratorTest {
         respond(body, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
     }
 
+    private var nextUsdcBalance = ENCODED_ZERO
+    private var nextIsOrderExpired = ENCODED_ZERO
     private var nextSubgraphResponse = SUBGRAPH_OK_ONE_CIRCLE
     private val subgraphEngine = MockEngine {
         respond(nextSubgraphResponse, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
@@ -82,6 +84,19 @@ class OfframpOrchestratorTest {
     private val signer = EoaSigner(rpc, chainId = network.chainId, account = account)
     private val subgraph = SubgraphClient(subgraphHttp, "http://mock/graph")
     private val orderReader = ScriptedOrderReadSource()
+
+    // On-chain pubkey verifier (H1). Defaults to a snapshot whose pubkey matches the accepted
+    // (subgraph) snapshot, so happy-path tests pass verification; override `next` to simulate a
+    // tampered subgraph pubkey.
+    private val onChainVerifier = object : OrderReadSource {
+        var next: OrderSnapshot? = snapshot(
+            status = OrderStatus.ACCEPTED,
+            pubkey = MERCHANT_PUBKEY,
+            merchant = MERCHANT_ADDRESS,
+        )
+        override suspend fun fetchOrder(orderId: BigInteger): OrderSnapshot? = next
+    }
+
     private val orchestrator = OfframpOrchestrator(
         rpc = rpc,
         submitter = signer,
@@ -89,12 +104,13 @@ class OfframpOrchestratorTest {
         network = network,
         subgraph = subgraph,
         orderReader = orderReader,
-        funding = OfframpFunding { _, _ -> },
+        funding = OfframpFunding { _, _, _, _ -> },
         refund = OfframpRefund { _, _ -> null },
         router = CircleRouter(random = Random(0), epsilon = 0.0),
         pollIntervalMs = 0,
         stalledAfterMs = 50,
         clockMs = ::nextTick,
+        onChainOrderReader = onChainVerifier,
     )
 
     // Monotonic per-call counter so tests don't depend on wall-clock advancing under runTest's
@@ -215,6 +231,23 @@ class OfframpOrchestratorTest {
     }
 
     @Test
+    fun `WaitingForMerchantAcceptance carries expired=true when Diamond reports the order as expired`() = runTest {
+        nextIsOrderExpired = ENCODED_ONE
+        orderReader.enqueue(null) // one extra null poll so a WaitingFor* emission with expired=true is observed
+        orderReader.enqueue(snapshot(status = OrderStatus.PLACED, pubkey = "", merchant = null))
+        orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+        orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+
+        val statuses = orchestrator.run(payRequest()).toList()
+
+        assertTrue(
+            statuses.filterIsInstance<OfframpStatus.WaitingForMerchantAcceptance>().any { it.expired },
+            "expected at least one WaitingForMerchantAcceptance.expired=true when Diamond.isOrderExpired returns 1",
+        )
+        assertIs<OfframpStatus.Completed>(statuses.last())
+    }
+
+    @Test
     fun `cancelled order during acceptance polling emits Cancelled terminal (not Failed)`() = runTest {
         orderReader.enqueue(
             snapshot(status = OrderStatus.CANCELLED, pubkey = "", merchant = null),
@@ -271,6 +304,146 @@ class OfframpOrchestratorTest {
         assertIs<OfframpStatus.Completed>(statuses.last())
         assertEquals(0, rawTxLog.size, "resume must not broadcast setSellOrderUpi when encUpi is already on-chain")
     }
+
+    // -- Funding: idempotency, route re-validation, recovery (mainnet bridge seam) -------------
+
+    @Test
+    fun `resume of a pre-order bridge re-polls the persisted handle, never re-quotes`() = runTest {
+        // Crash after the ZEC deposit but before the order was placed. The checkpoint carries the
+        // 1-Click depositAddress and no orderId. Resume MUST hand that handle back to funding (so it
+        // re-polls the in-flight bridge) instead of opening a second bridge — the double-send fix.
+        val seenResumeHandles = mutableListOf<String?>()
+        val orchestrator = orchestratorWith(
+            funding = OfframpFunding { _, _, resumeHandle, _ -> seenResumeHandles += resumeHandle },
+        )
+        orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+        orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+
+        val statuses = orchestrator.resume(bridgeResumeCheckpoint(depositAddress = "near-deposit-abc")).toList()
+
+        assertEquals(listOf<String?>("near-deposit-abc"), seenResumeHandles, "resume must pass the persisted handle")
+        assertIs<OfframpStatus.Completed>(statuses.last())
+    }
+
+    @Test
+    fun `onBridgeStarted emits BridgingFunds with the deposit address before approving`() = runTest {
+        val orchestrator = orchestratorWith(
+            funding = OfframpFunding { _, _, _, onBridgeStarted -> onBridgeStarted("near-deposit-xyz") },
+        )
+        orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+        orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
+
+        val statuses = orchestrator.run(payRequest()).toList()
+
+        val bridging = statuses.filterIsInstance<OfframpStatus.BridgingFunds>().single()
+        assertEquals("near-deposit-xyz", bridging.depositAddress)
+        val classes = statuses.map { it::class.simpleName }
+        assertTrue(
+            classes.indexOf("BridgingFunds") < classes.indexOf("ApprovingUsdc"),
+            "the deposit address must be surfaced (and persisted) before any USDC tx",
+        )
+    }
+
+    @Test
+    fun `route re-validation fails closed when the merchant vanishes during funding`() = runTest {
+        // Eligibility passes at circle-selection time, then the (multi-minute) bridge runs and the
+        // merchant drops out. The post-funding re-check must fail BEFORE approve, so the bridged USDC
+        // is never committed to a placeOrder that would revert.
+        val orchestrator = orchestratorWith(
+            funding = OfframpFunding { _, _, _, _ -> getAssignableResponse = ENCODED_EMPTY_ADDRESS_ARRAY },
+        )
+
+        val statuses = orchestrator.run(payRequest()).toList()
+
+        val failed = assertIs<OfframpStatus.Failed>(statuses.last())
+        assertEquals(OfframpStep.FUNDING, failed.step)
+        assertEquals(0, rawTxLog.size, "no approve/placeOrder may broadcast once the route is gone")
+    }
+
+    @Test
+    fun `bridgeFundsBackToZec routes the smart-account balance to the pull-back target (no order)`() = runTest {
+        nextUsdcBalance = ENCODED_FIVE_USDC
+        val pullback = Address.parse("0x2222222222222222222222222222222222222222")
+        val orchestrator = orchestratorWith(
+            funding = OfframpFunding { _, _, _, _ -> },
+            refund = OfframpRefund { _, _ -> pullback },
+        )
+
+        val statuses = orchestrator.bridgeFundsBackToZec(orderId = null).toList()
+
+        val recovered = assertIs<OfframpStatus.FundsRecovered>(statuses.last())
+        assertEquals(Usdc6.ofMicros(5_000_000), recovered.amount)
+        assertEquals(pullback, recovered.target)
+        assertEquals(1, rawTxLog.size, "one USDC.transfer to the pull-back target")
+    }
+
+    @Test
+    fun `bridgeFundsBackToZec with no route leaves the USDC in the account (testnet)`() = runTest {
+        nextUsdcBalance = ENCODED_FIVE_USDC
+        val orchestrator = orchestratorWith(
+            funding = OfframpFunding { _, _, _, _ -> },
+            refund = OfframpRefund { _, _ -> null },
+        )
+
+        val statuses = orchestrator.bridgeFundsBackToZec(orderId = null).toList()
+
+        val recovered = assertIs<OfframpStatus.FundsRecovered>(statuses.last())
+        assertEquals(Usdc6.ofMicros(5_000_000), recovered.amount)
+        assertEquals(null, recovered.target)
+        assertEquals(0, rawTxLog.size, "no route → no transfer; self-custodial balance stays put")
+    }
+
+    @Test
+    fun `setSellOrderUpi fails closed when the subgraph merchant pubkey disagrees with chain (H1)`() = runTest {
+        // A compromised subgraph hands an attacker pubkey for the accepted order. The orchestrator must
+        // re-read the pubkey on-chain, detect the mismatch, and refuse to encrypt the UPI to it — so the
+        // user's plaintext UPI handle never leaks to an attacker key.
+        onChainVerifier.next = snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS)
+        orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = ATTACKER_PUBKEY, merchant = MERCHANT_ADDRESS))
+
+        val statuses = orchestrator.run(payRequest()).toList()
+
+        val failed = assertIs<OfframpStatus.Failed>(statuses.last())
+        assertEquals(OfframpStep.ENCRYPTING_UPI, failed.step)
+        // approve + placeOrder broadcast (2); setSellOrderUpi must NOT — the UPI is never encrypted.
+        assertEquals(2, rawTxLog.size, "setSellOrderUpi must not broadcast on a pubkey mismatch")
+        assertTrue(statuses.none { it is OfframpStatus.SendingEncryptedUpi })
+    }
+
+    private fun payRequest() = OfframpRequest(
+        recipientUpi = "merchant@upi",
+        usdcAmount = Usdc6.ofMicros(5_000_000),
+        currency = CurrencyCode.Inr,
+    )
+
+    private fun orchestratorWith(
+        funding: OfframpFunding,
+        refund: OfframpRefund = OfframpRefund { _, _ -> null },
+    ) = OfframpOrchestrator(
+        rpc = rpc,
+        submitter = signer,
+        accountAddress = account.address,
+        network = network,
+        subgraph = subgraph,
+        orderReader = orderReader,
+        funding = funding,
+        refund = refund,
+        router = CircleRouter(random = Random(0), epsilon = 0.0),
+        pollIntervalMs = 0,
+        stalledAfterMs = 50,
+        clockMs = ::nextTick,
+        onChainOrderReader = onChainVerifier,
+    )
+
+    private fun bridgeResumeCheckpoint(depositAddress: String?) = OfframpCheckpoint(
+        orderId = null,
+        currentStep = OfframpStep.FUNDING,
+        bridgeDepositAddress = depositAddress,
+        recipientUpi = "merchant@upi",
+        usdcAmountMicroDecimal = "5000000",
+        currency = CurrencyCode.Inr,
+        createdAtMillis = 0,
+    )
 
     private fun resumeCheckpoint(setUpiTxHash: xyz.justzappit.evm.types.TxHash?) = OfframpCheckpoint(
         orderId = ORDER_ID.toString(),
@@ -359,6 +532,10 @@ class OfframpOrchestratorTest {
         return when {
             params.contains("0x36b0ec9a") ->
                 """{"jsonrpc":"2.0","id":1,"result":"$getAssignableResponse"}"""
+            params.contains("0x70a08231") -> // ERC-20 balanceOf, used by recoverUnplacedFunds
+                """{"jsonrpc":"2.0","id":1,"result":"$nextUsdcBalance"}"""
+            params.contains("0x59c69313") -> // isOrderExpired(uint256)
+                """{"jsonrpc":"2.0","id":1,"result":"$nextIsOrderExpired"}"""
             else -> error("Unexpected eth_call (no longer poll getOrdersById on-chain): $params")
         }
     }
@@ -407,6 +584,9 @@ class OfframpOrchestratorTest {
             "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f" +
                 "70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1"
         const val MERCHANT_ADDRESS = "0x1111111111111111111111111111111111111111"
+
+        // A distinct (attacker-controlled) pubkey for the H1 tamper test — never used for real crypto.
+        val ATTACKER_PUBKEY = "00".repeat(64)
         val ORDER_ID: BigInteger = BigInteger.valueOf(7)
 
         // Synthetic 32-byte hash whose trailing byte (0x02) matches the second mocked broadcast.
@@ -416,6 +596,15 @@ class OfframpOrchestratorTest {
             "0x0000000000000000000000000000000000000000000000000000000000000020" +
                 "0000000000000000000000000000000000000000000000000000000000000001" +
                 "000000000000000000000000111111111111111111111111111111111111baaf"
+
+        // ABI-encoded empty address[] (offset 0x20, length 0): no assignable merchant.
+        const val ENCODED_EMPTY_ADDRESS_ARRAY =
+            "0x0000000000000000000000000000000000000000000000000000000000000020" +
+                "0000000000000000000000000000000000000000000000000000000000000000"
+
+        const val ENCODED_ZERO = "0x" + "0000000000000000000000000000000000000000000000000000000000000000"
+        const val ENCODED_ONE = "0x" + "0000000000000000000000000000000000000000000000000000000000000001"
+        const val ENCODED_FIVE_USDC = "0x" + "00000000000000000000000000000000000000000000000000000000004c4b40"
 
         const val SUBGRAPH_OK_ONE_CIRCLE = """
             {"data":{"circles":[

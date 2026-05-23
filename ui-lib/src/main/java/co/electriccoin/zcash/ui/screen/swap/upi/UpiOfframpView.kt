@@ -3,6 +3,7 @@ package co.electriccoin.zcash.ui.screen.swap.upi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -99,6 +100,14 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 modifier = Modifier.fillMaxWidth(),
             )
 
+            Spacer(modifier = Modifier.height(GAP_SM.dp))
+
+            BasicText(
+                text = stringResource(R.string.upi_offramp_limit_hint),
+                style = ZappTheme.typography.caption.copy(color = c.textMuted),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
             Spacer(modifier = Modifier.height(GAP_LG.dp))
 
             BasicText(
@@ -136,6 +145,18 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 BasicText(
                     text = info.getValue(),
                     style = ZappTheme.typography.caption.copy(color = c.textMuted),
+                )
+            }
+
+            state.onDiscardInFlight?.let { onDiscard ->
+                Spacer(modifier = Modifier.height(GAP_SM.dp))
+                BasicText(
+                    text = stringResource(R.string.upi_offramp_discard_in_flight),
+                    style = ZappTheme.typography.caption.copy(
+                        color = c.danger,
+                        textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                    ),
+                    modifier = Modifier.clickable(onClick = onDiscard),
                 )
             }
 

@@ -150,6 +150,40 @@ class OfframpCheckpointPersisterTest {
         assertNull(repo.getInFlight())
     }
 
+    @Test
+    fun `BridgingFunds persists the deposit address for resume (pre-order, no double-bridge)`() = runBlocking {
+        // The mainnet bridge emits its 1-Click deposit address before any ZEC moves; the persister
+        // must checkpoint it (with a null orderId) so a crash mid-bridge resumes by re-polling that
+        // address instead of opening a second bridge — the idempotency the orchestrator relies on.
+        val repo = InMemoryOfframpRepository()
+        val persister = OfframpCheckpointPersister(repo, freshRequest())
+
+        persister.onStatus(OfframpStatus.Idle)
+        persister.onStatus(OfframpStatus.BridgingFunds(amount = AMOUNT, depositAddress = "near-deposit-abc"))
+
+        val saved = repo.getInFlight()!!
+        assertNull(saved.orderId)
+        assertEquals("near-deposit-abc", saved.bridgeDepositAddress)
+        assertEquals(OfframpStep.FUNDING, saved.currentStep)
+    }
+
+    @Test
+    fun `bridge deposit address survives later saves once the order is placed`() = runBlocking {
+        val repo = InMemoryOfframpRepository()
+        val persister = OfframpCheckpointPersister(repo, freshRequest())
+
+        persister.onStatus(OfframpStatus.BridgingFunds(amount = AMOUNT, depositAddress = "near-deposit-abc"))
+        persister.onStatus(OfframpStatus.ApprovingUsdc(txHash = APPROVE_HASH, amount = AMOUNT))
+        persister.onStatus(
+            OfframpStatus.PlacingOrder(txHash = PLACE_ORDER_HASH, circleId = BigInteger.ONE, amount = AMOUNT),
+        )
+        persister.onStatus(OfframpStatus.WaitingForMerchantAcceptance(orderId = ORDER_ID))
+
+        val saved = repo.getInFlight()!!
+        assertEquals(ORDER_ID.toString(), saved.orderId)
+        assertEquals("near-deposit-abc", saved.bridgeDepositAddress)
+    }
+
     private fun freshRequest() = OfframpRequest(
         recipientUpi = "merchant@upi",
         usdcAmount = AMOUNT,

@@ -21,6 +21,7 @@ import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.DiamondCalls
 import xyz.justzappit.offramp.p2p.Erc20Calls
 import xyz.justzappit.offramp.p2p.OrderEvents
+import xyz.justzappit.offramp.p2p.OnChainOrderReader
 import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.OrderReader
 import xyz.justzappit.offramp.p2p.OrderSnapshot
@@ -41,11 +42,19 @@ interface OfframpDriver {
     fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus>
 
     /**
-     * User-initiated cancel + reclaim: cancels the order on-chain (the contract refunds the escrowed
-     * USDC to the account), then routes that USDC back to ZEC (mainnet) or leaves it in the account
-     * (testnet). Emits [OfframpStatus.Cancelled] on success or [OfframpStatus.Failed] on revert.
+     * Single user intent: "get my USDC back to ZEC". State-aware — reads the on-chain order (if
+     * [orderId] given), picks the right cleanup contract call, then transfers any USDC sitting in
+     * the smart account to the NEAR pullback target (mainnet) or leaves it self-custodial (testnet).
+     *
+     *  - ACCEPTED / PAID    → `cancelOrder` (user-permitted, refunds escrow) + transfer
+     *  - PLACED + expired   → `autoCancelExpiredOrders` (permissionless cleanup) + transfer
+     *  - PLACED + active    → transfer only (PAY/SELL hold no escrow at PLACED — funds are still
+     *                          in the smart account)
+     *  - CANCELLED / null   → transfer only (nothing to cancel)
+     *
+     * Emits [OfframpStatus.FundsRecovered] on success, [OfframpStatus.Failed] on revert.
      */
-    fun cancelAndRefund(orderId: BigInteger): Flow<OfframpStatus>
+    fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus>
 }
 
 class OfframpOrchestrator(
@@ -63,8 +72,9 @@ class OfframpOrchestrator(
      * After this duration of polling with no terminal transition, the WaitingFor* status emits
      * with `stalled = true` so the UI can hint that the order is taking longer than usual. There
      * is no client-side timeout — the order remains live on-chain until merchant acceptance,
-     * completion, or the contract's own auto-cancel (~72h per Diamond.getOrderExpiryTime).
-     * Killing flows on a client clock would orphan the user's escrowed USDC.
+     * completion, the user cancelling, or the executor's order-sweeper auto-cancelling once the
+     * Diamond's getOrderExpiry() window (30 min) elapses. Killing flows on a client clock would
+     * orphan the user's escrowed USDC.
      */
     private val stalledAfterMs: Long = DEFAULT_STALLED_AFTER_MS,
     /**
@@ -73,13 +83,31 @@ class OfframpOrchestrator(
      * `clockMs()`.
      */
     private val clockMs: () -> Long = System::currentTimeMillis,
+    /**
+     * Authoritative on-chain order reader used to verify the merchant encryption pubkey before we
+     * encrypt the user's UPI to it (the polling [orderReader] is subgraph-primary and untrusted for
+     * this). Defaults to a direct `getOrdersById` reader; injectable for tests.
+     */
+    private val onChainOrderReader: OrderReadSource = OnChainOrderReader(rpc, network),
 ) : OfframpDriver {
     override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
+        emit(OfframpStatus.Idle)
+        driveNewOrder(request, resumeBridgeHandle = null)
+    }
+
+    /**
+     * Drives a fresh — or bridge-resumed — order from circle selection through completion.
+     * [resumeBridgeHandle] is a persisted 1-Click deposit address when resuming a mainnet bridge that
+     * was already opened: passing it makes the funding step re-poll that bridge instead of opening a
+     * second one, so a crash mid-bridge can't double-send the user's ZEC.
+     */
+    private suspend fun FlowCollector<OfframpStatus>.driveNewOrder(
+        request: OfframpRequest,
+        resumeBridgeHandle: String?,
+    ) {
         var orderId: BigInteger? = null
         var currentStep = OfframpStep.INITIALIZATION
         var lastTxHash: TxHash? = null
-        emit(OfframpStatus.Idle)
-
         try {
             val relay = RelayIdentities.generate()
             val currencyHex = "0x" + AbiEncoder.bytes32String(request.currency.code).value.toHex()
@@ -88,16 +116,28 @@ class OfframpOrchestrator(
             val circles = subgraph.circlesForRouting(currencyHex)
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size))
 
-            val circleId = router.selectCircleForOrder(
+            val selectedCircle = router.selectCircleForOrder(
                 circles = circles,
                 orderCurrency = currencyHex,
-            ) { id -> validateCircleOnChain(id, request) }.value
+            ) { id -> validateCircleOnChain(id, request) }
+            val circleId = selectedCircle.value
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
-            // Funding gate runs only after an assignable merchant is confirmed (above): on mainnet
-            // this bridges ZEC→USDC, on testnet it verifies the account is pre-funded. Either way we
+            // Funding gate, resumable + idempotent: on mainnet bridges ZEC→USDC via NEAR and persists
+            // the deposit address (via the emit below) before any ZEC moves; on testnet verifies the
+            // account is pre-funded. Runs only after an assignable merchant is confirmed (above) so we
             // never bridge into a market with no route.
-            funding.ensureFunded(accountAddress, request)
+            currentStep = OfframpStep.FUNDING
+            funding.ensureFunded(accountAddress, request, resumeHandle = resumeBridgeHandle) { depositAddress ->
+                emit(OfframpStatus.BridgingFunds(amount = request.usdcAmount, depositAddress = depositAddress))
+            }
+
+            // Route re-validation: the funding bridge can take minutes, long enough for the merchant the
+            // eligibility gate picked to drop out. Re-confirm the circle still has an assignable merchant
+            // before committing funds — otherwise placeOrder reverts and the bridged USDC strands.
+            check(validateCircleOnChain(selectedCircle, request)) {
+                "Selected circle $circleId lost its assignable merchant during funding — not placing the order"
+            }
 
             currentStep = OfframpStep.APPROVING_USDC
             val approveHash = submitter.sendTransaction(
@@ -119,6 +159,7 @@ class OfframpOrchestrator(
                         orderType = OrderType.PAY,
                         currency = request.currency,
                         circleId = circleId,
+                        fiatAmountLimit = request.minFiatAmount ?: Usdc6.ZERO,
                     ),
                 ),
             )
@@ -154,18 +195,25 @@ class OfframpOrchestrator(
     }
 
     /**
-     * Resumes an in-flight order from a persisted checkpoint. Assumes the orderId is known (which
-     * implies approve + placeOrder both already landed). Earlier-step resumes are out of scope for
-     * v1; if [checkpoint.orderId] is null the caller must restart fresh via [run].
+     * Resumes an in-flight order from a persisted checkpoint.
+     *
+     * - **Order already placed** ([checkpoint.orderId] non-null): pick up at merchant-acceptance /
+     *   completion polling — approve + placeOrder are known to have landed.
+     * - **Pre-order** (orderId null): no order was ever placed. If a mainnet funding bridge was in
+     *   flight, [OfframpCheckpoint.bridgeDepositAddress] resumes it (re-polled, never re-quoted) and
+     *   the order is then placed; otherwise this is just a fresh start. [driveNewOrder] is idempotent
+     *   on the bridge via that handle, so this can never double-send the user's ZEC.
      */
     override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
-        val orderId = requireNotNull(checkpoint.orderIdBig) {
-            "OfframpOrchestrator.resume requires a checkpoint with orderId — got currentStep=${checkpoint.currentStep}"
-        }
+        emit(OfframpStatus.Idle)
         val request = checkpoint.toRequest()
+        val orderId = checkpoint.orderIdBig
+        if (orderId == null) {
+            driveNewOrder(request, resumeBridgeHandle = checkpoint.bridgeDepositAddress)
+            return@flow
+        }
         var currentStep = checkpoint.currentStep
         var lastTxHash: TxHash? = checkpoint.setUpiTxHash ?: checkpoint.placeOrderTxHash
-        emit(OfframpStatus.Idle)
         try {
             awaitMerchantAndComplete(
                 orderId = orderId,
@@ -181,41 +229,87 @@ class OfframpOrchestrator(
         }
     }
 
-    override fun cancelAndRefund(orderId: BigInteger): Flow<OfframpStatus> = flow {
+    override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> = flow {
         try {
-            // The placed amount is what the contract refunds to the account on cancel.
-            val snapshot = runCatching { orderReader.fetchOrder(orderId) }.getOrNull()
-            val refundAmount = snapshot?.usdcAmount ?: Usdc6.ZERO
-
-            val cancelHash = submitter.sendTransaction(
-                to = network.diamondAddress,
-                data = DiamondCalls.cancelOrderCalldata(orderId),
-            )
-            require(submitter.awaitReceipt(cancelHash).success) { "cancelOrder reverted" }
-
-            // Route the refunded USDC back to ZEC (mainnet) or leave it in the account (testnet).
-            val target = refund.pullbackTarget(accountAddress, refundAmount)
-            if (target != null && refundAmount > Usdc6.ZERO) {
-                val transferHash = submitter.sendTransaction(
-                    to = network.usdcAddress,
-                    data = Erc20Calls.transferCalldata(target, refundAmount),
-                )
-                require(submitter.awaitReceipt(transferHash).success) { "USDC pull-back transfer reverted" }
+            cleanUpOrderIfNeeded(orderId)
+            val balance = Usdc6(usdcBalanceOf(accountAddress))
+            if (balance <= Usdc6.ZERO) {
+                emit(OfframpStatus.FundsRecovered(amount = Usdc6.ZERO))
+                return@flow
             }
-
-            emit(
-                OfframpStatus.Cancelled(
-                    orderId = orderId,
-                    cancelledAtEpochSeconds = snapshot?.cancelledAtEpochSeconds,
-                    acceptedMerchant = snapshot?.acceptedMerchantAddress,
-                    refundedUsdcAmount = refundAmount.takeIf { it > Usdc6.ZERO },
-                ),
+            val target = refund.pullbackTarget(accountAddress, balance)
+            if (target == null) {
+                // No NEAR route (testnet): USDC is already in the self-custodial account.
+                emit(OfframpStatus.FundsRecovered(amount = balance))
+                return@flow
+            }
+            val transferHash = submitter.sendTransaction(
+                to = network.usdcAddress,
+                data = Erc20Calls.transferCalldata(target, balance),
             )
+            require(submitter.awaitReceipt(transferHash).success) { "USDC pull-back transfer reverted" }
+            emit(OfframpStatus.FundsRecovered(amount = balance, target = target, txHash = transferHash))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Throwable) {
             emit(buildFailedStatus(e, orderId, OfframpStep.WAITING_FOR_ACCEPTANCE, null))
         }
+    }
+
+    private suspend fun cleanUpOrderIfNeeded(orderId: BigInteger?) {
+        if (orderId == null) return
+        val status = runCatching { orderReader.fetchOrder(orderId)?.status }.getOrNull() ?: return
+        when (status) {
+            OrderStatus.ACCEPTED, OrderStatus.PAID -> {
+                val hash = submitter.sendTransaction(
+                    to = network.diamondAddress,
+                    data = DiamondCalls.cancelOrderCalldata(orderId),
+                )
+                require(submitter.awaitReceipt(hash).success) { "cancelOrder reverted" }
+            }
+            OrderStatus.PLACED -> if (checkOrderExpired(orderId)) {
+                val hash = submitter.sendTransaction(
+                    to = network.diamondAddress,
+                    data = DiamondCalls.autoCancelExpiredOrdersCalldata(listOf(orderId)),
+                )
+                require(submitter.awaitReceipt(hash).success) { "autoCancelExpiredOrders reverted" }
+            }
+            OrderStatus.COMPLETED, OrderStatus.CANCELLED -> Unit
+        }
+    }
+
+    // Resume guard: subgraph can lag the chain, so when it claims "no UPI yet" we re-read on-chain
+    // before re-broadcasting setSellOrderUpi — otherwise the second broadcast reverts UpiAlreadySent.
+    private suspend fun isUpiAlreadyOnChain(orderId: BigInteger, accepted: OrderSnapshot): Boolean {
+        if (accepted.status.onChain >= OrderStatus.PAID.onChain) return true
+        if (accepted.encryptedUserUpi.isNotBlank()) return true
+        if (accepted.source == OrderSnapshot.Source.OnChain) return false
+        val onChain = runCatching { onChainOrderReader.fetchOrder(orderId) }.getOrNull() ?: return false
+        return onChain.encryptedUserUpi.isNotBlank() ||
+            onChain.status.onChain >= OrderStatus.PAID.onChain
+    }
+
+    // Encrypt UPI only to the on-chain pubkey: a compromised indexer could swap in an attacker key
+    // and harvest the plaintext. Fail closed if the on-chain read disagrees with what subgraph gave us;
+    // if subgraph omitted the field, trust the on-chain value (it's the source of truth anyway).
+    private suspend fun verifiedMerchantPubKey(orderId: BigInteger, accepted: OrderSnapshot): String {
+        if (accepted.source == OrderSnapshot.Source.OnChain) return accepted.merchantPubKey
+        val onChain = onChainOrderReader.fetchOrder(orderId)
+            ?: error("Cannot verify merchant pubkey on-chain for order $orderId — refusing to encrypt UPI")
+        check(onChain.merchantPubKey.isNotBlank()) {
+            "On-chain merchant pubkey is empty for order $orderId — refusing to encrypt UPI"
+        }
+        if (accepted.merchantPubKey.isNotBlank()) {
+            check(onChain.merchantPubKey.equals(accepted.merchantPubKey, ignoreCase = true)) {
+                "Merchant pubkey disagrees between subgraph and chain for order $orderId — refusing to encrypt UPI"
+            }
+        }
+        return onChain.merchantPubKey
+    }
+
+    private suspend fun usdcBalanceOf(account: Address): BigInteger {
+        val ret = rpc.ethCall(to = network.usdcAddress, data = Erc20Calls.balanceOfCalldata(account))
+        return if (ret.isEmpty()) BigInteger.ZERO else BigInteger(1, ret)
     }
 
     private suspend fun FlowCollector<OfframpStatus>.awaitMerchantAndComplete(
@@ -241,14 +335,12 @@ class OfframpOrchestrator(
         // Resume safety: if the encrypted UPI is already on-chain — the setSellOrderUpi tx landed
         // before its hash was checkpointed, or the order already advanced past ACCEPTED — re-sending
         // it reverts with UpiAlreadySent. Broadcast only when we have not already done so.
-        val upiAlreadyOnChain = accepted.encryptedUserUpi.isNotBlank() ||
-            accepted.status.onChain >= OrderStatus.PAID.onChain
         val setUpiHash: TxHash? = when {
             knownSetUpiHash != null -> knownSetUpiHash
-            upiAlreadyOnChain -> null
+            isUpiAlreadyOnChain(orderId, accepted) -> null
             else -> {
                 val cipherHex = Ecies.cipherStringify(
-                    Ecies.encryptWithPublicKey(accepted.merchantPubKey, request.recipientUpi),
+                    Ecies.encryptWithPublicKey(verifiedMerchantPubKey(orderId, accepted), request.recipientUpi),
                 )
                 onStep(OfframpStep.SENDING_UPI)
                 submitter.sendTransaction(
@@ -342,12 +434,13 @@ class OfframpOrchestrator(
     private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): PollOutcome =
         pollOrderUntil(
             orderId = orderId,
-            buildStatus = { attempt, lastSeen, stalled ->
+            buildStatus = { attempt, lastSeen, stalled, expired ->
                 OfframpStatus.WaitingForMerchantAcceptance(
                     orderId = orderId,
                     pollAttempts = attempt,
                     lastObservedStatus = lastSeen,
                     stalled = stalled,
+                    expired = expired,
                 )
             },
             predicate = { it.isAccepted },
@@ -359,18 +452,24 @@ class OfframpOrchestrator(
     ): PollOutcome =
         pollOrderUntil(
             orderId = orderId,
-            buildStatus = { attempt, lastSeen, stalled ->
+            buildStatus = { attempt, lastSeen, stalled, expired ->
                 OfframpStatus.WaitingForCompletion(
                     orderId = orderId,
                     pollAttempts = attempt,
                     lastObservedStatus = lastSeen,
                     stalled = stalled,
+                    expired = expired,
                     acceptedAtEpochSeconds = accepted.acceptedAtEpochSeconds,
                     paidAtEpochSeconds = null,
                 )
             },
             predicate = { it.status == OrderStatus.COMPLETED },
         )
+
+    private suspend fun checkOrderExpired(orderId: BigInteger): Boolean = runCatching {
+        val ret = rpc.ethCall(to = network.diamondAddress, data = DiamondCalls.isOrderExpiredCalldata(orderId))
+        ret.isNotEmpty() && BigInteger(1, ret).signum() != 0
+    }.getOrDefault(false)
 
     /**
      * Polls [orderReader] indefinitely until [predicate] matches or the order is observed in the
@@ -384,12 +483,12 @@ class OfframpOrchestrator(
      */
     private suspend fun FlowCollector<OfframpStatus>.pollOrderUntil(
         orderId: BigInteger,
-        buildStatus: (Int, OrderStatus?, Boolean) -> OfframpStatus,
+        buildStatus: (attempt: Int, lastSeen: OrderStatus?, stalled: Boolean, expired: Boolean) -> OfframpStatus,
         predicate: (OrderSnapshot) -> Boolean,
     ): PollOutcome {
         var attempt = 0
         val startedAtMs = clockMs()
-        emit(buildStatus(attempt, null, false))
+        emit(buildStatus(attempt, null, false, false))
         while (true) {
             attempt++
             val stalled = clockMs() - startedAtMs >= stalledAfterMs
@@ -408,9 +507,10 @@ class OfframpOrchestrator(
                     return PollOutcome.Cancelled(snapshot)
                 }
                 if (predicate(snapshot)) return PollOutcome.Matched(snapshot)
-                emit(buildStatus(attempt, snapshot.status, stalled))
+                val expired = checkOrderExpired(orderId)
+                emit(buildStatus(attempt, snapshot.status, stalled, expired))
             } else {
-                emit(buildStatus(attempt, null, stalled))
+                emit(buildStatus(attempt, null, stalled, false))
             }
             delay(pollIntervalMs)
         }

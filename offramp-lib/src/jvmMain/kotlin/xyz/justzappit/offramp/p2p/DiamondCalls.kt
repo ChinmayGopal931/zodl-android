@@ -7,6 +7,7 @@ import xyz.justzappit.evm.abi.AbiInt
 import xyz.justzappit.evm.abi.AbiString
 import xyz.justzappit.evm.abi.AbiUint
 import xyz.justzappit.evm.abi.AbiUint8
+import xyz.justzappit.evm.abi.AbiUintArray
 import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 
@@ -66,6 +67,15 @@ object DiamondCalls {
 
     fun cancelOrderCalldata(orderId: BigInteger): ByteArray =
         AbiEncoder.encodeFunctionCall("cancelOrder(uint256)", listOf(AbiUint(orderId)))
+
+    fun isOrderExpiredCalldata(orderId: BigInteger): ByteArray =
+        AbiEncoder.encodeFunctionCall("isOrderExpired(uint256)", listOf(AbiUint(orderId)))
+
+    fun autoCancelExpiredOrdersCalldata(orderIds: List<BigInteger>): ByteArray =
+        AbiEncoder.encodeFunctionCall(
+            "autoCancelExpiredOrders(uint256[])",
+            listOf(AbiUintArray(orderIds)),
+        )
 
     fun getOrdersByIdCalldata(orderId: BigInteger): ByteArray =
         AbiEncoder.encodeFunctionCall(

@@ -98,11 +98,13 @@
     <string name="upi_offramp_upi_id_placeholder">merchant@upi</string>
     <string name="upi_offramp_scan_qr_cd">Scan UPI QR code</string>
     <string name="upi_offramp_estimate_disclaimer">Estimated. Final amount locks in when the merchant accepts.</string>
-    <string name="upi_offramp_error_above_cap">Amounts above $99 USDC require KYC and aren\'t supported yet.</string>
+    <string name="upi_offramp_limit_hint">Maximum 100 USDC per offramp.</string>
+    <string name="upi_offramp_error_above_cap">Amounts above 100 USDC aren\'t supported for offramp.</string>
     <string name="upi_offramp_error_invalid_upi">That doesn\'t look like a UPI handle (expected something like name@bank).</string>
     <string name="upi_offramp_send_button">Send</string>
     <string name="upi_offramp_resume_button">Resume in-flight offramp</string>
     <string name="upi_offramp_error_in_flight">An offramp is already in progress. Resume it before starting a new one.</string>
+    <string name="upi_offramp_discard_in_flight">Discard local order &amp; start over</string>
 
     <!-- UPI Offramp progress screen -->
     <string name="upi_offramp_progress_title_in_progress">Sending to merchant</string>
@@ -113,11 +115,10 @@
     <string name="upi_offramp_progress_subtitle_failed">%1$s</string>
     <string name="upi_offramp_progress_done_button">Done</string>
     <string name="upi_offramp_progress_close_button">Close</string>
-    <string name="upi_offramp_cancel_button">Cancel &amp; get funds back</string>
-    <string name="upi_offramp_cancel_in_progress">Cancelling…</string>
     <string name="upi_offramp_progress_tx_hash">tx %1$s…</string>
     <string name="upi_offramp_step_init">Setup</string>
     <string name="upi_offramp_step_selecting_circle">Picking a merchant pool</string>
+    <string name="upi_offramp_step_funding">Bridging funds</string>
     <string name="upi_offramp_step_approve">Approving USDC</string>
     <string name="upi_offramp_step_place_order">Placing the order</string>
     <string name="upi_offramp_step_wait_acceptance">Waiting for merchant to accept</string>
@@ -134,6 +135,8 @@
     <string name="upi_offramp_summary_network">Network</string>
     <string name="upi_offramp_summary_signer">From</string>
     <string name="upi_offramp_detail_candidates">%1$d candidate circle(s) from subgraph</string>
+    <string name="upi_offramp_detail_deposit_addr">Deposit %1$s</string>
+    <string name="upi_offramp_detail_bridging_amount">Bridging %1$s USDC from ZEC via NEAR Intents</string>
     <string name="upi_offramp_detail_selected_circle">Selected circle #%1$s</string>
     <string name="upi_offramp_detail_amount">%1$s USDC</string>
     <string name="upi_offramp_detail_circle_id">Circle #%1$s</string>
@@ -158,13 +161,22 @@
     <string name="upi_offramp_revert_invalid_order_upi">The merchant rejected the encrypted UPI handle. This may signal a wire-format issue — please report.</string>
     <string name="upi_offramp_revert_order_not_accepted">The order isn\'t yet accepted. Try again shortly.</string>
     <string name="upi_offramp_revert_usdc_transfer_failed">USDC transfer failed. Check your balance and allowance.</string>
-    <string name="upi_offramp_revert_not_authorized">This order can\'t be cancelled yet — unaccepted orders expire on their own, and your funds never left your wallet.</string>
+    <string name="upi_offramp_revert_not_authorized">Cancel was rejected by the contract — the order may already be completed or cancelled.</string>
     <!-- Long-tail fallback for SDK-known but non-curated contract errors. %1$s is the SDK error
          constant (e.g. ORDER_ALREADY_MARKED_COMPLETED). -->
     <string name="upi_offramp_revert_sdk_long_tail">Contract error: %1$s</string>
 
     <!-- Surfaced when a poll loop has been running for a while without a merchant transition. -->
-    <string name="upi_offramp_detail_stalled">Taking longer than usual — your USDC stays escrowed on-chain until the merchant accepts or the order auto-cancels (~72 hours).</string>
+    <string name="upi_offramp_detail_stalled">Still connecting you to a merchant. Your USDC stays in your account; if no merchant accepts, the order auto-cancels on chain.</string>
+
+    <!-- Recovery flow (pullback of stranded USDC via recoverUnplacedFunds) -->
+    <string name="upi_offramp_recover_button">Bridge USDC back to ZEC</string>
+    <string name="upi_offramp_recovery_in_progress_title">Bridging USDC back to ZEC</string>
+    <string name="upi_offramp_recovery_in_progress_subtitle">Routing your refunded USDC to ZEC via NEAR Intents — this can take a couple of minutes.</string>
+    <string name="upi_offramp_recovery_in_progress_button">Bridging…</string>
+    <string name="upi_offramp_recovery_done_title">USDC bridged back to ZEC</string>
+    <string name="upi_offramp_recovery_amount">%1$s USDC sent to bridge</string>
+    <string name="upi_offramp_recovery_target">Bridge deposit %1$s</string>
 
     <!-- Per-step on-chain timestamps -->
     <string name="upi_offramp_detail_accepted_at">Accepted at %1$s</string>
@@ -188,7 +200,7 @@
 
     <!-- Cancelled terminal state (normal on-chain outcome, USDC refunded — not an error) -->
     <string name="upi_offramp_progress_title_cancelled">Order cancelled</string>
-    <string name="upi_offramp_progress_subtitle_cancelled">No merchant completed this order in time. Your USDC has been refunded on-chain.</string>
+    <string name="upi_offramp_progress_subtitle_cancelled">No merchant completed this order in time. Your USDC is in your offramp account, ready to bridge back.</string>
     <string name="upi_offramp_cancelled_refunded">%1$s USDC returned to your wallet</string>
     <string name="upi_offramp_cancelled_returned_zec">%1$s USDC is on its way back to ZEC — it will arrive in your wallet shortly</string>
     <string name="upi_offramp_cancelled_at">Cancelled at %1$s</string>

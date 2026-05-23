@@ -67,12 +67,17 @@ import org.koin.dsl.module
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.BundlerClient
 import xyz.justzappit.evm.rpc.RpcHttpClient
+import co.electriccoin.zcash.ui.common.provider.WalletSeedPhraseSource
 import xyz.justzappit.offramp.account.DevOfframpAccountProvider
 import xyz.justzappit.offramp.account.OfframpAccountProvider
+import xyz.justzappit.offramp.account.SeedPhraseSource
 import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
+import xyz.justzappit.offramp.account.StaticOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
-import xyz.justzappit.offramp.funding.NearBridgeOfframpFunding
-import xyz.justzappit.offramp.funding.NearPullbackOfframpRefund
+import co.electriccoin.zcash.ui.common.provider.NearBridgeOfframpFunding
+import co.electriccoin.zcash.ui.common.provider.NearPullbackOfframpRefund
+import co.electriccoin.zcash.ui.common.provider.OfframpBridgeWallet
+import co.electriccoin.zcash.ui.common.provider.RealOfframpBridgeWallet
 import xyz.justzappit.offramp.funding.NoRouteOfframpRefund
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
@@ -131,7 +136,14 @@ val providerModule =
                     Twig.debug { "OfframpHttp $message" }
                 }
             }
-            RpcHttpClient.create(config = RpcHttpClient.Config(logger = twigLogger))
+            // TEMP-DEBUG: BODY level until we diagnose the thirdweb bundler 500 on cancelOrder.
+            // Revert to INFO once the cancel path is verified — BODY logs every poll's response.
+            RpcHttpClient.create(
+                config = RpcHttpClient.Config(
+                    logger = twigLogger,
+                    logLevel = io.ktor.client.plugins.logging.LogLevel.BODY,
+                ),
+            )
         }
         single<P2pConfigProvider> {
             // Recognised values are exactly "", "sepolia", "mainnet"; blank defaults to Sepolia
@@ -165,13 +177,17 @@ val providerModule =
             val cfg = get<P2pNetworkConfig>()
             SubgraphClient(httpClient = get(named(OFFRAMP_HTTP_CLIENT_QUALIFIER)), subgraphUrl = cfg.subgraphUrl)
         }
+        single<SeedPhraseSource> { WalletSeedPhraseSource(persistableWalletProvider = get()) }
         single<OfframpAccountProvider> {
             val cfg = get<P2pNetworkConfig>()
-            check(cfg.chainId != P2pNetworks.MAINNET_CHAIN_ID) {
-                "UPI offramp is not wired for mainnet — refusing to expose DevOfframpAccountProvider" +
-                    " (would sign mainnet txs with the committed dev key)."
+            // Testnet keeps the committed dev key (its smart account is pre-funded for QA). Mainnet
+            // derives the ERC-4337 owner key from the user's wallet seed, so they sign with their own
+            // self-custodial account — never the shared dev key.
+            if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+                StaticOfframpAccountProvider(seedPhraseSource = get())
+            } else {
+                DevOfframpAccountProvider
             }
-            DevOfframpAccountProvider
         }
         single<BundlerClient> {
             val cfg = get<P2pNetworkConfig>()
@@ -183,11 +199,26 @@ val providerModule =
                 chainId = cfg.chainId,
             )
         }
+        single<OfframpBridgeWallet> {
+            RealOfframpBridgeWallet(
+                accountDataSource = get(),
+                zashiProposalRepository = get(),
+                keystoneProposalRepository = get(),
+                submitProposal = get(),
+                synchronizerProvider = get(),
+            )
+        }
         single<OfframpFunding> {
             val cfg = get<P2pNetworkConfig>()
-            // Network toggle: mainnet bridges ZEC→USDC via NEAR; testnet expects a pre-funded account.
+            // Network toggle: mainnet bridges ZEC→USDC via NEAR (reusing the swap SwapDataSource);
+            // testnet expects a pre-funded account.
             if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
-                NearBridgeOfframpFunding(rpc = get(), usdc = cfg.usdcAddress)
+                NearBridgeOfframpFunding(
+                    rpc = get(),
+                    usdc = cfg.usdcAddress,
+                    swapDataSource = get(),
+                    wallet = get(),
+                )
             } else {
                 PreFundedOfframpFunding(rpc = get(), usdc = cfg.usdcAddress)
             }
@@ -195,7 +226,11 @@ val providerModule =
         single<OfframpRefund> {
             val cfg = get<P2pNetworkConfig>()
             // Network toggle: mainnet pulls USDC→ZEC via NEAR; testnet keeps the USDC in the account.
-            if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) NearPullbackOfframpRefund() else NoRouteOfframpRefund()
+            if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+                NearPullbackOfframpRefund(usdc = cfg.usdcAddress, swapDataSource = get(), wallet = get())
+            } else {
+                NoRouteOfframpRefund()
+            }
         }
         single {
             val cfg = get<P2pNetworkConfig>()

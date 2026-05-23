@@ -20,6 +20,13 @@ import java.math.BigInteger
 data class OfframpCheckpoint(
     val orderId: String?,
     val currentStep: OfframpStep,
+    /**
+     * 1-Click deposit address of an in-flight ZEC→USDC bridge (mainnet), persisted the moment the
+     * bridge opens — before any ZEC moves. On resume a non-null value is re-polled to completion
+     * rather than re-quoted, so a crash mid-bridge can never open a second bridge (double-send).
+     * Null on testnet (pre-funded) and once the order has been placed.
+     */
+    val bridgeDepositAddress: String? = null,
     val approveTxHash: TxHash? = null,
     val placeOrderTxHash: TxHash? = null,
     val setUpiTxHash: TxHash? = null,

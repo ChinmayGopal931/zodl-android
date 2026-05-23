@@ -70,6 +70,30 @@ bun /path/to/zodl-android/docs/integrations/scripts/generate-error-messages.ts \
   > /path/to/zodl-android/offramp-lib/src/jvmMain/kotlin/xyz/justzappit/offramp/orchestrator/KnownContractErrorMessages.kt
 ```
 
+## `thirdweb-refund-smoketest.ts`
+
+Live end-to-end test of the thirdweb bundler + paymaster against Base Sepolia. Sends a
+`autoCancelExpiredOrders([id])` UserOp through the same pipeline the Android app uses, with
+the same smart account (derived from the wallet seed via BIP-39 + `m/44'/60'/0'/0/0`).
+
+Use to:
+- Confirm thirdweb wiring works end-to-end on Sepolia, orthogonal to any cancelOrder-specific
+  authorization 500s.
+- Actually refund an expired PAY order so the Android app's poll observes `CANCELLED`.
+
+```sh
+# from inside a p2pdotme-sdk clone with `bun install` already run:
+OFFRAMP_OWNER_MNEMONIC="word1 word2 ... word24" \
+OFFRAMP_ORDER_ID=216 \
+THIRDWEB_CLIENT_ID=21b036f5b277b1f8c6d53b4fbbf933eb \
+bun /path/to/zodl-android/docs/integrations/scripts/thirdweb-refund-smoketest.ts
+```
+
+The script prints every bundler request/response and the final on-chain state. If thirdweb is
+healthy, the order flips to `status=4` (CANCELLED). If thirdweb returns 500 on a clean
+`autoCancelExpiredOrders` op, the wiring problem is general (not specific to the prior
+`cancelOrder` revert).
+
 ## `generate-calldata-fixtures.ts`
 
 Emits viem-encoded calldata for `approve`, `placeOrder`, `setSellOrderUpi`,

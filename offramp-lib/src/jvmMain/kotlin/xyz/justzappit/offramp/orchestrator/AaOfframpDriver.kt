@@ -40,8 +40,8 @@ class AaOfframpDriver(
         emitAll(buildOrchestrator().resume(checkpoint))
     }
 
-    override fun cancelAndRefund(orderId: BigInteger): Flow<OfframpStatus> = flow {
-        emitAll(buildOrchestrator().cancelAndRefund(orderId))
+    override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> = flow {
+        emitAll(buildOrchestrator().bridgeFundsBackToZec(orderId))
     }
 
     private suspend fun buildOrchestrator(): OfframpOrchestrator {
