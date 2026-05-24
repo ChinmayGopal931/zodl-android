@@ -1,6 +1,7 @@
 package co.electriccoin.zcash.ui.screen.settings.p2p
 
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.util.ellipsizeMiddle
 import co.electriccoin.zcash.ui.design.util.stringRes
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.offramp.config.P2pNetworkConfig
@@ -16,6 +17,8 @@ import java.util.TimeZone
 internal object P2pTransactionsFormat {
     private const val MILLIS_PER_SECOND = 1_000L
     private const val ZERO_BYTE = 0.toByte()
+    private const val SECONDS_PER_MINUTE = 60L
+    private const val SECONDS_PER_HOUR = 3_600L
 
     private val DATE_FORMAT: SimpleDateFormat =
         SimpleDateFormat("dd MMM yyyy, HH:mm", Locale.US).apply { timeZone = TimeZone.getDefault() }
@@ -27,6 +30,20 @@ internal object P2pTransactionsFormat {
 
     fun timestamp(epochSeconds: Long): String =
         DATE_FORMAT.format(Date(epochSeconds * MILLIS_PER_SECOND))
+
+    /** "1m 32s" / "45s" / "1h 4m" — null when either bound is missing or non-positive. */
+    fun duration(fromEpochSec: Long?, toEpochSec: Long?): String? {
+        if (fromEpochSec == null || toEpochSec == null || toEpochSec <= fromEpochSec) return null
+        val total = toEpochSec - fromEpochSec
+        val hours = total / SECONDS_PER_HOUR
+        val minutes = (total % SECONDS_PER_HOUR) / SECONDS_PER_MINUTE
+        val seconds = total % SECONDS_PER_MINUTE
+        return when {
+            hours > 0 -> "${hours}h ${minutes}m"
+            minutes > 0 -> "${minutes}m ${seconds}s"
+            else -> "${seconds}s"
+        }
+    }
 }
 
 internal fun P2pOrderHistoryItem.toRow(network: P2pNetworkConfig): P2pTransactionRow {
@@ -52,8 +69,25 @@ internal fun P2pOrderHistoryItem.toRow(network: P2pNetworkConfig): P2pTransactio
         timestamp = (completedAtEpochSeconds ?: cancelledAtEpochSeconds ?: placedAtEpochSeconds)
             ?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
         explorerUrl = null,
+        detail = TransactionDetail(
+            recipientUpiPlain = recipientUpiPlain?.let(::extractUpiVpa),
+            merchantUpiPlain = merchantUpiPlain?.let(::extractUpiVpa),
+            merchantAddressShort = acceptedMerchantAddress?.checksumHex
+                ?.ellipsizeMiddle(prefix = ADDRESS_ELLIPSIS_PREFIX, suffix = ADDRESS_ELLIPSIS_SUFFIX),
+            merchantExplorerUrl = acceptedMerchantAddress?.let { network.addressUrl(it.checksumHex) },
+            placedAt = placedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
+            completedAt = completedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
+            cancelledAt = cancelledAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
+            duration = P2pTransactionsFormat.duration(
+                fromEpochSec = placedAtEpochSeconds,
+                toEpochSec = completedAtEpochSeconds ?: cancelledAtEpochSeconds,
+            )?.let(::stringRes),
+        ),
     )
 }
+
+private const val ADDRESS_ELLIPSIS_PREFIX = 8
+private const val ADDRESS_ELLIPSIS_SUFFIX = 4
 
 private fun P2pOrderHistoryItem.fromForType(type: OrderType): String? = when (type) {
     // BUY: user receives fiat; "from" = merchant's pay-to VPA (encrypted in encUpi at acceptOrder).

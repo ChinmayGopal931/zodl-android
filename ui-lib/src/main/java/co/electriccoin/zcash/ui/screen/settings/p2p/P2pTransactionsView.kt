@@ -24,27 +24,33 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBorderedCard
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
-import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
-import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
 import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
-import androidx.compose.ui.res.stringResource
 
 @Composable
 internal fun P2pTransactionsView(state: P2pTransactionsState) {
@@ -165,9 +171,8 @@ private fun RefundControl(refund: RefundUiState) {
         RefundUiState.Hidden -> Unit
         is RefundUiState.Available -> {
             Spacer(Modifier.width(GAP_MD.dp))
-            ZappButton(
+            CompactPrimaryButton(
                 text = stringResource(R.string.p2p_transactions_refund_button),
-                variant = ZappButtonVariant.Secondary,
                 onClick = refund.onClick,
             )
         }
@@ -188,12 +193,33 @@ private fun RefundControl(refund: RefundUiState) {
         }
         is RefundUiState.FailedRetry -> {
             Spacer(Modifier.width(GAP_MD.dp))
-            ZappButton(
+            CompactPrimaryButton(
                 text = stringResource(R.string.p2p_transactions_refund_retry),
-                variant = ZappButtonVariant.Secondary,
                 onClick = refund.onRetry,
             )
         }
+    }
+}
+
+/**
+ * Inline yellow CTA sized for sitting next to a balance display — about half the height of
+ * the standard [ZappButton] and uses the [ZappTextStyles.buttonSmall] type ramp. Keep visually
+ * distinct (still accent-coloured) but unobtrusive against the balance number.
+ */
+@Composable
+private fun CompactPrimaryButton(text: String, onClick: () -> Unit) {
+    val c = ZappTheme.colors
+    Box(
+        modifier = Modifier
+            .background(c.accent, RectangleShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = COMPACT_BUTTON_PADDING_H.dp, vertical = COMPACT_BUTTON_PADDING_V.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        BasicText(
+            text = text,
+            style = ZappTheme.typography.buttonSmall.copy(color = c.onAccent),
+        )
     }
 }
 
@@ -257,12 +283,12 @@ private fun AccountAddressRow(addressShort: String, explorerUrl: String?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         BasicText(
             text = stringResource(R.string.p2p_transactions_account_label),
-            style = ZappTheme.typography.caption.copy(color = c.textSubtle),
+            style = ZappTheme.typography.chip.copy(color = c.textSubtle, fontWeight = FontWeight.Normal),
         )
         Spacer(Modifier.weight(1f))
         BasicText(
             text = addressShort,
-            style = ZappTheme.typography.caption.copy(
+            style = ZappTheme.typography.chip.copy(
                 color = if (explorerUrl != null) c.accent else c.text,
             ),
             modifier = if (explorerUrl != null) {
@@ -275,7 +301,13 @@ private fun AccountAddressRow(addressShort: String, explorerUrl: String?) {
 @Composable
 private fun TransactionCard(row: P2pTransactionRow) {
     val c = ZappTheme.colors
-    ZappBorderedCard(verticalArrangement = Arrangement.spacedBy(GAP_SM.dp)) {
+    var expanded by remember(row.orderId) { mutableStateOf(false) }
+    val canExpand = row.detail?.hasAnything() == true
+
+    ZappBorderedCard(
+        verticalArrangement = Arrangement.spacedBy(GAP_SM.dp),
+        modifier = if (canExpand) Modifier.clickable { expanded = !expanded } else Modifier,
+    ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             BasicText(
                 text = row.typeLabel.getValue(),
@@ -310,9 +342,104 @@ private fun TransactionCard(row: P2pTransactionRow) {
             row.timestamp?.let {
                 BasicText(text = it.getValue(), style = ZappTheme.typography.caption.copy(color = c.textSubtle))
             }
+            if (canExpand) {
+                Spacer(Modifier.width(GAP_SM.dp))
+                Icon(
+                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = stringResource(
+                        if (expanded) {
+                            R.string.p2p_transactions_detail_collapse_content_description
+                        } else {
+                            R.string.p2p_transactions_detail_expand_content_description
+                        },
+                    ),
+                    tint = c.textSubtle,
+                    modifier = Modifier.size(CHEVRON_SIZE.dp),
+                )
+            }
+        }
+
+        if (expanded && row.detail != null) {
+            TransactionDetailPanel(row.detail)
         }
     }
 }
+
+@Composable
+private fun TransactionDetailPanel(detail: TransactionDetail) {
+    val c = ZappTheme.colors
+    val uriHandler = LocalUriHandler.current
+    Column(verticalArrangement = Arrangement.spacedBy(GAP_SM.dp)) {
+        Spacer(Modifier.height(GAP_SM.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(c.border),
+        )
+
+        detail.recipientUpiPlain?.let { vpa ->
+            DetailRow(
+                label = stringResource(R.string.p2p_transactions_detail_recipient_upi),
+                value = vpa,
+            )
+        }
+        detail.merchantUpiPlain?.let { vpa ->
+            DetailRow(
+                label = stringResource(R.string.p2p_transactions_detail_merchant_upi),
+                value = vpa,
+            )
+        }
+        if (detail.merchantAddressShort != null) {
+            DetailRow(
+                label = stringResource(R.string.p2p_transactions_detail_merchant_address),
+                value = detail.merchantAddressShort,
+                onValueClick = detail.merchantExplorerUrl?.let { url -> { uriHandler.openUri(url) } },
+            )
+        }
+        detail.placedAt?.let {
+            DetailRow(label = stringResource(R.string.p2p_transactions_detail_placed), value = it.getValue())
+        }
+        detail.completedAt?.let {
+            DetailRow(label = stringResource(R.string.p2p_transactions_detail_completed), value = it.getValue())
+        }
+        detail.cancelledAt?.let {
+            DetailRow(label = stringResource(R.string.p2p_transactions_detail_cancelled), value = it.getValue())
+        }
+        detail.duration?.let {
+            DetailRow(label = stringResource(R.string.p2p_transactions_detail_duration), value = it.getValue())
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String, onValueClick: (() -> Unit)? = null) {
+    val c = ZappTheme.colors
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        BasicText(
+            text = label,
+            style = ZappTheme.typography.caption.copy(color = c.textSubtle),
+            modifier = Modifier.weight(1f),
+        )
+        BasicText(
+            text = value,
+            style = ZappTheme.typography.caption.copy(
+                color = if (onValueClick != null) c.accent else c.text,
+                fontWeight = FontWeight.Medium,
+            ),
+            modifier = if (onValueClick != null) Modifier.clickable(onClick = onValueClick) else Modifier,
+        )
+    }
+}
+
+private fun TransactionDetail.hasAnything(): Boolean =
+    recipientUpiPlain != null ||
+        merchantUpiPlain != null ||
+        merchantAddressShort != null ||
+        placedAt != null ||
+        completedAt != null ||
+        cancelledAt != null ||
+        duration != null
 
 @Composable
 private fun StatusPill(label: String, tone: P2pTransactionRow.StatusTone) {
@@ -346,6 +473,9 @@ private const val PILL_PADDING_V = 4
 private const val EMPTY_PADDING_V = 32
 private const val DIALOG_BUTTON_PADDING = 16
 private const val DIALOG_BUTTON_PADDING_V = 12
+private const val COMPACT_BUTTON_PADDING_H = 12
+private const val COMPACT_BUTTON_PADDING_V = 6
+private const val CHEVRON_SIZE = 18
 
 @PreviewScreens
 @Composable
@@ -374,6 +504,16 @@ private fun PreviewLoaded() = ProvideZappTheme {
                     toLabel = stringRes("To friend@ybl"),
                     timestamp = stringRes("23 May 2026, 14:21"),
                     explorerUrl = null,
+                    detail = TransactionDetail(
+                        recipientUpiPlain = "friend@ybl",
+                        merchantUpiPlain = "merchant@okhdfc",
+                        merchantAddressShort = "0xa8e6…fab2",
+                        merchantExplorerUrl = null,
+                        placedAt = stringRes("23 May 2026, 14:21"),
+                        completedAt = stringRes("23 May 2026, 14:23"),
+                        cancelledAt = null,
+                        duration = stringRes("1m 32s"),
+                    ),
                 ),
             ),
             emptyMessage = null,

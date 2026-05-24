@@ -52,6 +52,23 @@ data class P2pTransactionRow(
     val toLabel: StringResource?,
     val timestamp: StringResource?,
     val explorerUrl: String?,
+    val detail: TransactionDetail?,
 ) {
     enum class StatusTone { Pending, Success, Cancelled, Failed }
 }
+
+/**
+ * Extra fields revealed when the user expands a transaction row. Sourced from the same
+ * [xyz.justzappit.offramp.p2p.P2pOrderHistoryItem] — recipient/merchant UPIs are already
+ * decrypted via the relay private key in [xyz.justzappit.offramp.p2p.P2pOrderHistorySource].
+ */
+data class TransactionDetail(
+    val recipientUpiPlain: String?,
+    val merchantUpiPlain: String?,
+    val merchantAddressShort: String?,
+    val merchantExplorerUrl: String?,
+    val placedAt: StringResource?,
+    val completedAt: StringResource?,
+    val cancelledAt: StringResource?,
+    val duration: StringResource?,
+)
