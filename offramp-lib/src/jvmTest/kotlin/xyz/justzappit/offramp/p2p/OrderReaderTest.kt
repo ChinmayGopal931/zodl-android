@@ -6,6 +6,7 @@ import java.math.BigInteger
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
@@ -73,9 +74,7 @@ class OrderReaderTest {
 
     @Test
     fun `decodeOrder rejects too-short input`() {
-        kotlin
-            .runCatching { OrderReader.decodeOrder(ByteArray(64)) }
-            .fold(onSuccess = { error("expected failure") }, onFailure = { /* expected */ })
+        assertFailsWith<IllegalArgumentException> { OrderReader.decodeOrder(ByteArray(64)) }
     }
 
     @Test

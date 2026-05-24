@@ -48,13 +48,30 @@ class PreFundedOfframpFundingTest {
         }
 
     @Test
-    fun `fails fast with an actionable message when balance is short`() =
+    fun `fails closed when balance is short, surfacing both actual and required amounts`() =
         runTest {
+            // What we're asserting (logic, not copy):
+            //  - the unit throws IllegalStateException (Kotlin `check`), not silently returns
+            //  - the message reflects the actual balance AND the required amount, so the user
+            //    can act on the gap without having to log-scrape the underlying RPC trace
+            val shortBalance = BigInteger.valueOf(500_000)
+            var bridgeCallbackFired = false
             val e =
                 assertFailsWith<IllegalStateException> {
-                    fundingWithBalance(BigInteger.valueOf(500_000)).ensureFunded(account, request, resumeHandle = null) {}
+                    fundingWithBalance(shortBalance).ensureFunded(account, request, resumeHandle = null) {
+                        bridgeCallbackFired = true
+                    }
                 }
-            assertTrue(e.message!!.contains("Fund it directly"), "expected funding hint, got: ${e.message}")
+            val msg = e.message.orEmpty()
+            assertTrue(
+                msg.contains(shortBalance.toString()),
+                "expected message to reflect actual balance $shortBalance, got: $msg",
+            )
+            assertTrue(
+                msg.contains(request.usdcAmount.micros.toString()),
+                "expected message to reflect required amount ${request.usdcAmount.micros}, got: $msg",
+            )
+            assertTrue(!bridgeCallbackFired, "fail-closed path must not invoke the bridge callback")
         }
 
     private companion object {

@@ -95,27 +95,11 @@ class KnownRevertsTest {
     fun `KnownContractErrors covers every curated selector`() {
         // Every curated selector must also exist in the wholesale SDK table. If this fails, the
         // curated map drifted from the SDK and a re-run of generate-revert-selectors.ts is overdue.
-        val curatedSelectors =
-            listOf(
-                "0x91da284f",
-                "0x412dd2b1",
-                "0xf42e41a1",
-                "0xbba2edf9",
-                "0x02a6fdd2",
-                "0xebb6f34b",
-                "0x4bbac5de",
-                "0x5d04ff4c",
-                "0xc56873ba",
-                "0xc1654697",
-                "0xaa60ec26",
-                "0x6b1b90b4",
-                "0x149f9fca",
-                "0x47bfece5",
-                "0x279bbc0c",
-            )
-        for (s in curatedSelectors) {
+        // Iterating KnownReverts.curatedSelectors (rather than a hand-mirrored literal list) means
+        // adding a new CURATED entry automatically extends test coverage.
+        for (s in KnownReverts.curatedSelectors) {
             assertNotNull(
-                KnownContractErrors.nameFor(Selector4.fromHex(s)),
+                KnownContractErrors.nameFor(s),
                 "Curated selector $s missing from KnownContractErrors — regenerate the wholesale table",
             )
         }
