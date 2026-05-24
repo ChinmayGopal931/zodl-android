@@ -59,11 +59,10 @@ interface OfframpBridgeWallet {
  * state for the deposit tx id. The swap UI flow itself is not modified — only its repositories/use case
  * are reused, exactly as `RequestSwapQuoteUseCase` builds and submits a swap.
  *
- * MAINNET-VALIDATION: two integration points must be exercised on mainnet — (1) [SubmitProposalUseCase]
- * navigates to the transaction-progress screen, so the offramp progress UX has to reconcile that
- * round-trip; (2) a cancelled biometric prompt never resolves [submitState], so the await relies on the
- * surrounding offramp flow being cancelled by the user. Keystone signing additionally routes through the
- * QR sign screen.
+ * MAINNET-VALIDATION: a cancelled biometric prompt never resolves [submitState], so the await relies on
+ * the surrounding offramp flow being cancelled by the user. Keystone signing still routes through the
+ * QR sign screen — pre-Keystone-support [navigateAfter=false] is Zashi-only; the Keystone path will
+ * need a separate seam.
  */
 class RealOfframpBridgeWallet(
     private val accountDataSource: AccountDataSource,
@@ -93,7 +92,11 @@ class RealOfframpBridgeWallet(
                 zashiProposalRepository.submitState
             }
         }
-        submitProposal()
+        // Keep the user on the offramp progress screen. `navigateAfter = false` suppresses the
+        // default replace(TransactionProgressArgs) the standard send/swap UX relies on — see
+        // SubmitProposalUseCase.invoke kdoc. The Zashi submit still runs on a background coroutine
+        // and `submitState` resolves the same way.
+        submitProposal(navigateAfter = false)
         val result = submitState.filterIsInstance<SubmitProposalState.Result>().first().submitResult
         return when (result) {
             is SubmitResult.Success -> result.txIds.firstOrNull()
