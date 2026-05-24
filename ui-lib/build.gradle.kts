@@ -213,6 +213,15 @@ androidComponents {
                 comment = "Pimlico API key for the offramp ERC-4337 bundler + verifying paymaster"
             )
         )
+        variant.buildConfigFields?.put(
+            "PIMLICO_SPONSORSHIP_POLICY_ID",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("PIMLICO_SPONSORSHIP_POLICY_ID")?.toString().orEmpty()}\"",
+                comment = "Optional Pimlico sponsorship-policy id. When non-blank, scopes pm_sponsorUserOperation " +
+                    "to the policy's (target, selector) constraints so a stolen API key can only sponsor expected calls."
+            )
+        )
     }
 }
 

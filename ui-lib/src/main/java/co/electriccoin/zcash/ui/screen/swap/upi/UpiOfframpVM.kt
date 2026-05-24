@@ -15,12 +15,18 @@ import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
@@ -61,6 +67,13 @@ internal class UpiOfframpVM(
      */
     private var smartAccountAddress: Address? = null
 
+    // Subscriber-count proxy: WhileSubscribed below establishes the upstream subscription when the
+    // first downstream subscriber arrives and drops it after the timeout elapses with no
+    // subscribers. We piggyback onStart/onCompletion on the upstream to drive the pollers' active
+    // state — when this reads > 0 the screen is live and polling should run; when it falls back
+    // to 0 the pollers cancel.
+    private val activeSubscribers = MutableStateFlow(0)
+
     val state: StateFlow<UpiOfframpState> =
         combine(
             combine(primary, usdcState, inrState) { side, usdc, inr -> Triple(side, usdc, inr) },
@@ -78,47 +91,82 @@ internal class UpiOfframpVM(
                 inFlightCheckpoint = checkpoint,
                 balance = balance,
             )
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue =
-                buildState(
-                    side = primary.value,
-                    usdc = usdcState.value,
-                    inr = inrState.value,
-                    upi = upiText.value,
-                    currentRate = rate.value,
-                    inFlightCheckpoint = inFlight.value,
-                    balance = baseBalance.value,
-                ),
-        )
+        }
+            .onStart { activeSubscribers.update { it + 1 } }
+            .onCompletion { activeSubscribers.update { (it - 1).coerceAtLeast(0) } }
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
+                initialValue =
+                    buildState(
+                        side = primary.value,
+                        usdc = usdcState.value,
+                        inr = inrState.value,
+                        upi = upiText.value,
+                        currentRate = rate.value,
+                        inFlightCheckpoint = inFlight.value,
+                        balance = baseBalance.value,
+                    ),
+            )
 
     init {
+        // The checkpoint observer is cheap (in-memory flow over EncryptedSharedPreferences) and
+        // must stay live so the in-flight banner is correct the moment the screen subscribes.
         viewModelScope.launch {
-            // §5f: refetch every 30s so the quote tracks the rate the contract will stamp.
+            checkpointStorage.observe().collect { checkpoint -> inFlight.update { checkpoint } }
+        }
+        // Rate + balance pollers gated on whether someone is actually collecting `state`. Before:
+        // the loops ran in init {} unconditionally for the lifetime of the VM, burning a NEAR
+        // 1-Click-equivalent of RPC quota even when the screen was backgrounded behind dialogs,
+        // navigation, or rotation. collectLatest restarts the inner block whenever the active
+        // bit flips, so subscription resumption auto-resumes polling.
+        viewModelScope.launch {
+            activeSubscribers
+                .map { it > 0 }
+                .distinctUntilChanged()
+                .collectLatest { isSubscribed ->
+                    if (!isSubscribed) return@collectLatest
+                    pollRate()
+                }
+        }
+        viewModelScope.launch {
+            activeSubscribers
+                .map { it > 0 }
+                .distinctUntilChanged()
+                .collectLatest { isSubscribed ->
+                    if (!isSubscribed) return@collectLatest
+                    pollBalance()
+                }
+        }
+    }
+
+    // §5f: refetch every 30s so the quote tracks the rate the contract will stamp.
+    private suspend fun pollRate() =
+        coroutineScope {
             while (isActive) {
                 refreshRate()
                 delay(RATE_REFRESH_INTERVAL_MS)
             }
         }
-        viewModelScope.launch {
-            checkpointStorage.observe().collect { checkpoint -> inFlight.update { checkpoint } }
-        }
-        viewModelScope.launch {
-            // Resolve the smart account once, then poll its USDC balance on the same cadence as the
-            // rate. Surfacing the balance lets the user see when prior cancelled orders left USDC on
-            // Base — those funds reuse without a new NEAR bridge.
-            smartAccountAddress =
-                runCatching { accountProvider.resolve().address }
-                    .onFailure { Twig.warn(it) { "UpiOfframpVM: smart account resolve failed" } }
-                    .getOrNull()
-            if (smartAccountAddress == null) return@launch
+
+    // Surfacing the smart-account USDC balance lets the user see when prior cancelled orders left
+    // USDC on Base — those funds reuse without a new NEAR bridge. Resolve the smart account lazily
+    // on first subscription (a process-level cache lives behind the provider, so subsequent
+    // subscriptions don't re-call the factory).
+    private suspend fun pollBalance() =
+        coroutineScope {
+            if (smartAccountAddress == null) {
+                smartAccountAddress =
+                    runCatching { accountProvider.resolve().address }
+                        .onFailure { Twig.warn(it) { "UpiOfframpVM: smart account resolve failed" } }
+                        .getOrNull()
+            }
+            if (smartAccountAddress == null) return@coroutineScope
             while (isActive) {
                 refreshBaseBalance()
                 delay(BALANCE_REFRESH_INTERVAL_MS)
             }
         }
-    }
 
     private suspend fun refreshBaseBalance() {
         val account = smartAccountAddress ?: return
