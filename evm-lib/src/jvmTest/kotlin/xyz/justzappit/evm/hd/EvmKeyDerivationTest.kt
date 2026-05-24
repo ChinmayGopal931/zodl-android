@@ -73,6 +73,30 @@ class EvmKeyDerivationTest {
         }
     }
 
+    @Test
+    fun `CharArray and String mnemonic overloads produce identical keys`() {
+        // Behavioural parity guard — the String overload delegates to the CharArray primary, so
+        // any future refactor that diverges (different trim semantics, different normalization)
+        // would fail this test before it shipped.
+        val fromString = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
+        val fromCharArray = EvmKeyDerivation.derive(MNEMONIC.toCharArray(), accountIndex = 0)
+        assertEquals(fromString.address, fromCharArray.address)
+        assertTrue(fromString.privateKey.contentEquals(fromCharArray.privateKey))
+        assertTrue(fromString.publicKey.contentEquals(fromCharArray.publicKey))
+    }
+
+    @Test
+    fun `derive does not mutate the caller's CharArray`() {
+        // The contract: derive() takes a CharArray and returns; zeroing the source is the
+        // caller's responsibility. The caller may want to derive multiple accounts from the
+        // same mnemonic before wiping. If derive mutated the input, the second call would
+        // produce garbage and a hard-to-diagnose mismatch with other wallets.
+        val mnemonic = MNEMONIC.toCharArray()
+        val before = mnemonic.copyOf()
+        EvmKeyDerivation.derive(mnemonic, accountIndex = 0)
+        assertTrue(mnemonic.contentEquals(before), "derive must not mutate the caller's CharArray")
+    }
+
     companion object {
         const val MNEMONIC =
             "abandon abandon abandon abandon abandon abandon " +
