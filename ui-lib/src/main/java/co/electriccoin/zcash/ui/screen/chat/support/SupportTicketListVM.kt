@@ -1,11 +1,15 @@
 package co.electriccoin.zcash.ui.screen.chat.support
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.SupportChatArgs
+import co.electriccoin.zcash.ui.screen.chat.common.formatRelativeTime
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
@@ -15,25 +19,23 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 class SupportTicketListVM(
+    private val application: Application,
     private val sdk: ZappMessagingSDK,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
-
     private val tickets = MutableStateFlow<List<TicketSnapshot>?>(null)
     private val closeTarget = MutableStateFlow<TicketSnapshot?>(null)
-    private val categoryCache = mutableMapOf<String, String?>()
+    private val categoryCache = mutableMapOf<String, SupportCategory?>()
 
     init {
         refresh()
         observeConversations()
-        observeUpdates()
+        observeMessageEvents()
     }
 
     val state: StateFlow<SupportTicketListState> =
@@ -43,26 +45,26 @@ class SupportTicketListVM(
                 isLoading = list == null,
                 onNewTicket = ::onNewTicket,
                 onBack = ::onBack,
-                closeDialog = target?.let { t ->
-                    SupportLeaveDialogState(
-                        onConfirm = { onCloseConfirm(t) },
-                        onDismiss = ::onCloseDismiss,
-                    )
-                },
+                closeDialog =
+                    target?.let { t ->
+                        SupportLeaveDialogState(
+                            onConfirm = { onCloseConfirm(t) },
+                            onDismiss = ::onCloseDismiss,
+                        )
+                    },
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = SupportTicketListState(
-                tickets = emptyList(),
-                isLoading = true,
-                onNewTicket = ::onNewTicket,
-                onBack = ::onBack,
-                closeDialog = null,
-            ),
+            initialValue =
+                SupportTicketListState(
+                    tickets = emptyList(),
+                    isLoading = true,
+                    onNewTicket = ::onNewTicket,
+                    onBack = ::onBack,
+                    closeDialog = null,
+                ),
         )
-
-    // ── Data loading ─────────────────────────────────────────────────────────
 
     fun refresh() {
         viewModelScope.launch {
@@ -74,63 +76,71 @@ class SupportTicketListVM(
 
     private fun observeConversations() {
         viewModelScope.launch {
-            sdk.conversations.collect { _ -> buildTicketList() }
+            sdk.conversations.collect { _ -> rebuild() }
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
-    private suspend fun buildTicketList() {
-        try {
-            val supportConvs = sdk.conversations.value
-                .map(ChatConversation::from)
-                .filter {
-                    SupportChatConstants.isSupportConversation(it.displayName, it.participantIds)
-                }
-                .sortedByDescending { it.lastMessageTimestamp ?: 0L }
-
-            val snapshots = supportConvs.map { conv ->
-                val category = categoryCache.getOrPut(conv.id) { fetchCategory(conv.id) }
-                TicketSnapshot(
-                    conversationId = conv.id,
-                    categoryLabel = category ?: "Ticket",
-                    lastMessage = stripBotPrefix(conv.lastMessage),
-                    lastMessageTimestamp = conv.lastMessageTimestamp,
-                    unreadCount = conv.unreadCount,
-                )
+    private fun observeMessageEvents() {
+        viewModelScope.launch { sdk.messageReceived.collect { _ -> rebuild() } }
+        viewModelScope.launch { sdk.inviteReceived.collect { rebuild() } }
+        viewModelScope.launch {
+            sdk.groupDeleted.collect { conversationId ->
+                categoryCache.remove(conversationId)
+                tickets.update { it?.filter { snap -> snap.conversationId != conversationId } }
             }
-            tickets.value = snapshots
-        } catch (e: Exception) {
-            Twig.warn(e) { "SupportTicketListVM: buildTicketList failed" }
-            if (tickets.value == null) tickets.value = emptyList()
+        }
+        viewModelScope.launch {
+            sdk.memberLeft.collect { (conversationId, _) ->
+                // Re-derive: a member leaving may change isSupportConversation on the agent side.
+                rebuild()
+            }
         }
     }
 
-    private suspend fun fetchCategory(conversationId: String): String? {
-        return try {
-            val msgs = sdk.getMessages(conversationId).map(ChatMessage::from)
-            msgs.firstOrNull { it.content.startsWith(SupportChatConstants.CATEGORY_MARKER) }
-                ?.content
-                ?.removePrefix(SupportChatConstants.CATEGORY_MARKER)
-                ?.removeSuffix("]")
-        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
-            Twig.warn(e) { "SupportTicketListVM: fetchCategory failed for $conversationId" }
-            null
+    private suspend fun rebuild() {
+        runChatCall("SupportTicketListVM: rebuild failed") {
+            val localPublicKey = sdk.identity.value?.publicKey
+            val supportConvs =
+                sdk.conversations.value
+                    .map(ChatConversation::from)
+                    .filter {
+                        SupportChatConstants.isSupportConversation(
+                            displayName = it.displayName,
+                            participantIds = it.participantIds,
+                            localPublicKey = localPublicKey,
+                        )
+                    }.sortedByDescending { it.lastMessageTimestamp ?: 0L }
+
+            val snapshots =
+                supportConvs.map { conv ->
+                    val category = categoryCache.getOrPut(conv.id) { fetchCategory(conv.id) }
+                    TicketSnapshot(
+                        conversationId = conv.id,
+                        category = category,
+                        lastMessage = stripBotPrefix(conv.lastMessage),
+                        lastMessageTimestamp = conv.lastMessageTimestamp,
+                        unreadCount = conv.unreadCount,
+                    )
+                }
+            tickets.value = snapshots
         }
+        if (tickets.value == null) tickets.value = emptyList()
+    }
+
+    private suspend fun fetchCategory(conversationId: String): SupportCategory? {
+        var result: SupportCategory? = null
+        runChatCall("SupportTicketListVM: fetchCategory failed for $conversationId") {
+            result =
+                sdk
+                    .getMessages(conversationId)
+                    .map(ChatMessage::from)
+                    .firstNotNullOfOrNull { SupportChatConstants.parseCategoryMarker(it.content) }
+        }
+        return result
     }
 
     private fun stripBotPrefix(message: String?): String? =
         message?.removePrefix(SupportChatConstants.BOT_PREFIX)
-
-    private fun observeUpdates() {
-        viewModelScope.launch {
-            sdk.messageReceived.collect { _ -> buildTicketList() }
-        }
-        viewModelScope.launch {
-            sdk.inviteReceived.collect { buildTicketList() }
-        }
-    }
-
-    // ── Actions ──────────────────────────────────────────────────────────────
 
     private fun onNewTicket() {
         navigationRouter.forward(SupportChatArgs())
@@ -150,51 +160,42 @@ class SupportTicketListVM(
         closeTarget.value = null
         viewModelScope.launch {
             runChatCall("SupportTicketListVM: send leave notice failed") {
+                val notice = application.getString(R.string.support_chat_leave_notice)
                 sdk.sendMessage(
                     ticket.conversationId,
-                    "${SupportChatConstants.BOT_PREFIX}${SupportChatConstants.LEAVE_MESSAGE}",
+                    "${SupportChatConstants.BOT_PREFIX}$notice",
                 )
             }
             runChatCall("SupportTicketListVM: removeConversation failed") {
                 sdk.removeConversation(ticket.conversationId)
             }
-            tickets.value = tickets.value?.filter { it.conversationId != ticket.conversationId }
+            categoryCache.remove(ticket.conversationId)
+            tickets.update { it?.filter { snap -> snap.conversationId != ticket.conversationId } }
         }
     }
 
-    // ── Snapshot model ───────────────────────────────────────────────────────
-
     private data class TicketSnapshot(
         val conversationId: String,
-        val categoryLabel: String,
+        val category: SupportCategory?,
         val lastMessage: String?,
         val lastMessageTimestamp: Long?,
         val unreadCount: Int,
     )
 
-    private fun TicketSnapshot.toItem() = SupportTicketItem(
-        conversationId = conversationId,
-        categoryLabel = categoryLabel,
-        lastMessage = lastMessage,
-        timeLabel = lastMessageTimestamp?.let { formatTime(it) },
-        unreadCount = unreadCount,
-        onClick = { navigationRouter.forward(SupportChatArgs(conversationId = conversationId)) },
-        onCloseSwipe = { onCloseRequest(this) },
-    )
-
-    companion object {
-        private fun formatTime(epochMillis: Long): String {
-            val diff = System.currentTimeMillis() - epochMillis
-            return when {
-                diff < 60_000L -> "now"
-                diff < 3_600_000L -> "${diff / 60_000L}m"
-                diff < 86_400_000L ->
-                    SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(epochMillis))
-                diff < 604_800_000L ->
-                    SimpleDateFormat("EEE", Locale.getDefault()).format(Date(epochMillis))
-                else ->
-                    SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(epochMillis))
-            }
-        }
+    private fun TicketSnapshot.toItem(): SupportTicketItem {
+        val categoryLabel: StringResource =
+            category
+                ?.displayNameRes
+                ?.let { stringRes(it) }
+                ?: stringRes(R.string.support_ticket_default_label)
+        return SupportTicketItem(
+            conversationId = conversationId,
+            categoryLabel = categoryLabel,
+            lastMessage = lastMessage?.let { stringRes(it) },
+            timeLabel = lastMessageTimestamp?.let { formatRelativeTime(it) },
+            unreadCount = unreadCount,
+            onClick = { navigationRouter.forward(SupportChatArgs(conversationId = conversationId)) },
+            onCloseSwipe = { onCloseRequest(this) },
+        )
     }
 }

@@ -8,7 +8,9 @@ internal inline fun runChatCall(message: String, block: () -> Unit) {
         block()
     } catch (e: CancellationException) {
         throw e
-    } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+    } catch (
+        @Suppress("TooGenericExceptionCaught") e: Exception
+    ) {
         Twig.warn(e) { message }
     }
 }

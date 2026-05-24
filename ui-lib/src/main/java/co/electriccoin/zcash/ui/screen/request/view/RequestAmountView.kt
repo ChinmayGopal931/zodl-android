@@ -29,8 +29,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -47,12 +47,12 @@ import co.electriccoin.zcash.ui.common.wallet.ExchangeRateState
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 import co.electriccoin.zcash.ui.design.util.rememberDesiredFormatLocale
-import co.electriccoin.zcash.ui.util.CURRENCY_TICKER
 import co.electriccoin.zcash.ui.screen.request.model.AmountState
 import co.electriccoin.zcash.ui.screen.request.model.MemoState
 import co.electriccoin.zcash.ui.screen.request.model.OnAmount
 import co.electriccoin.zcash.ui.screen.request.model.RequestCurrency
 import co.electriccoin.zcash.ui.screen.request.model.RequestState
+import co.electriccoin.zcash.ui.util.CURRENCY_TICKER
 import java.text.DecimalFormatSymbols
 
 @Composable
@@ -105,9 +105,10 @@ internal fun RequestAmountView(
         RequestAmountNoteField(
             state = state,
             onFocusChanged = { noteFieldFocused = it },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = ZcashTheme.dimens.screenHorizontalSpacingRegular),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = ZcashTheme.dimens.screenHorizontalSpacingRegular),
         )
 
         Spacer(modifier = Modifier.weight(1f))
@@ -152,12 +153,13 @@ private fun RequestAmountWithMainFiatView(
 
         AutoSizingText(
             text = fiatText,
-            style = ZappTheme.typography.display.copy(
-                fontSize = 44.sp,
-                lineHeight = 48.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-1.8).sp,
-            ),
+            style =
+                ZappTheme.typography.display.copy(
+                    fontSize = 44.sp,
+                    lineHeight = 48.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-1.8).sp,
+                ),
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -228,12 +230,13 @@ private fun RequestAmountWithMainZecView(
 
         AutoSizingText(
             text = zecText,
-            style = ZappTheme.typography.display.copy(
-                fontSize = 44.sp,
-                lineHeight = 48.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-1.8).sp,
-            ),
+            style =
+                ZappTheme.typography.display.copy(
+                    fontSize = 44.sp,
+                    lineHeight = 48.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-1.8).sp,
+                ),
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -302,12 +305,13 @@ private fun RequestAmountNoFiatView(
 
         AutoSizingText(
             text = text,
-            style = ZappTheme.typography.display.copy(
-                fontSize = 44.sp,
-                lineHeight = 48.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-1.8).sp,
-            ),
+            style =
+                ZappTheme.typography.display.copy(
+                    fontSize = 44.sp,
+                    lineHeight = 48.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-1.8).sp,
+                ),
         )
     }
 }
@@ -321,9 +325,10 @@ private fun RequestAmountNoteField(
     val c = ZappTheme.colors
     val memoText = state.request.memoState.text
     Row(
-        modifier = modifier
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+        modifier =
+            modifier
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
@@ -338,9 +343,10 @@ private fun RequestAmountNoteField(
             onValueChange = { state.onMemo(MemoState.new(it, state.request.memoState.zecAmount)) },
             singleLine = true,
             textStyle = ZappTheme.typography.body.copy(color = c.text),
-            modifier = Modifier
-                .weight(1f)
-                .onFocusChanged { onFocusChanged(it.isFocused) },
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .onFocusChanged { onFocusChanged(it.isFocused) },
             decorationBox = { innerTextField ->
                 if (memoText.isEmpty()) {
                     BasicText(
@@ -354,12 +360,13 @@ private fun RequestAmountNoteField(
     }
 }
 
-private val KEYBOARD_ROWS = listOf(
-    listOf("1", "2", "3"),
-    listOf("4", "5", "6"),
-    listOf("7", "8", "9"),
-    listOf(null, "0", "⌫"),
-)
+private val KEYBOARD_ROWS =
+    listOf(
+        listOf("1", "2", "3"),
+        listOf("4", "5", "6"),
+        listOf("7", "8", "9"),
+        listOf(null, "0", "⌫"),
+    )
 
 @Composable
 private fun RequestAmountKeyboardView(
@@ -371,9 +378,10 @@ private fun RequestAmountKeyboardView(
     val decimalSep = DecimalFormatSymbols(locale).decimalSeparator.toString()
 
     // Replace the null slot with the locale decimal separator
-    val rows = KEYBOARD_ROWS.map { row ->
-        row.map { key -> if (key == null) decimalSep else key }
-    }
+    val rows =
+        KEYBOARD_ROWS.map { row ->
+            row.map { key -> if (key == null) decimalSep else key }
+        }
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -383,26 +391,28 @@ private fun RequestAmountKeyboardView(
             Row(modifier = Modifier.fillMaxWidth()) {
                 row.forEach { key ->
                     Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(60.dp)
-                            .border(1.dp, c.border, RectangleShape)
-                            .clickable {
-                                when (key) {
-                                    "⌫" -> state.onAmount(OnAmount.Delete)
-                                    decimalSep -> state.onAmount(OnAmount.Separator(decimalSep))
-                                    else -> state.onAmount(OnAmount.Number(key.toInt()))
-                                }
-                            },
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .height(60.dp)
+                                .border(1.dp, c.border, RectangleShape)
+                                .clickable {
+                                    when (key) {
+                                        "⌫" -> state.onAmount(OnAmount.Delete)
+                                        decimalSep -> state.onAmount(OnAmount.Separator(decimalSep))
+                                        else -> state.onAmount(OnAmount.Number(key.toInt()))
+                                    }
+                                },
                         contentAlignment = Alignment.Center,
                     ) {
                         BasicText(
                             text = key,
-                            style = ZappTheme.typography.button.copy(
-                                color = c.text,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Black,
-                            ),
+                            style =
+                                ZappTheme.typography.button.copy(
+                                    color = c.text,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Black,
+                                ),
                         )
                     }
                 }
@@ -419,10 +429,11 @@ private fun InvalidAmountView(
     val c = ZappTheme.colors
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier
-            .fillMaxWidth()
-            .requiredHeight(48.dp)
-            .padding(horizontal = ZcashTheme.dimens.screenHorizontalSpacingRegular),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .requiredHeight(48.dp)
+                .padding(horizontal = ZcashTheme.dimens.screenHorizontalSpacingRegular),
     ) {
         if (amountState.isValid == false) {
             Image(
@@ -434,10 +445,11 @@ private fun InvalidAmountView(
 
             BasicText(
                 text = stringResource(id = R.string.request_amount_invalid),
-                style = ZappTheme.typography.caption.copy(
-                    color = c.accent,
-                    fontWeight = FontWeight.Medium,
-                ),
+                style =
+                    ZappTheme.typography.caption.copy(
+                        color = c.accent,
+                        fontWeight = FontWeight.Medium,
+                    ),
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
             )

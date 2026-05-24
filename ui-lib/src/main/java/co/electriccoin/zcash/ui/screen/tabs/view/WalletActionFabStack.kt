@@ -25,12 +25,13 @@ internal fun WalletActionFabStack(
     modifier: Modifier = Modifier,
 ) {
     Column(
-        modifier = modifier
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(
-                end = 18.dp,
-                bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
-            ),
+        modifier =
+            modifier
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(
+                    end = 18.dp,
+                    bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                ),
         verticalArrangement = Arrangement.spacedBy(10.dp),
         horizontalAlignment = Alignment.End,
     ) {

@@ -78,19 +78,21 @@ fun PinSetupScreen(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
             OnbProgress(step = 3)
         }
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             GhostNum(n = 3, modifier = Modifier.align(Alignment.TopEnd))
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
@@ -103,26 +105,30 @@ fun PinSetupScreen(
                 if (mismatchError) {
                     BasicText(
                         text = "PINs don't match. Please try again.",
-                        style = ZappTheme.typography.body.copy(
-                            color = c.danger,
-                            fontSize = 13.sp,
-                            lineHeight = 20.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.body.copy(
+                                color = c.danger,
+                                fontSize = 13.sp,
+                                lineHeight = 20.sp,
+                            ),
                     )
                 } else {
                     OnbSub(
-                        text = if (isConfirmPhase)
-                            "Re-enter your 6-digit PIN to confirm."
-                        else
-                            "Choose a 6-digit code you'll remember.",
+                        text =
+                            if (isConfirmPhase) {
+                                "Re-enter your 6-digit PIN to confirm."
+                            } else {
+                                "Choose a 6-digit code you'll remember."
+                            },
                     )
                 }
             }
             Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PinDotRow(filledCount = currentInput.length, hasError = mismatchError)
@@ -132,10 +138,15 @@ fun PinSetupScreen(
                     onKey = { key ->
                         if (!mismatchError) {
                             when {
-                                key == "⌫" -> if (currentInput.isNotEmpty()) {
-                                    currentInput = currentInput.dropLast(1)
+                                key == "⌫" -> {
+                                    if (currentInput.isNotEmpty()) {
+                                        currentInput = currentInput.dropLast(1)
+                                    }
                                 }
-                                currentInput.length < 6 -> currentInput += key
+
+                                currentInput.length < 6 -> {
+                                    currentInput += key
+                                }
                             }
                         }
                     },

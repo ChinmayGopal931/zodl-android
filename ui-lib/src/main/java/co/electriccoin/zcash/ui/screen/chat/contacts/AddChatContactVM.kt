@@ -65,8 +65,7 @@ class AddChatContactVM(
                     error.value = null
                     onConsumeScannedPublicKey()
                 }
-            }
-            .launchIn(scope)
+            }.launchIn(scope)
 
         // Bridge scanned wallet address. Route to either the per-field address
         // (transparent/evm/solana) or the primary wallet address field.
@@ -89,8 +88,7 @@ class AddChatContactVM(
                     }
                     onConsumeScannedWalletAddress()
                 }
-            }
-            .launchIn(scope)
+            }.launchIn(scope)
     }
 
     val state: StateFlow<AddChatContactState> =
@@ -103,8 +101,9 @@ class AddChatContactVM(
             val (nameVal, pkVal, walletVal) = primary
             val (tAddr, eAddr, sAddr) = extras
             val cleanedKey = pkVal.text.trim().removePrefix("0x")
-            val isValidKey = cleanedKey.length == 64 &&
-                cleanedKey.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+            val isValidKey =
+                cleanedKey.length == 64 &&
+                    cleanedKey.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
             AddChatContactState(
                 name = nameVal,
                 publicKey = pkVal,
@@ -135,30 +134,31 @@ class AddChatContactVM(
             initialValue = initialState(),
         )
 
-    private fun initialState() = AddChatContactState(
-        name = TextFieldValue(""),
-        publicKey = TextFieldValue(""),
-        walletAddress = TextFieldValue(""),
-        transparentAddr = TextFieldValue(""),
-        evmAddr = TextFieldValue(""),
-        solanaAddr = TextFieldValue(""),
-        showAdditionalAddresses = false,
-        error = null,
-        isValidKey = false,
-        cleanedKey = "",
-        onNameChange = ::onNameChange,
-        onPublicKeyChange = ::onPublicKeyChange,
-        onWalletAddressChange = ::onWalletAddressChange,
-        onTransparentAddrChange = ::onTransparentAddrChange,
-        onEvmAddrChange = ::onEvmAddrChange,
-        onSolanaAddrChange = ::onSolanaAddrChange,
-        onToggleAdditionalAddresses = ::onToggleAdditionalAddresses,
-        onScanPublicKey = onScanPublicKeyRequest,
-        onScanWalletAddress = ::onScanPrimaryWalletAddress,
-        onScanAddressField = ::onScanAddressField,
-        onSave = ::onSave,
-        onDismiss = onDismissRequest,
-    )
+    private fun initialState() =
+        AddChatContactState(
+            name = TextFieldValue(""),
+            publicKey = TextFieldValue(""),
+            walletAddress = TextFieldValue(""),
+            transparentAddr = TextFieldValue(""),
+            evmAddr = TextFieldValue(""),
+            solanaAddr = TextFieldValue(""),
+            showAdditionalAddresses = false,
+            error = null,
+            isValidKey = false,
+            cleanedKey = "",
+            onNameChange = ::onNameChange,
+            onPublicKeyChange = ::onPublicKeyChange,
+            onWalletAddressChange = ::onWalletAddressChange,
+            onTransparentAddrChange = ::onTransparentAddrChange,
+            onEvmAddrChange = ::onEvmAddrChange,
+            onSolanaAddrChange = ::onSolanaAddrChange,
+            onToggleAdditionalAddresses = ::onToggleAdditionalAddresses,
+            onScanPublicKey = onScanPublicKeyRequest,
+            onScanWalletAddress = ::onScanPrimaryWalletAddress,
+            onScanAddressField = ::onScanAddressField,
+            onSave = ::onSave,
+            onDismiss = onDismissRequest,
+        )
 
     private fun onNameChange(value: TextFieldValue) {
         name.value = value
@@ -202,23 +202,29 @@ class AddChatContactVM(
     }
 
     private fun onSave() {
-        val pk = publicKey.value.text.trim().removePrefix("0x")
+        val pk =
+            publicKey.value.text
+                .trim()
+                .removePrefix("0x")
         val nameVal = name.value.text.trim()
         val wallet = walletAddress.value.text.trim()
-        val isValidHex = pk.length == 64 && pk.all {
-            it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F'
-        }
-        val addrs = buildMap {
-            if (transparentAddr.value.text.isNotBlank()) {
-                put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.value.text.trim())
+        val isValidHex =
+            pk.length == 64 &&
+                pk.all {
+                    it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F'
+                }
+        val addrs =
+            buildMap {
+                if (transparentAddr.value.text.isNotBlank()) {
+                    put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.value.text.trim())
+                }
+                if (evmAddr.value.text.isNotBlank()) {
+                    put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.value.text.trim())
+                }
+                if (solanaAddr.value.text.isNotBlank()) {
+                    put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.value.text.trim())
+                }
             }
-            if (evmAddr.value.text.isNotBlank()) {
-                put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.value.text.trim())
-            }
-            if (solanaAddr.value.text.isNotBlank()) {
-                put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.value.text.trim())
-            }
-        }
         when {
             nameVal.isEmpty() -> error.value = stringRes(R.string.chat_contact_error_name_required)
             pk.isEmpty() -> error.value = stringRes(R.string.chat_contact_error_messaging_key_required)
@@ -227,5 +233,4 @@ class AddChatContactVM(
             else -> onSaveContact(pk, nameVal, wallet, addrs)
         }
     }
-
 }

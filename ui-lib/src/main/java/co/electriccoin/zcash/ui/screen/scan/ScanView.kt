@@ -168,7 +168,6 @@ fun ScanView(
                         )
                 // Intentionally omitting paddingValues to have edge to edge design
             )
-
         }
     }
 }
@@ -257,7 +256,6 @@ fun ScanBottomItems(
         Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
     }
 }
-
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Suppress(

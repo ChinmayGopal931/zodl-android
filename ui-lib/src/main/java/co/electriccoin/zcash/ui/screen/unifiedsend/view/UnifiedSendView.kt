@@ -8,11 +8,11 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -47,24 +47,24 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.AssetCardState
 import co.electriccoin.zcash.ui.design.component.ChipButtonState
+import co.electriccoin.zcash.ui.design.component.IconButtonState
+import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
 import co.electriccoin.zcash.ui.design.component.Spacer
 import co.electriccoin.zcash.ui.design.component.ZashiAddressTextField
 import co.electriccoin.zcash.ui.design.component.ZashiAssetCard
 import co.electriccoin.zcash.ui.design.component.ZashiChipButton
 import co.electriccoin.zcash.ui.design.component.ZashiImageButton
-import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
 import co.electriccoin.zcash.ui.design.component.ZashiNumberTextField
 import co.electriccoin.zcash.ui.design.component.ZashiNumberTextFieldDefaults
 import co.electriccoin.zcash.ui.design.component.ZashiTextField
 import co.electriccoin.zcash.ui.design.component.ZashiTextFieldDefaults
-import co.electriccoin.zcash.ui.design.component.IconButtonState
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
@@ -74,12 +74,12 @@ import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidget
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidgetState
-import co.electriccoin.zcash.ui.screen.unifiedsend.view.SendAddressBookHint
 import co.electriccoin.zcash.ui.screen.swap.SlippageButton
 import co.electriccoin.zcash.ui.screen.swap.SwapErrorFooter
 import co.electriccoin.zcash.ui.screen.unifiedsend.model.MemoFieldState
 import co.electriccoin.zcash.ui.screen.unifiedsend.model.PrimaryButtonState
 import co.electriccoin.zcash.ui.screen.unifiedsend.model.UnifiedSendFormState
+import co.electriccoin.zcash.ui.screen.unifiedsend.view.SendAddressBookHint
 
 @Composable
 internal fun UnifiedSendView(
@@ -88,20 +88,22 @@ internal fun UnifiedSendView(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout))
-            .imePadding(),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout))
+                .imePadding(),
     ) {
         ZappScreenHeader(title = stringResource(R.string.unified_send_title))
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 28.dp, vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 28.dp, vertical = 8.dp),
             ) {
                 // Balance widget with title
                 Spacer(8.dp)
@@ -158,11 +160,12 @@ internal fun UnifiedSendView(
                 // ── Swap mode: Slippage ──────────────────────────────────────
                 if (state.slippage != null && state.onSlippageClick != null) {
                     SlippageButton(
-                        state = co.electriccoin.zcash.ui.design.component.ButtonState(
-                            text = state.slippage,
-                            icon = R.drawable.ic_swap_slippage,
-                            onClick = state.onSlippageClick,
-                        )
+                        state =
+                            co.electriccoin.zcash.ui.design.component.ButtonState(
+                                text = state.slippage,
+                                icon = R.drawable.ic_swap_slippage,
+                                onClick = state.onSlippageClick,
+                            )
                     )
                     Spacer(8.dp)
                 }
@@ -192,18 +195,20 @@ internal fun UnifiedSendView(
                 style = ZappTheme.typography.caption,
                 color = ZappTheme.colors.textMuted,
                 textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 8.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp, vertical = 8.dp),
             )
         }
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(c.surface)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(c.surface)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(horizontal = 18.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
@@ -224,25 +229,31 @@ private fun SentenceFragment(text: String) {
 @Composable
 private fun CtaButton(btn: PrimaryButtonState, modifier: Modifier = Modifier) {
     when (btn) {
-        is PrimaryButtonState.Review -> ZappButton(
-            modifier = modifier,
-            text = stringResource(R.string.send_create),
-            enabled = !btn.isLoading,
-            onClick = btn.onClick,
-        )
+        is PrimaryButtonState.Review -> {
+            ZappButton(
+                modifier = modifier,
+                text = stringResource(R.string.send_create),
+                enabled = !btn.isLoading,
+                onClick = btn.onClick,
+            )
+        }
 
-        is PrimaryButtonState.TopUp -> ZappButton(
-            modifier = modifier,
-            text = stringResource(R.string.unified_send_top_up),
-            onClick = btn.onClick,
-        )
+        is PrimaryButtonState.TopUp -> {
+            ZappButton(
+                modifier = modifier,
+                text = stringResource(R.string.unified_send_top_up),
+                onClick = btn.onClick,
+            )
+        }
 
-        PrimaryButtonState.Disabled -> ZappButton(
-            modifier = modifier,
-            text = stringResource(R.string.send_create),
-            enabled = false,
-            onClick = {},
-        )
+        PrimaryButtonState.Disabled -> {
+            ZappButton(
+                modifier = modifier,
+                text = stringResource(R.string.send_create),
+                enabled = false,
+                onClick = {},
+            )
+        }
     }
 }
 
@@ -277,7 +288,9 @@ private fun AmountFields(state: UnifiedSendFormState) {
             isUsd = state.isAmountSwapped,
             interactionSource = primarySource,
             showZecPlaceholder = !state.isAmountSwapped && !isPrimaryFocused,
-            fiatValue = state.fiatAmount.innerState.innerTextFieldState.value.getValue(),
+            fiatValue =
+                state.fiatAmount.innerState.innerTextFieldState.value
+                    .getValue(),
             modifier = Modifier.weight(1f),
         )
 
@@ -286,20 +299,24 @@ private fun AmountFields(state: UnifiedSendFormState) {
             painter = painterResource(R.drawable.ic_send_convert),
             contentDescription = stringResource(R.string.unified_send_swap_amounts),
             colorFilter = ColorFilter.tint(color = ZcashTheme.colors.secondaryColor),
-            modifier = Modifier
-                .size(32.dp)
-                .clickable(onClick = state.onAmountSwap),
+            modifier =
+                Modifier
+                    .size(32.dp)
+                    .clickable(onClick = state.onAmountSwap),
         )
         Spacer(12.dp)
 
         // RIGHT: secondary display field — always in this slot; disabled (read-only)
         AmountInputField(
-            state = (if (state.isAmountSwapped) state.zecAmount else state.fiatAmount)
-                .copy(isEnabled = false),
+            state =
+                (if (state.isAmountSwapped) state.zecAmount else state.fiatAmount)
+                    .copy(isEnabled = false),
             isUsd = !state.isAmountSwapped,
             interactionSource = null,
             showZecPlaceholder = false,
-            fiatValue = state.fiatAmount.innerState.innerTextFieldState.value.getValue(),
+            fiatValue =
+                state.fiatAmount.innerState.innerTextFieldState.value
+                    .getValue(),
             modifier = Modifier.weight(1f),
         )
     }
@@ -318,46 +335,53 @@ private fun AmountInputField(
         modifier = modifier,
         state = state,
         interactionSource = interactionSource ?: remember { MutableInteractionSource() },
-        placeholder = when {
-            isUsd -> {
+        placeholder =
+            when {
+                isUsd -> {
+                    {
+                        ZashiNumberTextFieldDefaults.Placeholder(
+                            modifier = Modifier.fillMaxWidth(),
+                            style = ZappTheme.typography.body.copy(color = ZappTheme.colors.textSubtle),
+                            fontWeight = FontWeight.Normal,
+                            text = stringResource(R.string.send_usd_amount_hint)
+                        )
+                    }
+                }
+
+                showZecPlaceholder -> {
+                    {
+                        ZashiNumberTextFieldDefaults.Placeholder(
+                            modifier = Modifier.fillMaxWidth(),
+                            style = ZappTheme.typography.body.copy(color = ZappTheme.colors.textSubtle),
+                            fontWeight = FontWeight.Normal,
+                            text = "0.00"
+                        )
+                    }
+                }
+
+                else -> {
+                    null
+                }
+            },
+        prefix =
+            if (isUsd) {
                 {
-                    ZashiNumberTextFieldDefaults.Placeholder(
-                        modifier = Modifier.fillMaxWidth(),
-                        style = ZappTheme.typography.body.copy(color = ZappTheme.colors.textSubtle),
-                        fontWeight = FontWeight.Normal,
-                        text = stringResource(R.string.send_usd_amount_hint)
+                    Image(
+                        painter = painterResource(R.drawable.ic_send_usd),
+                        contentDescription = null,
+                        colorFilter =
+                            ColorFilter.tint(
+                                if (fiatValue.isNotEmpty()) {
+                                    ZappTheme.colors.text
+                                } else {
+                                    ZappTheme.colors.textMuted
+                                }
+                            )
                     )
                 }
-            }
-            showZecPlaceholder -> {
-                {
-                    ZashiNumberTextFieldDefaults.Placeholder(
-                        modifier = Modifier.fillMaxWidth(),
-                        style = ZappTheme.typography.body.copy(color = ZappTheme.colors.textSubtle),
-                        fontWeight = FontWeight.Normal,
-                        text = "0.00"
-                    )
-                }
-            }
-            else -> null
-        },
-        prefix = if (isUsd) {
-            {
-                Image(
-                    painter = painterResource(R.drawable.ic_send_usd),
-                    contentDescription = null,
-                    colorFilter = ColorFilter.tint(
-                        if (fiatValue.isNotEmpty()) {
-                            ZappTheme.colors.text
-                        } else {
-                            ZappTheme.colors.textMuted
-                        }
-                    )
-                )
-            }
-        } else {
-            null
-        },
+            } else {
+                null
+            },
     )
 }
 
@@ -365,32 +389,35 @@ private fun AmountInputField(
 private fun AddressField(state: UnifiedSendFormState) {
     ZashiAddressTextField(
         state = state.address,
-        modifier = Modifier
-            .fillMaxWidth()
-            .onKeyEvent {
-                if (state.abContact != null && it.nativeKeyEvent.keyCode == NativeKeyEvent.KEYCODE_DEL) {
-                    state.abContact.onClick()
-                    true
-                } else {
-                    false
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .onKeyEvent {
+                    if (state.abContact != null && it.nativeKeyEvent.keyCode == NativeKeyEvent.KEYCODE_DEL) {
+                        state.abContact.onClick()
+                        true
+                    } else {
+                        false
+                    }
+                },
+        placeholder =
+            if (state.abContact == null) {
+                {
+                    Text(
+                        text = state.addressPlaceholder.getValue(),
+                        style = ZappTheme.typography.body,
+                        color = ZappTheme.colors.textSubtle,
+                    )
                 }
+            } else {
+                null
             },
-        placeholder = if (state.abContact == null) {
-            {
-                Text(
-                    text = state.addressPlaceholder.getValue(),
-                    style = ZappTheme.typography.body,
-                    color = ZappTheme.colors.textSubtle,
-                )
-            }
-        } else {
-            null
-        },
-        prefix = if (state.abContact == null) {
-            null
-        } else {
-            { ContactChipPrefix(state.abContact) }
-        },
+        prefix =
+            if (state.abContact == null) {
+                null
+            } else {
+                { ContactChipPrefix(state.abContact) }
+            },
         suffix = {
             Row(verticalAlignment = Alignment.Top) {
                 ZashiImageButton(modifier = Modifier.size(36.dp), state = state.abButton)
@@ -398,19 +425,21 @@ private fun AddressField(state: UnifiedSendFormState) {
                 ZashiImageButton(modifier = Modifier.size(36.dp), state = state.qrButton)
             }
         },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Text,
-            imeAction = ImeAction.Done,
-        ),
+        keyboardOptions =
+            KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Done,
+            ),
     )
 }
 
 @Composable
 private fun ContactChipPrefix(contact: ChipButtonState) {
     Box(
-        modifier = Modifier
-            .fillMaxHeight()
-            .padding(top = 3.5.dp),
+        modifier =
+            Modifier
+                .fillMaxHeight()
+                .padding(top = 3.5.dp),
         contentAlignment = Alignment.CenterStart,
     ) {
         ZashiChipButton(
@@ -420,10 +449,11 @@ private fun ContactChipPrefix(contact: ChipButtonState) {
             shape = RoundedCornerShape(0.dp),
             color = ZappTheme.colors.chipBg,
             border = BorderStroke(1.dp, ZappTheme.colors.border),
-            textStyle = ZappTheme.typography.caption.copy(
-                color = ZappTheme.colors.text,
-                fontWeight = FontWeight.Medium,
-            )
+            textStyle =
+                ZappTheme.typography.caption.copy(
+                    color = ZappTheme.colors.text,
+                    fontWeight = FontWeight.Medium,
+                )
         )
     }
 }
@@ -440,27 +470,30 @@ private fun MemoSection(memo: MemoFieldState.Editable) {
         ZashiTextField(
             value = memo.text,
             onValueChange = memo.onValueChange,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(88.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(88.dp),
             singleLine = false,
             maxLines = 4,
             isEnabled = memo.isEnabled,
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Default,
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    capitalization = KeyboardCapitalization.Sentences,
+                    imeAction = ImeAction.Default,
+                ),
             innerModifier = ZashiTextFieldDefaults.innerModifier,
             placeholder = null,
             suffix = {
                 Text(
                     text = "${memo.byteCount} / ${memo.maxBytes}",
                     style = ZappTheme.typography.caption,
-                    color = if (memo.byteCount > memo.maxBytes) {
-                        ZappTheme.colors.danger
-                    } else {
-                        ZappTheme.colors.textSubtle
-                    },
+                    color =
+                        if (memo.byteCount > memo.maxBytes) {
+                            ZappTheme.colors.danger
+                        } else {
+                            ZappTheme.colors.textSubtle
+                        },
                 )
             },
         )

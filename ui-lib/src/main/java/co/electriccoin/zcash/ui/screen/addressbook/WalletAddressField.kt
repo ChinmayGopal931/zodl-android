@@ -5,11 +5,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
@@ -55,39 +55,43 @@ internal fun WalletAddressesSection(
 
     // Toggle header
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 48.dp)
-            .clickable(onClick = onToggle)
-            .semantics {
-                contentDescription = "Additional addresses"
-                role = Role.Button
-            },
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+                .clickable(onClick = onToggle)
+                .semantics {
+                    contentDescription = "Additional addresses"
+                    role = Role.Button
+                },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // 3dp accent stripe
         Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(20.dp)
-                .background(c.accent, RectangleShape),
+            modifier =
+                Modifier
+                    .width(3.dp)
+                    .height(20.dp)
+                    .background(c.accent, RectangleShape),
         )
         Spacer(Modifier.width(12.dp))
         BasicText(
             text = stringResource(R.string.address_book_additional_addresses).uppercase(),
-            style = ZappTheme.typography.eyebrow.copy(
-                color = c.accent,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 2.sp,
-            ),
+            style =
+                ZappTheme.typography.eyebrow.copy(
+                    color = c.accent,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 2.sp,
+                ),
             modifier = Modifier.weight(1f),
         )
         BasicText(
             text = if (expanded) "−" else "+",
-            style = ZappTheme.typography.button.copy(
-                color = c.accent,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.button.copy(
+                    color = c.accent,
+                    fontWeight = FontWeight.Black,
+                ),
         )
     }
 
@@ -171,11 +175,12 @@ internal fun WalletAddressField(
     Column(modifier = Modifier.fillMaxWidth()) {
         BasicText(
             text = label.uppercase(),
-            style = ZappTheme.typography.mono.copy(
-                color = c.textMuted,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 1.sp,
-            ),
+            style =
+                ZappTheme.typography.mono.copy(
+                    color = c.textMuted,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 1.sp,
+                ),
         )
         Spacer(Modifier.height(4.dp))
         ZappInputField(
@@ -187,34 +192,39 @@ internal fun WalletAddressField(
                     Icons.Default.AccountBalanceWallet,
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
-                    tint = when (validation) {
-                        AddrValidation.VALID -> c.success
-                        AddrValidation.INVALID -> c.danger
-                        AddrValidation.EMPTY -> c.textSubtle
-                    },
+                    tint =
+                        when (validation) {
+                            AddrValidation.VALID -> c.success
+                            AddrValidation.INVALID -> c.danger
+                            AddrValidation.EMPTY -> c.textSubtle
+                        },
                 )
             },
-            trailingIcon = if (onScan != null) {
-                {
-                    Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable(onClick = onScan)
-                            .semantics {
-                                contentDescription = "Scan $label QR"
-                                role = Role.Button
-                            },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            Icons.Default.QrCodeScanner,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = c.textSubtle,
-                        )
+            trailingIcon =
+                if (onScan != null) {
+                    {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .size(48.dp)
+                                    .clickable(onClick = onScan)
+                                    .semantics {
+                                        contentDescription = "Scan $label QR"
+                                        role = Role.Button
+                                    },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.QrCodeScanner,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = c.textSubtle,
+                            )
+                        }
                     }
-                }
-            } else null,
+                } else {
+                    null
+                },
         )
         // Validation feedback
         if (validation == AddrValidation.INVALID) {

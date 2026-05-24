@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -55,7 +55,9 @@ fun MessagingPhaseIntro(
         OnbHero(text = "Create your\nmessaging\nidentity")
         Spacer(Modifier.height(16.dp))
         OnbSub(
-            text = "Your identity is a username backed by your wallet's recovery phrase — one phrase restores your chats and your wallet on any device.",
+            text =
+                "Your identity is a username backed by your wallet's recovery phrase — " +
+                    "one phrase restores your chats and your wallet on any device.",
             modifier = Modifier.fillMaxWidth(0.92f),
         )
         Spacer(Modifier.height(28.dp))
@@ -132,19 +134,21 @@ internal fun OnbScreen(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
             OnbProgress(step = step)
         }
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             GhostNum(
                 n = ghostNum,
@@ -176,19 +180,21 @@ internal fun UsernameField(
     val c = ZappTheme.colors
     val borderColor = if (value.isNotEmpty()) c.text else c.border
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(width = 2.dp, color = borderColor, shape = RectangleShape)
-            .padding(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(width = 2.dp, color = borderColor, shape = RectangleShape)
+                .padding(start = 12.dp, end = 12.dp, top = 14.dp, bottom = 14.dp),
         verticalAlignment = Alignment.Bottom,
     ) {
         BasicText(
             text = "@",
-            style = ZappTheme.typography.display.copy(
-                color = c.textSubtle,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.display.copy(
+                    color = c.textSubtle,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                ),
         )
         Spacer(Modifier.width(2.dp))
         BasicTextField(
@@ -196,24 +202,26 @@ internal fun UsernameField(
             onValueChange = onChange,
             singleLine = true,
             cursorBrush = SolidColor(c.accent),
-            textStyle = ZappTheme.typography.display.copy(
-                color = c.text,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-0.8).sp,
-            ),
+            textStyle =
+                ZappTheme.typography.display.copy(
+                    color = c.text,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-0.8).sp,
+                ),
             modifier = Modifier.weight(1f),
             decorationBox = { inner ->
                 Box {
                     if (value.isEmpty()) {
                         BasicText(
                             text = "your_handle",
-                            style = ZappTheme.typography.display.copy(
-                                color = c.textSubtle,
-                                fontSize = 28.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = (-0.8).sp,
-                            ),
+                            style =
+                                ZappTheme.typography.display.copy(
+                                    color = c.textSubtle,
+                                    fontSize = 28.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = (-0.8).sp,
+                                ),
                         )
                     }
                     inner()
@@ -223,11 +231,12 @@ internal fun UsernameField(
         if (isValid) {
             BasicText(
                 text = "✓",
-                style = ZappTheme.typography.display.copy(
-                    color = c.success,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.display.copy(
+                        color = c.success,
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
         }
     }
@@ -263,10 +272,11 @@ private fun Chip(label: String, ok: Boolean) {
 internal fun InfoCallout(text: String) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, c.border, RectangleShape)
-            .padding(12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(1.dp, c.border, RectangleShape)
+                .padding(12.dp),
         verticalAlignment = Alignment.Top,
     ) {
         BasicText(
@@ -276,11 +286,12 @@ internal fun InfoCallout(text: String) {
         Spacer(Modifier.width(10.dp))
         BasicText(
             text = text,
-            style = ZappTheme.typography.body.copy(
-                color = c.textSubtle,
-                fontSize = 12.sp,
-                lineHeight = 18.sp,
-            ),
+            style =
+                ZappTheme.typography.body.copy(
+                    color = c.textSubtle,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                ),
         )
     }
 }
@@ -303,29 +314,32 @@ fun SeedRevealScreen(
     val c = ZappTheme.colors
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
             OnbProgress(step = step)
         }
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             BasicText(
                 text = title,
-                style = ZappTheme.typography.display.copy(
-                    color = c.text,
-                    fontSize = 26.sp,
-                    lineHeight = 30.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = (-0.8).sp,
-                ),
+                style =
+                    ZappTheme.typography.display.copy(
+                        color = c.text,
+                        fontSize = 26.sp,
+                        lineHeight = 30.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.8).sp,
+                    ),
             )
             Spacer(Modifier.height(8.dp))
             OnbSub(text = sub, modifier = Modifier.fillMaxWidth(0.92f))
@@ -334,23 +348,26 @@ fun SeedRevealScreen(
             Box(modifier = Modifier.fillMaxWidth()) {
                 SeedGrid(
                     words = words,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, c.border, RectangleShape)
-                        .blur(if (revealed) 0.dp else 14.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, c.border, RectangleShape)
+                            .blur(if (revealed) 0.dp else 14.dp),
                 )
                 if (!revealed) {
                     Column(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .clickable { revealed = true },
+                        modifier =
+                            Modifier
+                                .matchParentSize()
+                                .clickable { revealed = true },
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Box(
-                            modifier = Modifier
-                                .size(44.dp)
-                                .background(c.text, RectangleShape),
+                            modifier =
+                                Modifier
+                                    .size(44.dp)
+                                    .background(c.text, RectangleShape),
                             contentAlignment = Alignment.Center,
                         ) {
                             BasicText(
@@ -361,12 +378,13 @@ fun SeedRevealScreen(
                         Spacer(Modifier.height(8.dp))
                         BasicText(
                             text = "Tap to reveal",
-                            style = ZappTheme.typography.button.copy(
-                                color = c.text,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 0.2.sp,
-                            ),
+                            style =
+                                ZappTheme.typography.button.copy(
+                                    color = c.text,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 0.2.sp,
+                                ),
                         )
                     }
                 }
@@ -375,15 +393,17 @@ fun SeedRevealScreen(
             Spacer(Modifier.height(16.dp))
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(enabled = revealed) { saved = !saved },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .clickable(enabled = revealed) { saved = !saved },
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(20.dp)
-                        .background(if (saved) c.accent else c.bg, RectangleShape)
-                        .border(2.dp, if (saved) c.accent else c.borderStrong, RectangleShape),
+                    modifier =
+                        Modifier
+                            .size(20.dp)
+                            .background(if (saved) c.accent else c.bg, RectangleShape)
+                            .border(2.dp, if (saved) c.accent else c.borderStrong, RectangleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (saved) {
@@ -396,11 +416,12 @@ fun SeedRevealScreen(
                 Spacer(Modifier.width(12.dp))
                 BasicText(
                     text = "I've written all ${words.size} words in order. I understand this phrase cannot be recovered if lost.",
-                    style = ZappTheme.typography.body.copy(
-                        color = c.textMuted,
-                        fontSize = 12.sp,
-                        lineHeight = 19.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.body.copy(
+                            color = c.textMuted,
+                            fontSize = 12.sp,
+                            lineHeight = 19.sp,
+                        ),
                 )
             }
         }
@@ -426,29 +447,32 @@ private fun SeedGrid(words: List<String>, modifier: Modifier = Modifier) {
                     val idx = ri * 3 + wi
                     val cellBg = if (ri % 2 == 0) c.bg else c.surfaceAlt
                     Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(cellBg, RectangleShape)
-                            .padding(horizontal = 10.dp, vertical = 11.dp),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .background(cellBg, RectangleShape)
+                                .padding(horizontal = 10.dp, vertical = 11.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         BasicText(
                             text = String.format("%02d", idx + 1),
-                            style = ZappTheme.typography.mono.copy(
-                                color = c.textSubtle,
-                                fontSize = 9.sp,
-                            ),
+                            style =
+                                ZappTheme.typography.mono.copy(
+                                    color = c.textSubtle,
+                                    fontSize = 9.sp,
+                                ),
                             modifier = Modifier.width(16.dp),
                         )
                         Spacer(Modifier.width(6.dp))
                         BasicText(
                             text = w,
-                            style = ZappTheme.typography.rowTitle.copy(
-                                color = c.text,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = (-0.1).sp,
-                            ),
+                            style =
+                                ZappTheme.typography.rowTitle.copy(
+                                    color = c.text,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = (-0.1).sp,
+                                ),
                         )
                     }
                 }

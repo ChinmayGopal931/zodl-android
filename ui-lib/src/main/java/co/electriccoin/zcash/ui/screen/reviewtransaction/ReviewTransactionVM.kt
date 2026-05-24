@@ -68,15 +68,18 @@ class ReviewTransactionVM(
     private val standardPreferenceProvider: StandardPreferenceProvider,
     private val encryptedPreferenceProvider: EncryptedPreferenceProvider,
 ) : ViewModel() {
-
     /** Drives the PIN entry overlay shown before a transaction is submitted. */
     sealed class SendAuthState {
         object Idle : SendAuthState()
+
         object PinRequired : SendAuthState()
+
         object PinError : SendAuthState()
 
         /** Lockout in effect — input must be disabled and a countdown shown. */
-        data class PinLocked(val secondsRemaining: Int) : SendAuthState()
+        data class PinLocked(
+            val secondsRemaining: Int
+        ) : SendAuthState()
     }
 
     private val _sendAuthState = MutableStateFlow<SendAuthState>(SendAuthState.Idle)
@@ -85,15 +88,16 @@ class ReviewTransactionVM(
 
     private fun startSendLockoutTicker(initialMs: Long) {
         sendLockoutTickerJob?.cancel()
-        sendLockoutTickerJob = viewModelScope.launch {
-            var remaining = initialMs
-            while (remaining > 0) {
-                _sendAuthState.value = SendAuthState.PinLocked(((remaining + 999) / 1000).toInt())
-                delay(1_000)
-                remaining -= 1_000
+        sendLockoutTickerJob =
+            viewModelScope.launch {
+                var remaining = initialMs
+                while (remaining > 0) {
+                    _sendAuthState.value = SendAuthState.PinLocked(((remaining + 999) / 1000).toInt())
+                    delay(1_000)
+                    remaining -= 1_000
+                }
+                _sendAuthState.value = SendAuthState.PinRequired
             }
-            _sendAuthState.value = SendAuthState.PinRequired
-        }
     }
 
     private val isReceiverExpanded = MutableStateFlow(false)
@@ -294,33 +298,39 @@ class ReviewTransactionVM(
 
     private fun onConfirmClick() {
         if (onConfirmClickJob?.isActive == true) return
-        onConfirmClickJob = viewModelScope.launch {
-            val authMethod = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
-            when (authMethod) {
-                "biometric" -> {
-                    try {
-                        biometricRepository.requestBiometrics(
-                            BiometricRequest(
-                                message = stringRes(
-                                    R.string.authentication_system_ui_subtitle,
-                                    stringRes(R.string.authentication_use_case_send_funds)
+        onConfirmClickJob =
+            viewModelScope.launch {
+                val authMethod = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
+                when (authMethod) {
+                    "biometric" -> {
+                        try {
+                            biometricRepository.requestBiometrics(
+                                BiometricRequest(
+                                    message =
+                                        stringRes(
+                                            R.string.authentication_system_ui_subtitle,
+                                            stringRes(R.string.authentication_use_case_send_funds)
+                                        )
                                 )
                             )
-                        )
+                            submitProposal()
+                        } catch (_: BiometricsCancelledException) {
+                            // User cancelled — stay on review screen
+                        } catch (_: BiometricsFailureException) {
+                            // Auth failed — stay on review screen
+                        }
+                    }
+
+                    "pin" -> {
+                        _sendAuthState.value = SendAuthState.PinRequired
+                        // Submission deferred to onSendPinSubmitted
+                    }
+
+                    else -> {
                         submitProposal()
-                    } catch (_: BiometricsCancelledException) {
-                        // User cancelled — stay on review screen
-                    } catch (_: BiometricsFailureException) {
-                        // Auth failed — stay on review screen
                     }
                 }
-                "pin" -> {
-                    _sendAuthState.value = SendAuthState.PinRequired
-                    // Submission deferred to onSendPinSubmitted
-                }
-                else -> submitProposal()
             }
-        }
     }
 
     /**
@@ -330,11 +340,14 @@ class ReviewTransactionVM(
      */
     fun onSendPinSubmitted(pin: String) {
         viewModelScope.launch {
-            when (val result = PinAuthGate.tryVerify(
-                pin,
-                encryptedPreferenceProvider,
-                standardPreferenceProvider,
-            )) {
+            when (
+                val result =
+                    PinAuthGate.tryVerify(
+                        pin,
+                        encryptedPreferenceProvider,
+                        standardPreferenceProvider,
+                    )
+            ) {
                 PinAuthGate.Result.Success -> {
                     _sendAuthState.value = SendAuthState.Idle
                     submitProposal()

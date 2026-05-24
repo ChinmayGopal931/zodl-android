@@ -20,12 +20,12 @@ import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsScreen
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupScreen
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListScreen
-import org.koin.compose.koinInject
 import co.electriccoin.zcash.ui.screen.onboarding.ZappOnboardingFlow
 import co.electriccoin.zcash.ui.screen.welcome.WelcomeGateVM
 import co.electriccoin.zcash.ui.screen.welcome.view.ChatRestoreView
 import co.electriccoin.zcash.ui.screen.welcome.view.WelcomeGateView
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 @Composable
 fun ZappTabsScaffold(

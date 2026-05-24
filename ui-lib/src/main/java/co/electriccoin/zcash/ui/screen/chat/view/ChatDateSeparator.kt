@@ -27,16 +27,18 @@ internal fun ChatDateSeparator(epochMillis: Long) {
     val label = formatDateSeparatorLabel(epochMillis, today, yesterday)
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(c.border),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(c.border),
         )
         BasicText(
             text = label.uppercase(),
@@ -44,10 +46,11 @@ internal fun ChatDateSeparator(epochMillis: Long) {
             modifier = Modifier.padding(horizontal = 12.dp),
         )
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(c.border),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(1.dp)
+                    .background(c.border),
         )
     }
 }
@@ -63,12 +66,21 @@ private fun formatDateSeparatorLabel(
     val sevenDaysAgoMillis = todayCal.timeInMillis - SEVEN_DAYS_MILLIS
 
     return when {
-        isSameDay(msgCal, todayCal) -> today
-        isSameDay(msgCal, yesterdayCal) -> yesterday
-        epochMillis >= sevenDaysAgoMillis ->
+        isSameDay(msgCal, todayCal) -> {
+            today
+        }
+
+        isSameDay(msgCal, yesterdayCal) -> {
+            yesterday
+        }
+
+        epochMillis >= sevenDaysAgoMillis -> {
             SimpleDateFormat("EEEE", Locale.getDefault()).format(Date(epochMillis))
-        else ->
+        }
+
+        else -> {
             SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(epochMillis))
+        }
     }
 }
 

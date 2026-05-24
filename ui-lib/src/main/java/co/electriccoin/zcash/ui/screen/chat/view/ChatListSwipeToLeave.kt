@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListItemState
@@ -35,17 +36,17 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 /**
- * The pointerInput uses PointerEventPass.Initial so it sees MOVE events before
- * the inner clickable; consume() then cancels the clickable's tap tracking.
- * Delta is read from change.position - change.previousPosition, immune to
- * positionChangeConsumed, and rawOffset is a local var so there's no
- * coroutine race with offsetX.
+ * Swipe-left-to-reveal action row. The pointerInput uses [PointerEventPass.Initial] so it sees
+ * MOVE events before the inner clickable; `consume()` then cancels the clickable's tap tracking.
+ * Delta is read from `position - previousPosition`, immune to positionChangeConsumed, and
+ * rawOffset is a local var so there's no coroutine race with offsetX.
  */
 @Suppress("CyclomaticComplexMethod", "LoopWithTooManyJumpStatements", "MagicNumber")
 @Composable
-internal fun SwipeToLeaveRow(
-    item: ChatListItemState,
-    onLeave: () -> Unit,
+internal fun SwipeToRevealActionRow(
+    key: String,
+    actionLabel: StringResource,
+    onAction: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     val c = ZappTheme.colors
@@ -58,7 +59,7 @@ internal fun SwipeToLeaveRow(
             Modifier
                 .fillMaxWidth()
                 .wrapContentHeight()
-                .pointerInput(item.id) {
+                .pointerInput(key) {
                     awaitEachGesture {
                         awaitFirstDown(requireUnconsumed = false)
 
@@ -75,7 +76,7 @@ internal fun SwipeToLeaveRow(
                                 if (isHorizontalDrag) {
                                     val capturedOffset = rawOffset
                                     scope.launch {
-                                        if (-capturedOffset >= revealThresholdPx) onLeave()
+                                        if (-capturedOffset >= revealThresholdPx) onAction()
                                         Animatable(capturedOffset).animateTo(0f, tween(200)) {
                                             offsetX = value
                                         }
@@ -124,7 +125,7 @@ internal fun SwipeToLeaveRow(
             contentAlignment = Alignment.CenterEnd,
         ) {
             BasicText(
-                text = stringRes(R.string.chat_list_leave_action).getValue(),
+                text = actionLabel.getValue(),
                 style =
                     ZappTheme.typography.button.copy(
                         color = c.bg,
@@ -143,4 +144,19 @@ internal fun SwipeToLeaveRow(
             content()
         }
     }
+}
+
+/** Chat-list specialization: pointerInput key derived from the item id, label "Leave". */
+@Composable
+internal fun SwipeToLeaveRow(
+    item: ChatListItemState,
+    onLeave: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    SwipeToRevealActionRow(
+        key = item.id,
+        actionLabel = stringRes(R.string.chat_list_leave_action),
+        onAction = onLeave,
+        content = content,
+    )
 }

@@ -6,33 +6,33 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.runtime.remember
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.material3.ripple
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.appbar.ZashiMainTopAppBarState
 import co.electriccoin.zcash.ui.design.component.CircularScreenProgressIndicator
+import co.electriccoin.zcash.ui.design.component.IconButtonState
 import co.electriccoin.zcash.ui.design.component.QrState
 import co.electriccoin.zcash.ui.design.component.ZashiQr
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
@@ -55,7 +56,6 @@ import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.design.util.styledStringResource
 import co.electriccoin.zcash.ui.fixture.ZashiMainTopAppBarStateFixture
-import co.electriccoin.zcash.ui.design.component.IconButtonState
 
 @Composable
 internal fun ReceiveView(
@@ -74,10 +74,11 @@ internal fun ReceiveView(
             val selectedItem = items.getOrNull(selectedIndex) ?: return
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(c.bg)
-                    .windowInsetsPadding(WindowInsets.statusBars),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(c.bg)
+                        .windowInsetsPadding(WindowInsets.statusBars),
             ) {
                 ZappScreenHeader(title = stringResource(R.string.receive_title))
 
@@ -96,10 +97,11 @@ internal fun ReceiveView(
 
                 ReceiveShareButton(
                     addressRaw = selectedItem.addressRaw,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 18.dp)
-                        .padding(bottom = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 18.dp)
+                            .padding(bottom = 8.dp),
                 )
 
                 ReceiveBottomDock(
@@ -118,26 +120,29 @@ private fun ReceiveMainPanel(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Spacer(Modifier.height(20.dp))
 
         Box(
-            modifier = Modifier
-                .background(c.bg, RectangleShape)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .padding(12.dp),
+            modifier =
+                Modifier
+                    .background(c.bg, RectangleShape)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .padding(12.dp),
             contentAlignment = Alignment.Center,
         ) {
             ZashiQr(
-                state = QrState(
-                    qrData = selectedItem.qrData,
-                    centerImage = selectedItem.icon,
-                ),
+                state =
+                    QrState(
+                        qrData = selectedItem.qrData,
+                        centerImage = selectedItem.icon,
+                    ),
                 modifier = Modifier.fillMaxWidth(0.92f),
             )
         }
@@ -150,10 +155,11 @@ private fun ReceiveMainPanel(
         ) {
             BasicText(
                 text = selectedItem.subtitle.getValue(),
-                style = ZappTheme.typography.mono.copy(
-                    color = c.textMuted,
-                    fontSize = 12.sp,
-                ),
+                style =
+                    ZappTheme.typography.mono.copy(
+                        color = c.textMuted,
+                        fontSize = 12.sp,
+                    ),
                 modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.width(8.dp))
@@ -168,30 +174,33 @@ private fun ReceiveMainPanel(
             verticalAlignment = Alignment.Top,
         ) {
             Box(
-                modifier = Modifier
-                    .width(3.dp)
-                    .height(36.dp)
-                    .background(c.accent, RectangleShape),
+                modifier =
+                    Modifier
+                        .width(3.dp)
+                        .height(36.dp)
+                        .background(c.accent, RectangleShape),
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 BasicText(
                     text = "TIP",
-                    style = ZappTheme.typography.eyebrow.copy(
-                        color = c.textSubtle,
-                        fontSize = 10.sp,
-                        letterSpacing = 1.8.sp,
-                        fontWeight = FontWeight.Black,
-                    ),
+                    style =
+                        ZappTheme.typography.eyebrow.copy(
+                            color = c.textSubtle,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.8.sp,
+                            fontWeight = FontWeight.Black,
+                        ),
                 )
                 Spacer(Modifier.height(4.dp))
                 BasicText(
                     text = stringResource(id = R.string.receive_prioritize_shielded),
-                    style = ZappTheme.typography.body.copy(
-                        color = c.textMuted,
-                        fontSize = 12.sp,
-                        lineHeight = 18.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.body.copy(
+                            color = c.textMuted,
+                            fontSize = 12.sp,
+                            lineHeight = 18.sp,
+                        ),
                 )
             }
         }
@@ -208,26 +217,28 @@ private fun ReceiveShareButton(
     val context = LocalContext.current
     val c = ZappTheme.colors
     Box(
-        modifier = modifier
-            .height(48.dp)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .clickable {
-                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(android.content.Intent.EXTRA_TEXT, addressRaw)
-                }
-                context.startActivity(android.content.Intent.createChooser(intent, null))
-            }
-            .semantics { role = Role.Button },
+        modifier =
+            modifier
+                .height(48.dp)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .clickable {
+                    val intent =
+                        android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(android.content.Intent.EXTRA_TEXT, addressRaw)
+                        }
+                    context.startActivity(android.content.Intent.createChooser(intent, null))
+                }.semantics { role = Role.Button },
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = "Share".uppercase(),
-            style = ZappTheme.typography.button.copy(
-                color = c.textMuted,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.4.sp,
-            ),
+            style =
+                ZappTheme.typography.button.copy(
+                    color = c.textMuted,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.4.sp,
+                ),
         )
     }
 }
@@ -240,45 +251,50 @@ private fun ReceiveBottomDock(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.bg)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.bg)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .size(width = 72.dp, height = 52.dp)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .clickable(onClick = onBack),
+            modifier =
+                Modifier
+                    .size(width = 72.dp, height = 52.dp)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .clickable(onClick = onBack),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
                 text = "←",
-                style = ZappTheme.typography.button.copy(
-                    color = c.text,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.button.copy(
+                        color = c.text,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
         }
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp)
-                .background(c.accent, RectangleShape)
-                .clickable(onClick = onRequest)
-                .semantics { role = Role.Button },
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .background(c.accent, RectangleShape)
+                    .clickable(onClick = onRequest)
+                    .semantics { role = Role.Button },
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
                 text = stringResource(R.string.receive_request).uppercase(),
-                style = ZappTheme.typography.button.copy(
-                    color = c.onAccent,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.6.sp,
-                ),
+                style =
+                    ZappTheme.typography.button.copy(
+                        color = c.onAccent,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.6.sp,
+                    ),
             )
         }
     }
@@ -293,38 +309,40 @@ private fun ReceiveTabSwitcher(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 8.dp)
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .padding(3.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 8.dp)
+                .background(c.surface, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         items.forEachIndexed { index, item ->
             val isSelected = index == selectedIndex
             val label = if (item.isShielded) "Shielded" else "Transparent"
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 34.dp)
-                    .background(
-                        if (isSelected) c.accent else androidx.compose.ui.graphics.Color.Transparent,
-                        RectangleShape,
-                    )
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = c.accent),
-                        onClick = { onSelect(index) },
-                    ),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = 34.dp)
+                        .background(
+                            if (isSelected) c.accent else androidx.compose.ui.graphics.Color.Transparent,
+                            RectangleShape,
+                        ).clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(color = c.accent),
+                            onClick = { onSelect(index) },
+                        ),
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = label,
-                    style = ZappTheme.typography.caption.copy(
-                        color = if (isSelected) c.onAccent else c.textMuted,
-                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
-                    ),
+                    style =
+                        ZappTheme.typography.caption.copy(
+                            color = if (isSelected) c.onAccent else c.textMuted,
+                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
+                        ),
                 )
             }
         }
@@ -338,11 +356,12 @@ private fun CopyIconButton(
 ) {
     val c = ZappTheme.colors
     Box(
-        modifier = modifier
-            .size(40.dp)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .clickable(onClick = onClick)
-            .semantics { role = Role.Button },
+        modifier =
+            modifier
+                .size(40.dp)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .clickable(onClick = onClick)
+                .semantics { role = Role.Button },
         contentAlignment = Alignment.Center,
     ) {
         Image(

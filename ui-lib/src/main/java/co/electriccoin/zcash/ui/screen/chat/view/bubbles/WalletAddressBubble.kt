@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material3.Icon
@@ -28,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -49,22 +49,28 @@ private const val QR_PX = 400
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
-    val address = remember(message.content) {
-        try { JSONObject(message.content).optString("content", message.content) }
-        catch (_: Exception) { message.content }
-    }
+    val address =
+        remember(message.content) {
+            try {
+                JSONObject(message.content).optString("content", message.content)
+            } catch (_: Exception) {
+                message.content
+            }
+        }
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
 
-    val qrBitmap = remember(address) {
-        val pixels = JvmQrCodeGenerator.generate(address, QR_PX)
-        AndroidQrCodeImageGenerator.generate(
-            bitArray = pixels,
-            sizePixels = QR_PX,
-            background = Color.White.toArgb(),
-            foreground = Color.Black.toArgb()
-        ).asImageBitmap()
-    }
+    val qrBitmap =
+        remember(address) {
+            val pixels = JvmQrCodeGenerator.generate(address, QR_PX)
+            AndroidQrCodeImageGenerator
+                .generate(
+                    bitArray = pixels,
+                    sizePixels = QR_PX,
+                    background = Color.White.toArgb(),
+                    foreground = Color.Black.toArgb()
+                ).asImageBitmap()
+        }
 
     Surface(
         shape = RectangleShape,
@@ -102,9 +108,10 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
                 Image(
                     bitmap = qrBitmap,
                     contentDescription = "Wallet QR",
-                    modifier = Modifier
-                        .size(160.dp)
-                        .padding(8.dp)
+                    modifier =
+                        Modifier
+                            .size(160.dp)
+                            .padding(8.dp)
                 )
             }
 
@@ -114,17 +121,18 @@ fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
                 text = address,
                 style = MaterialTheme.typography.bodySmall,
                 color = ZappTheme.colors.text,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .combinedClickable(
-                        onLongClick = {
-                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            cm.setPrimaryClip(ClipData.newPlainText("address", address))
-                            Toast.makeText(context, "Address copied", Toast.LENGTH_SHORT).show()
-                        },
-                        onClick = {}
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .combinedClickable(
+                            onLongClick = {
+                                haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                cm.setPrimaryClip(ClipData.newPlainText("address", address))
+                                Toast.makeText(context, "Address copied", Toast.LENGTH_SHORT).show()
+                            },
+                            onClick = {}
+                        )
             )
 
             Spacer(modifier = Modifier.height(4.dp))

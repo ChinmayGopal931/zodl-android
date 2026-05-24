@@ -13,19 +13,17 @@ import co.electriccoin.zcash.ui.screen.advancedsettings.debug.DebugVM
 import co.electriccoin.zcash.ui.screen.advancedsettings.debug.db.DebugDBVM
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidgetVM
 import co.electriccoin.zcash.ui.screen.balances.spendable.SpendableBalanceVM
-import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
 import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditVM
 import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsVM
+import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListVM
 import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationVM
 import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileVM
 import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomVM
-import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsVM
 import co.electriccoin.zcash.ui.screen.chat.scan.ChatScanPublicKeyVM
+import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsVM
 import co.electriccoin.zcash.ui.screen.chat.support.SupportChatVM
 import co.electriccoin.zcash.ui.screen.chat.support.SupportTicketListVM
-import org.koin.android.ext.koin.androidApplication
-import org.koin.core.module.dsl.viewModel
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerVM
 import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactVM
 import co.electriccoin.zcash.ui.screen.contact.AddZashiABContactVM
@@ -73,6 +71,7 @@ import co.electriccoin.zcash.ui.screen.scankeystone.viewmodel.ScanKeystonePCZTVi
 import co.electriccoin.zcash.ui.screen.scankeystone.viewmodel.ScanKeystoneSignInRequestViewModel
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsViewModel
 import co.electriccoin.zcash.ui.screen.selectkeystoneaccount.viewmodel.SelectKeystoneAccountViewModel
+import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsVM
 import co.electriccoin.zcash.ui.screen.signkeystonetransaction.SignKeystoneTransactionVM
 import co.electriccoin.zcash.ui.screen.support.viewmodel.SupportViewModel
 import co.electriccoin.zcash.ui.screen.swap.SwapVM
@@ -87,6 +86,9 @@ import co.electriccoin.zcash.ui.screen.swap.picker.SwapAssetPickerVM
 import co.electriccoin.zcash.ui.screen.swap.picker.SwapBlockchainPickerVM
 import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteVM
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageVM
+import co.electriccoin.zcash.ui.screen.swap.upi.UpiOfframpVM
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressVM
+import co.electriccoin.zcash.ui.screen.swap.upi.scan.ScanUpiVM
 import co.electriccoin.zcash.ui.screen.tabs.viewmodel.WalletSyncStateVM
 import co.electriccoin.zcash.ui.screen.taxexport.TaxExportViewModel
 import co.electriccoin.zcash.ui.screen.texunsupported.TEXUnsupportedVM
@@ -121,6 +123,7 @@ val viewModelModule =
         viewModelOf(::RestoreSuccessViewModel)
         viewModelOf(::WhatsNewViewModel)
         viewModelOf(::ChooseServerVM)
+        viewModelOf(::P2pTransactionsVM)
         viewModelOf(::ReceiveVM)
         viewModelOf(::QrCodeVM)
         viewModelOf(::RequestVM)
@@ -173,6 +176,9 @@ val viewModelModule =
         viewModelOf(::SwapAssetPickerVM)
         viewModelOf(::SwapSlippageVM)
         viewModelOf(::SwapVM)
+        viewModelOf(::UpiOfframpVM)
+        viewModelOf(::UpiOfframpProgressVM)
+        viewModelOf(::ScanUpiVM)
         viewModelOf(::UnifiedSendViewModel)
         viewModelOf(::SwapQuoteVM)
         viewModelOf(::ScanGenericAddressVM)

@@ -17,8 +17,9 @@ import org.json.JSONObject
  * blocking is enforced client-side by filtering incoming messages from
  * blocked public keys.
  */
-class ChatModerationRepository(private val context: Context) {
-
+class ChatModerationRepository(
+    private val context: Context
+) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _blockedUsers = MutableStateFlow<Set<BlockedUser>>(emptySet())
@@ -60,14 +61,15 @@ class ChatModerationRepository(private val context: Context) {
         conversationId: String? = null,
         messageId: String? = null,
     ): ContentReport {
-        val report = ContentReport(
-            reportedPublicKey = reportedPublicKey,
-            reportedDisplayName = reportedDisplayName,
-            category = category,
-            details = details,
-            conversationId = conversationId,
-            messageId = messageId,
-        )
+        val report =
+            ContentReport(
+                reportedPublicKey = reportedPublicKey,
+                reportedDisplayName = reportedDisplayName,
+                category = category,
+                details = details,
+                conversationId = conversationId,
+                messageId = messageId,
+            )
         _reports.value = _reports.value + report
         persistReports(_reports.value)
         return report

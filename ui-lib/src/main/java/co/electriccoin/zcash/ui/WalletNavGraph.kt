@@ -29,8 +29,6 @@ import co.electriccoin.zcash.ui.screen.balances.spendable.SpendableBalanceArgs
 import co.electriccoin.zcash.ui.screen.balances.spendable.SpendableBalanceScreen
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerScreen
-import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
-import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsScreen
 import co.electriccoin.zcash.ui.screen.connectkeystone.ConnectKeystoneArgs
 import co.electriccoin.zcash.ui.screen.connectkeystone.ConnectKeystoneScreen
 import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactArgs
@@ -81,14 +79,12 @@ import co.electriccoin.zcash.ui.screen.hotfix.ephemeral.EphemeralHotfixArgs
 import co.electriccoin.zcash.ui.screen.hotfix.ephemeral.EphemeralHotfixScreen
 import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsArgs
 import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsScreen
-import co.electriccoin.zcash.ui.screen.offramp.OfframpArgs
-import co.electriccoin.zcash.ui.screen.offramp.OfframpScreen
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsArgs
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsScreen
 import co.electriccoin.zcash.ui.screen.more.MoreArgs
 import co.electriccoin.zcash.ui.screen.more.MoreScreen
-import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
-import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendScreen
+import co.electriccoin.zcash.ui.screen.offramp.OfframpArgs
+import co.electriccoin.zcash.ui.screen.offramp.OfframpScreen
 import co.electriccoin.zcash.ui.screen.qrcode.QrCodeScreen
 import co.electriccoin.zcash.ui.screen.receive.ReceiveAddressType
 import co.electriccoin.zcash.ui.screen.receive.ReceiveArgs
@@ -130,8 +126,12 @@ import co.electriccoin.zcash.ui.screen.scankeystone.ScanKeystonePCZTRequest
 import co.electriccoin.zcash.ui.screen.scankeystone.ScanKeystoneSignInRequest
 import co.electriccoin.zcash.ui.screen.scankeystone.WrapScanKeystonePCZTRequest
 import co.electriccoin.zcash.ui.screen.scankeystone.WrapScanKeystoneSignInRequest
+import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
+import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsScreen
 import co.electriccoin.zcash.ui.screen.selectkeystoneaccount.AndroidSelectKeystoneAccount
 import co.electriccoin.zcash.ui.screen.selectkeystoneaccount.SelectKeystoneAccount
+import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
+import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsScreen
 import co.electriccoin.zcash.ui.screen.signkeystonetransaction.SignKeystoneTransactionArgs
 import co.electriccoin.zcash.ui.screen.signkeystonetransaction.SignKeystoneTransactionScreen
 import co.electriccoin.zcash.ui.screen.swap.SwapArgs
@@ -162,6 +162,12 @@ import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteArgs
 import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteScreen
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageArgs
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageScreen
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
+import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressScreen
+import co.electriccoin.zcash.ui.screen.swap.upi.scan.ScanUpiArgs
+import co.electriccoin.zcash.ui.screen.swap.upi.scan.ScanUpiScreen
+import co.electriccoin.zcash.ui.screen.tabs.AndroidTabs
+import co.electriccoin.zcash.ui.screen.tabs.TabsArgs
 import co.electriccoin.zcash.ui.screen.taxexport.AndroidTaxExport
 import co.electriccoin.zcash.ui.screen.taxexport.TaxExport
 import co.electriccoin.zcash.ui.screen.texunsupported.AndroidTEXUnsupported
@@ -180,10 +186,10 @@ import co.electriccoin.zcash.ui.screen.transactionnote.AndroidTransactionNote
 import co.electriccoin.zcash.ui.screen.transactionnote.TransactionNote
 import co.electriccoin.zcash.ui.screen.transactionprogress.TransactionProgressArgs
 import co.electriccoin.zcash.ui.screen.transactionprogress.TransactionProgressScreen
+import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
+import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendScreen
 import co.electriccoin.zcash.ui.screen.walletbackup.AndroidWalletBackup
 import co.electriccoin.zcash.ui.screen.walletbackup.WalletBackup
-import co.electriccoin.zcash.ui.screen.tabs.AndroidTabs
-import co.electriccoin.zcash.ui.screen.tabs.TabsArgs
 import co.electriccoin.zcash.ui.screen.warning.WrapNotEnoughSpace
 import co.electriccoin.zcash.ui.screen.warning.viewmodel.StorageCheckViewModel
 import co.electriccoin.zcash.ui.screen.whatsnew.WrapWhatsNew
@@ -208,6 +214,7 @@ fun NavGraphBuilder.walletNavGraph(
         composable<MoreArgs> { MoreScreen() }
         composable<AdvancedSettingsArgs> { AdvancedSettingsScreen() }
         composable<ChooseServerArgs> { ChooseServerScreen() }
+        composable<P2pTransactionsArgs> { P2pTransactionsScreen() }
         composable<SecuritySettingsArgs> { SecuritySettingsScreen() }
         composable<WalletBackup> { AndroidWalletBackup(it.toRoute()) }
         composable<FeedbackArgs> { FeedbackScreen() }
@@ -278,6 +285,8 @@ fun NavGraphBuilder.walletNavGraph(
         dialogComposable<SwapAssetPickerArgs> { SwapAssetPickerScreen(it.toRoute()) }
         dialogComposable<SwapBlockchainPickerArgs> { SwapBlockchainPickerScreen(it.toRoute()) }
         composable<SwapArgs> { SwapScreen() }
+        composable<UpiOfframpProgressArgs> { UpiOfframpProgressScreen(it.toRoute()) }
+        composable<ScanUpiArgs> { ScanUpiScreen(it.toRoute()) }
         dialogComposable<SwapSlippageArgs> { SwapSlippageScreen(it.toRoute()) }
         dialogComposable<SwapInfoArgs> { SwapInfoScreen() }
         dialogComposable<DepositSwapInfoArgs> { DepositSwapInfoScreen() }

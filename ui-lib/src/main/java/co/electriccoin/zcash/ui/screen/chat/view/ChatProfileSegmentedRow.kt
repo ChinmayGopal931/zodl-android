@@ -28,7 +28,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
-internal data class SegmentItem(val label: String, val icon: ImageVector?, val isSelected: Boolean)
+internal data class SegmentItem(
+    val label: String,
+    val icon: ImageVector?,
+    val isSelected: Boolean
+)
 
 @Composable
 internal fun ProfileSegmentedRow(items: List<SegmentItem>, onSelect: (Int) -> Unit) {

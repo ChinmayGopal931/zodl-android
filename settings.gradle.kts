@@ -206,6 +206,7 @@ dependencyResolutionManagement {
             val keystoneVersion = extra["KEYSTONE_VERSION"].toString()
             val shimmerVersion = extra["SHIMMER_VERSION"].toString()
             val ktorVersion = extra["KTOR_VERSION"].toString()
+            val bouncyCastleVersion = extra["BOUNCY_CASTLE_VERSION"].toString()
 
             // Standalone versions
             version("flank", flankVersion)
@@ -280,6 +281,8 @@ dependencyResolutionManagement {
             library("ktor-negotiation", "io.ktor" ,"ktor-client-content-negotiation").withoutVersion()
             library("ktor-json", "io.ktor" ,"ktor-serialization-kotlinx-json").withoutVersion()
             library("ktor-logging", "io.ktor" ,"ktor-client-logging").withoutVersion()
+            library("ktor-mock", "io.ktor" ,"ktor-client-mock").withoutVersion()
+            library("bouncycastle-bcprov", "org.bouncycastle:bcprov-jdk18on:$bouncyCastleVersion")
             library("coil-compose", "io.coil-kt:coil-compose:2.6.0")
             library("coil-gif", "io.coil-kt:coil-gif:2.6.0")
             library("play-services-location", "com.google.android.gms:play-services-location:21.3.0")
@@ -379,6 +382,10 @@ include("ui-design-lib")
 include("ui-integration-test")
 include("ui-lib")
 include("ui-screenshot-test")
+
+// UPI offramp: EVM primitives + p2p.me protocol (pure-JVM KMP, unit-testable on host)
+include("evm-lib")
+include("offramp-lib")
 
 // ZappMessaging P2P modules (external references)
 include(":zappmessaging")

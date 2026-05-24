@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.LocationOn
@@ -23,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -35,7 +35,12 @@ import java.util.Locale
 @Composable
 fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
     val context = LocalContext.current
-    val parsed = try { JSONObject(message.content) } catch (_: Exception) { null }
+    val parsed =
+        try {
+            JSONObject(message.content)
+        } catch (_: Exception) {
+            null
+        }
     val lat = parsed?.optDouble("latitude") ?: 0.0
     val lng = parsed?.optDouble("longitude") ?: 0.0
 
@@ -71,14 +76,15 @@ fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
-                modifier = Modifier.clickable {
-                    val geoUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng")
-                    context.startActivity(
-                        Intent(Intent.ACTION_VIEW, geoUri).apply {
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                    )
-                },
+                modifier =
+                    Modifier.clickable {
+                        val geoUri = Uri.parse("geo:$lat,$lng?q=$lat,$lng")
+                        context.startActivity(
+                            Intent(Intent.ACTION_VIEW, geoUri).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        )
+                    },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {

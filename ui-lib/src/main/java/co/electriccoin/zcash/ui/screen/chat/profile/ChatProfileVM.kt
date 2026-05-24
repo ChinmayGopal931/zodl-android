@@ -10,13 +10,13 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.preference.EncryptedPreferenceProvider
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
 import co.electriccoin.zcash.spackle.Twig
-import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.model.WalletAccount
 import co.electriccoin.zcash.ui.common.repository.BiometricRepository
 import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
-import co.electriccoin.zcash.ui.common.model.WalletAccount
 import co.electriccoin.zcash.ui.common.security.PinAuthGate
 import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
@@ -169,28 +169,36 @@ class ChatProfileVM(
 
     private fun PinVerifyMode.toState(): ChatProfilePinVerifyState? =
         when (this) {
-            PinVerifyMode.Idle -> null
-            PinVerifyMode.Required ->
+            PinVerifyMode.Idle -> {
+                null
+            }
+
+            PinVerifyMode.Required -> {
                 ChatProfilePinVerifyState(
                     hasError = false,
                     lockoutSecondsRemaining = 0,
                     onPinSubmit = ::onPinSubmitted,
                     onCancel = ::onPinEntryDismissed,
                 )
-            PinVerifyMode.Error ->
+            }
+
+            PinVerifyMode.Error -> {
                 ChatProfilePinVerifyState(
                     hasError = true,
                     lockoutSecondsRemaining = 0,
                     onPinSubmit = ::onPinSubmitted,
                     onCancel = ::onPinEntryDismissed,
                 )
-            is PinVerifyMode.Locked ->
+            }
+
+            is PinVerifyMode.Locked -> {
                 ChatProfilePinVerifyState(
                     hasError = false,
                     lockoutSecondsRemaining = secondsRemaining,
                     onPinSubmit = ::onPinSubmitted,
                     onCancel = ::onPinEntryDismissed,
                 )
+            }
         }
 
     // ── Click handlers ─────────────────────────────────────────────────
@@ -310,8 +318,14 @@ class ChatProfileVM(
                     // explicit cancel — silent
                 }
             }
-            AUTH_METHOD_PIN -> pinVerifyMode.value = PinVerifyMode.Required
-            else -> exportAndEmitSeedPhrase()
+
+            AUTH_METHOD_PIN -> {
+                pinVerifyMode.value = PinVerifyMode.Required
+            }
+
+            else -> {
+                exportAndEmitSeedPhrase()
+            }
         }
     }
 
@@ -324,12 +338,16 @@ class ChatProfileVM(
                     pinVerifyMode.value = PinVerifyMode.Idle
                     exportAndEmitSeedPhrase()
                 }
+
                 PinAuthGate.Result.Wrong -> {
                     pinVerifyMode.value = PinVerifyMode.Error
                     delay(PIN_ERROR_FEEDBACK_MS)
                     pinVerifyMode.value = PinVerifyMode.Required
                 }
-                is PinAuthGate.Result.Locked -> startPinLockoutTicker(result.msUntilUnlock)
+
+                is PinAuthGate.Result.Locked -> {
+                    startPinLockoutTicker(result.msUntilUnlock)
+                }
             }
         }
     }
@@ -376,10 +394,15 @@ class ChatProfileVM(
 
         object Error : PinVerifyMode()
 
-        data class Locked(val secondsRemaining: Int) : PinVerifyMode()
+        data class Locked(
+            val secondsRemaining: Int
+        ) : PinVerifyMode()
     }
 
-    private data class ChatProfileIdentity(val displayName: String, val publicKey: String)
+    private data class ChatProfileIdentity(
+        val displayName: String,
+        val publicKey: String
+    )
 
     companion object {
         private const val COPY_FEEDBACK_MS = 2_000L

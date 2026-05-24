@@ -25,10 +25,10 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,9 +69,10 @@ fun AddressBookView(
         topBar = {
             ZappScreenHeader(
                 title = state.title.getValue(),
-                modifier = Modifier
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .testTag(AddressBookTag.TOP_APP_BAR),
+                modifier =
+                    Modifier
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .testTag(AddressBookTag.TOP_APP_BAR),
             )
         },
         bottomBar = {
@@ -88,28 +89,31 @@ fun AddressBookView(
 
             state.items.isEmpty() && !state.isLoading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                        .padding(horizontal = 18.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                            .padding(horizontal = 18.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = stringResource(id = R.string.address_book_empty),
-                        style = ZappTheme.typography.rowTitle.copy(
-                            color = ZappTheme.colors.text,
-                            fontWeight = FontWeight.Black,
-                            textAlign = TextAlign.Center,
-                        ),
+                        style =
+                            ZappTheme.typography.rowTitle.copy(
+                                color = ZappTheme.colors.text,
+                                fontWeight = FontWeight.Black,
+                                textAlign = TextAlign.Center,
+                            ),
                     )
                 }
             }
 
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
                 ) {
                     itemsIndexed(
                         contentType = { _, item -> item.contentType },
@@ -147,9 +151,10 @@ fun AddressBookView(
                             AddressBookItem.Empty -> {
                                 Spacer(modifier = Modifier.height(68.dp))
                                 EmptyItem(
-                                    modifier = Modifier
-                                        .padding(horizontal = 20.dp)
-                                        .fillMaxWidth()
+                                    modifier =
+                                        Modifier
+                                            .padding(horizontal = 20.dp)
+                                            .fillMaxWidth()
                                 )
                             }
                         }
@@ -217,12 +222,13 @@ private fun AddressBookBottomBar(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -246,10 +252,11 @@ private fun ZappSectionTitle(
     BasicText(
         modifier = modifier,
         text = state.title.getValue().uppercase(),
-        style = ZappTheme.typography.groupLabel.copy(
-            color = ZappTheme.colors.textMuted,
-            fontWeight = FontWeight.Black,
-        ),
+        style =
+            ZappTheme.typography.groupLabel.copy(
+                color = ZappTheme.colors.textMuted,
+                fontWeight = FontWeight.Black,
+            ),
     )
 }
 
@@ -257,18 +264,20 @@ private fun ZappSectionTitle(
 private fun EmptyItem(modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     Box(
-        modifier = modifier
-            .border(1.dp, c.border, RectangleShape)
-            .padding(horizontal = 20.dp, vertical = 64.dp),
+        modifier =
+            modifier
+                .border(1.dp, c.border, RectangleShape)
+                .padding(horizontal = 20.dp, vertical = 64.dp),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = stringResource(id = R.string.address_book_empty),
-            style = ZappTheme.typography.rowTitle.copy(
-                color = c.text,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center,
-            ),
+            style =
+                ZappTheme.typography.rowTitle.copy(
+                    color = c.text,
+                    fontWeight = FontWeight.Black,
+                    textAlign = TextAlign.Center,
+                ),
         )
     }
 }
@@ -280,14 +289,14 @@ private fun ZappContactRow(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = c.accent),
-                onClick = state.onClick,
-            )
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(color = c.accent),
+                    onClick = state.onClick,
+                ).padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
@@ -320,17 +329,19 @@ private fun ZappContactAvatar(
     val displayText = if (icon is ImageResource.DisplayString) icon.value else "?"
     val textColor = if (icon is ImageResource.DisplayString) c.text else c.textMuted
     Box(
-        modifier = modifier
-            .size(40.dp)
-            .background(c.surfaceAlt, RectangleShape),
+        modifier =
+            modifier
+                .size(40.dp)
+                .background(c.surfaceAlt, RectangleShape),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = displayText,
-            style = ZappTheme.typography.rowTitle.copy(
-                color = textColor,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.rowTitle.copy(
+                    color = textColor,
+                    fontWeight = FontWeight.Black,
+                ),
         )
     }
 }

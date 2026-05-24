@@ -40,12 +40,15 @@ internal fun BottomDock(state: NewConversationState) {
     val backLabel = stringResource(R.string.chat_new_conversation_back_content_description)
     val (label, description) =
         when (state.primaryAction) {
-            is NewConversationPrimaryAction.StartChat ->
+            is NewConversationPrimaryAction.StartChat -> {
                 stringResource(R.string.chat_new_conversation_start_chat_label) to
                     stringResource(R.string.chat_new_conversation_start_chat_content_description)
-            is NewConversationPrimaryAction.ScanQr ->
+            }
+
+            is NewConversationPrimaryAction.ScanQr -> {
                 stringResource(R.string.chat_new_conversation_scan_qr_label) to
                     stringResource(R.string.chat_new_conversation_scan_qr_content_description)
+            }
         }
 
     Row(

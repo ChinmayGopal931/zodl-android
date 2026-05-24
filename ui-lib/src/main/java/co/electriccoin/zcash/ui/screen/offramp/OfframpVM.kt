@@ -28,10 +28,10 @@ class OfframpVM(
     private val navigationRouter: NavigationRouter,
     exchangeRateRepository: ExchangeRateRepository,
 ) : ViewModel() {
-
-    val amountZec: MutableStateFlow<String> = MutableStateFlow(
-        args.prefillZatoshi?.let { Zatoshi(it).convertZatoshiToZec().toPlainString() }.orEmpty()
-    )
+    val amountZec: MutableStateFlow<String> =
+        MutableStateFlow(
+            args.prefillZatoshi?.let { Zatoshi(it).convertZatoshiToZec().toPlainString() }.orEmpty()
+        )
 
     val state: StateFlow<OfframpState?> =
         combine(

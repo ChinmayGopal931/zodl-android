@@ -33,7 +33,9 @@ data class NewConversationContactItem(
 sealed interface NewConversationPrimaryAction {
     val onClick: () -> Unit
 
-    data class ScanQr(override val onClick: () -> Unit) : NewConversationPrimaryAction
+    data class ScanQr(
+        override val onClick: () -> Unit
+    ) : NewConversationPrimaryAction
 
     data class StartChat(
         val isCreating: Boolean,

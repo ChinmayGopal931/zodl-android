@@ -69,19 +69,21 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .imePadding()
-                .padding(bottom = 28.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .imePadding()
+                    .padding(bottom = 28.dp),
         ) {
             BasicText(
                 text = "Edit Contact",
-                style = ZappTheme.typography.sectionTitle.copy(
-                    color = c.text,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.sectionTitle.copy(
+                        color = c.text,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
 
             Spacer(Modifier.height(20.dp))
@@ -105,11 +107,12 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
 
             // Messaging key — read-only display
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(c.surfaceInput, RectangleShape)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(c.surfaceInput, RectangleShape)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape)
+                        .padding(horizontal = 14.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
@@ -144,13 +147,14 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
                 },
                 trailingIcon = {
                     Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable(onClick = state.onScanWalletAddress)
-                            .semantics {
-                                contentDescription = "Scan wallet address QR"
-                                role = Role.Button
-                            },
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .clickable(onClick = state.onScanWalletAddress)
+                                .semantics {
+                                    contentDescription = "Scan wallet address QR"
+                                    role = Role.Button
+                                },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -199,61 +203,63 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
             // Save + Delete CTAs
             if (!state.showDeleteConfirm) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .background(
-                            if (state.isSaveEnabled) c.accent else c.surfaceAlt,
-                            RectangleShape,
-                        )
-                        .then(
-                            if (state.isSaveEnabled) {
-                                Modifier.clickable(onClick = {
-                                    keyboard?.hide()
-                                    state.onSave()
-                                })
-                            } else {
-                                Modifier
-                            }
-                        )
-                        .semantics {
-                            contentDescription = "Save changes"
-                            role = Role.Button
-                            if (!state.isSaveEnabled) disabled()
-                        },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .background(
+                                if (state.isSaveEnabled) c.accent else c.surfaceAlt,
+                                RectangleShape,
+                            ).then(
+                                if (state.isSaveEnabled) {
+                                    Modifier.clickable(onClick = {
+                                        keyboard?.hide()
+                                        state.onSave()
+                                    })
+                                } else {
+                                    Modifier
+                                }
+                            ).semantics {
+                                contentDescription = "Save changes"
+                                role = Role.Button
+                                if (!state.isSaveEnabled) disabled()
+                            },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = "SAVE CHANGES",
-                        style = ZappTheme.typography.button.copy(
-                            color = if (state.isSaveEnabled) c.onAccent else c.textSubtle,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.6.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.button.copy(
+                                color = if (state.isSaveEnabled) c.onAccent else c.textSubtle,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.6.sp,
+                            ),
                     )
                 }
 
                 Spacer(Modifier.height(10.dp))
 
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .background(c.dangerSoft, RectangleShape)
-                        .clickable(onClick = state.onRequestDelete)
-                        .semantics {
-                            contentDescription = "Delete contact"
-                            role = Role.Button
-                        },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .background(c.dangerSoft, RectangleShape)
+                            .clickable(onClick = state.onRequestDelete)
+                            .semantics {
+                                contentDescription = "Delete contact"
+                                role = Role.Button
+                            },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = "DELETE CONTACT",
-                        style = ZappTheme.typography.button.copy(
-                            color = c.danger,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.6.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.button.copy(
+                                color = c.danger,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.6.sp,
+                            ),
                     )
                 }
             }
@@ -268,19 +274,21 @@ private fun DeleteConfirmation(
 ) {
     val c = ZappTheme.colors
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.dangerSoft, RectangleShape)
-            .border(BorderStroke(1.dp, c.danger), RectangleShape)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.dangerSoft, RectangleShape)
+                .border(BorderStroke(1.dp, c.danger), RectangleShape)
+                .padding(horizontal = 16.dp, vertical = 14.dp),
     ) {
         Column {
             BasicText(
                 text = "Delete contact?",
-                style = ZappTheme.typography.rowTitle.copy(
-                    color = c.danger,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.rowTitle.copy(
+                        color = c.danger,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
             Spacer(Modifier.height(4.dp))
             BasicText(
@@ -293,45 +301,49 @@ private fun DeleteConfirmation(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .border(BorderStroke(1.dp, c.border), RectangleShape)
-                        .clickable(onClick = onCancel)
-                        .semantics {
-                            contentDescription = "Cancel delete"
-                            role = Role.Button
-                        },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .border(BorderStroke(1.dp, c.border), RectangleShape)
+                            .clickable(onClick = onCancel)
+                            .semantics {
+                                contentDescription = "Cancel delete"
+                                role = Role.Button
+                            },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = "CANCEL",
-                        style = ZappTheme.typography.button.copy(
-                            color = c.text,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.6.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.button.copy(
+                                color = c.text,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.6.sp,
+                            ),
                     )
                 }
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .background(c.danger, RectangleShape)
-                        .clickable(onClick = onConfirm)
-                        .semantics {
-                            contentDescription = "Confirm delete contact"
-                            role = Role.Button
-                        },
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .background(c.danger, RectangleShape)
+                            .clickable(onClick = onConfirm)
+                            .semantics {
+                                contentDescription = "Confirm delete contact"
+                                role = Role.Button
+                            },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = "DELETE",
-                        style = ZappTheme.typography.button.copy(
-                            color = c.onAccent,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.6.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.button.copy(
+                                color = c.onAccent,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.6.sp,
+                            ),
                     )
                 }
             }

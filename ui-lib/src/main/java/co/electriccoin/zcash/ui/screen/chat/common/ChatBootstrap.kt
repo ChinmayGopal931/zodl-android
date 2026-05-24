@@ -29,9 +29,9 @@ class ChatBootstrap(
     private val _isInitializing = MutableStateFlow(true)
     val isInitializing: StateFlow<Boolean> = _isInitializing.asStateFlow()
 
-    private val _unreadCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    private val unreadCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
     val totalUnreadCount: StateFlow<Int> =
-        _unreadCounts
+        unreadCounts
             .map { it.values.sum() }
             .stateIn(scope, SharingStarted.Eagerly, 0)
 
@@ -54,14 +54,14 @@ class ChatBootstrap(
         sdk.messageReceived.collect { (conversationId, msg) ->
             if (msg.isFromMe) return@collect
             if (moderationRepository.isBlocked(msg.senderId)) return@collect
-            _unreadCounts.update { current ->
+            unreadCounts.update { current ->
                 current + (conversationId to ((current[conversationId] ?: 0) + 1))
             }
         }
     }
 
     fun markConversationRead(conversationId: String) {
-        _unreadCounts.update { it - conversationId }
+        unreadCounts.update { it - conversationId }
     }
 
     suspend fun restoreFromWalletSeed(displayName: String): ZMIdentity {

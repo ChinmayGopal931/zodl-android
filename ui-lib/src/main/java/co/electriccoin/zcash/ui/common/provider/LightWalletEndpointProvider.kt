@@ -24,9 +24,11 @@ class LightWalletEndpointProvider(
                 LightWalletEndpoint(host = "ap.zec.rocks", port = 443, isSecure = true),
             )
         } else {
+            // testnet.zec.rocks:443 is app-layer dead (TCP up, no gRPC) and produces the
+            // ECONNREFUSED noise we see in logcat. Cipherscan is the working community endpoint.
+            // Re-add zec.rocks here only after manually verifying gRPC HEALTH responds.
             listOf(
                 LightWalletEndpoint(host = "lightwalletd.testnet.cipherscan.app", port = 443, isSecure = true),
-                LightWalletEndpoint(host = "testnet.zec.rocks", port = 443, isSecure = true),
             )
         }
 

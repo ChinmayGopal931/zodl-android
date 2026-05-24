@@ -63,19 +63,21 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp)
-                .imePadding()
-                .padding(bottom = 28.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .imePadding()
+                    .padding(bottom = 28.dp),
         ) {
             BasicText(
                 text = "Add New Contact",
-                style = ZappTheme.typography.sectionTitle.copy(
-                    color = c.text,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.sectionTitle.copy(
+                        color = c.text,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
 
             Spacer(Modifier.height(20.dp))
@@ -112,13 +114,14 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
                 },
                 trailingIcon = {
                     Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable(onClick = state.onScanPublicKey)
-                            .semantics {
-                                contentDescription = "Scan messaging key QR"
-                                role = Role.Button
-                            },
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .clickable(onClick = state.onScanPublicKey)
+                                .semantics {
+                                    contentDescription = "Scan messaging key QR"
+                                    role = Role.Button
+                                },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -135,10 +138,11 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
             if (state.isValidKey) {
                 Spacer(Modifier.height(8.dp))
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(c.successSoft, RectangleShape)
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(c.successSoft, RectangleShape)
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
@@ -174,13 +178,14 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
                 },
                 trailingIcon = {
                     Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable(onClick = state.onScanWalletAddress)
-                            .semantics {
-                                contentDescription = "Scan wallet address QR"
-                                role = Role.Button
-                            },
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .clickable(onClick = state.onScanWalletAddress)
+                                .semantics {
+                                    contentDescription = "Scan wallet address QR"
+                                    role = Role.Button
+                                },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -220,27 +225,29 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
 
             // Add Contact primary CTA
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .background(c.accent, RectangleShape)
-                    .clickable(onClick = {
-                        keyboard?.hide()
-                        state.onSave()
-                    })
-                    .semantics {
-                        contentDescription = "Add Contact"
-                        role = Role.Button
-                    },
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .background(c.accent, RectangleShape)
+                        .clickable(onClick = {
+                            keyboard?.hide()
+                            state.onSave()
+                        })
+                        .semantics {
+                            contentDescription = "Add Contact"
+                            role = Role.Button
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = "SAVE",
-                    style = ZappTheme.typography.button.copy(
-                        color = c.onAccent,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.6.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.button.copy(
+                            color = c.onAccent,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.6.sp,
+                        ),
                 )
             }
         }

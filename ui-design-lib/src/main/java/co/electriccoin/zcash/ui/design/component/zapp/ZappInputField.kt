@@ -31,21 +31,23 @@ fun ZappInputField(
     val c = ZappTheme.colors
     val isFilled = value.text.isNotEmpty()
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surfaceInput, RectangleShape)
-            .then(
-                if (isFilled) {
-                    Modifier.border(BorderStroke(2.dp, c.borderStrong), RectangleShape)
-                } else {
-                    Modifier.border(BorderStroke(1.dp, c.border), RectangleShape)
-                }
-            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surfaceInput, RectangleShape)
+                .then(
+                    if (isFilled) {
+                        Modifier.border(BorderStroke(2.dp, c.borderStrong), RectangleShape)
+                    } else {
+                        Modifier.border(BorderStroke(1.dp, c.border), RectangleShape)
+                    }
+                ),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 14.dp, end = 0.dp, top = 14.dp, bottom = 14.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(start = 14.dp, end = 0.dp, top = 14.dp, bottom = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             leadingIcon?.let {

@@ -6,11 +6,11 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
 import co.electriccoin.zcash.ui.common.datasource.SendTransactionProposal
-import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.datasource.SwapTransactionProposal
 import co.electriccoin.zcash.ui.common.datasource.TransactionProposal
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
 import co.electriccoin.zcash.ui.common.model.ZashiAccount
+import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.repository.BiometricRepository
 import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
@@ -44,9 +44,16 @@ class SubmitProposalUseCase(
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     /**
-     * Submit Zashi proposal and navigate to Transaction Progress screen or navigate to Keystone PCZT flow.
+     * Submit Zashi proposal and (by default) navigate to Transaction Progress / Keystone PCZT flow.
+     *
+     * @param navigateAfter When true (default), navigates to [TransactionProgressArgs] (Zashi) or
+     *   [SignKeystoneTransactionArgs] (Keystone) after submit — the standard send/swap UX. When
+     *   false, both navigations are suppressed and the caller keeps the foreground. Used by the
+     *   UPI offramp's NEAR-bridge funding step so the user stays on the offramp progress screen
+     *   while the ZEC deposit submits in the background. The Zashi submit still runs on a
+     *   background coroutine either way.
      */
-    suspend operator fun invoke() {
+    suspend operator fun invoke(navigateAfter: Boolean = true) {
         try {
             biometricRepository.requestBiometrics(
                 request =
@@ -73,13 +80,17 @@ class SubmitProposalUseCase(
             }
             when (account) {
                 is KeystoneAccount -> {
-                    navigationRouter.replace(SignKeystoneTransactionArgs)
+                    if (navigateAfter) {
+                        navigationRouter.replace(SignKeystoneTransactionArgs)
+                    }
                 }
 
                 is ZashiAccount -> {
                     swapRepository.clear()
                     submitZashiProposal(proposal)
-                    navigationRouter.replace(TransactionProgressArgs)
+                    if (navigateAfter) {
+                        navigationRouter.replace(TransactionProgressArgs)
+                    }
                 }
             }
         } catch (_: BiometricsFailureException) {
@@ -110,7 +121,11 @@ class SubmitProposalUseCase(
 
     private suspend fun notifyChatPeer(conversationId: String, proposal: SendTransactionProposal) {
         try {
-            val zecAmount = proposal.amount.convertZatoshiToZec().stripTrailingZeros().toPlainString()
+            val zecAmount =
+                proposal.amount
+                    .convertZatoshiToZec()
+                    .stripTrailingZeros()
+                    .toPlainString()
             messagingSDK.sendMessage(conversationId, "Sent $zecAmount ZEC \uD83D\uDCB8")
         } catch (e: Exception) {
             Twig.warn(e) { "Failed to send chat payment notification" }

@@ -6,6 +6,9 @@ and this application adheres to [Semantic Versioning](https://semver.org/spec/v2
 
 ## [Unreleased]
 
+### Added:
+- UPI offramp via p2p.me — convert USDC to INR with on-chain price reads, rich progress UI, and subgraph-with-on-chain-fallback order tracking.
+
 ## [3.3.1 (1643)] - 2026-04-10
 
 ### Fixed:

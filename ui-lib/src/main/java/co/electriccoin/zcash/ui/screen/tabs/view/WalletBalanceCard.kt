@@ -49,9 +49,10 @@ internal fun BalanceCard(
     val hasBalance = balanceState.totalBalance.value > 0L
 
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 18.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
     ) {
         ZappSectionLabel(text = "Total balance")
         Spacer(Modifier.height(8.dp))
@@ -77,26 +78,29 @@ private fun BalanceAmount(balanceState: BalanceWidgetState) {
     val c = ZappTheme.colors
     val fiat = balanceState.toFiatFormatted()
     val context = LocalContext.current
-    val zec = remember(balanceState.totalBalance, context) {
-        stringRes(balanceState.totalBalance, TickerLocation.HIDDEN).getString(context)
-    }
+    val zec =
+        remember(balanceState.totalBalance, context) {
+            stringRes(balanceState.totalBalance, TickerLocation.HIDDEN).getString(context)
+        }
 
     // Swiss display style — Black weight, oversized, tight tracking — matches
     // the wallet hero in the design canvas (52sp whole / 26sp fraction).
-    val wholeStyle = ZappTheme.typography.display.copy(
-        color = c.text,
-        fontSize = 52.sp,
-        lineHeight = 52.sp,
-        fontWeight = FontWeight.Black,
-        letterSpacing = (-3).sp,
-    )
-    val fractionStyle = ZappTheme.typography.displaySecondary.copy(
-        color = c.textMuted,
-        fontSize = 26.sp,
-        lineHeight = 32.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = (-1).sp,
-    )
+    val wholeStyle =
+        ZappTheme.typography.display.copy(
+            color = c.text,
+            fontSize = 52.sp,
+            lineHeight = 52.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = (-3).sp,
+        )
+    val fractionStyle =
+        ZappTheme.typography.displaySecondary.copy(
+            color = c.textMuted,
+            fontSize = 26.sp,
+            lineHeight = 32.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (-1).sp,
+        )
 
     if (fiat != null) {
         Row {
@@ -164,22 +168,26 @@ private fun Dot(color: androidx.compose.ui.graphics.Color) {
 private fun ChartArea(state: BalanceChartState) {
     val c = ZappTheme.colors
     when (state) {
-        is BalanceChartState.Data ->
+        is BalanceChartState.Data -> {
             SparkChart(
                 data = state.chart,
                 lineColor = c.accent,
                 fillColor = c.accent,
                 modifier = Modifier.fillMaxWidth(),
             )
+        }
 
-        is BalanceChartState.Empty ->
+        is BalanceChartState.Empty -> {
             EmptyChartBox("No data for this period")
+        }
 
-        BalanceChartState.Loading ->
+        BalanceChartState.Loading -> {
             EmptyChartBox("Loading chart…")
+        }
 
-        BalanceChartState.Hidden ->
+        BalanceChartState.Hidden -> {
             EmptyChartBox("Balance chart appears here")
+        }
     }
 }
 
@@ -187,10 +195,11 @@ private fun ChartArea(state: BalanceChartState) {
 private fun EmptyChartBox(text: String) {
     val c = ZappTheme.colors
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(96.dp)
-            .background(c.surfaceInput, RectangleShape),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(96.dp)
+                .background(c.surfaceInput, RectangleShape),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
@@ -215,7 +224,10 @@ private fun PeriodSelector(state: BalanceChartState) {
     )
 }
 
-private data class FormattedFiat(val whole: String, val fraction: String)
+private data class FormattedFiat(
+    val whole: String,
+    val fraction: String
+)
 
 @Composable
 private fun BalanceWidgetState.toFiatFormatted(): FormattedFiat? {
@@ -226,7 +238,8 @@ private fun BalanceWidgetState.toFiatFormatted(): FormattedFiat? {
     return remember(totalBalance, conversion.priceOfZec, exchange.fiatCurrency.symbol) {
         val zec = totalBalance.convertZatoshiToZec()
         val fiatAmount =
-            zec.multiply(BigDecimal(conversion.priceOfZec), MathContext.DECIMAL128)
+            zec
+                .multiply(BigDecimal(conversion.priceOfZec), MathContext.DECIMAL128)
                 .setScale(2, RoundingMode.HALF_UP)
         val symbol = exchange.fiatCurrency.symbol
         val whole = fiatAmount.toBigInteger()

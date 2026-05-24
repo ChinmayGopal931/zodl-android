@@ -71,16 +71,18 @@ fun PinVerifyScreen(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
                 Spacer(Modifier.height(14.dp))
@@ -90,34 +92,39 @@ fun PinVerifyScreen(
                     isLocked -> {
                         BasicText(
                             text = "Too many attempts. Try again in ${lockoutSecondsRemaining}s.",
-                            style = ZappTheme.typography.body.copy(
-                                color = c.danger,
-                                fontSize = 13.sp,
-                                lineHeight = 20.sp,
-                            ),
+                            style =
+                                ZappTheme.typography.body.copy(
+                                    color = c.danger,
+                                    fontSize = 13.sp,
+                                    lineHeight = 20.sp,
+                                ),
                         )
                     }
+
                     hasError -> {
                         BasicText(
                             text = "Incorrect PIN. Please try again.",
-                            style = ZappTheme.typography.body.copy(
-                                color = c.danger,
-                                fontSize = 13.sp,
-                                lineHeight = 20.sp,
-                            ),
+                            style =
+                                ZappTheme.typography.body.copy(
+                                    color = c.danger,
+                                    fontSize = 13.sp,
+                                    lineHeight = 20.sp,
+                                ),
                         )
                     }
+
                     else -> {
                         OnbSub(text = "Enter your 6-digit PIN to continue.")
                     }
                 }
             }
             Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .let { if (!showBack) it.windowInsetsPadding(WindowInsets.navigationBars) else it }
-                    .padding(bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .let { if (!showBack) it.windowInsetsPadding(WindowInsets.navigationBars) else it }
+                        .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PinDotRow(filledCount = currentInput.length, hasError = hasError || isLocked)

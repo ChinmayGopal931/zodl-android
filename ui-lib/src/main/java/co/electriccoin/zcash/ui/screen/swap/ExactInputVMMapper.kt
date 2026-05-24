@@ -71,24 +71,27 @@ internal class ExactInputVMMapper {
                 onSwapAssetPickerClick = onSwapAssetPickerClick
             )
         return SwapState(
-            headerBalance = if (state.account != null) {
-                stringRes(state.totalSpendableBalance, TickerLocation.HIDDEN)
-            } else {
-                null
-            },
-            headerBalanceFiat = state.swapAssets.zecAsset?.usdPrice?.let { zecPrice ->
-                val fiatAmount =
-                    state.totalSpendableBalance.value
-                        .convertZatoshiToZecBigDecimal()
-                        .multiply(zecPrice, MathContext.DECIMAL128)
-                stringRes("≈ ") + stringResByDynamicCurrencyNumber(fiatAmount, FiatCurrency.USD.symbol)
-            },
-            priceStats = state.swapAssets.zecAsset?.usdPrice?.let { zecPrice ->
-                SwapPriceStats(
-                    price = stringResByDynamicCurrencyNumber(zecPrice, FiatCurrency.USD.symbol),
-                    fee = stringRes("~") + stringResByNumber(state.slippage, minDecimals = 0) + stringRes("%")
-                )
-            },
+            headerBalance =
+                if (state.account != null) {
+                    stringRes(state.totalSpendableBalance, TickerLocation.HIDDEN)
+                } else {
+                    null
+                },
+            headerBalanceFiat =
+                state.swapAssets.zecAsset?.usdPrice?.let { zecPrice ->
+                    val fiatAmount =
+                        state.totalSpendableBalance.value
+                            .convertZatoshiToZecBigDecimal()
+                            .multiply(zecPrice, MathContext.DECIMAL128)
+                    stringRes("≈ ") + stringResByDynamicCurrencyNumber(fiatAmount, FiatCurrency.USD.symbol)
+                },
+            priceStats =
+                state.swapAssets.zecAsset?.usdPrice?.let { zecPrice ->
+                    SwapPriceStats(
+                        price = stringResByDynamicCurrencyNumber(zecPrice, FiatCurrency.USD.symbol),
+                        fee = stringRes("~") + stringResByNumber(state.slippage, minDecimals = 0) + stringRes("%")
+                    )
+                },
             amountTextField = textFieldState,
             slippage =
                 createSlippageState(
@@ -168,14 +171,18 @@ internal class ExactInputVMMapper {
                     } ?: stringRes(co.electriccoin.zcash.ui.design.R.string.general_enter_address),
             receivingZecAddress =
                 when (state.mode) {
-                    SWAP_FROM_ZEC -> null
-                    SWAP_INTO_ZEC ->
+                    SWAP_FROM_ZEC -> {
+                        null
+                    }
+
+                    SWAP_INTO_ZEC -> {
                         state.account?.let { account ->
                             when (state.receivingAddressType) {
                                 ReceivingAddressType.UNIFIED -> stringRes(account.unified.address.address)
                                 ReceivingAddressType.TRANSPARENT -> stringRes(account.transparent.address.address)
                             }
                         }
+                    }
                 },
             onChangeReceivingAddress =
                 when (state.mode) {

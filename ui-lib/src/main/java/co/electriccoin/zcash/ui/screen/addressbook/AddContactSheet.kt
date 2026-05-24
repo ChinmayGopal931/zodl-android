@@ -126,19 +126,21 @@ internal fun AddContactSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 28.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 28.dp),
         ) {
             BasicText(
                 text = stringResource(R.string.add_new_contact_title),
-                style = ZappTheme.typography.screenTitle.copy(
-                    color = c.text,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.screenTitle.copy(
+                        color = c.text,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
 
             Spacer(Modifier.height(20.dp))
@@ -146,7 +148,10 @@ internal fun AddContactSheet(
             // Name field
             ZappInputField(
                 value = nameInput,
-                onValueChange = { nameInput = it; error = null },
+                onValueChange = {
+                    nameInput = it
+                    error = null
+                },
                 placeholder = stringResource(R.string.contact_name_hint),
                 leadingIcon = {
                     Icon(
@@ -163,7 +168,10 @@ internal fun AddContactSheet(
             // Messaging Key field
             ZappInputField(
                 value = messagingKeyInput,
-                onValueChange = { messagingKeyInput = it; error = null },
+                onValueChange = {
+                    messagingKeyInput = it
+                    error = null
+                },
                 placeholder = "Messaging Key (64 hex chars)",
                 leadingIcon = {
                     Icon(
@@ -175,13 +183,14 @@ internal fun AddContactSheet(
                 },
                 trailingIcon = {
                     Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable(onClick = onScanMessagingKey)
-                            .semantics {
-                                contentDescription = "Scan messaging key QR"
-                                role = Role.Button
-                            },
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .clickable(onClick = onScanMessagingKey)
+                                .semantics {
+                                    contentDescription = "Scan messaging key QR"
+                                    role = Role.Button
+                                },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -198,10 +207,11 @@ internal fun AddContactSheet(
             if (isValidKey) {
                 Spacer(Modifier.height(8.dp))
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(c.successSoft, RectangleShape)
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(c.successSoft, RectangleShape)
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(
@@ -225,7 +235,10 @@ internal fun AddContactSheet(
             // Wallet Address field
             ZappInputField(
                 value = walletAddressInput,
-                onValueChange = { walletAddressInput = it; error = null },
+                onValueChange = {
+                    walletAddressInput = it
+                    error = null
+                },
                 placeholder = stringResource(R.string.contact_address_hint),
                 leadingIcon = {
                     Icon(
@@ -237,13 +250,14 @@ internal fun AddContactSheet(
                 },
                 trailingIcon = {
                     Box(
-                        modifier = Modifier
-                            .size(48.dp)
-                            .clickable(onClick = onScanWalletAddress)
-                            .semantics {
-                                contentDescription = "Scan wallet address QR"
-                                role = Role.Button
-                            },
+                        modifier =
+                            Modifier
+                                .size(48.dp)
+                                .clickable(onClick = onScanWalletAddress)
+                                .semantics {
+                                    contentDescription = "Scan wallet address QR"
+                                    role = Role.Button
+                                },
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -285,37 +299,51 @@ internal fun AddContactSheet(
             // ADD CONTACT CTA
             val keyboard = LocalSoftwareKeyboardController.current
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
-                    .background(c.accent, RectangleShape)
-                    .clickable(onClick = {
-                        val name = nameInput.text.trim()
-                        val mk = messagingKeyInput.text.trim().removePrefix("0x")
-                        val wallet = walletAddressInput.text.trim()
-                        val addrs = buildMap {
-                            if (transparentAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.text.trim())
-                            if (evmAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.text.trim())
-                            if (solanaAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.text.trim())
-                        }
-                        when {
-                            name.isEmpty() -> error = "Name is required"
-                            else -> {
-                                keyboard?.hide()
-                                onAdd(name, mk, wallet, addrs)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(52.dp)
+                        .background(c.accent, RectangleShape)
+                        .clickable(onClick = {
+                            val name = nameInput.text.trim()
+                            val mk = messagingKeyInput.text.trim().removePrefix("0x")
+                            val wallet = walletAddressInput.text.trim()
+                            val addrs =
+                                buildMap {
+                                    if (transparentAddr.text.isNotBlank()) {
+                                        put(
+                                            AddressBookContact.ADDR_TYPE_TRANSPARENT,
+                                            transparentAddr.text.trim()
+                                        )
+                                    }
+                                    if (evmAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.text.trim())
+                                    if (solanaAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.text.trim())
+                                }
+                            when {
+                                name.isEmpty() -> {
+                                    error = "Name is required"
+                                }
+
+                                else -> {
+                                    keyboard?.hide()
+                                    onAdd(name, mk, wallet, addrs)
+                                }
                             }
-                        }
-                    })
-                    .semantics { contentDescription = "Add Contact"; role = Role.Button },
+                        })
+                        .semantics {
+                            contentDescription = "Add Contact"
+                            role = Role.Button
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = stringResource(R.string.add_new_contact_primary_btn).uppercase(),
-                    style = ZappTheme.typography.button.copy(
-                        color = c.onAccent,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.6.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.button.copy(
+                            color = c.onAccent,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.6.sp,
+                        ),
                 )
             }
         }

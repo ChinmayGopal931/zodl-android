@@ -68,10 +68,11 @@ fun ChatContactsView(
         }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             ZappScreenHeader(
@@ -90,22 +91,24 @@ fun ChatContactsView(
                 val navBarBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(
-                        top = 4.dp,
-                        bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
-                    ),
+                    contentPadding =
+                        PaddingValues(
+                            top = 4.dp,
+                            bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
+                        ),
                 ) {
                     grouped.forEach { (letter, bucket) ->
                         item(key = "header-$letter") {
                             BasicText(
                                 text = letter.toString(),
                                 style = ZappTheme.typography.groupLabel.copy(color = c.textMuted),
-                                modifier = Modifier.padding(
-                                    start = 20.dp,
-                                    end = 20.dp,
-                                    top = 14.dp,
-                                    bottom = 4.dp,
-                                ),
+                                modifier =
+                                    Modifier.padding(
+                                        start = 20.dp,
+                                        end = 20.dp,
+                                        top = 14.dp,
+                                        bottom = 4.dp,
+                                    ),
                             )
                         }
                         items(
@@ -127,25 +130,27 @@ fun ChatContactsView(
             icon = Icons.Default.PersonAdd,
             contentDescription = stringResource(R.string.chat_contacts_add_content_description),
             onClick = state.onAddSheetOpen,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(
-                    end = 20.dp,
-                    bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
-                ),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(
+                        end = 20.dp,
+                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                    ),
         )
 
         if (showBackButton) {
             ZappBackButton(
                 onClick = state.onBack,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(
-                        start = 20.dp,
-                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
-                    ),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(
+                            start = 20.dp,
+                            bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                        ),
             )
         }
     }
@@ -196,16 +201,18 @@ private fun ContactListItem(
     val shortKey = remember(contact.publicKey) { contact.publicKey.ellipsizeAddress() }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onEdit)
-            .padding(horizontal = 18.dp, vertical = 10.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onEdit)
+                .padding(horizontal = 18.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(c.accent, RectangleShape),
+            modifier =
+                Modifier
+                    .size(40.dp)
+                    .background(c.accent, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
@@ -232,13 +239,14 @@ private fun ContactListItem(
         }
 
         Box(
-            modifier = Modifier
-                .size(48.dp)
-                .clickable(onClick = onChat)
-                .semantics {
-                    contentDescription = "Start chat"
-                    role = Role.Button
-                },
+            modifier =
+                Modifier
+                    .size(48.dp)
+                    .clickable(onClick = onChat)
+                    .semantics {
+                        contentDescription = "Start chat"
+                        role = Role.Button
+                    },
             contentAlignment = Alignment.Center,
         ) {
             Icon(

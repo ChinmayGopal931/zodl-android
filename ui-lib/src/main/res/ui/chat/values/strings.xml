@@ -10,6 +10,7 @@
 
     <!-- Chat list — swipe-to-leave -->
     <string name="chat_list_leave_action">Leave</string>
+    <string name="chat_list_close_action">Close</string>
     <string name="chat_list_leave_dialog_title">Leave conversation?</string>
     <string name="chat_list_leave_dialog_message">You\'ll leave \"%1$s\" and stop receiving its messages.</string>
     <string name="chat_list_leave_dialog_cancel">Cancel</string>
@@ -228,6 +229,15 @@
     <string name="support_chat_leave_dialog_cancel">Cancel</string>
     <string name="support_chat_contact_footer_subtitle">Report issues or share feedback</string>
     <string name="support_chat_input_placeholder">Message</string>
+    <string name="support_chat_greeting_problem">Please describe the issue you\'re experiencing.</string>
+    <string name="support_chat_greeting_feedback">We\'d love to hear your thoughts.</string>
+    <string name="support_chat_greeting_other">How can we help?</string>
+    <string name="support_chat_leave_notice">User has left the chat.</string>
+
+    <!-- Support chat — accessibility / content descriptions -->
+    <string name="support_chat_back_content_description">Go back</string>
+    <string name="support_chat_overflow_content_description">More options</string>
+    <string name="support_chat_send_content_description">Send message</string>
 
     <!-- Support ticket list -->
     <string name="support_ticket_list_empty_title">No support tickets</string>
@@ -237,7 +247,18 @@
     <string name="support_ticket_close_dialog_message">This will remove the ticket and its messages.</string>
     <string name="support_ticket_close_dialog_confirm">Close</string>
     <string name="support_ticket_close_dialog_cancel">Cancel</string>
+    <string name="support_ticket_list_back_content_description">Go back</string>
+    <string name="support_ticket_default_label">Ticket</string>
     <string name="chat_list_support_tickets_fmt">%1$d open ticket(s)</string>
+
+    <!-- Settings tab — support group -->
+    <string name="settings_group_support">Support</string>
+    <string name="settings_support_contact_title">Contact support</string>
+    <string name="settings_support_contact_subtitle">Report issues, share feedback</string>
+
+    <!-- Chat room — reply preview fallback names -->
+    <string name="chat_room_reply_sender_self">You</string>
+    <string name="chat_room_reply_sender_unknown">Unknown</string>
 
     <!-- Chat room — image viewer -->
     <string name="chat_room_image_viewer_close">Close</string>
@@ -253,11 +274,12 @@
     <string name="chat_room_media_placeholder_video">Video</string>
     <string name="chat_room_media_placeholder_image">Image</string>
 
-    <!-- Support chat — media sheet -->
-    <string name="support_chat_media_sheet_title">Attach</string>
-    <string name="support_chat_media_option_media">Media</string>
-    <string name="support_chat_media_option_file">File</string>
-    <string name="support_chat_media_option_camera">Camera</string>
+    <!-- Chat media attachment sheet (shared by chat room + support chat) -->
+    <string name="chat_media_sheet_title">Attach</string>
+    <string name="chat_media_option_media">Media</string>
+    <string name="chat_media_option_file">File</string>
+    <string name="chat_media_option_camera">Camera</string>
+    <string name="chat_media_option_location">Location</string>
 
     <!-- Chat contacts — add/edit validation errors -->
     <string name="chat_contact_error_name_required">Name is required</string>

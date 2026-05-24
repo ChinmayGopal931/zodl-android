@@ -224,11 +224,12 @@ private fun Item(item: ListItemState) {
 @Composable
 private fun BottomSearchBar(innerState: SwapAssetPickerState) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(ZashiColors.Surfaces.bgPrimary)
-            .navigationBarsPadding()
-            .padding(end = 24.dp, top = 8.dp, bottom = 8.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(ZashiColors.Surfaces.bgPrimary)
+                .navigationBarsPadding()
+                .padding(end = 24.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         ZashiTopAppBarCloseNavigation(

@@ -117,18 +117,19 @@ class ChatContactsVM(
 
     private fun openAddSheet() {
         if (addSheet.value != null) return
-        addSheet.value = AddChatContactVM(
-            scope = viewModelScope,
-            existingKeysProvider = { contacts.value.map { it.publicKey }.toSet() },
-            scannedPublicKeyFlow = scannedPublicKey.asStateFlow(),
-            scannedWalletAddressFlow = scannedWalletAddress.asStateFlow(),
-            onConsumeScannedPublicKey = ::consumeScannedPublicKey,
-            onConsumeScannedWalletAddress = ::consumeScannedWalletAddress,
-            onScanPublicKeyRequest = ::onScanPublicKey,
-            onScanWalletAddressRequest = ::onScanWalletAddress,
-            onSaveContact = ::addContactFromSheet,
-            onDismissRequest = ::closeAddSheet,
-        )
+        addSheet.value =
+            AddChatContactVM(
+                scope = viewModelScope,
+                existingKeysProvider = { contacts.value.map { it.publicKey }.toSet() },
+                scannedPublicKeyFlow = scannedPublicKey.asStateFlow(),
+                scannedWalletAddressFlow = scannedWalletAddress.asStateFlow(),
+                onConsumeScannedPublicKey = ::consumeScannedPublicKey,
+                onConsumeScannedWalletAddress = ::consumeScannedWalletAddress,
+                onScanPublicKeyRequest = ::onScanPublicKey,
+                onScanWalletAddressRequest = ::onScanWalletAddress,
+                onSaveContact = ::addContactFromSheet,
+                onDismissRequest = ::closeAddSheet,
+            )
     }
 
     private fun closeAddSheet() {
@@ -137,16 +138,17 @@ class ChatContactsVM(
 
     private fun openEditSheet(contact: ChatContact) {
         if (editSheet.value != null) return
-        editSheet.value = EditChatContactVM(
-            contact = contact,
-            scope = viewModelScope,
-            scannedWalletAddressFlow = scannedWalletAddress.asStateFlow(),
-            onConsumeScannedWalletAddress = ::consumeScannedWalletAddress,
-            onScanWalletAddressRequest = ::onScanWalletAddress,
-            onSaveContact = ::updateContactFromSheet,
-            onDeleteContact = ::deleteContactFromSheet,
-            onDismissRequest = ::closeEditSheet,
-        )
+        editSheet.value =
+            EditChatContactVM(
+                contact = contact,
+                scope = viewModelScope,
+                scannedWalletAddressFlow = scannedWalletAddress.asStateFlow(),
+                onConsumeScannedWalletAddress = ::consumeScannedWalletAddress,
+                onScanWalletAddressRequest = ::onScanWalletAddress,
+                onSaveContact = ::updateContactFromSheet,
+                onDeleteContact = ::deleteContactFromSheet,
+                onDismissRequest = ::closeEditSheet,
+            )
     }
 
     private fun closeEditSheet() {

@@ -40,11 +40,17 @@ internal class ChatScanPublicKeyVM(
             mutex.withLock {
                 if (hasBeenScannedSuccessfully) return@withLock
                 when (result) {
-                    is ImageToQrCodeResult.SingleCode -> onScanned(result.text)
-                    ImageToQrCodeResult.MultipleCodes ->
+                    is ImageToQrCodeResult.SingleCode -> {
+                        onScanned(result.text)
+                    }
+
+                    ImageToQrCodeResult.MultipleCodes -> {
                         state.update { ScanValidationState.SEVERAL_CODES_FOUND }
-                    ImageToQrCodeResult.NoCode ->
+                    }
+
+                    ImageToQrCodeResult.NoCode -> {
                         state.update { ScanValidationState.INVALID_IMAGE }
+                    }
                 }
             }
         }

@@ -263,12 +263,14 @@ private fun StringResource.ByNumber.convertNumber(context: StringContext): Strin
 private fun StringResource.ByZatoshi.convertZatoshi(context: StringContext): String {
     val zec = this.zatoshi.convertZatoshiToZec(scale = 8)
     val amount =
-        NumberFormat.getInstance(context.locale).apply {
-            roundingMode = RoundingMode.HALF_EVEN
-            maximumFractionDigits = 8
-            minimumFractionDigits = 3
-            minimumIntegerDigits = 1
-        }.format(zec)
+        NumberFormat
+            .getInstance(context.locale)
+            .apply {
+                roundingMode = RoundingMode.HALF_EVEN
+                maximumFractionDigits = 8
+                minimumFractionDigits = 3
+                minimumIntegerDigits = 1
+            }.format(zec)
     return when (this.tickerLocation) {
         TickerLocation.BEFORE -> "ZEC $amount"
         TickerLocation.AFTER -> "$amount ZEC"

@@ -14,7 +14,14 @@ data class AddressBookState(
     val onBack: () -> Unit,
     val scanButton: ButtonState,
     val manualButton: ButtonState,
-    val onSaveNewContact: ((name: String, messagingKey: String, walletAddress: String, walletAddresses: Map<String, String>) -> Unit)? = null,
+    val onSaveNewContact: (
+        (
+            name: String,
+            messagingKey: String,
+            walletAddress: String,
+            walletAddresses: Map<String, String>
+        ) -> Unit
+    )? = null,
     val onScanMessagingKey: (() -> Unit)? = null,
     val scannedMessagingKey: String? = null,
     val onConsumeScannedMessagingKey: (() -> Unit)? = null,

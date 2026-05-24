@@ -15,8 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Scaffold
@@ -138,26 +138,31 @@ private fun RequestBottomBar(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.bg)
-            .border(BorderStroke(1.dp, c.text), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.bg)
+                .border(BorderStroke(1.dp, c.text), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         when (state) {
-            is RequestState.Amount -> SwissDockRow(
-                onBack = state.onBack,
-                cta = stringResource(id = R.string.request_amount_btn),
-                onCta = state.onDone,
-                ctaEnabled = state.request.amountState.isValid == true,
-            )
+            is RequestState.Amount -> {
+                SwissDockRow(
+                    onBack = state.onBack,
+                    cta = stringResource(id = R.string.request_amount_btn),
+                    onCta = state.onDone,
+                    ctaEnabled = state.request.amountState.isValid == true,
+                )
+            }
 
-            is RequestState.Memo -> SwissDockRow(
-                onBack = state.onBack,
-                cta = stringResource(id = R.string.request_memo_btn),
-                onCta = state.onDone,
-                ctaEnabled = state.request.memoState.isValid(),
-            )
+            is RequestState.Memo -> {
+                SwissDockRow(
+                    onBack = state.onBack,
+                    cta = stringResource(id = R.string.request_memo_btn),
+                    onCta = state.onDone,
+                    ctaEnabled = state.request.memoState.isValid(),
+                )
+            }
 
             is RequestState.QrCode -> {
                 val sizePixels = with(LocalDensity.current) { DEFAULT_QR_CODE_SIZE.toPx() }.roundToInt()
@@ -198,19 +203,21 @@ private fun SwissDockRow(
 private fun SwissBackBox(onClick: () -> Unit) {
     val c = ZappTheme.colors
     Box(
-        modifier = Modifier
-            .size(width = 72.dp, height = 52.dp)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .clickable(onClick = onClick),
+        modifier =
+            Modifier
+                .size(width = 72.dp, height = 52.dp)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = "←",
-            style = ZappTheme.typography.button.copy(
-                color = c.text,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.button.copy(
+                    color = c.text,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                ),
         )
     }
 }
@@ -226,21 +233,23 @@ private fun SwissPrimaryButton(
     val bg = if (enabled) c.accent else c.surfaceAlt
     val fg = if (enabled) c.onAccent else c.textSubtle
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp)
-            .background(bg, RectangleShape)
-            .clickable(enabled = enabled, onClick = onClick),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .height(52.dp)
+                .background(bg, RectangleShape)
+                .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = text.uppercase(),
-            style = ZappTheme.typography.button.copy(
-                color = fg,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.6.sp,
-            ),
+            style =
+                ZappTheme.typography.button.copy(
+                    color = fg,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.6.sp,
+                ),
         )
     }
 }

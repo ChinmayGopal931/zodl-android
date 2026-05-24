@@ -51,44 +51,49 @@ private fun WelcomeGateContent(
     val c = ZappTheme.colors
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         // ── Hero block ───────────────────────────────────────────
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 36.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 36.dp),
             verticalArrangement = Arrangement.Center,
         ) {
             // Logo + wordmark
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(c.accent, RectangleShape),
+                    modifier =
+                        Modifier
+                            .size(40.dp)
+                            .background(c.accent, RectangleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = "Z",
-                        style = ZappTheme.typography.display.copy(
-                            color = c.onAccent,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Black,
-                        ),
+                        style =
+                            ZappTheme.typography.display.copy(
+                                color = c.onAccent,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Black,
+                            ),
                     )
                 }
                 Spacer(Modifier.width(12.dp))
                 BasicText(
                     text = "Zapp",
-                    style = ZappTheme.typography.screenTitle.copy(
-                        color = c.text,
-                        fontWeight = FontWeight.Black,
-                        fontSize = 22.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.screenTitle.copy(
+                            color = c.text,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 22.sp,
+                        ),
                 )
             }
 
@@ -97,79 +102,87 @@ private fun WelcomeGateContent(
             // Hero — line 1 default, line 2 accent
             BasicText(
                 text = "Chat\nprivately.",
-                style = ZappTheme.typography.display.copy(
-                    color = c.text,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 54.sp,
-                    lineHeight = 52.sp,
-                    letterSpacing = (-2.4).sp,
-                ),
+                style =
+                    ZappTheme.typography.display.copy(
+                        color = c.text,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 54.sp,
+                        lineHeight = 52.sp,
+                        letterSpacing = (-2.4).sp,
+                    ),
             )
             Spacer(Modifier.height(6.dp))
             BasicText(
                 text = "Send\ninstantly.",
-                style = ZappTheme.typography.display.copy(
-                    color = c.accent,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 54.sp,
-                    lineHeight = 52.sp,
-                    letterSpacing = (-2.4).sp,
-                ),
+                style =
+                    ZappTheme.typography.display.copy(
+                        color = c.accent,
+                        fontWeight = FontWeight.Black,
+                        fontSize = 54.sp,
+                        lineHeight = 52.sp,
+                        letterSpacing = (-2.4).sp,
+                    ),
             )
 
             Spacer(Modifier.height(24.dp))
             // 36×3 accent rule
             Box(
-                modifier = Modifier
-                    .size(width = 36.dp, height = 3.dp)
-                    .background(c.text, RectangleShape),
+                modifier =
+                    Modifier
+                        .size(width = 36.dp, height = 3.dp)
+                        .background(c.text, RectangleShape),
             )
             Spacer(Modifier.height(20.dp))
 
             BasicText(
                 text = "End-to-end encrypted messaging. Add a self-custody wallet whenever you want — it's optional.",
-                style = ZappTheme.typography.body.copy(
-                    color = c.textMuted,
-                    fontSize = 14.sp,
-                    lineHeight = 22.sp,
-                ),
+                style =
+                    ZappTheme.typography.body.copy(
+                        color = c.textMuted,
+                        fontSize = 14.sp,
+                        lineHeight = 22.sp,
+                    ),
                 modifier = Modifier.fillMaxWidth(0.85f),
             )
         }
 
         // ── Footer / CTAs ─────────────────────────────────────────
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(width = 1.dp, color = c.text, shape = RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(start = 28.dp, end = 28.dp, top = 16.dp, bottom = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .border(width = 1.dp, color = c.text, shape = RectangleShape)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(start = 28.dp, end = 28.dp, top = 16.dp, bottom = 24.dp),
         ) {
             ZappButton(
                 text = "Get started",
                 onClick = onGetStarted,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
             )
             Spacer(Modifier.height(8.dp))
             ZappButton(
                 text = "I already use Zapp",
                 onClick = onRestoreExisting,
                 variant = ZappButtonVariant.Ghost,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
             )
             Spacer(Modifier.height(12.dp))
             Text(
                 text = "By continuing you accept our terms & privacy policy.",
-                style = ZappTheme.typography.caption.copy(
-                    color = c.textSubtle,
-                    fontSize = 10.sp,
-                    letterSpacing = 0.3.sp,
-                    textAlign = TextAlign.Center,
-                ),
+                style =
+                    ZappTheme.typography.caption.copy(
+                        color = c.textSubtle,
+                        fontSize = 10.sp,
+                        letterSpacing = 0.3.sp,
+                        textAlign = TextAlign.Center,
+                    ),
                 modifier = Modifier.fillMaxWidth(),
             )
         }

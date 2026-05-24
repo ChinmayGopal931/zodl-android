@@ -33,8 +33,8 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomState
-import java.util.Calendar
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 @Composable
 internal fun ChatRoomView(
@@ -108,12 +108,17 @@ internal fun ChatRoomView(
                     },
                 ) { _, item ->
                     when (item) {
-                        is ChatListItem.DateSeparator -> ChatDateSeparator(epochMillis = item.epochMillis)
-                        is ChatListItem.Message -> MessageBubble(
-                            message = item.message,
-                            onReplyToMessage = onReplyToMessage,
-                            onImageClick = { viewerMessage = it },
-                        )
+                        is ChatListItem.DateSeparator -> {
+                            ChatDateSeparator(epochMillis = item.epochMillis)
+                        }
+
+                        is ChatListItem.Message -> {
+                            MessageBubble(
+                                message = item.message,
+                                onReplyToMessage = onReplyToMessage,
+                                onImageClick = { viewerMessage = it },
+                            )
+                        }
                     }
                 }
             }
@@ -187,8 +192,14 @@ internal fun ChatRoomView(
 }
 
 private sealed interface ChatListItem {
-    data class DateSeparator(val dayKey: Long, val epochMillis: Long) : ChatListItem
-    data class Message(val message: ChatMessage) : ChatListItem
+    data class DateSeparator(
+        val dayKey: Long,
+        val epochMillis: Long
+    ) : ChatListItem
+
+    data class Message(
+        val message: ChatMessage
+    ) : ChatListItem
 }
 
 private fun buildChatListItems(messages: List<ChatMessage>): List<ChatListItem> {

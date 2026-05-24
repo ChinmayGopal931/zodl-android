@@ -93,7 +93,7 @@ class CreateFlexaTransactionUseCase(
                     null -> WalletAddress.Unified.new(recipientAddressState.address)
                 },
             amount =
-                Zatoshi.fromZecString(context, transaction.amount)
+                Zatoshi.fromZecString(transaction.amount, context.resources.configuration.locales[0])
                     ?: throw NullPointerException("TX amount is null"),
             memo = Memo(""),
             proposal = null

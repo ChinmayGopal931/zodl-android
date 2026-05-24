@@ -83,4 +83,171 @@
     <string name="swap_deposit_info_step_2">Send the exact amount of the asset displayed. Sending less will result in a refund.</string>
     <string name="swap_deposit_info_step_3">Double-check that you are sending the correct asset on the correct network (e.g., USDC on Solana).</string>
     <string name="swap_deposit_info_step_4">It’s best to send from a wallet you own. Sending from an exchange may result in delays or refunds.</string>
+
+    <!-- Swap / Offramp tab toggle -->
+    <string name="swap_tab_swap">Swap</string>
+    <string name="swap_tab_offramp">Offramp</string>
+
+    <!-- UPI Offramp form -->
+    <string name="upi_offramp_you_send">You send</string>
+    <string name="upi_offramp_recipient_gets">Recipient gets</string>
+    <string name="upi_offramp_token_usdc">USDC</string>
+    <string name="upi_offramp_token_inr">INR</string>
+    <string name="upi_offramp_rate_label">1 USDC ≈ ₹%1$s (estimated)</string>
+    <string name="upi_offramp_upi_id_label">UPI ID</string>
+    <string name="upi_offramp_upi_id_placeholder">merchant@upi</string>
+    <string name="upi_offramp_scan_qr_cd">Scan UPI QR code</string>
+    <string name="upi_offramp_estimate_disclaimer">Estimated. Final amount locks in when the merchant accepts.</string>
+    <string name="upi_offramp_limit_hint">Maximum 100 USDC per offramp.</string>
+    <string name="upi_offramp_error_above_cap">Amounts above 100 USDC aren\'t supported for offramp.</string>
+    <string name="upi_offramp_error_invalid_upi">That doesn\'t look like a UPI handle (expected something like name@bank).</string>
+    <string name="upi_offramp_send_button">Send</string>
+    <string name="upi_offramp_resume_button">Resume in-flight offramp</string>
+    <string name="upi_offramp_error_in_flight">An offramp is already in progress. Resume it before starting a new one.</string>
+    <string name="upi_offramp_discard_in_flight">Discard local order &amp; start over</string>
+
+    <!-- UPI Offramp progress screen -->
+    <string name="upi_offramp_progress_title_in_progress">Sending to merchant</string>
+    <string name="upi_offramp_progress_title_completed">Payment sent</string>
+    <string name="upi_offramp_progress_title_failed">Something went wrong</string>
+    <string name="upi_offramp_progress_subtitle_recipient">Recipient: %1$s</string>
+    <string name="upi_offramp_progress_subtitle_completed">The merchant has confirmed the UPI transfer.</string>
+    <string name="upi_offramp_progress_done_button">Done</string>
+    <string name="upi_offramp_progress_close_button">Close</string>
+    <string name="upi_offramp_step_init">Setup</string>
+    <string name="upi_offramp_step_selecting_circle">Picking a merchant pool</string>
+    <string name="upi_offramp_step_funding">Bridging funds</string>
+    <string name="upi_offramp_step_funding_from_base">Using your Base balance</string>
+    <string name="upi_offramp_step_approve">Approving USDC</string>
+    <string name="upi_offramp_base_balance_label">Available on Base: %1$s USDC</string>
+    <string name="upi_offramp_funding_from_base">✓ Using your Base balance — no bridge needed.</string>
+    <string name="upi_offramp_funding_via_near">Will bridge %1$s USDC from your ZEC via NEAR.</string>
+    <string name="upi_offramp_funding_need_manual">Need %1$s USDC on Base — bridge unavailable on this network.</string>
+    <string name="upi_offramp_step_place_order">Placing the order</string>
+    <string name="upi_offramp_step_wait_acceptance">Waiting for merchant to accept</string>
+    <string name="upi_offramp_step_encrypting_upi">Encrypting UPI handle</string>
+    <string name="upi_offramp_step_send_upi">Sending encrypted UPI</string>
+    <string name="upi_offramp_step_wait_completion">Waiting for merchant payment</string>
+
+    <!-- UPI Offramp progress — summary + detail lines + failure card -->
+    <string name="upi_offramp_progress_amount_usdc">%1$s USDC</string>
+    <string name="upi_offramp_summary_amount">Amount</string>
+    <string name="upi_offramp_summary_recipient">Recipient</string>
+    <string name="upi_offramp_summary_order_id">Order ID</string>
+    <string name="upi_offramp_summary_order_id_value">#%1$s</string>
+    <string name="upi_offramp_summary_network">Network</string>
+    <string name="upi_offramp_summary_signer">From</string>
+    <string name="upi_offramp_detail_candidates">%1$d candidate circle(s) from subgraph</string>
+    <string name="upi_offramp_detail_deposit_addr">Deposit %1$s</string>
+    <string name="upi_offramp_detail_bridging_amount">Bridging %1$s USDC from ZEC via NEAR Intents</string>
+    <string name="upi_offramp_detail_selected_circle">Selected circle #%1$s</string>
+    <string name="upi_offramp_detail_amount">%1$s USDC</string>
+    <string name="upi_offramp_detail_circle_id">Circle #%1$s</string>
+    <string name="upi_offramp_detail_polling_attempts">Polling… attempt %1$d</string>
+    <string name="upi_offramp_detail_last_status">Last on-chain status: %1$s</string>
+    <string name="upi_offramp_detail_merchant">Merchant %1$s</string>
+    <string name="upi_offramp_failure_header">Failed during: %1$s</string>
+    <string name="upi_offramp_failure_selector">Revert selector %1$s</string>
+
+    <!-- UPI Offramp known revert reasons (mapped from KnownRevertReason in offramp-lib).
+         Keep aligned with @p2pdotme/user-app-client i18n keys where wording overlaps. -->
+    <string name="upi_offramp_revert_buy_order_amount_exceeds_limit">Order amount is above your per-transaction limit. The limit grows with reputation points — complete verification at app.p2p.me/limits.</string>
+    <string name="upi_offramp_revert_insufficient_reputation">Your account has no reputation points yet. Complete social or KYC verification at app.p2p.me/limits before placing orders.</string>
+    <string name="upi_offramp_revert_order_amount_exceeds_limit">Order amount exceeds the global per-order cap.</string>
+    <string name="upi_offramp_revert_sell_amount_exceeds_fiat_limit">Amount exceeds your daily fiat limit.</string>
+    <string name="upi_offramp_revert_currency_not_supported">This currency isn\'t deployed on this network yet.</string>
+    <string name="upi_offramp_revert_user_is_blacklisted">Your account is blocked by the exchange. Contact p2p.me support.</string>
+    <string name="upi_offramp_revert_exchange_not_operational">p2p.me is temporarily paused. Try again later.</string>
+    <string name="upi_offramp_revert_not_enough_eligible_merchants">No merchant has fiat liquidity for this order right now. Try a smaller amount, wait for merchants to fund, or retry to pick a different circle.</string>
+    <string name="upi_offramp_revert_order_expired">The merchant didn\'t act in time. Your USDC has been refunded.</string>
+    <string name="upi_offramp_revert_upi_already_sent">This order already has a UPI payment address. This is a bug — please report.</string>
+    <string name="upi_offramp_revert_invalid_order_upi">The merchant rejected the encrypted UPI handle. This may signal a wire-format issue — please report.</string>
+    <string name="upi_offramp_revert_order_not_accepted">The order isn\'t yet accepted. Try again shortly.</string>
+    <string name="upi_offramp_revert_usdc_transfer_failed">USDC transfer failed. Check your balance and allowance.</string>
+    <string name="upi_offramp_revert_not_authorized">Cancel was rejected by the contract — the order may already be completed or cancelled.</string>
+    <!-- Long-tail fallback for SDK-known but non-curated contract errors. %1$s is the SDK error
+         constant (e.g. ORDER_ALREADY_MARKED_COMPLETED). -->
+    <string name="upi_offramp_revert_sdk_long_tail">Contract error: %1$s</string>
+
+    <!-- Surfaced when a poll loop has been running for a while without a merchant transition. -->
+    <string name="upi_offramp_detail_stalled">Still connecting you to a merchant. Your USDC stays in your account; if no merchant accepts, the order auto-cancels on chain.</string>
+
+    <!-- Recovery flow (pullback of stranded USDC via bridgeFundsBackToZec) -->
+    <string name="upi_offramp_recover_button">Bridge USDC back to ZEC</string>
+    <string name="upi_offramp_recovery_in_progress_title">Bridging USDC back to ZEC</string>
+    <string name="upi_offramp_recovery_in_progress_subtitle">Routing your refunded USDC to ZEC via NEAR Intents — this can take a couple of minutes.</string>
+    <string name="upi_offramp_recovery_in_progress_button">Bridging…</string>
+    <string name="upi_offramp_recovery_done_title">USDC bridged back to ZEC</string>
+    <string name="upi_offramp_recovery_amount">%1$s USDC sent to bridge</string>
+    <string name="upi_offramp_recovery_target">Bridge deposit %1$s</string>
+
+    <!-- Per-step on-chain timestamps -->
+    <string name="upi_offramp_detail_accepted_at">Accepted at %1$s</string>
+    <string name="upi_offramp_detail_paid_at">Payment confirmed at %1$s</string>
+    <string name="upi_offramp_detail_completed_at">Completed at %1$s</string>
+
+    <!-- Completed-state summary extras -->
+    <string name="upi_offramp_completion_duration">Completed in %1$s</string>
+    <string name="upi_offramp_terminal_at">%1$s</string>
+    <string name="upi_offramp_summary_completion">Completed in</string>
+    <string name="upi_offramp_summary_time">Time</string>
+    <string name="upi_offramp_summary_merchant">Paid to</string>
+
+    <!-- Order fee breakdown card (from getAdditionalOrderDetails) -->
+    <string name="upi_offramp_fee_breakdown_header">Order breakdown</string>
+    <string name="upi_offramp_fee_breakdown_you_send">You send</string>
+    <string name="upi_offramp_fee_breakdown_fee">Network &amp; merchant fee</string>
+    <string name="upi_offramp_fee_breakdown_you_receive">You receive</string>
+    <string name="upi_offramp_fee_breakdown_amount_usdc">%1$s USDC</string>
+    <string name="upi_offramp_fee_breakdown_amount_inr">₹%1$s</string>
+
+    <!-- Cancelled terminal state (normal on-chain outcome, USDC refunded — not an error) -->
+    <string name="upi_offramp_progress_title_cancelled">Order cancelled</string>
+    <string name="upi_offramp_progress_subtitle_cancelled">No merchant completed this order in time. Your USDC is in your offramp account, ready to bridge back.</string>
+    <string name="upi_offramp_cancelled_refunded">%1$s USDC returned to your wallet</string>
+    <string name="upi_offramp_cancelled_returned_zec">%1$s USDC is on its way back to ZEC — it will arrive in your wallet shortly</string>
+    <string name="upi_offramp_cancelled_at">Cancelled at %1$s</string>
+    <string name="upi_offramp_cancelled_tip">Tip: ask the merchant to generate the UPI QR only after this screen opens, so the order completes before it expires.</string>
+
+    <!-- P2P transactions (settings → wallet) -->
+    <string name="p2p_transactions_title">P2P transactions</string>
+    <string name="p2p_transactions_balance_label">Balance on Base</string>
+    <string name="p2p_transactions_balance_amount">%1$s USDC</string>
+    <string name="p2p_transactions_balance_unavailable">Balance unavailable</string>
+    <string name="p2p_transactions_balance_loading">—</string>
+    <string name="p2p_transactions_refund_button">Refund to ZEC</string>
+    <string name="p2p_transactions_refund_in_progress">Refunding…</string>
+    <string name="p2p_transactions_refund_retry">Retry refund</string>
+    <string name="p2p_transactions_refund_failed">Refund failed — %1$s</string>
+    <string name="p2p_transactions_refund_dialog_title">Refund to ZEC?</string>
+    <string name="p2p_transactions_refund_dialog_message">This bridges %1$s back to your ZEC wallet via NEAR. Funds typically arrive in 5–10 minutes.</string>
+    <string name="p2p_transactions_refund_dialog_confirm">Refund</string>
+    <string name="p2p_transactions_refund_dialog_cancel">Cancel</string>
+    <string name="p2p_transactions_account_label">P2P account</string>
+    <string name="p2p_transactions_empty">No P2P transactions yet.</string>
+    <string name="p2p_transactions_error">Couldn\'t load transactions. Pull to refresh.</string>
+    <string name="p2p_transactions_row_amount_usdc">%1$s USDC</string>
+    <string name="p2p_transactions_row_amount_fiat">%1$s %2$s</string>
+    <string name="p2p_transactions_row_from">From %1$s</string>
+    <string name="p2p_transactions_row_to">To %1$s</string>
+    <string name="p2p_transactions_row_order_id">Order #%1$s</string>
+    <string name="p2p_transactions_type_buy">Buy</string>
+    <string name="p2p_transactions_type_sell">Sell</string>
+    <string name="p2p_transactions_type_pay">Pay</string>
+    <string name="p2p_transactions_status_placed">Placed</string>
+    <string name="p2p_transactions_status_accepted">Accepted</string>
+    <string name="p2p_transactions_status_paid">Paid</string>
+    <string name="p2p_transactions_status_completed">Completed</string>
+    <string name="p2p_transactions_status_cancelled">Cancelled</string>
+
+    <!-- Detail panel (expanded transaction row) -->
+    <string name="p2p_transactions_detail_recipient_upi">Recipient UPI</string>
+    <string name="p2p_transactions_detail_merchant_upi">Merchant UPI</string>
+    <string name="p2p_transactions_detail_merchant_address">Merchant address</string>
+    <string name="p2p_transactions_detail_placed">Placed</string>
+    <string name="p2p_transactions_detail_completed">Completed</string>
+    <string name="p2p_transactions_detail_cancelled">Cancelled</string>
+    <string name="p2p_transactions_detail_duration">Duration</string>
+    <string name="p2p_transactions_detail_expand_content_description">Show details</string>
+    <string name="p2p_transactions_detail_collapse_content_description">Hide details</string>
 </resources>

@@ -27,19 +27,21 @@ fun TwoFAChoiceScreen(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
             OnbProgress(step = 3)
         }
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             GhostNum(n = 3, modifier = Modifier.align(Alignment.TopEnd))
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
@@ -50,25 +52,27 @@ fun TwoFAChoiceScreen(
                 OnbSub("Choose how you unlock Zapp and authorise payments.")
             }
             OnbActionListCard(
-                actions = listOf(
-                    OnbAction(
-                        icon = "◎",
-                        label = "Biometric",
-                        sub = "Fingerprint or face — fastest",
-                        onClick = { onPick(TwoFAMode.Bio) },
-                        highlight = true,
+                actions =
+                    listOf(
+                        OnbAction(
+                            icon = "◎",
+                            label = "Biometric",
+                            sub = "Fingerprint or face — fastest",
+                            onClick = { onPick(TwoFAMode.Bio) },
+                            highlight = true,
+                        ),
+                        OnbAction(
+                            icon = "✱",
+                            label = "6-digit PIN",
+                            sub = "A passcode you remember",
+                            onClick = { onPick(TwoFAMode.Pin) },
+                        ),
                     ),
-                    OnbAction(
-                        icon = "✱",
-                        label = "6-digit PIN",
-                        sub = "A passcode you remember",
-                        onClick = { onPick(TwoFAMode.Pin) },
-                    ),
-                ),
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
             )
         }
         OnbBottomDock(

@@ -11,9 +11,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -36,10 +37,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.component.zapp.ZappGroupHeader
@@ -54,6 +57,7 @@ import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
+import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -78,18 +82,20 @@ fun SettingsTabContent(
         containerColor = c.bg,
     ) { _ ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars),
         ) {
             ZappScreenHeader(title = "Settings")
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(bottom = ZappNavBar.CLEARANCE_DP.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(bottom = ZappNavBar.CLEARANCE_DP.dp),
             ) {
                 identity?.let { id ->
                     ProfileCard(displayName = id.displayName)
@@ -143,13 +149,20 @@ fun SettingsTabContent(
                             icon = Icons.Default.Cloud,
                             onClick = { navigationRouter.forward(ChooseServerArgs) },
                         )
+                        ZappRowDivider(inset = true)
+                        ZappRow(
+                            title = "P2P transactions",
+                            subtitle = "Balance and order history",
+                            icon = Icons.Default.SwapHoriz,
+                            onClick = { navigationRouter.forward(P2pTransactionsArgs) },
+                        )
                     }
                 }
 
-                SettingsGroup(title = "Support") {
+                SettingsGroup(title = stringResource(R.string.settings_group_support)) {
                     ZappRow(
-                        title = "Contact support",
-                        subtitle = "Report issues, share feedback",
+                        title = stringResource(R.string.settings_support_contact_title),
+                        subtitle = stringResource(R.string.settings_support_contact_subtitle),
                         icon = Icons.Default.SupportAgent,
                         onClick = { navigationRouter.forward(SupportTicketListArgs) },
                     )
@@ -176,16 +189,18 @@ private fun ProfileCard(displayName: String) {
     val initials = remember(displayName) { initialsOf(displayName) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(72.dp)
-                .background(c.accent, RectangleShape),
+            modifier =
+                Modifier
+                    .size(72.dp)
+                    .background(c.accent, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
@@ -211,11 +226,12 @@ private fun SettingsGroup(
     val c = ZappTheme.colors
     ZappGroupHeader(text = title)
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp)
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp)
+                .background(c.surface, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape),
     ) {
         content()
     }

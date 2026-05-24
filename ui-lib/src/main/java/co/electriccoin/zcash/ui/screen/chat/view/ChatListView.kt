@@ -1,13 +1,17 @@
 package co.electriccoin.zcash.ui.screen.chat.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -16,20 +20,16 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.ui.res.painterResource
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
@@ -66,7 +66,9 @@ fun ChatListView(
             )
 
             when {
-                state.isLoading && state.items.isEmpty() -> LoadingState(modifier = Modifier.weight(1f))
+                state.isLoading && state.items.isEmpty() -> {
+                    LoadingState(modifier = Modifier.weight(1f))
+                }
 
                 else -> {
                     val navBarBottom =
@@ -79,9 +81,11 @@ fun ChatListView(
                                 bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
                             ),
                     ) {
-                        item(key = "support_row") {
-                            SupportContactRow(state = state.supportRow)
-                            ZappRowDivider(inset = true)
+                        state.supportRow?.let { row ->
+                            item(key = "support_row") {
+                                SupportContactRow(state = row)
+                                ZappRowDivider(inset = true)
+                            }
                         }
 
                         items(items = state.items, key = { it.id }) { item ->
@@ -185,14 +189,9 @@ private fun SupportContactRow(state: ChatListSupportRowState) {
             )
             Spacer(Modifier.height(2.dp))
             BasicText(
-                text = when {
-                    state.lastMessage != null -> state.lastMessage.getValue()
-                    state.ticketCount > 0 -> stringRes(
-                        R.string.chat_list_support_tickets_fmt,
-                        state.ticketCount,
-                    ).getValue()
-                    else -> stringRes(R.string.support_chat_contact_footer_subtitle).getValue()
-                },
+                text =
+                    state.lastMessage?.getValue()
+                        ?: stringRes(R.string.chat_list_support_tickets_fmt, state.ticketCount).getValue(),
                 style = ZappTheme.typography.rowSubtitle.copy(color = c.textMuted),
                 maxLines = 1,
             )
@@ -214,4 +213,3 @@ private fun SupportContactRow(state: ChatListSupportRowState) {
         }
     }
 }
-

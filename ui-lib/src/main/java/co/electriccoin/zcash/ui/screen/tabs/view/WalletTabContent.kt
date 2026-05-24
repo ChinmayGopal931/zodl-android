@@ -65,17 +65,21 @@ fun WalletTabContent(
 
     Box(modifier = Modifier.fillMaxSize().background(c.bg)) {
         when {
-            secretState == SecretState.LOADING ->
+            secretState == SecretState.LOADING -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = c.accent)
                 }
-            createPhase == CreatePhase.RevealingSeed ->
+            }
+
+            createPhase == CreatePhase.RevealingSeed -> {
                 WalletSeedPhraseScreen(
                     words = seedWords.orEmpty(),
                     onBack = { createPhase = CreatePhase.Idle },
                     onContinue = { createPhase = CreatePhase.Idle },
                 )
-            secretState == SecretState.NONE ->
+            }
+
+            secretState == SecretState.NONE -> {
                 WalletEmptyState(
                     onCreate = {
                         walletViewModel.createNewWallet()
@@ -83,7 +87,11 @@ fun WalletTabContent(
                     },
                     onRestore = { navigationRouter.forward(RestoreSeedArgs) },
                 )
-            else -> WalletHomeView()
+            }
+
+            else -> {
+                WalletHomeView()
+            }
         }
     }
 }
@@ -95,11 +103,12 @@ private fun WalletEmptyState(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 28.dp),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(horizontal = 28.dp),
     ) {
         Spacer(Modifier.height(32.dp))
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -114,21 +123,22 @@ private fun WalletEmptyState(
         )
         Spacer(Modifier.height(32.dp))
         OnbActionListCard(
-            actions = listOf(
-                OnbAction(
-                    icon = "✦",
-                    label = stringResource(R.string.wallet_empty_create),
-                    sub = stringResource(R.string.wallet_empty_create_sub),
-                    onClick = onCreate,
-                    highlight = true,
+            actions =
+                listOf(
+                    OnbAction(
+                        icon = "✦",
+                        label = stringResource(R.string.wallet_empty_create),
+                        sub = stringResource(R.string.wallet_empty_create_sub),
+                        onClick = onCreate,
+                        highlight = true,
+                    ),
+                    OnbAction(
+                        icon = "⚿",
+                        label = stringResource(R.string.wallet_empty_restore),
+                        sub = stringResource(R.string.wallet_empty_restore_sub),
+                        onClick = onRestore,
+                    ),
                 ),
-                OnbAction(
-                    icon = "⚿",
-                    label = stringResource(R.string.wallet_empty_restore),
-                    sub = stringResource(R.string.wallet_empty_restore_sub),
-                    onClick = onRestore,
-                ),
-            ),
         )
     }
 }

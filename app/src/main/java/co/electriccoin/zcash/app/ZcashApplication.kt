@@ -74,7 +74,7 @@ class ZcashApplication : CoroutineApplication() {
                 useCaseModule,
                 mapperModule,
                 viewModelModule,
-                zappMessagingModule
+                zappMessagingModule,
             )
         }
 

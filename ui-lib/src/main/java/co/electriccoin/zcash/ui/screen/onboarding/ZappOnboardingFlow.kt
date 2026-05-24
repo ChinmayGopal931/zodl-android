@@ -28,7 +28,6 @@ import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
-import kotlinx.coroutines.launch
 import co.electriccoin.zcash.ui.screen.onboarding.view.BioScanScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.MessagingPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnboardingDoneScreen
@@ -40,6 +39,7 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.WalletChoiceScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletSeedPhraseScreen
 import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 /** All steps the Swiss onboarding flow walks the user through. */
@@ -117,34 +117,46 @@ fun ZappOnboardingFlow(
     }
 
     when (step) {
-        Step.MSG_INTRO -> MessagingPhaseIntro(
-            onBack = onBackToWelcome,
-            onContinue = { step = Step.MSG_USERNAME },
-        )
-        Step.MSG_USERNAME -> UsernameEntryScreen(
-            onBack = { step = Step.MSG_INTRO },
-            onContinue = { name ->
-                pendingUsername = name
-                step = Step.WALLET_INTRO
-            },
-        )
-        Step.WALLET_INTRO -> WalletPhaseIntro(
-            onBack = { step = Step.MSG_USERNAME },
-            onContinue = { step = Step.WALLET_CHOICE },
-        )
-        Step.WALLET_CHOICE -> WalletChoiceScreen(
-            onBack = { step = Step.WALLET_INTRO },
-            onCreate = {
-                walletViewModel.createNewWallet()
-                onboardingScope.launch {
-                    runCatching { chatBootstrap.restoreFromWalletSeed(pendingUsername) }
-                }
-                step = Step.WALLET_SEED
-            },
-            onRestore = {
-                navigationRouter.forward(RestoreSeedArgs)
-            },
-        )
+        Step.MSG_INTRO -> {
+            MessagingPhaseIntro(
+                onBack = onBackToWelcome,
+                onContinue = { step = Step.MSG_USERNAME },
+            )
+        }
+
+        Step.MSG_USERNAME -> {
+            UsernameEntryScreen(
+                onBack = { step = Step.MSG_INTRO },
+                onContinue = { name ->
+                    pendingUsername = name
+                    step = Step.WALLET_INTRO
+                },
+            )
+        }
+
+        Step.WALLET_INTRO -> {
+            WalletPhaseIntro(
+                onBack = { step = Step.MSG_USERNAME },
+                onContinue = { step = Step.WALLET_CHOICE },
+            )
+        }
+
+        Step.WALLET_CHOICE -> {
+            WalletChoiceScreen(
+                onBack = { step = Step.WALLET_INTRO },
+                onCreate = {
+                    walletViewModel.createNewWallet()
+                    onboardingScope.launch {
+                        runCatching { chatBootstrap.restoreFromWalletSeed(pendingUsername) }
+                    }
+                    step = Step.WALLET_SEED
+                },
+                onRestore = {
+                    navigationRouter.forward(RestoreSeedArgs)
+                },
+            )
+        }
+
         Step.WALLET_SEED -> {
             val words = walletSeed
             if (words == null) {
@@ -160,33 +172,46 @@ fun ZappOnboardingFlow(
                 )
             }
         }
-        Step.SECURE_CHOICE -> TwoFAChoiceScreen(
-            onBack = { step = Step.WALLET_INTRO },
-            onPick = { mode ->
-                twoFAMode = mode
-                step = when (mode) {
-                    TwoFAMode.Bio -> Step.BIO_SCAN
-                    TwoFAMode.Pin -> Step.PIN_SETUP
-                }
-            },
-        )
-        Step.BIO_SCAN -> BioScanScreen(
-            isEnrolling = bioState is OnboardingSecurityViewModel.BioState.Prompting,
-            errorMessage = (bioState as? OnboardingSecurityViewModel.BioState.Error)?.message,
-            onEnroll = { securityVM.triggerBiometricSetup() },
-            onCancel = {
-                securityVM.resetBioError()
-                step = Step.SECURE_CHOICE
-            },
-        )
-        Step.PIN_SETUP -> PinSetupScreen(
-            onBack = { step = Step.SECURE_CHOICE },
-            onPinConfirmed = { pin -> securityVM.savePin(pin) },
-        )
-        Step.DONE -> OnboardingDoneScreen(
-            mode = twoFAMode,
-            onEnter = onComplete,
-        )
+
+        Step.SECURE_CHOICE -> {
+            TwoFAChoiceScreen(
+                onBack = { step = Step.WALLET_INTRO },
+                onPick = { mode ->
+                    twoFAMode = mode
+                    step =
+                        when (mode) {
+                            TwoFAMode.Bio -> Step.BIO_SCAN
+                            TwoFAMode.Pin -> Step.PIN_SETUP
+                        }
+                },
+            )
+        }
+
+        Step.BIO_SCAN -> {
+            BioScanScreen(
+                isEnrolling = bioState is OnboardingSecurityViewModel.BioState.Prompting,
+                errorMessage = (bioState as? OnboardingSecurityViewModel.BioState.Error)?.message,
+                onEnroll = { securityVM.triggerBiometricSetup() },
+                onCancel = {
+                    securityVM.resetBioError()
+                    step = Step.SECURE_CHOICE
+                },
+            )
+        }
+
+        Step.PIN_SETUP -> {
+            PinSetupScreen(
+                onBack = { step = Step.SECURE_CHOICE },
+                onPinConfirmed = { pin -> securityVM.savePin(pin) },
+            )
+        }
+
+        Step.DONE -> {
+            OnboardingDoneScreen(
+                mode = twoFAMode,
+                onEnter = onComplete,
+            )
+        }
     }
 }
 
@@ -211,8 +236,9 @@ private fun SeedLoadingPlaceholder(sdkError: String?) {
         }
     }
 
-    val displayError = sdkError
-        ?: "Taking longer than expected.".takeIf { timedOut }
+    val displayError =
+        sdkError
+            ?: "Taking longer than expected.".takeIf { timedOut }
 
     Box(
         modifier = Modifier.fillMaxSize().background(c.bg),
@@ -225,18 +251,20 @@ private fun SeedLoadingPlaceholder(sdkError: String?) {
             ) {
                 BasicText(
                     text = displayError,
-                    style = ZappTheme.typography.body.copy(
-                        color = c.danger,
-                        fontSize = 13.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.body.copy(
+                            color = c.danger,
+                            fontSize = 13.sp,
+                        ),
                 )
                 Spacer(Modifier.height(12.dp))
                 BasicText(
                     text = "Try going back and submitting again.",
-                    style = ZappTheme.typography.body.copy(
-                        color = c.textMuted,
-                        fontSize = 12.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.body.copy(
+                            color = c.textMuted,
+                            fontSize = 12.sp,
+                        ),
                 )
             }
         } else {

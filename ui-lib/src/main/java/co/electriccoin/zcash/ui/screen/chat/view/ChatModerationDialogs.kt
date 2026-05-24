@@ -150,19 +150,21 @@ fun ReportUserDialog(
 
                 ReportCategory.entries.forEach { category ->
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { selectedCategory = category }
-                            .padding(vertical = 4.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .clickable { selectedCategory = category }
+                                .padding(vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(
                             selected = selectedCategory == category,
                             onClick = { selectedCategory = category },
-                            colors = RadioButtonDefaults.colors(
-                                selectedColor = c.accent,
-                                unselectedColor = c.textMuted,
-                            ),
+                            colors =
+                                RadioButtonDefaults.colors(
+                                    selectedColor = c.accent,
+                                    unselectedColor = c.textMuted,
+                                ),
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(

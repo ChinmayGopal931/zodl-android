@@ -31,11 +31,12 @@ fun ZappStackedActionBar(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.bg)
-            .border(BorderStroke(1.dp, c.text), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.bg)
+                .border(BorderStroke(1.dp, c.text), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars),
         content = content,
     )
 }

@@ -42,7 +42,6 @@ class SelectABRecipientVM(
     private val navigateToScanPublicKeyUseCase: NavigateToScanPublicKeyUseCase,
     private val sdk: ZappMessagingSDK,
 ) : ViewModel() {
-
     private val scannedAddress = MutableStateFlow<String?>(null)
     private val scannedMessagingKey = MutableStateFlow<String?>(null)
 
@@ -62,9 +61,12 @@ class SelectABRecipientVM(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-                initialValue = createStateWithoutAccounts(
-                    contacts = null, scannedAddress = null, scannedMessagingKey = null
-                )
+                initialValue =
+                    createStateWithoutAccounts(
+                        contacts = null,
+                        scannedAddress = null,
+                        scannedMessagingKey = null
+                    )
             )
 
     @Suppress("SpreadOperator")

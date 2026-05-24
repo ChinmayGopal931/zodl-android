@@ -56,6 +56,7 @@ object StandardPreferenceKeys {
             PreferenceKey("IS_HIDE_BALANCES"),
             false
         )
+
     /**
      * Wall-clock timestamp captured in [android.app.Activity.onStop]. Used as a coarse
      * fallback for the inactivity re-auth gate; the authoritative timer is

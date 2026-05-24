@@ -164,6 +164,55 @@ androidComponents {
                 comment = "Whether is the screen rotation enabled, otherwise, it's locked in the portrait mode"
             )
         )
+        // UPI offramp config — selects the on-chain p2p.me network + endpoints.
+        variant.buildConfigFields?.put(
+            "P2P_NETWORK",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("P2P_NETWORK")?.toString().orEmpty()}\"",
+                comment = "UPI offramp p2p.me network: 'sepolia' or 'mainnet'"
+            )
+        )
+        variant.buildConfigFields?.put(
+            "P2P_RPC_URL_BASE_SEPOLIA",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("P2P_RPC_URL_BASE_SEPOLIA")?.toString().orEmpty()}\"",
+                comment = "Base Sepolia JSON-RPC endpoint used when P2P_NETWORK=sepolia"
+            )
+        )
+        variant.buildConfigFields?.put(
+            "P2P_RPC_URL_BASE_MAINNET",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("P2P_RPC_URL_BASE_MAINNET")?.toString().orEmpty()}\"",
+                comment = "Base mainnet JSON-RPC endpoint used when P2P_NETWORK=mainnet"
+            )
+        )
+        variant.buildConfigFields?.put(
+            "P2P_SUBGRAPH_URL_SEPOLIA",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("P2P_SUBGRAPH_URL_SEPOLIA")?.toString().orEmpty()}\"",
+                comment = "Sepolia subgraph URL used when P2P_NETWORK=sepolia"
+            )
+        )
+        variant.buildConfigFields?.put(
+            "P2P_SUBGRAPH_URL_MAINNET",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("P2P_SUBGRAPH_URL_MAINNET")?.toString().orEmpty()}\"",
+                comment = "Mainnet subgraph URL used when P2P_NETWORK=mainnet"
+            )
+        )
+        variant.buildConfigFields?.put(
+            "PIMLICO_API_KEY",
+            BuildConfigField(
+                type = "String",
+                value = "\"${project.property("PIMLICO_API_KEY")?.toString().orEmpty()}\"",
+                comment = "Pimlico API key for the offramp ERC-4337 bundler + verifying paymaster"
+            )
+        )
     }
 }
 
@@ -211,6 +260,7 @@ dependencies {
     api(projects.configurationImplAndroidLib)
     api(projects.sdkExtLib)
     api(projects.uiDesignLib)
+    implementation(projects.offrampLib)
     api(libs.androidx.fragment)
     api(libs.androidx.fragment.compose)
     api(libs.androidx.activity)
@@ -220,6 +270,9 @@ dependencies {
 
     // ZappMessaging P2P SDK
     implementation(project(":zappmessaging"))
+
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation(projects.testLib)
     androidTestImplementation(libs.bundles.androidx.test)

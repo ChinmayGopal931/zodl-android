@@ -126,26 +126,28 @@ private fun WelcomeContent(
     val c = ZappTheme.colors
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(c.accent) // Zapp brand yellow/orange — the splash colour
-            .drawWithContent {
-                if (revealProgress < 1f) {
-                    val wavePath = Path().apply {
-                        val chartHeightPx = chartHeightDp.toPx()
-                        val waveTopY = (size.height + chartHeightPx) * (1f - revealProgress) - chartHeightPx
-                        moveTo(0f, 0f)
-                        lineTo(size.width, 0f)
-                        for (i in points.size - 1 downTo 0) {
-                            lineTo(size.width * points[i].x, waveTopY + chartHeightPx * points[i].y)
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(c.accent) // Zapp brand yellow/orange — the splash colour
+                .drawWithContent {
+                    if (revealProgress < 1f) {
+                        val wavePath =
+                            Path().apply {
+                                val chartHeightPx = chartHeightDp.toPx()
+                                val waveTopY = (size.height + chartHeightPx) * (1f - revealProgress) - chartHeightPx
+                                moveTo(0f, 0f)
+                                lineTo(size.width, 0f)
+                                for (i in points.size - 1 downTo 0) {
+                                    lineTo(size.width * points[i].x, waveTopY + chartHeightPx * points[i].y)
+                                }
+                                close()
+                            }
+                        clipPath(wavePath) {
+                            this@drawWithContent.drawContent()
                         }
-                        close()
-                    }
-                    clipPath(wavePath) {
-                        this@drawWithContent.drawContent()
                     }
                 }
-            }
     ) {
         Column(
             modifier = Modifier.fillMaxSize().padding(horizontal = 28.dp),
@@ -155,21 +157,23 @@ private fun WelcomeContent(
             // Big Swiss "Hi." — Black weight, tight letter spacing, white on yellow.
             BasicText(
                 text = "Hi.",
-                style = ZappTheme.typography.display.copy(
-                    color = Color.White,
-                    fontSize = 140.sp,
-                    lineHeight = 130.sp,
-                    letterSpacing = (-6).sp,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.display.copy(
+                        color = Color.White,
+                        fontSize = 140.sp,
+                        lineHeight = 130.sp,
+                        letterSpacing = (-6).sp,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
             Spacer(Modifier.height(20.dp))
             // 36×3 horizontal rule — same accent device used on WelcomeGate.
             Box(
-                modifier = Modifier
-                    .width(36.dp)
-                    .height(3.dp)
-                    .background(c.text, RectangleShape),
+                modifier =
+                    Modifier
+                        .width(36.dp)
+                        .height(3.dp)
+                        .background(c.text, RectangleShape),
             )
 
             AnimatedVisibility(visible = showAuthLogo) {
@@ -179,31 +183,35 @@ private fun WelcomeContent(
                 }
 
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 40.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     // Sharp-edged tap-target — kept as a manual fallback.
-                    val unlockDesc = stringResource(
-                        id = R.string.authentication_failed_welcome_icon_cont_desc,
-                        stringResource(R.string.app_name),
-                    )
+                    val unlockDesc =
+                        stringResource(
+                            id = R.string.authentication_failed_welcome_icon_cont_desc,
+                            stringResource(R.string.app_name),
+                        )
                     Box(
-                        modifier = Modifier
-                            .size(56.dp)
-                            .background(c.text, RectangleShape)
-                            .clickable(onClick = onRetry)
-                            .semantics { contentDescription = unlockDesc },
+                        modifier =
+                            Modifier
+                                .size(56.dp)
+                                .background(c.text, RectangleShape)
+                                .clickable(onClick = onRetry)
+                                .semantics { contentDescription = unlockDesc },
                         contentAlignment = Alignment.Center,
                     ) {
                         BasicText(
                             text = "🔒",
-                            style = ZappTheme.typography.display.copy(
-                                color = c.accent,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Black,
-                            ),
+                            style =
+                                ZappTheme.typography.display.copy(
+                                    color = c.accent,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Black,
+                                ),
                         )
                     }
 
@@ -211,25 +219,27 @@ private fun WelcomeContent(
 
                     BasicText(
                         text = stringResource(id = R.string.authentication_failed_welcome_title),
-                        style = ZappTheme.typography.display.copy(
-                            color = c.text,
-                            fontSize = 18.sp,
-                            lineHeight = 24.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = (-0.4).sp,
-                            textAlign = TextAlign.Center,
-                        ),
+                        style =
+                            ZappTheme.typography.display.copy(
+                                color = c.text,
+                                fontSize = 18.sp,
+                                lineHeight = 24.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = (-0.4).sp,
+                                textAlign = TextAlign.Center,
+                            ),
                         modifier = Modifier.fillMaxWidth(),
                     )
                     Spacer(Modifier.height(8.dp))
                     BasicText(
                         text = stringResource(id = R.string.authentication_failed_welcome_subtitle),
-                        style = ZappTheme.typography.body.copy(
-                            color = c.text,
-                            fontSize = 13.sp,
-                            lineHeight = 20.sp,
-                            textAlign = TextAlign.Center,
-                        ),
+                        style =
+                            ZappTheme.typography.body.copy(
+                                color = c.text,
+                                fontSize = 13.sp,
+                                lineHeight = 20.sp,
+                                textAlign = TextAlign.Center,
+                            ),
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }

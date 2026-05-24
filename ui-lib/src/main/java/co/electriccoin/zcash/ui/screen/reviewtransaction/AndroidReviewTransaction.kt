@@ -33,6 +33,9 @@ fun AndroidReviewTransaction() {
                 onCancel = { vm.onSendAuthDismissed() }
             )
         }
-        else -> state?.let { ReviewTransactionView(it) }
+
+        else -> {
+            state?.let { ReviewTransactionView(it) }
+        }
     }
 }

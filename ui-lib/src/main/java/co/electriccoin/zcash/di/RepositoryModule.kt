@@ -1,5 +1,7 @@
 package co.electriccoin.zcash.di
 
+import co.electriccoin.zcash.ui.common.provider.OrderRecipientUpiStorageProvider
+import co.electriccoin.zcash.ui.common.provider.RelayIdentityStorageProvider
 import co.electriccoin.zcash.ui.common.repository.ApplicationStateRepository
 import co.electriccoin.zcash.ui.common.repository.ApplicationStateRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.BiometricRepository
@@ -29,8 +31,19 @@ import co.electriccoin.zcash.ui.common.repository.WalletSnapshotRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepository
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepositoryImpl
 import org.koin.core.module.dsl.singleOf
+import org.koin.core.qualifier.named
 import org.koin.dsl.bind
 import org.koin.dsl.module
+import xyz.justzappit.offramp.orchestrator.AaOfframpDriver
+import xyz.justzappit.offramp.orchestrator.OfframpDriver
+import xyz.justzappit.offramp.p2p.CircleRouter
+import xyz.justzappit.offramp.p2p.FallbackOrderReader
+import xyz.justzappit.offramp.p2p.OnChainOrderReader
+import xyz.justzappit.offramp.p2p.OrderReadSource
+import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
+import xyz.justzappit.offramp.p2p.P2pOrderHistorySource
+import xyz.justzappit.offramp.p2p.RelayIdentityStore
+import xyz.justzappit.offramp.p2p.SubgraphOrderReader
 
 val repositoryModule =
     module {
@@ -48,4 +61,45 @@ val repositoryModule =
         singleOf(::ApplicationStateRepositoryImpl) bind ApplicationStateRepository::class
         singleOf(::SwapRepositoryImpl) bind SwapRepository::class
         singleOf(::EphemeralAddressRepositoryImpl) bind EphemeralAddressRepository::class
+
+        // UPI offramp data sources + orchestrator.
+        single { CircleRouter() }
+        single { SubgraphOrderReader(subgraph = get()) }
+        single { OnChainOrderReader(rpc = get(), network = get()) }
+        single<OrderReadSource> {
+            FallbackOrderReader(
+                primary = get<SubgraphOrderReader>(),
+                fallback = get<OnChainOrderReader>(),
+                logger = { msg, cause ->
+                    val warn: (String, Throwable?) -> Unit = get(named("offramp_warn"))
+                    warn(msg, cause)
+                },
+            )
+        }
+        single<RelayIdentityStore> { RelayIdentityStorageProvider(encryptedPreferenceProvider = get()) }
+        single<OrderRecipientUpiCache> {
+            OrderRecipientUpiStorageProvider(encryptedPreferenceProvider = get())
+        }
+        single {
+            P2pOrderHistorySource(
+                subgraph = get(),
+                relayIdentityStore = get(),
+                orderRecipientUpiCache = get(),
+            )
+        }
+        factory<OfframpDriver> {
+            AaOfframpDriver(
+                rpc = get(),
+                bundler = get(),
+                network = get(),
+                accountProvider = get(),
+                subgraph = get(),
+                orderReader = get(),
+                funding = get(),
+                refund = get(),
+                router = get(),
+                relayIdentityStore = get(),
+                orderRecipientUpiCache = get(),
+            )
+        }
     }
