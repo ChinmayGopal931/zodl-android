@@ -132,6 +132,28 @@ class CircleRouterTest {
         }
 
     @Test
+    fun `selectCircleForOrder propagates exceptions from validateCircle instead of swallowing them`() =
+        runTest {
+            // Regression for: validateCircle used to be wrapped in
+            // runCatching{...}.getOrElse{false}, so an RPC blip in the orchestrator's on-chain
+            // merchant-availability check looked like "invalid circle". Over the default 3
+            // attempts that swallowed three transport errors and surfaced as "Exhausted N
+            // validation attempts" — masking the real cause. The exception now propagates.
+            val router = CircleRouter(random = Random(0), epsilon = 0.0, maxValidationAttempts = 3)
+            val circles =
+                listOf(
+                    circle("1", 100.0, "active"),
+                    circle("2", 1.0, "active"),
+                )
+            val rpcFailure = RuntimeException("simulated RPC timeout")
+            val thrown =
+                assertFailsWith<RuntimeException> {
+                    router.selectCircleForOrder(circles, inrCurrency) { throw rpcFailure }
+                }
+            assertEquals(rpcFailure, thrown)
+        }
+
+    @Test
     fun `epsilon = 1 explores across all statuses, not only active`() =
         runTest {
             // Weights after status scaling: paused 50.0 * 0.3 = 15.0; bootstrap min(5, 25) = 5.0.

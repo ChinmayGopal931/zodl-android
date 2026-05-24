@@ -40,14 +40,18 @@ class CircleRouter(
         orderCurrency: String,
         validateCircle: suspend (CircleId) -> Boolean,
     ): CircleId {
+        // The validateCircle predicate is expected to surface its own genuine failures (RPC,
+        // contract revert) rather than have them swallowed here. The previous
+        // runCatching{...}.getOrElse{false} flipped a transient transport error into "this
+        // circle is invalid", which over MAX_VALIDATION_ATTEMPTS=3 looked like a degraded
+        // route and surfaced as "Exhausted N validation attempts" — masking the actual problem.
         val pool = filterEligible(circles, orderCurrency).toMutableList()
         if (pool.isEmpty()) error("No eligible circles found for currency '$orderCurrency'")
 
         repeat(maxValidationAttempts) {
             if (pool.isEmpty()) error("No eligible circles found")
             val chosen = selectCircle(pool) ?: error("No eligible circles found")
-            val isValid = runCatching { validateCircle(chosen.id) }.getOrElse { false }
-            if (isValid) return chosen.id
+            if (validateCircle(chosen.id)) return chosen.id
             pool.removeAll { it.id == chosen.id }
         }
         error("Exhausted $maxValidationAttempts validation attempts without a valid circle")

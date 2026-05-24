@@ -46,7 +46,12 @@ class OrderEventsTest {
     }
 
     @Test
-    fun `parseOrderIdFromReceipt falls back to first matching event when no user match`() {
+    fun `parseOrderIdFromReceipt returns null when no log matches the user (no unchecked fallback)`() {
+        // Regression: previously, if the user-topic check failed on every log, the parser fell
+        // back to the first OrderPlaced log in the receipt. Degenerate for a single-call execute
+        // (one event per tx), but a foot-gun the moment a batched UserOp or multicall produces
+        // multiple OrderPlaced logs — the parser would return someone else's orderId and the
+        // orchestrator would commit USDC against the wrong escrow. The fallback is now gone.
         val diamond = Address.parse("0xce868398fdadca368eac203222874d6888532ae2")
         val orderId = BigInteger.valueOf(7)
         val orderIdTopic = "0x" + orderId.toString(16).padStart(64, '0')
@@ -63,9 +68,47 @@ class OrderEventsTest {
                     ),
             )
         val receipt = sampleReceipt(logs = listOf(log))
-        // user not in any topic; falls back to first matching event
         val unknownUser = Address.parse("0x000000000000000000000000000000000000cafe")
-        assertEquals(orderId, OrderEvents.parseOrderIdFromReceipt(receipt, diamond, unknownUser))
+        assertNull(OrderEvents.parseOrderIdFromReceipt(receipt, diamond, unknownUser))
+    }
+
+    @Test
+    fun `parseOrderIdFromReceipt with two OrderPlaced logs from different users picks ours`() {
+        // The multi-log safety the unchecked fallback was hiding: a batched UserOp could in
+        // principle put two OrderPlaced events from different users in the same receipt. We must
+        // only ever return our own orderId, never the other user's.
+        val diamond = Address.parse("0xce868398fdadca368eac203222874d6888532ae2")
+        val us = Address.parse("0x9858effd232b4033e47d90003d41ec34ecaeda94")
+        val otherUser = Address.parse("0x000000000000000000000000000000000000beef")
+        val otherOrderId = BigInteger.valueOf(11)
+        val ourOrderId = BigInteger.valueOf(22)
+
+        val otherUserLog =
+            sampleLog(
+                diamond.lowercaseHex,
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        "0x" + otherOrderId.toString(16).padStart(64, '0'),
+                        addressAsTopic(otherUser.lowercaseHex),
+                        addressAsTopic(diamond.lowercaseHex),
+                    ),
+            )
+        val ourLog =
+            sampleLog(
+                diamond.lowercaseHex,
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        "0x" + ourOrderId.toString(16).padStart(64, '0'),
+                        addressAsTopic(us.lowercaseHex),
+                        addressAsTopic(diamond.lowercaseHex),
+                    ),
+            )
+
+        // Other user's log comes first — the old fallback path would have returned otherOrderId.
+        val receipt = sampleReceipt(logs = listOf(otherUserLog, ourLog))
+        assertEquals(ourOrderId, OrderEvents.parseOrderIdFromReceipt(receipt, diamond, us))
     }
 
     @Test
