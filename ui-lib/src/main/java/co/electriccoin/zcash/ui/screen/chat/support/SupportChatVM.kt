@@ -153,7 +153,7 @@ class SupportChatVM(
                 )
                 _messages.update { it + ChatMessage.from(catMsg).toSupportUiMessage() }
 
-                val greeting = SupportChatConstants.CATEGORY_GREETINGS[category] ?: return@runChatCall
+                val greeting = SupportChatConstants.categoryGreeting(application, category)
                 val greetMsg = sdk.sendMessage(
                     conv.id,
                     "${SupportChatConstants.BOT_PREFIX}$greeting",
@@ -306,7 +306,7 @@ class SupportChatVM(
                 runChatCall("SupportChatVM: send leave notice failed") {
                     sdk.sendMessage(
                         convId,
-                        "${SupportChatConstants.BOT_PREFIX}${SupportChatConstants.LEAVE_MESSAGE}",
+                        "${SupportChatConstants.BOT_PREFIX}${SupportChatConstants.leaveNotice(application)}",
                     )
                 }
                 runChatCall("SupportChatVM: removeConversation failed") {

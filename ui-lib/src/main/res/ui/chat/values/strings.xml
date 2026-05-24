@@ -228,6 +228,15 @@
     <string name="support_chat_leave_dialog_cancel">Cancel</string>
     <string name="support_chat_contact_footer_subtitle">Report issues or share feedback</string>
     <string name="support_chat_input_placeholder">Message</string>
+    <string name="support_chat_greeting_problem">Please describe the issue you\'re experiencing.</string>
+    <string name="support_chat_greeting_feedback">We\'d love to hear your thoughts.</string>
+    <string name="support_chat_greeting_other">How can we help?</string>
+    <string name="support_chat_leave_notice">User has left the chat.</string>
+
+    <!-- Support chat — accessibility / content descriptions -->
+    <string name="support_chat_back_content_description">Go back</string>
+    <string name="support_chat_overflow_content_description">More options</string>
+    <string name="support_chat_send_content_description">Send message</string>
 
     <!-- Support ticket list -->
     <string name="support_ticket_list_empty_title">No support tickets</string>

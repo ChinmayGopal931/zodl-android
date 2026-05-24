@@ -195,6 +195,7 @@
     <string name="p2p_transactions_balance_label">Saldo en Base</string>
     <string name="p2p_transactions_balance_amount">%1$s USDC</string>
     <string name="p2p_transactions_balance_unavailable">Saldo no disponible</string>
+    <string name="p2p_transactions_balance_loading">—</string>
     <string name="p2p_transactions_refund_button">Reembolsar a ZEC</string>
     <string name="p2p_transactions_refund_in_progress">Reembolsando…</string>
     <string name="p2p_transactions_refund_retry">Reintentar reembolso</string>

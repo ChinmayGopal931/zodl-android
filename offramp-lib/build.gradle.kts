@@ -2,6 +2,7 @@ plugins {
     kotlin("multiplatform")
     kotlin("plugin.serialization")
     id("secant.kotlin-multiplatform-build-conventions")
+    id("secant.dependency-conventions")
 
     id("org.jetbrains.kotlinx.kover")
     id("secant.kover-conventions")
@@ -35,7 +36,7 @@ kotlin {
         getByName("jvmTest") {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("io.ktor:ktor-client-mock")
+                implementation(libs.ktor.mock)
             }
         }
     }

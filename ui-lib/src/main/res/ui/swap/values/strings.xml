@@ -214,6 +214,7 @@
     <string name="p2p_transactions_balance_label">Balance on Base</string>
     <string name="p2p_transactions_balance_amount">%1$s USDC</string>
     <string name="p2p_transactions_balance_unavailable">Balance unavailable</string>
+    <string name="p2p_transactions_balance_loading">—</string>
     <string name="p2p_transactions_refund_button">Refund to ZEC</string>
     <string name="p2p_transactions_refund_in_progress">Refunding…</string>
     <string name="p2p_transactions_refund_retry">Retry refund</string>

@@ -1,5 +1,8 @@
 package co.electriccoin.zcash.ui.screen.chat.support
 
+import android.content.Context
+import co.electriccoin.zcash.ui.R
+
 enum class SupportCategory(val label: String) {
     PROBLEM("Problem"),
     FEEDBACK("Feedback"),
@@ -36,15 +39,19 @@ object SupportChatConstants {
      */
     const val CATEGORY_MARKER = "[Category: "
 
-    /** Sent to the support peer when the user closes the chat. */
-    const val LEAVE_MESSAGE = "User has left the chat."
+    /** Localised greeting shown after the user picks a topic. */
+    fun categoryGreeting(context: Context, category: SupportCategory): String =
+        context.getString(
+            when (category) {
+                SupportCategory.PROBLEM -> R.string.support_chat_greeting_problem
+                SupportCategory.FEEDBACK -> R.string.support_chat_greeting_feedback
+                SupportCategory.OTHER -> R.string.support_chat_greeting_other
+            },
+        )
 
-    /** Category-specific greeting shown after the user picks a topic. */
-    val CATEGORY_GREETINGS: Map<SupportCategory, String> = mapOf(
-        SupportCategory.PROBLEM to "Please describe the issue you're experiencing.",
-        SupportCategory.FEEDBACK to "We'd love to hear your thoughts.",
-        SupportCategory.OTHER to "How can we help?",
-    )
+    /** Sent to the support peer when the user closes the chat. */
+    fun leaveNotice(context: Context): String =
+        context.getString(R.string.support_chat_leave_notice)
 
     /**
      * Returns true when the conversation is a support ticket.

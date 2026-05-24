@@ -39,6 +39,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.spackle.Twig
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import co.electriccoin.zcash.ui.R
@@ -66,7 +67,10 @@ internal fun ImageViewerOverlay(
             message.thumbnailData != null -> try {
                 val bytes = Base64.decode(message.thumbnailData, Base64.DEFAULT)
                 BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            } catch (_: Exception) { null }
+            } catch (e: IllegalArgumentException) {
+                Twig.warn(e) { "ImageViewerOverlay: thumbnail base64 decode failed" }
+                null
+            }
             else -> null
         }
     }
@@ -185,7 +189,11 @@ private fun saveImageToGallery(context: Context, message: ChatMessage) {
         }
 
         Toast.makeText(context, context.getString(R.string.chat_room_image_viewer_saved), Toast.LENGTH_SHORT).show()
-    } catch (_: Exception) {
+    } catch (e: java.io.IOException) {
+        Twig.warn(e) { "ImageViewerOverlay: saveImageToGallery failed" }
+        Toast.makeText(context, context.getString(R.string.chat_room_image_viewer_save_failed), Toast.LENGTH_SHORT).show()
+    } catch (e: SecurityException) {
+        Twig.warn(e) { "ImageViewerOverlay: saveImageToGallery denied" }
         Toast.makeText(context, context.getString(R.string.chat_room_image_viewer_save_failed), Toast.LENGTH_SHORT).show()
     }
 }

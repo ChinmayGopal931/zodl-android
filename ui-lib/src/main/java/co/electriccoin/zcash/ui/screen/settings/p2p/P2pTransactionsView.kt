@@ -129,7 +129,7 @@ private fun BalanceCard(state: BalanceState, refund: RefundUiState, isRefreshing
             Column(modifier = Modifier.weight(1f)) {
                 when (state) {
                     BalanceState.Loading -> BasicText(
-                        text = "—",
+                        text = stringResource(R.string.p2p_transactions_balance_loading),
                         style = ZappTheme.typography.display.copy(color = c.text, fontWeight = FontWeight.SemiBold),
                     )
                     BalanceState.Unavailable -> BasicText(

@@ -58,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -173,7 +174,7 @@ private fun SupportTopBar(
             ) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = null,
+                    contentDescription = stringResource(R.string.support_chat_back_content_description),
                     tint = ZappTheme.colors.text,
                     modifier = Modifier.size(20.dp),
                 )
@@ -194,7 +195,7 @@ private fun SupportTopBar(
                     ) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = null,
+                            contentDescription = stringResource(R.string.support_chat_overflow_content_description),
                             tint = ZappTheme.colors.text,
                             modifier = Modifier.size(20.dp),
                         )
@@ -429,7 +430,7 @@ private fun SupportInputBar(
         ) {
             Icon(
                 imageVector = Icons.Default.ArrowUpward,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.support_chat_send_content_description),
                 tint = if (canSend) c.onAccent else c.textSubtle,
                 modifier = Modifier.size(18.dp),
             )

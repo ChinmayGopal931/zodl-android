@@ -1,5 +1,6 @@
 package co.electriccoin.zcash.ui.screen.chat.support
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
@@ -22,6 +23,7 @@ import java.util.Date
 import java.util.Locale
 
 class SupportTicketListVM(
+    private val application: Application,
     private val sdk: ZappMessagingSDK,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
@@ -152,7 +154,7 @@ class SupportTicketListVM(
             runChatCall("SupportTicketListVM: send leave notice failed") {
                 sdk.sendMessage(
                     ticket.conversationId,
-                    "${SupportChatConstants.BOT_PREFIX}${SupportChatConstants.LEAVE_MESSAGE}",
+                    "${SupportChatConstants.BOT_PREFIX}${SupportChatConstants.leaveNotice(application)}",
                 )
             }
             runChatCall("SupportTicketListVM: removeConversation failed") {

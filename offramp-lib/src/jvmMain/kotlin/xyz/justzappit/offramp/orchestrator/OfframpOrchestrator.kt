@@ -48,26 +48,16 @@ import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getOrCreate
 import java.math.BigInteger
 
-/**
- * Surface for the VM layer to depend on. Decouples the UI VM from the concrete RPC/signer wiring
- * so tests can substitute a scripted flow without standing up a real RPC stack.
- */
 interface OfframpDriver {
     fun run(request: OfframpRequest): Flow<OfframpStatus>
     fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus>
 
     /**
-     * Single user intent: "get my USDC back to ZEC". State-aware — reads the on-chain order (if
-     * [orderId] given), picks the right cleanup contract call, then transfers any USDC sitting in
-     * the smart account to the NEAR pullback target (mainnet) or leaves it self-custodial (testnet).
-     *
+     * "Get my USDC back to ZEC". Cleanup-call selection depends on on-chain order state:
      *  - ACCEPTED / PAID    → `cancelOrder` (user-permitted, refunds escrow) + transfer
      *  - PLACED + expired   → `autoCancelExpiredOrders` (permissionless cleanup) + transfer
-     *  - PLACED + active    → transfer only (PAY/SELL hold no escrow at PLACED — funds are still
-     *                          in the smart account)
-     *  - CANCELLED / null   → transfer only (nothing to cancel)
-     *
-     * Emits [OfframpStatus.FundsRecovered] on success, [OfframpStatus.Failed] on revert.
+     *  - PLACED + active    → transfer only (PAY/SELL escrow nothing at PLACED)
+     *  - CANCELLED / null   → transfer only
      */
     fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus>
 }
@@ -92,19 +82,13 @@ class OfframpOrchestrator(
      * orphan the user's escrowed USDC.
      */
     private val stalledAfterMs: Long = DEFAULT_STALLED_AFTER_MS,
-    /**
-     * Clock used to compute the stalled-flag deadline. Defaults to wall-clock; tests inject a
-     * controllable monotonic counter because `runTest`'s virtual time does not advance
-     * `clockMs()`.
-     */
+    // Wall-clock by default; tests inject a monotonic counter — `runTest` virtual time doesn't
+    // advance `System.currentTimeMillis()`.
     private val clockMs: () -> Long = System::currentTimeMillis,
-    /**
-     * Authoritative on-chain order reader used to verify the merchant encryption pubkey before we
-     * encrypt the user's UPI to it (the polling [orderReader] is subgraph-primary and untrusted for
-     * this). Defaults to a direct `getOrdersById` reader; injectable for tests.
-     */
+    // Authoritative on-chain reader for the merchant pubkey verification — the polling [orderReader]
+    // is subgraph-primary and untrusted for the field we encrypt the user's UPI to.
     private val onChainOrderReader: OrderReadSource = OnChainOrderReader(rpc, network),
-    /** See [RelayIdentityStore]. In-memory default for tests; Android injects an encrypted-prefs store. */
+    // In-memory default for tests; Android injects an encrypted-prefs store.
     private val relayIdentityStore: RelayIdentityStore = InMemoryRelayIdentityStore(),
 ) : OfframpDriver {
     override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
@@ -112,12 +96,9 @@ class OfframpOrchestrator(
         driveNewOrder(request, resumeBridgeHandle = null)
     }
 
-    /**
-     * Drives a fresh — or bridge-resumed — order from circle selection through completion.
-     * [resumeBridgeHandle] is a persisted 1-Click deposit address when resuming a mainnet bridge that
-     * was already opened: passing it makes the funding step re-poll that bridge instead of opening a
-     * second one, so a crash mid-bridge can't double-send the user's ZEC.
-     */
+    // [resumeBridgeHandle] is a persisted 1-Click deposit address — passing it forces the funding
+    // step to re-poll the existing bridge instead of opening a second one, so a crash mid-bridge
+    // can't double-send the user's ZEC.
     private suspend fun FlowCollector<OfframpStatus>.driveNewOrder(
         request: OfframpRequest,
         resumeBridgeHandle: String?,
@@ -140,12 +121,9 @@ class OfframpOrchestrator(
             val circleId = selectedCircle.value
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
-            // Funding gate, resumable + idempotent: on mainnet bridges ZEC→USDC via NEAR and persists
-            // the deposit address (via the emit below) before any ZEC moves; on testnet verifies the
-            // account is pre-funded. Runs only after an assignable merchant is confirmed (above) so we
-            // never bridge into a market with no route. AlreadyFunded short-circuits the bridge — common
-            // when a previous cancelled order left USDC refunded into the smart account — and we emit a
-            // distinct status so the UI can render "Using Base balance" instead of "Bridging funds".
+            // AlreadyFunded short-circuits the bridge — common when a previous cancelled order left
+            // USDC refunded into the smart account; emit a distinct status so the UI renders
+            // "Using Base balance" instead of "Bridging funds".
             currentStep = OfframpStep.FUNDING
             val outcome = funding.ensureFunded(accountAddress, request, resumeHandle = resumeBridgeHandle) { depositAddress ->
                 emit(OfframpStatus.BridgingFunds(amount = request.usdcAmount, depositAddress = depositAddress))
@@ -222,16 +200,10 @@ class OfframpOrchestrator(
         }
     }
 
-    /**
-     * Resumes an in-flight order from a persisted checkpoint.
-     *
-     * - **Order already placed** ([checkpoint.orderId] non-null): pick up at merchant-acceptance /
-     *   completion polling — approve + placeOrder are known to have landed.
-     * - **Pre-order** (orderId null): no order was ever placed. If a mainnet funding bridge was in
-     *   flight, [OfframpCheckpoint.bridgeDepositAddress] resumes it (re-polled, never re-quoted) and
-     *   the order is then placed; otherwise this is just a fresh start. [driveNewOrder] is idempotent
-     *   on the bridge via that handle, so this can never double-send the user's ZEC.
-     */
+    // Two branches:
+    //  - orderId non-null → resume at merchant-acceptance / completion polling.
+    //  - orderId null → fresh start; if a mainnet bridge was already opened,
+    //    [bridgeDepositAddress] makes [driveNewOrder] re-poll it instead of re-quoting.
     override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
         emit(OfframpStatus.Idle)
         val fallbackFiat = checkpoint.fiatAmount ?: resolveFallbackFiat(checkpoint)
@@ -601,16 +573,10 @@ class OfframpOrchestrator(
         ret.isNotEmpty() && BigInteger(1, ret).signum() != 0
     }.getOrDefault(false)
 
-    /**
-     * Polls [orderReader] indefinitely until [predicate] matches or the order is observed in the
-     * CANCELLED state (which is a normal terminal — the contract has refunded the user's USDC
-     * on-chain — not an error). There is no client-side deadline; see [stalledAfterMs] for the
-     * UX-side "this is taking a while" signal.
-     *
-     * Transient RPC failures inside [orderReader] are silently absorbed (the fallback reader logs
-     * them) and the loop continues. A single bad poll must not kill an order whose USDC is
-     * already escrowed on-chain.
-     */
+    // No client-side deadline (see [stalledAfterMs] for the UX-only "taking a while" signal).
+    // CANCELLED is a normal terminal — the contract has refunded the user's USDC on-chain — and
+    // returned as a [PollOutcome.Cancelled], not thrown. Transient RPC failures are swallowed so
+    // a single bad poll can't kill an order whose USDC is already escrowed.
     private suspend fun FlowCollector<OfframpStatus>.pollOrderUntil(
         orderId: BigInteger,
         buildStatus: (attempt: Int, lastSeen: OrderStatus?, stalled: Boolean, expired: Boolean) -> OfframpStatus,
@@ -627,9 +593,7 @@ class OfframpOrchestrator(
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Throwable) {
-                // FallbackOrderReader already logs primary + fallback failures; the orchestrator
-                // just keeps polling. Returning null here lets the existing snapshot==null branch
-                // re-emit the WaitingFor* status without changing observed on-chain state.
+                // FallbackOrderReader already logs both legs; orchestrator just keeps polling.
                 null
             }
             if (snapshot != null) {
