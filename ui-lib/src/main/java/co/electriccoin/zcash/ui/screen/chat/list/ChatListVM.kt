@@ -15,6 +15,7 @@ import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
 import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.support.SupportChatConstants
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.chat.common.formatRelativeTime
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
@@ -31,9 +32,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Suppress("TooManyFunctions")
 class ChatListVM(
@@ -44,6 +42,7 @@ class ChatListVM(
     private val chatBootstrap: ChatBootstrap,
 ) : ViewModel() {
     private val conversations = MutableStateFlow<List<ChatConversation>?>(null)
+    private val localPublicKey = MutableStateFlow<String?>(null)
     private val connectionStatus = MutableStateFlow(ChatListConnectionStatus.CONNECTING)
     private val peerCount = MutableStateFlow(0)
     private val dhtHealth = MutableStateFlow(ChatListDhtHealth.HEALTHY)
@@ -62,18 +61,35 @@ class ChatListVM(
         viewModelScope.launch { checkTosAccepted() }
     }
 
+    private fun buildSupportRow(supportConvs: List<ChatConversation>): ChatListSupportRowState? {
+        if (supportConvs.isEmpty()) return null
+        val latestSupportMsg = supportConvs
+            .maxByOrNull { it.lastMessageTimestamp ?: 0L }
+            ?.lastMessage
+            ?.removePrefix(SupportChatConstants.BOT_PREFIX)
+        return ChatListSupportRowState(
+            ticketCount = supportConvs.size,
+            lastMessage = latestSupportMsg?.let { stringRes(it) },
+            totalUnreadCount = supportConvs.sumOf { it.unreadCount },
+            onClick = ::onSupportClick,
+        )
+    }
+
     val state: StateFlow<ChatListState> =
         combine(
-            combine(conversations, moderationRepository.blockedKeys) { c, b -> c to b },
+            combine(conversations, moderationRepository.blockedKeys, localPublicKey) { c, b, pk ->
+                Triple(c, b, pk)
+            },
             combine(connectionStatus, peerCount, dhtHealth) { cs, pc, dh -> Triple(cs, pc, dh) },
             combine(showTosDialog, showNetworkSheet, leaveTarget) { tos, sheet, leave ->
                 Triple(tos, sheet, leave)
             },
             connectionDetails,
-        ) { (convs, blocked), (cs, pc, dh), (tos, sheet, leave), details ->
+        ) { (convs, blocked, pk), (cs, pc, dh), (tos, sheet, leave), details ->
             createState(
                 conversations = convs,
                 blockedKeys = blocked,
+                localPublicKey = pk,
                 connectionStatus = cs,
                 peerCount = pc,
                 dhtHealth = dh,
@@ -89,6 +105,7 @@ class ChatListVM(
                 createState(
                     conversations = null,
                     blockedKeys = emptySet(),
+                    localPublicKey = null,
                     connectionStatus = ChatListConnectionStatus.CONNECTING,
                     peerCount = 0,
                     dhtHealth = ChatListDhtHealth.HEALTHY,
@@ -103,6 +120,7 @@ class ChatListVM(
     private fun createState(
         conversations: List<ChatConversation>?,
         blockedKeys: Set<String>,
+        localPublicKey: String?,
         connectionStatus: ChatListConnectionStatus,
         peerCount: Int,
         dhtHealth: ChatListDhtHealth,
@@ -111,37 +129,33 @@ class ChatListVM(
         showTosDialog: Boolean,
         leaveTarget: ChatConversation?,
     ): ChatListState {
-        // Separate support conversations from regular ones so the aggregate "Zapp Support"
-        // parent row can be pinned independently of the timestamp-sorted list.
-        // Uses both displayName prefix and participantIds to work on both the
-        // user's device and the support agent's device (where participantIds
-        // does not contain SUPPORT_PUBLIC_KEY — only the user's key).
+        // Pin the aggregate "Zapp Support" row above the timestamp-sorted list.
+        // [isSupportConversation] handles the side-asymmetry: user device requires the
+        // support agent's key in participantIds; the support agent's device falls back
+        // to the displayName prefix because its own key is excluded from the participant list.
         val supportConvs = conversations?.filter { conv ->
-            SupportChatConstants.isSupportConversation(conv.displayName, conv.participantIds)
+            SupportChatConstants.isSupportConversation(
+                displayName = conv.displayName,
+                participantIds = conv.participantIds,
+                localPublicKey = localPublicKey,
+            )
         }.orEmpty()
 
         val visibleConversations =
             conversations
                 ?.filter { conv ->
-                    !SupportChatConstants.isSupportConversation(conv.displayName, conv.participantIds) &&
-                        (conv.type != ConversationType.DIRECT ||
-                            conv.participantIds.none { it in blockedKeys })
+                    !SupportChatConstants.isSupportConversation(
+                        displayName = conv.displayName,
+                        participantIds = conv.participantIds,
+                        localPublicKey = localPublicKey,
+                    ) && (
+                        conv.type != ConversationType.DIRECT ||
+                            conv.participantIds.none { it in blockedKeys }
+                    )
                 }?.sortedByDescending { it.lastMessageTimestamp ?: 0L }
                 .orEmpty()
 
-        val latestSupportMsg = supportConvs
-            .maxByOrNull { it.lastMessageTimestamp ?: 0L }
-            ?.lastMessage
-            ?.removePrefix(SupportChatConstants.BOT_PREFIX)
-
-        val supportRow =
-            ChatListSupportRowState(
-                isActive = supportConvs.isNotEmpty(),
-                ticketCount = supportConvs.size,
-                lastMessage = latestSupportMsg?.let { stringRes(it) },
-                totalUnreadCount = supportConvs.sumOf { it.unreadCount },
-                onClick = ::onSupportClick,
-            )
+        val supportRow = buildSupportRow(supportConvs)
 
         return ChatListState(
             title = stringRes(R.string.chat_list_title),
@@ -284,6 +298,7 @@ class ChatListVM(
 
     private suspend fun observeIdentityAndRefresh() {
         sdk.identity.collect { id ->
+            localPublicKey.value = id?.publicKey
             if (id != null) startConversationRefresh()
         }
     }
@@ -421,22 +436,3 @@ class ChatListVM(
         private const val CONVERSATION_RELOAD_DEBOUNCE_MS = 500L
     }
 }
-
-private fun formatRelativeTime(epochMillis: Long): StringResource {
-    val diff = System.currentTimeMillis() - epochMillis
-    return when {
-        diff < ONE_MINUTE_MS -> stringRes(R.string.chat_list_time_now)
-        diff < ONE_HOUR_MS ->
-            stringRes(R.string.chat_list_time_minutes_short, (diff / ONE_MINUTE_MS).toInt())
-        diff < ONE_DAY_MS ->
-            stringRes(SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(epochMillis)))
-        diff < ONE_WEEK_MS ->
-            stringRes(SimpleDateFormat("EEE", Locale.getDefault()).format(Date(epochMillis)))
-        else -> stringRes(SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(epochMillis)))
-    }
-}
-
-private const val ONE_MINUTE_MS = 60_000L
-private const val ONE_HOUR_MS = 3_600_000L
-private const val ONE_DAY_MS = 86_400_000L
-private const val ONE_WEEK_MS = 604_800_000L

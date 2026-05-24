@@ -37,10 +37,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.component.zapp.ZappGroupHeader
@@ -155,10 +157,10 @@ fun SettingsTabContent(
                     }
                 }
 
-                SettingsGroup(title = "Support") {
+                SettingsGroup(title = stringResource(R.string.settings_group_support)) {
                     ZappRow(
-                        title = "Contact support",
-                        subtitle = "Report issues, share feedback",
+                        title = stringResource(R.string.settings_support_contact_title),
+                        subtitle = stringResource(R.string.settings_support_contact_subtitle),
                         icon = Icons.Default.SupportAgent,
                         onClick = { navigationRouter.forward(SupportTicketListArgs) },
                     )

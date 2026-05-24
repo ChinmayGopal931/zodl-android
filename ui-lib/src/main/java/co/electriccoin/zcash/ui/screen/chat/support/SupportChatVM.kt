@@ -6,11 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.screen.chat.SupportChatArgs
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.media.FileUtils
 import co.electriccoin.zcash.ui.screen.chat.media.ImageProcessor
+import co.electriccoin.zcash.ui.screen.chat.media.MediaPickEffect
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
+import co.electriccoin.zcash.ui.screen.chat.model.MimeTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,175 +38,173 @@ class SupportChatVM(
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
 
-    private val _messages = MutableStateFlow<List<SupportUiMessage>>(emptyList())
-    private val _input = MutableStateFlow("")
-    private val _isLoading = MutableStateFlow(true)
-    private val _showLeaveDialog = MutableStateFlow(false)
-    private val _showMediaSheet = MutableStateFlow(false)
+    private val conversationId = MutableStateFlow(args.conversationId.takeIf { it.isNotEmpty() })
+    private val messages = MutableStateFlow<List<SupportUiMessage>>(emptyList())
+    private val input = MutableStateFlow("")
+    private val isLoading = MutableStateFlow(true)
+    private val isSubmittingCategory = MutableStateFlow(false)
+    private val showLeaveDialog = MutableStateFlow(false)
+    private val showMediaSheet = MutableStateFlow(false)
 
-    private val _effects = MutableSharedFlow<SupportChatEffect>(extraBufferCapacity = 4)
-    val effects: SharedFlow<SupportChatEffect> = _effects.asSharedFlow()
-
-    private var convId: String = args.conversationId
-    private val isNewTicket = args.conversationId.isEmpty()
+    private val _effects = MutableSharedFlow<MediaPickEffect>(extraBufferCapacity = 4)
+    val effects: SharedFlow<MediaPickEffect> = _effects.asSharedFlow()
 
     init {
         viewModelScope.launch { initialize() }
+        subscribeToIncomingMessages()
     }
 
     val state: StateFlow<SupportChatScreenState> =
         combine(
-            _messages,
-            _input,
-            combine(_isLoading, _showLeaveDialog, _showMediaSheet) { l, d, m -> Triple(l, d, m) },
-        ) { messages, input, (loading, showLeave, showMedia) ->
-            val uiState = when {
-                loading -> SupportChatUiState.Loading
-                isNewTicket && convId.isEmpty() -> SupportChatUiState.SelectCategory
-                else -> SupportChatUiState.Chat(messages = messages, input = input)
-            }
-            SupportChatScreenState(
-                uiState = uiState,
-                onCategorySelected = ::onCategorySelected,
-                onInputChange = ::onInputChange,
-                onSend = ::onSendClick,
-                onAttach = ::onAttachClick,
-                onLeave = ::onLeaveClick,
-                onBack = ::onBack,
-                leaveDialog = if (showLeave) {
-                    SupportLeaveDialogState(
-                        onConfirm = ::onLeaveConfirm,
-                        onDismiss = ::onLeaveDismiss,
-                    )
-                } else {
-                    null
-                },
-                mediaSheet = if (showMedia) {
-                    SupportMediaSheetState(
-                        onChooseMedia = ::onChooseMediaClick,
-                        onAttachFile = ::onAttachFileClick,
-                        onTakePhoto = ::onTakePhotoClick,
-                        onDismiss = ::onDismissMediaSheet,
-                    )
-                } else {
-                    null
-                },
-            )
+            conversationId,
+            messages,
+            input,
+            combine(isLoading, isSubmittingCategory) { l, s -> l to s },
+            combine(showLeaveDialog, showMediaSheet) { d, m -> d to m },
+        ) { convId, msgs, inp, (loading, submitting), (showLeave, showMedia) ->
+            buildState(convId, msgs, inp, loading, submitting, showLeave, showMedia)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = SupportChatScreenState(
-                uiState = SupportChatUiState.Loading,
-                onCategorySelected = ::onCategorySelected,
-                onInputChange = ::onInputChange,
-                onSend = ::onSendClick,
-                onAttach = ::onAttachClick,
-                onLeave = ::onLeaveClick,
-                onBack = ::onBack,
-                leaveDialog = null,
-                mediaSheet = null,
+            initialValue = buildState(
+                conversationId = conversationId.value,
+                messages = emptyList(),
+                input = "",
+                isLoading = true,
+                isSubmittingCategory = false,
+                showLeaveDialog = false,
+                showMediaSheet = false,
             ),
         )
 
-    // ── Initialization ────────────────────────────────────────────────────────
+    private fun buildState(
+        conversationId: String?,
+        messages: List<SupportUiMessage>,
+        input: String,
+        isLoading: Boolean,
+        isSubmittingCategory: Boolean,
+        showLeaveDialog: Boolean,
+        showMediaSheet: Boolean,
+    ): SupportChatScreenState {
+        val uiState = when {
+            isLoading -> SupportChatUiState.Loading
+            conversationId == null -> SupportChatUiState.SelectCategory(isSubmitting = isSubmittingCategory)
+            else -> SupportChatUiState.Chat(messages = messages, input = input)
+        }
+        return SupportChatScreenState(
+            uiState = uiState,
+            onCategorySelected = ::onCategorySelected,
+            onInputChange = ::onInputChange,
+            onSend = ::onSendClick,
+            onAttach = ::onAttachClick,
+            onLeave = ::onLeaveClick,
+            onBack = ::onBack,
+            leaveDialog = if (showLeaveDialog) {
+                SupportLeaveDialogState(onConfirm = ::onLeaveConfirm, onDismiss = ::onLeaveDismiss)
+            } else {
+                null
+            },
+            mediaSheet = if (showMediaSheet) {
+                SupportMediaSheetState(
+                    onChooseMedia = ::onChooseMediaClick,
+                    onAttachFile = ::onAttachFileClick,
+                    onTakePhoto = ::onTakePhotoClick,
+                    onDismiss = ::onDismissMediaSheet,
+                )
+            } else {
+                null
+            },
+        )
+    }
 
     private suspend fun initialize() {
-        subscribeToIncomingMessages()
-        if (!isNewTicket) loadMessages()
-        _isLoading.value = false
+        if (conversationId.value != null) loadMessages()
+        isLoading.value = false
     }
 
     private suspend fun loadMessages() {
-        if (convId.isEmpty()) return
+        val convId = conversationId.value ?: return
         runChatCall("SupportChatVM: loadMessages failed") {
-            val list = sdk.getMessages(convId)
+            messages.value = sdk.getMessages(convId)
                 .map(ChatMessage::from)
-                .map { it.toSupportUiMessage() }
-            _messages.value = list
+                .mapNotNull { it.toSupportUiMessageOrNull() }
         }
     }
 
     private fun subscribeToIncomingMessages() {
         viewModelScope.launch {
             sdk.messageReceived.collect { (incomingConvId, zmMsg) ->
-                if (incomingConvId != convId || convId.isEmpty()) return@collect
-                val msg = ChatMessage.from(zmMsg).toSupportUiMessage()
-                _messages.update { current ->
+                if (incomingConvId != conversationId.value) return@collect
+                val msg = ChatMessage.from(zmMsg).toSupportUiMessageOrNull() ?: return@collect
+                messages.update { current ->
                     if (current.any { it.id == msg.id }) current else current + msg
                 }
             }
         }
     }
 
-    // ── Category selection ────────────────────────────────────────────────────
-
     private fun onCategorySelected(category: SupportCategory) {
+        if (conversationId.value != null || isSubmittingCategory.value) return
+        isSubmittingCategory.value = true
         viewModelScope.launch {
             runChatCall("SupportChatVM: create ticket failed") {
                 val conv = sdk.createConversation(
                     type = SdkConversationType.GROUP,
                     participants = listOf(SupportChatConstants.SUPPORT_PUBLIC_KEY),
-                    displayName = "Support: ${category.label}",
+                    displayName = "${SupportChatConstants.DISPLAY_NAME_PREFIX}${category.protocolKey}",
                 )
-                convId = conv.id
-
-                val catMsg = sdk.sendMessage(
-                    conv.id,
-                    "${SupportChatConstants.CATEGORY_MARKER}${category.label}]",
-                )
-                _messages.update { it + ChatMessage.from(catMsg).toSupportUiMessage() }
-
-                val greeting = SupportChatConstants.categoryGreeting(application, category)
-                val greetMsg = sdk.sendMessage(
-                    conv.id,
-                    "${SupportChatConstants.BOT_PREFIX}$greeting",
-                )
-                _messages.update { it + ChatMessage.from(greetMsg).toSupportUiMessage() }
+                conversationId.value = conv.id
+                sdk.sendMessage(conv.id, SupportChatConstants.categoryMarker(category))
+                val greeting = application.getString(category.greetingRes)
+                val greetMsg = sdk.sendMessage(conv.id, "${SupportChatConstants.BOT_PREFIX}$greeting")
+                ChatMessage.from(greetMsg).toSupportUiMessageOrNull()?.let { ui ->
+                    messages.update { it + ui }
+                }
             }
+            isSubmittingCategory.value = false
         }
     }
 
-    // ── Text input ───────────────────────────────────────────────────────────
-
     private fun onInputChange(value: String) {
-        _input.value = value
+        input.value = value
     }
 
     private fun onSendClick() {
-        val text = _input.value.trim()
-        if (text.isEmpty() || convId.isEmpty()) return
-        _input.value = ""
+        val text = input.value.trim()
+        val convId = conversationId.value ?: return
+        if (text.isEmpty()) return
+        input.value = ""
         viewModelScope.launch {
             runChatCall("SupportChatVM: send message failed") {
                 val userMsg = sdk.sendMessage(convId, text)
-                _messages.update { it + ChatMessage.from(userMsg).toSupportUiMessage() }
+                ChatMessage.from(userMsg).toSupportUiMessageOrNull()?.let { ui ->
+                    messages.update { it + ui }
+                }
             }
         }
     }
 
-    // ── Attachment / media ───────────────────────────────────────────────────
-
     private fun onAttachClick() {
-        _showMediaSheet.value = true
+        showMediaSheet.value = true
     }
 
     private fun onChooseMediaClick() {
-        _showMediaSheet.value = false
-        _effects.tryEmit(SupportChatEffect.PickMedia)
+        showMediaSheet.value = false
+        _effects.tryEmit(MediaPickEffect.PickMedia)
     }
 
     private fun onAttachFileClick() {
-        _showMediaSheet.value = false
-        _effects.tryEmit(SupportChatEffect.PickFile)
+        showMediaSheet.value = false
+        _effects.tryEmit(MediaPickEffect.PickFile)
     }
 
     private fun onTakePhotoClick() {
-        _showMediaSheet.value = false
-        _effects.tryEmit(SupportChatEffect.TakePhoto)
+        showMediaSheet.value = false
+        _effects.tryEmit(MediaPickEffect.TakePhoto)
     }
 
     private fun onDismissMediaSheet() {
-        _showMediaSheet.value = false
+        showMediaSheet.value = false
     }
 
     fun onMediaPicked(uri: Uri) {
@@ -219,95 +220,94 @@ class SupportChatVM(
     }
 
     private suspend fun sendMediaFromUri(uri: Uri) {
-        if (convId.isEmpty()) return
+        val convId = conversationId.value ?: return
         runChatCall("SupportChatVM: sendMedia failed") {
             withContext(Dispatchers.IO) {
                 val mimeType = FileUtils.getMimeType(application, uri)
-                val thumbnail =
-                    if (mimeType.startsWith("image/")) {
-                        ImageProcessor.generateThumbnail(application, uri)
-                    } else {
-                        null
+                val thumbnail = thumbnailFor(uri, mimeType)
+                when {
+                    mimeType == MimeTypes.GIF -> {
+                        val cached = FileUtils.copyUriToCache(application, uri)
+                            ?: error("Failed to cache GIF")
+                        sendMediaMessage(convId, cached.absolutePath, MimeTypes.GIF, thumbnail)
                     }
-                if (mimeType == GIF_MIME) {
-                    val cached =
-                        FileUtils.copyUriToCache(application, uri) ?: error("Failed to cache GIF")
-                    sendMediaMessage(cached.absolutePath, GIF_MIME, thumbnail)
-                } else if (mimeType.startsWith("image/")) {
-                    val compressed =
-                        ImageProcessor.compressImage(application, uri)
+                    mimeType.startsWith(MimeTypes.IMAGE_PREFIX) -> {
+                        val compressed = ImageProcessor.compressImage(application, uri)
                             ?: error("Image compression failed")
-                    sendMediaMessage(compressed.absolutePath, IMAGE_MIME, thumbnail)
-                } else {
-                    val cached =
-                        FileUtils.copyUriToCache(application, uri) ?: error("Failed to cache media")
-                    sendMediaMessage(cached.absolutePath, mimeType, thumbnail)
+                        sendMediaMessage(convId, compressed.absolutePath, MimeTypes.IMAGE_JPEG, thumbnail)
+                    }
+                    else -> {
+                        val cached = FileUtils.copyUriToCache(application, uri)
+                            ?: error("Failed to cache media")
+                        sendMediaMessage(convId, cached.absolutePath, mimeType, thumbnail)
+                    }
                 }
             }
         }
     }
 
     private suspend fun sendFileFromUri(uri: Uri) {
-        if (convId.isEmpty()) return
+        val convId = conversationId.value ?: return
         runChatCall("SupportChatVM: sendFile failed") {
             withContext(Dispatchers.IO) {
-                val cached =
-                    FileUtils.copyUriToCache(application, uri) ?: error("Failed to cache file")
+                val cached = FileUtils.copyUriToCache(application, uri)
+                    ?: error("Failed to cache file")
                 val mimeType = FileUtils.getMimeType(application, uri)
-                val thumbnail =
-                    if (mimeType.startsWith("image/")) {
-                        ImageProcessor.generateThumbnail(application, uri)
-                    } else {
-                        null
-                    }
-                sendMediaMessage(cached.absolutePath, mimeType, thumbnail)
+                val thumbnail = thumbnailFor(uri, mimeType)
+                sendMediaMessage(convId, cached.absolutePath, mimeType, thumbnail)
             }
         }
     }
 
     private suspend fun sendCameraCapture(uri: Uri) {
-        if (convId.isEmpty()) return
+        val convId = conversationId.value ?: return
         runChatCall("SupportChatVM: sendCameraCapture failed") {
             withContext(Dispatchers.IO) {
                 val thumbnail = ImageProcessor.generateThumbnail(application, uri)
-                val compressed =
-                    ImageProcessor.compressImage(application, uri)
-                        ?: error("Image compression failed")
-                sendMediaMessage(compressed.absolutePath, IMAGE_MIME, thumbnail)
+                val compressed = ImageProcessor.compressImage(application, uri)
+                    ?: error("Image compression failed")
+                sendMediaMessage(convId, compressed.absolutePath, MimeTypes.IMAGE_JPEG, thumbnail)
             }
         }
     }
 
+    private fun thumbnailFor(uri: Uri, mimeType: String): String? =
+        if (mimeType.startsWith(MimeTypes.IMAGE_PREFIX)) {
+            ImageProcessor.generateThumbnail(application, uri)
+        } else {
+            null
+        }
+
     private suspend fun sendMediaMessage(
+        convId: String,
         mediaPath: String,
         contentType: String,
         thumbnailData: String?,
     ) {
         runChatCall("SupportChatVM: sendMediaMessage failed") {
             val zmMessage = sdk.sendMediaMessage(convId, mediaPath, contentType, "", thumbnailData)
-            _messages.update { it + ChatMessage.from(zmMessage).toSupportUiMessage() }
+            ChatMessage.from(zmMessage).toSupportUiMessageOrNull()?.let { ui ->
+                messages.update { it + ui }
+            }
         }
     }
 
-    // ── Leave / close ────────────────────────────────────────────────────────
-
     private fun onLeaveClick() {
-        _showLeaveDialog.value = true
+        showLeaveDialog.value = true
     }
 
     private fun onLeaveDismiss() {
-        _showLeaveDialog.value = false
+        showLeaveDialog.value = false
     }
 
     private fun onLeaveConfirm() {
-        _showLeaveDialog.value = false
+        showLeaveDialog.value = false
+        val convId = conversationId.value
         viewModelScope.launch {
-            if (convId.isNotEmpty()) {
+            if (convId != null) {
                 runChatCall("SupportChatVM: send leave notice failed") {
-                    sdk.sendMessage(
-                        convId,
-                        "${SupportChatConstants.BOT_PREFIX}${SupportChatConstants.leaveNotice(application)}",
-                    )
+                    val notice = application.getString(R.string.support_chat_leave_notice)
+                    sdk.sendMessage(convId, "${SupportChatConstants.BOT_PREFIX}$notice")
                 }
                 runChatCall("SupportChatVM: removeConversation failed") {
                     sdk.removeConversation(convId)
@@ -318,21 +318,29 @@ class SupportChatVM(
     }
 
     private fun onBack() = navigationRouter.back()
-
-    companion object {
-        private const val IMAGE_MIME = "image/jpeg"
-        private const val GIF_MIME = "image/gif"
-    }
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-private fun ChatMessage.toSupportUiMessage(): SupportUiMessage {
-    val isBot = isFromMe && content.startsWith(SupportChatConstants.BOT_PREFIX)
+/**
+ * Maps a [ChatMessage] to a [SupportUiMessage] for the support-chat UI, returning null when the
+ * message is a protocol marker (e.g. `[Category: …]`) that should not be rendered.
+ *
+ * Bot-prefixed messages always render on the agent side regardless of who sent them: the user's
+ * own device emits `[Zapp]:` greetings/notices and the agent's device may emit announcements
+ * with the same prefix — both should look like system messages, not user input.
+ */
+private fun ChatMessage.toSupportUiMessageOrNull(): SupportUiMessage? {
+    if (content.startsWith(SupportChatConstants.CATEGORY_MARKER_PREFIX)) return null
+    val isBotPrefixed = content.startsWith(SupportChatConstants.BOT_PREFIX)
+    val origin = when {
+        isBotPrefixed -> SupportMessageOrigin.BOT
+        isFromMe -> SupportMessageOrigin.USER
+        else -> SupportMessageOrigin.AGENT
+    }
+    val displayContent = if (isBotPrefixed) content.removePrefix(SupportChatConstants.BOT_PREFIX) else content
     return SupportUiMessage(
         id = id,
-        content = if (isBot) content.removePrefix(SupportChatConstants.BOT_PREFIX) else content,
-        isFromMe = if (isBot) false else isFromMe,
+        content = displayContent,
+        origin = origin,
         timestamp = timestamp,
     )
 }

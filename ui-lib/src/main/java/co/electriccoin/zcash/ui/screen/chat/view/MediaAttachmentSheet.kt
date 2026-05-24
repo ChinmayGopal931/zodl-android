@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.CameraAlt
@@ -20,82 +20,96 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
+/**
+ * Bottom sheet offering media-attachment options. Pass [onShareLocation] as null to omit the
+ * location option (support chat doesn't need it).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MediaAttachmentSheet(
+internal fun MediaAttachmentSheet(
     onChooseMedia: () -> Unit,
     onAttachFile: () -> Unit,
     onTakePhoto: () -> Unit,
-    onShareLocation: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onShareLocation: (() -> Unit)? = null,
 ) {
+    val c = ZappTheme.colors
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = ZappTheme.colors.surface,
-        scrimColor = ZappTheme.colors.overlay,
+        containerColor = c.surface,
+        scrimColor = c.overlay,
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp)
+                .padding(bottom = 24.dp),
         ) {
-            Text(
-                "Attach",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = ZappTheme.colors.text
+            BasicText(
+                text = stringResource(R.string.chat_media_sheet_title),
+                style = ZappTheme.typography.sectionTitle.copy(color = c.text),
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 MediaOption(
                     icon = Icons.Default.Image,
-                    label = "Media",
+                    label = stringResource(R.string.chat_media_option_media),
                     onClick = onChooseMedia,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 MediaOption(
                     icon = Icons.Default.AttachFile,
-                    label = "File",
+                    label = stringResource(R.string.chat_media_option_file),
                     onClick = onAttachFile,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
+                if (onShareLocation == null) {
+                    MediaOption(
+                        icon = Icons.Default.CameraAlt,
+                        label = stringResource(R.string.chat_media_option_camera),
+                        onClick = onTakePhoto,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            if (onShareLocation != null) {
+                Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                MediaOption(
-                    icon = Icons.Default.CameraAlt,
-                    label = "Camera",
-                    onClick = onTakePhoto,
-                    modifier = Modifier.weight(1f)
-                )
-                MediaOption(
-                    icon = Icons.Default.LocationOn,
-                    label = "Location",
-                    onClick = onShareLocation,
-                    modifier = Modifier.weight(1f)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    MediaOption(
+                        icon = Icons.Default.CameraAlt,
+                        label = stringResource(R.string.chat_media_option_camera),
+                        onClick = onTakePhoto,
+                        modifier = Modifier.weight(1f),
+                    )
+                    MediaOption(
+                        icon = Icons.Default.LocationOn,
+                        label = stringResource(R.string.chat_media_option_location),
+                        onClick = onShareLocation,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
             }
         }
     }
@@ -106,31 +120,30 @@ private fun MediaOption(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
+    val c = ZappTheme.colors
     Surface(
         onClick = onClick,
         modifier = modifier.height(80.dp),
         shape = RectangleShape,
-        color = ZappTheme.colors.surfaceAlt
+        color = c.surfaceAlt,
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Center,
         ) {
             Icon(
                 icon,
                 contentDescription = label,
-                tint = ZappTheme.colors.accent,
-                modifier = Modifier.size(28.dp)
+                tint = c.accent,
+                modifier = Modifier.size(28.dp),
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                label,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                color = ZappTheme.colors.text
+            BasicText(
+                text = label,
+                style = ZappTheme.typography.chip.copy(color = c.text),
             )
         }
     }

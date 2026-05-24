@@ -79,9 +79,11 @@ fun ChatListView(
                                 bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
                             ),
                     ) {
-                        item(key = "support_row") {
-                            SupportContactRow(state = state.supportRow)
-                            ZappRowDivider(inset = true)
+                        state.supportRow?.let { row ->
+                            item(key = "support_row") {
+                                SupportContactRow(state = row)
+                                ZappRowDivider(inset = true)
+                            }
                         }
 
                         items(items = state.items, key = { it.id }) { item ->
@@ -185,14 +187,8 @@ private fun SupportContactRow(state: ChatListSupportRowState) {
             )
             Spacer(Modifier.height(2.dp))
             BasicText(
-                text = when {
-                    state.lastMessage != null -> state.lastMessage.getValue()
-                    state.ticketCount > 0 -> stringRes(
-                        R.string.chat_list_support_tickets_fmt,
-                        state.ticketCount,
-                    ).getValue()
-                    else -> stringRes(R.string.support_chat_contact_footer_subtitle).getValue()
-                },
+                text = state.lastMessage?.getValue()
+                    ?: stringRes(R.string.chat_list_support_tickets_fmt, state.ticketCount).getValue(),
                 style = ZappTheme.typography.rowSubtitle.copy(color = c.textMuted),
                 maxLines = 1,
             )

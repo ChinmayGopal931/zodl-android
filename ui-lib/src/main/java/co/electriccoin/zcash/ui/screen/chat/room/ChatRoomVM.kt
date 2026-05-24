@@ -23,6 +23,7 @@ import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.model.MessageStatus
+import co.electriccoin.zcash.ui.screen.chat.model.MimeTypes
 import co.electriccoin.zcash.ui.screen.chat.model.ReportCategory
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
@@ -201,8 +202,13 @@ class ChatRoomVM(
                     onAttachClick = ::onAttachClick,
                     replyPreview =
                         replyingTo?.let { msg ->
+                            val fallbackRes = if (msg.isFromMe) {
+                                R.string.chat_room_reply_sender_self
+                            } else {
+                                R.string.chat_room_reply_sender_unknown
+                            }
                             ChatRoomReplyPreviewState(
-                                senderName = msg.senderName ?: if (msg.isFromMe) "You" else "Unknown",
+                                senderName = msg.senderName ?: application.getString(fallbackRes),
                                 content = msg.content.take(REPLY_PREVIEW_MAX_LENGTH),
                                 onDismiss = ::dismissReply,
                             )
@@ -645,20 +651,20 @@ class ChatRoomVM(
             withContext(Dispatchers.IO) {
                 val mimeType = FileUtils.getMimeType(application, uri)
                 val thumbnail =
-                    if (mimeType.startsWith("image/")) {
+                    if (mimeType.startsWith(MimeTypes.IMAGE_PREFIX)) {
                         ImageProcessor.generateThumbnail(application, uri)
                     } else {
                         null
                     }
-                if (mimeType == GIF_MIME) {
+                if (mimeType == MimeTypes.GIF) {
                     val cached =
                         FileUtils.copyUriToCache(application, uri) ?: error("Failed to cache GIF")
-                    sendMediaMessage(cached.absolutePath, GIF_MIME, thumbnailData = thumbnail)
-                } else if (mimeType.startsWith("image/")) {
+                    sendMediaMessage(cached.absolutePath, MimeTypes.GIF, thumbnailData = thumbnail)
+                } else if (mimeType.startsWith(MimeTypes.IMAGE_PREFIX)) {
                     val compressed =
                         ImageProcessor.compressImage(application, uri)
                             ?: error("Image compression failed")
-                    sendMediaMessage(compressed.absolutePath, IMAGE_MIME, thumbnailData = thumbnail)
+                    sendMediaMessage(compressed.absolutePath, MimeTypes.IMAGE_JPEG, thumbnailData = thumbnail)
                 } else {
                     val cached =
                         FileUtils.copyUriToCache(application, uri) ?: error("Failed to cache media")
@@ -676,7 +682,7 @@ class ChatRoomVM(
                 val mimeType = FileUtils.getMimeType(application, uri)
                 val fileName = FileUtils.getFileName(application, uri) ?: FILE_FALLBACK_NAME
                 val thumbnail =
-                    if (mimeType.startsWith("image/")) {
+                    if (mimeType.startsWith(MimeTypes.IMAGE_PREFIX)) {
                         ImageProcessor.generateThumbnail(application, uri)
                     } else {
                         null
@@ -693,7 +699,7 @@ class ChatRoomVM(
                 val compressed =
                     ImageProcessor.compressImage(application, uri)
                         ?: error("Image compression failed")
-                sendMediaMessage(compressed.absolutePath, IMAGE_MIME, thumbnailData = thumbnail)
+                sendMediaMessage(compressed.absolutePath, MimeTypes.IMAGE_JPEG, thumbnailData = thumbnail)
             }
         }
     }
@@ -719,7 +725,7 @@ class ChatRoomVM(
                         put("longitude", longitude)
                         put("accuracy", accuracy.toDouble())
                     }.toString()
-            val zmMessage = sdk.sendMessage(conversationId, content, LOCATION_MIME)
+            val zmMessage = sdk.sendMessage(conversationId, content, MimeTypes.LOCATION)
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
@@ -727,7 +733,7 @@ class ChatRoomVM(
     private suspend fun shareWalletAddress() {
         runChatCall("ChatRoomVM: shareWalletAddress failed") {
             val address = getZashiAccount().unified.address.address
-            val zmMessage = sdk.sendMessage(conversationId, address, WALLET_ADDRESS_MIME)
+            val zmMessage = sdk.sendMessage(conversationId, address, MimeTypes.WALLET_ADDRESS)
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
@@ -747,7 +753,7 @@ class ChatRoomVM(
 
     private fun resolvePeerWalletAddress(): String? =
         messages.value.lastOrNull { msg ->
-            msg.contentType == WALLET_ADDRESS_MIME && !msg.isFromMe
+            msg.contentType == MimeTypes.WALLET_ADDRESS && !msg.isFromMe
         }?.content?.takeIf { it.isNotBlank() }
 
     companion object {
@@ -755,10 +761,6 @@ class ChatRoomVM(
         const val STATUS_QUEUED = "queued"
         const val STATUS_FAILED = "failed"
         const val PEER_STATUS_ONLINE = "online"
-        const val IMAGE_MIME = "image/jpeg"
-        const val GIF_MIME = "image/gif"
-        const val LOCATION_MIME = "application/location"
-        const val WALLET_ADDRESS_MIME = "application/wallet-address"
         const val FILE_FALLBACK_NAME = "File"
         const val REPLY_PREVIEW_MAX_LENGTH = 100
     }

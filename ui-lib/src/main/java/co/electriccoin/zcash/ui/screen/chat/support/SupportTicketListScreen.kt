@@ -48,6 +48,8 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.chat.view.ConfirmDialog
+import co.electriccoin.zcash.ui.screen.chat.view.SwipeToRevealActionRow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
@@ -88,7 +90,8 @@ private fun SupportTicketListView(state: SupportTicketListState) {
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = null,
+                            contentDescription =
+                                stringRes(R.string.support_ticket_list_back_content_description).getValue(),
                             tint = c.text,
                             modifier = Modifier.size(20.dp),
                         )
@@ -121,9 +124,10 @@ private fun SupportTicketListView(state: SupportTicketListState) {
                         ),
                     ) {
                         items(items = state.tickets, key = { it.conversationId }) { ticket ->
-                            SwipeToCloseRow(
+                            SwipeToRevealActionRow(
                                 key = ticket.conversationId,
-                                onClose = ticket.onCloseSwipe,
+                                actionLabel = stringRes(R.string.chat_list_close_action),
+                                onAction = ticket.onCloseSwipe,
                             ) {
                                 TicketRow(ticket = ticket)
                             }
@@ -156,6 +160,7 @@ private fun SupportTicketListView(state: SupportTicketListState) {
 @Composable
 private fun TicketRow(ticket: SupportTicketItem) {
     val c = ZappTheme.colors
+    val categoryLabelText = ticket.categoryLabel.getValue()
 
     Row(
         modifier = Modifier
@@ -171,7 +176,7 @@ private fun TicketRow(ticket: SupportTicketItem) {
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
-                text = ticket.categoryLabel.first().uppercase(),
+                text = categoryLabelText.firstOrNull()?.uppercase().orEmpty(),
                 style = ZappTheme.typography.sectionTitle.copy(color = c.onAccent),
             )
         }
@@ -184,20 +189,20 @@ private fun TicketRow(ticket: SupportTicketItem) {
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 BasicText(
-                    text = ticket.categoryLabel,
+                    text = categoryLabelText,
                     style = ZappTheme.typography.rowTitle.copy(color = c.text),
                     maxLines = 1,
                 )
                 ticket.timeLabel?.let { time ->
                     BasicText(
-                        text = time,
+                        text = time.getValue(),
                         style = ZappTheme.typography.caption.copy(color = c.textMuted),
                     )
                 }
             }
             Spacer(Modifier.height(2.dp))
             BasicText(
-                text = ticket.lastMessage
+                text = ticket.lastMessage?.getValue()
                     ?: stringRes(R.string.chat_list_no_messages).getValue(),
                 style = ZappTheme.typography.rowSubtitle.copy(color = c.textMuted),
                 maxLines = 1,
@@ -253,71 +258,12 @@ private fun TicketEmptyState(modifier: Modifier = Modifier) {
 
 @Composable
 private fun SupportCloseDialog(state: SupportLeaveDialogState) {
-    val c = ZappTheme.colors
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.overlay)
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = state.onDismiss,
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp)
-                .background(c.surface, RectangleShape)
-                .clickable(
-                    indication = null,
-                    interactionSource = remember { MutableInteractionSource() },
-                    onClick = {},
-                )
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            BasicText(
-                text = stringRes(R.string.support_ticket_close_dialog_title).getValue(),
-                style = ZappTheme.typography.rowTitle.copy(color = c.text),
-            )
-            BasicText(
-                text = stringRes(R.string.support_ticket_close_dialog_message).getValue(),
-                style = ZappTheme.typography.body.copy(color = c.textMuted),
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .background(c.surfaceAlt, RectangleShape)
-                        .clickable(onClick = state.onDismiss),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    BasicText(
-                        text = stringRes(R.string.support_ticket_close_dialog_cancel).getValue(),
-                        style = ZappTheme.typography.button.copy(color = c.text),
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp)
-                        .background(c.danger, RectangleShape)
-                        .clickable(onClick = state.onConfirm),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    BasicText(
-                        text = stringRes(R.string.support_ticket_close_dialog_confirm).getValue(),
-                        style = ZappTheme.typography.button.copy(color = c.bg),
-                    )
-                }
-            }
-        }
-    }
+    ConfirmDialog(
+        title = stringRes(R.string.support_ticket_close_dialog_title),
+        body = stringRes(R.string.support_ticket_close_dialog_message),
+        confirmLabel = stringRes(R.string.support_ticket_close_dialog_confirm),
+        cancelLabel = stringRes(R.string.support_ticket_close_dialog_cancel),
+        onConfirm = state.onConfirm,
+        onDismiss = state.onDismiss,
+    )
 }

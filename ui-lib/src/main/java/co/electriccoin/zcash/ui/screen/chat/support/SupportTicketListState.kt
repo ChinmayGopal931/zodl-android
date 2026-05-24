@@ -1,5 +1,7 @@
 package co.electriccoin.zcash.ui.screen.chat.support
 
+import co.electriccoin.zcash.ui.design.util.StringResource
+
 data class SupportTicketListState(
     val tickets: List<SupportTicketItem>,
     val isLoading: Boolean,
@@ -10,9 +12,9 @@ data class SupportTicketListState(
 
 data class SupportTicketItem(
     val conversationId: String,
-    val categoryLabel: String,
-    val lastMessage: String?,
-    val timeLabel: String?,
+    val categoryLabel: StringResource,
+    val lastMessage: StringResource?,
+    val timeLabel: StringResource?,
     val unreadCount: Int,
     val onClick: () -> Unit,
     val onCloseSwipe: () -> Unit,
