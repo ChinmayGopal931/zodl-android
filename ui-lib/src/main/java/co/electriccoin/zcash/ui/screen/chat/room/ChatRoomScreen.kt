@@ -19,5 +19,9 @@ internal fun ChatRoomScreen(args: ChatRoomArgs) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     ChatRoomEffectsHandler(viewModel)
     BackHandler { state.onBack() }
-    ChatRoomView(state = state, modifier = Modifier.fillMaxSize())
+    ChatRoomView(
+        state = state,
+        onReplyToMessage = viewModel::onReplyToMessage,
+        modifier = Modifier.fillMaxSize(),
+    )
 }

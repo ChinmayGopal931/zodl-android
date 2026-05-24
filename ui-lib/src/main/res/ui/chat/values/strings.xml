@@ -81,6 +81,16 @@
     <string name="chat_room_edit_contact_report">Report</string>
     <string name="chat_room_edit_contact_block">Block User</string>
 
+    <!-- Chat room — date separator labels -->
+    <string name="chat_room_date_today">Today</string>
+    <string name="chat_room_date_yesterday">Yesterday</string>
+
+    <!-- Chat room — reply -->
+    <string name="chat_room_reply_action">Reply</string>
+    <string name="chat_room_reply_to_fmt">Replying to %1$s</string>
+    <string name="chat_room_reply_dismiss">Dismiss reply</string>
+    <string name="chat_room_reply_unknown_sender">Unknown</string>
+
     <!-- Chat room — delivery indicator content descriptions -->
     <string name="chat_room_delivery_sent">Sent</string>
     <string name="chat_room_delivery_queued">Queued</string>
@@ -204,6 +214,50 @@
     <string name="chat_contacts_empty_subtitle">Add contacts to start chatting</string>
     <string name="chat_contacts_add_content_description">Add contact</string>
     <string name="chat_contacts_start_chat_content_description">Start chat</string>
+
+    <!-- Support chat -->
+    <string name="support_chat_title">Zapp Support</string>
+    <string name="support_chat_pick_topic">Pick a topic</string>
+    <string name="support_chat_category_problem">Problem</string>
+    <string name="support_chat_category_feedback">Feedback</string>
+    <string name="support_chat_category_other">Other</string>
+    <string name="support_chat_overflow_close">Close Support Chat</string>
+    <string name="support_chat_leave_dialog_title">Close support chat?</string>
+    <string name="support_chat_leave_dialog_message">This will remove the support conversation from your inbox. The Zapp team will also see it as closed.</string>
+    <string name="support_chat_leave_dialog_confirm">Close</string>
+    <string name="support_chat_leave_dialog_cancel">Cancel</string>
+    <string name="support_chat_contact_footer_subtitle">Report issues or share feedback</string>
+    <string name="support_chat_input_placeholder">Message</string>
+
+    <!-- Support ticket list -->
+    <string name="support_ticket_list_empty_title">No support tickets</string>
+    <string name="support_ticket_list_empty_subtitle">Tap + to create a new ticket</string>
+    <string name="support_ticket_list_new_content_description">New ticket</string>
+    <string name="support_ticket_close_dialog_title">Close this ticket?</string>
+    <string name="support_ticket_close_dialog_message">This will remove the ticket and its messages.</string>
+    <string name="support_ticket_close_dialog_confirm">Close</string>
+    <string name="support_ticket_close_dialog_cancel">Cancel</string>
+    <string name="chat_list_support_tickets_fmt">%1$d open ticket(s)</string>
+
+    <!-- Chat room — image viewer -->
+    <string name="chat_room_image_viewer_close">Close</string>
+    <string name="chat_room_image_viewer_save">Save image</string>
+    <string name="chat_room_image_viewer_share">Share image</string>
+    <string name="chat_room_image_viewer_saved">Image saved</string>
+    <string name="chat_room_image_viewer_save_failed">Could not save image</string>
+    <string name="chat_room_image_viewer_content_description">Full-screen image</string>
+    <string name="chat_room_media_content_description_image">Image</string>
+    <string name="chat_room_media_content_description_gif">GIF</string>
+    <string name="chat_room_media_content_description_video">Video</string>
+    <string name="chat_room_media_play_video">Play video</string>
+    <string name="chat_room_media_placeholder_video">Video</string>
+    <string name="chat_room_media_placeholder_image">Image</string>
+
+    <!-- Support chat — media sheet -->
+    <string name="support_chat_media_sheet_title">Attach</string>
+    <string name="support_chat_media_option_media">Media</string>
+    <string name="support_chat_media_option_file">File</string>
+    <string name="support_chat_media_option_camera">Camera</string>
 
     <!-- Chat contacts — add/edit validation errors -->
     <string name="chat_contact_error_name_required">Name is required</string>

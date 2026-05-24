@@ -10,7 +10,7 @@ import java.io.File
 import java.io.FileOutputStream
 
 object ImageProcessor {
-    private const val THUMBNAIL_MAX_SIZE = 200
+    private const val THUMBNAIL_MAX_SIZE = 400
     private const val IMAGE_QUALITY = 85
     private const val MAX_IMAGE_SIZE = 1920
 

@@ -22,6 +22,8 @@ import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileVM
 import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomVM
 import co.electriccoin.zcash.ui.screen.chat.scan.ChatScanPublicKeyVM
 import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsVM
+import co.electriccoin.zcash.ui.screen.chat.support.SupportChatVM
+import co.electriccoin.zcash.ui.screen.chat.support.SupportTicketListVM
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerVM
 import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactVM
 import co.electriccoin.zcash.ui.screen.contact.AddZashiABContactVM
@@ -211,4 +213,6 @@ val viewModelModule =
         viewModelOf(::NewConversationVM)
         viewModelOf(::ContactEditVM)
         viewModelOf(::ChatRoomVM)
+        viewModelOf(::SupportTicketListVM)
+        viewModelOf(::SupportChatVM)
     }
