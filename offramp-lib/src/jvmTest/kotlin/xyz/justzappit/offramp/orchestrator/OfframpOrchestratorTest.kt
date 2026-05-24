@@ -462,7 +462,6 @@ class OfframpOrchestratorTest {
         placedTxHash = xyz.justzappit.evm.types.TxHash.fromHex(
             "0x" + "02".padStart(64, '0'),
         ),
-        placedAtBlockNumber = 16L,
         source = OrderSnapshot.Source.Subgraph,
     )
 

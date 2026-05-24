@@ -239,7 +239,6 @@ val providerModule =
             )
         }
 
-        // Twig-shaped logger fn pulled out as a reusable single, used by FallbackOrderReader.
         single<(String, Throwable?) -> Unit>(named("offramp_warn")) {
             { msg, cause ->
                 if (cause != null) Twig.warn(cause) { msg } else Twig.warn { msg }

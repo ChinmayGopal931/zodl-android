@@ -25,7 +25,6 @@ data class OrderSnapshot(
     val actualUsdcAmount: Usdc6?,
     val actualFiatAmount: Usdc6?,
     val placedTxHash: TxHash?,
-    val placedAtBlockNumber: Long?,
     val source: Source,
 ) {
     enum class Source { Subgraph, OnChain }

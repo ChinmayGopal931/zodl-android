@@ -13,8 +13,8 @@ package xyz.justzappit.offramp.orchestrator
 enum class KnownRevertReason {
     /**
      * `placeOrder` reverts because the user's USDC tx limit (RP × multiplier) is below the
-     * requested amount. Selector `0x91da284f`. Discord 2026-04-23 (Bucky): new mainnet users will
-     * hit this until they complete social/KYC verification at app.p2p.me/limits.
+     * requested amount. Selector `0x91da284f`. New mainnet users hit this until they complete
+     * social/KYC verification at app.p2p.me/limits.
      */
     BuyOrderAmountExceedsLimit,
 

@@ -18,7 +18,6 @@ import java.math.BigInteger
  */
 data class OrderFeeDetails(
     val fixedFeePaid: Usdc6,
-    val tipsPaid: Usdc6,
     val acceptedAtEpochSeconds: Long?,
     val paidAtEpochSeconds: Long?,
     val actualUsdcAmount: Usdc6,
@@ -31,24 +30,22 @@ object OrderFeeDetailsDecoder {
      * so no leading offset pointer (cf. `getOrdersById`, whose tuple is dynamic). The 7 words
      * land back-to-back: uint64(fixedFeePaid), uint64(tipsPaid), uint128(acceptedTimestamp),
      * uint128(paidTimestamp), uint128(reserved2), uint256(actualUsdtAmount), uint256(actualFiatAmount).
-     * Each is left-padded to 32 bytes per ABI spec.
+     * Each is left-padded to 32 bytes per ABI spec. Slots 1 and 4 are intentionally skipped:
+     * tipsPaid has no UI consumer and reserved2 is contract-reserved for future use.
      */
     fun decode(returnData: ByteArray): OrderFeeDetails {
         val d = AbiDecoder(returnData)
         d.requireWords(TUPLE_FIELDS)
         return OrderFeeDetails(
             fixedFeePaid = Usdc6(d.uint(FIELD_FIXED_FEE_PAID)),
-            tipsPaid = Usdc6(d.uint(FIELD_TIPS_PAID)),
             acceptedAtEpochSeconds = d.uint(FIELD_ACCEPTED_TS).toLong().takeIf { it > 0 },
             paidAtEpochSeconds = d.uint(FIELD_PAID_TS).toLong().takeIf { it > 0 },
-            // FIELD_RESERVED2 intentionally skipped — contract reserves it for future use.
             actualUsdcAmount = Usdc6(d.uint(FIELD_ACTUAL_USDC)),
             actualFiatAmount = Usdc6(d.uint(FIELD_ACTUAL_FIAT)),
         )
     }
 
     private const val FIELD_FIXED_FEE_PAID = 0
-    private const val FIELD_TIPS_PAID = 1
     private const val FIELD_ACCEPTED_TS = 2
     private const val FIELD_PAID_TS = 3
     private const val FIELD_ACTUAL_USDC = 5

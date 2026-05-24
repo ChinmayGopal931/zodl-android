@@ -25,7 +25,6 @@ class OrderFeeDetailsDecoderTest {
 
         val decoded = OrderFeeDetailsDecoder.decode(hex)
         assertEquals(Usdc6.ofMicros(50_000), decoded.fixedFeePaid)
-        assertEquals(Usdc6.ZERO, decoded.tipsPaid)
         assertEquals(1_779_500_000L, decoded.acceptedAtEpochSeconds)
         assertEquals(1_779_999_000L, decoded.paidAtEpochSeconds)
         assertEquals(Usdc6.ofMicros(5_062_500), decoded.actualUsdcAmount)
@@ -38,7 +37,6 @@ class OrderFeeDetailsDecoderTest {
         val hex = ("00".repeat(32 * 7)).hexToBytes()
         val decoded = OrderFeeDetailsDecoder.decode(hex)
         assertEquals(Usdc6.ZERO, decoded.fixedFeePaid)
-        assertEquals(Usdc6.ZERO, decoded.tipsPaid)
         assertNull(decoded.acceptedAtEpochSeconds)
         assertNull(decoded.paidAtEpochSeconds)
         assertEquals(Usdc6.ZERO, decoded.actualUsdcAmount)

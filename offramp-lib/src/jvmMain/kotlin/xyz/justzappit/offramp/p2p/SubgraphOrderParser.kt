@@ -33,7 +33,6 @@ internal object SubgraphOrderParser {
             actualFiatAmount = node.optionalString("actualFiatAmount")
                 ?.takeIf { it != "0" }?.toBigInteger()?.let(::Usdc6),
             placedTxHash = node.optionalString("transactionHash")?.takeIf { it.isNotBlank() }?.let(TxHash::fromHex),
-            placedAtBlockNumber = node.optionalString("blockNumber")?.toLongOrNull(),
             source = OrderSnapshot.Source.Subgraph,
         )
     }

@@ -57,7 +57,6 @@ object OrderReader {
             actualUsdcAmount = null,
             actualFiatAmount = null,
             placedTxHash = null,
-            placedAtBlockNumber = null,
             source = OrderSnapshot.Source.OnChain,
         )
     }

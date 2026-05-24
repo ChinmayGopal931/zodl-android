@@ -7,16 +7,12 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 
 /**
- * All four fields are typed [Usdc6] because the diamond contract returns them as 6-decimal
- * micros — even the fiat-side `sellPrice` is expressed in the same 6-decimal unit (e.g.
+ * `sellPrice` is expressed in the same 6-decimal unit as USDC by the diamond contract (e.g.
  * `sellPrice = 89_178_176` ⇒ 1 USDC ≈ 89.178176 fiat). Wrapping in [Usdc6] prevents accidentally
- * treating `89_178_176` as a fiat or USDC whole-token quantity at any callsite.
+ * treating the value as a fiat or USDC whole-token quantity at any callsite.
  */
 data class PriceConfig(
-    val buyPrice: Usdc6,
     val sellPrice: Usdc6,
-    val buyPriceOffset: Usdc6,
-    val baseSpread: Usdc6,
 ) {
     fun sellPriceAsRate(): BigDecimal = sellPrice.whole.stripTrailingZeros()
 
@@ -33,18 +29,14 @@ data class PriceConfig(
 }
 
 object PriceConfigDecoder {
-    // Decodes the return value of getPriceConfig(bytes32) — four packed uint256 words.
+    /** Decodes `getPriceConfig(bytes32)` — four packed uint256 words; only `sellPrice` is surfaced. */
     fun decode(returnData: ByteArray): PriceConfig {
         val d = AbiDecoder(returnData)
         d.requireWords(FOUR_WORDS)
-        return PriceConfig(
-            buyPrice = Usdc6(d.uint(0)),
-            sellPrice = Usdc6(d.uint(1)),
-            buyPriceOffset = Usdc6(d.uint(2)),
-            baseSpread = Usdc6(d.uint(3)),
-        )
+        return PriceConfig(sellPrice = Usdc6(d.uint(SLOT_SELL_PRICE)))
     }
 
+    private const val SLOT_SELL_PRICE = 1
     private const val FOUR_WORDS = 4
 }
 

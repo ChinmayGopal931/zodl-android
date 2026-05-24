@@ -84,7 +84,6 @@ class FallbackOrderReaderTest {
         actualUsdcAmount = null,
         actualFiatAmount = null,
         placedTxHash = null,
-        placedAtBlockNumber = null,
         source = source,
     )
 

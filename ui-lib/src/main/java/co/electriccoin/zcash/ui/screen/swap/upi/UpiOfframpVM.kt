@@ -189,8 +189,8 @@ internal class UpiOfframpVM(
             val result = navigateToScanUpi() ?: return@launch
             upiText.update { result.paymentAddress }
             result.fiatAmount?.let { fiat ->
-                // QR included an `am=` field; pre-fill the INR side as the user's primary so the
-                // USDC side derives from the live rate (matches the SDK's `parseUPI` semantics).
+                // QR carried an `am=` field; treat INR as the user's primary so USDC re-derives
+                // from the live rate (a scanned amount must not lock the USDC field).
                 primary.update { UpiOfframpAmountSide.INR }
                 inrState.update {
                     NumberTextFieldInnerState.fromAmount(fiat.setScale(INR_INPUT_SCALE, RoundingMode.FLOOR))
@@ -275,7 +275,7 @@ internal class UpiOfframpVM(
     companion object {
         private val CURRENCY = CurrencyCode.Inr
 
-        // Matches the FE: priceConfig?.sellPrice ?? 85.
+        // Used until getPriceConfig returns. ₹85/USDC is the p2p.me historical default.
         private val FALLBACK_RATE: BigDecimal = BigDecimal("85")
 
         // p2p.me caps a single offramp at 100 USDC. Surfaced proactively in the UI via
