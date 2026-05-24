@@ -19,7 +19,9 @@ import co.electriccoin.zcash.ui.common.model.ZecSwapAsset
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepository
 import co.electriccoin.zcash.ui.common.repository.SubmitProposalState
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepository
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.usecase.SubmitProposalUseCase
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
@@ -184,9 +186,29 @@ class NearBridgeOfframpFunding(
         return depositAddress
     }
 
+    /**
+     * The bridge runs server-side on 1-Click regardless of our polling cadence, so a transient
+     * HTTP error here (wifi blip, 5xx, transient timeout) must not propagate — bubbling it would
+     * make the orchestrator emit Failed(FUNDING), clear the checkpoint, and orphan the user's
+     * in-flight ZEC with no resume path. Only a *terminal* [SwapStatus] from 1-Click counts as
+     * the bridge actually dying. Cancellation still escapes for coroutine teardown.
+     */
+    @Suppress("TooGenericExceptionCaught")
     private suspend fun pollUntilSettled(depositAddress: String, tokens: List<SwapAsset>) {
         while (true) {
-            when (swapDataSource.checkSwapStatus(depositAddress, tokens).status) {
+            val status = try {
+                swapDataSource.checkSwapStatus(depositAddress, tokens).status
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                Twig.warn(e) {
+                    "NearBridgeOfframpFunding.pollUntilSettled: transient checkSwapStatus failure " +
+                        "for $depositAddress — retrying in ${pollIntervalMs}ms"
+                }
+                delay(pollIntervalMs)
+                continue
+            }
+            when (status) {
                 SwapStatus.SUCCESS -> return
                 SwapStatus.REFUNDED, SwapStatus.FAILED, SwapStatus.EXPIRED, SwapStatus.INCOMPLETE_DEPOSIT ->
                     error("NEAR bridge did not deliver USDC for $depositAddress — the user's ZEC was refunded.")

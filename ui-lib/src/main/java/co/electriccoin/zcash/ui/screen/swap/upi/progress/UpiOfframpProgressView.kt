@@ -95,11 +95,6 @@ internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
                 CancelledCard(cancelled)
             }
 
-            state.recovery?.let { recovery ->
-                Spacer(modifier = Modifier.height(GAP_LG.dp))
-                RecoveryCard(recovery)
-            }
-
             state.failure?.let { failure ->
                 Spacer(modifier = Modifier.height(GAP_LG.dp))
                 FailureCard(failure)
@@ -209,36 +204,6 @@ private fun FeeBreakdownCard(fees: UpiOfframpFeeBreakdown) {
         fees.youReceive?.let {
             Spacer(modifier = Modifier.height(GAP_SM.dp))
             SummaryRow(stringResource(R.string.upi_offramp_fee_breakdown_you_receive), it.getValue())
-        }
-    }
-}
-
-@Composable
-private fun RecoveryCard(recovery: UpiOfframpRecoveryCard) {
-    val c = ZappTheme.colors
-    val t = ZappTheme.typography
-    val uriHandler = LocalUriHandler.current
-    ZappBorderedCard {
-        BasicText(
-            text = recovery.amount.getValue(),
-            style = t.body.copy(color = c.text, fontWeight = FontWeight.SemiBold),
-        )
-        recovery.target?.let { target ->
-            Spacer(modifier = Modifier.height(GAP_SM.dp))
-            BasicText(
-                text = stringResource(R.string.upi_offramp_recovery_target, target.ellipsizeMiddle(10, 6)),
-                style = t.caption.copy(color = c.textMuted),
-            )
-        }
-        if (recovery.txHash != null && recovery.txExplorerUrl != null) {
-            Spacer(modifier = Modifier.height(GAP_SM.dp))
-            ExplorerLink(
-                value = recovery.txHash,
-                url = recovery.txExplorerUrl,
-                prefix = TX_HASH_ELLIPSIS_PREFIX,
-                suffix = TX_HASH_ELLIPSIS_SUFFIX,
-                uriHandler = uriHandler,
-            )
         }
     }
 }
@@ -632,69 +597,6 @@ private fun PreviewCancelled() {
                 ),
                 failure = null,
                 primaryButton = ButtonState(text = stringRes("Close"), onClick = {}),
-                onBack = {},
-            ),
-        )
-    }
-}
-
-@PreviewScreens
-@Composable
-private fun PreviewRecoveryInProgress() {
-    ZcashTheme {
-        UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Bridging USDC back to ZEC"),
-                subtitle = stringRes("Routing your refunded USDC to ZEC via NEAR Intents — this can take a couple of minutes."),
-                summary = previewSummary.copy(terminalTimestamp = stringRes("22 May 2026, 03:51 AM")),
-                feeBreakdown = null,
-                cancelled = UpiOfframpCancelledCard(
-                    refundedAmount = stringRes("5.00 USDC refunded to your offramp account"),
-                    cancelledAt = stringRes("Cancelled at 22 May 2026, 03:51 AM"),
-                    tip = stringRes("Tip: ask the merchant to generate the UPI QR only after this screen opens."),
-                ),
-                recovery = null,
-                steps = previewSteps(
-                    waitingAcceptance = UpiOfframpStepStatus.Completed,
-                    sendingUpi = UpiOfframpStepStatus.Completed,
-                    waitingCompletion = UpiOfframpStepStatus.Failed,
-                ),
-                failure = null,
-                primaryButton = ButtonState(text = stringRes("Bridging…"), isEnabled = false),
-                onBack = {},
-            ),
-        )
-    }
-}
-
-@PreviewScreens
-@Composable
-private fun PreviewRecoveryDone() {
-    ZcashTheme {
-        UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("USDC bridged back to ZEC"),
-                subtitle = null,
-                summary = previewSummary.copy(terminalTimestamp = stringRes("22 May 2026, 03:51 AM")),
-                feeBreakdown = null,
-                cancelled = UpiOfframpCancelledCard(
-                    refundedAmount = stringRes("5.00 USDC refunded to your offramp account"),
-                    cancelledAt = stringRes("Cancelled at 22 May 2026, 03:51 AM"),
-                    tip = stringRes("Tip: ask the merchant to generate the UPI QR only after this screen opens."),
-                ),
-                recovery = UpiOfframpRecoveryCard(
-                    amount = stringRes("5.00 USDC sent to bridge"),
-                    target = "0x9999888877776666555544443333222211110000",
-                    txHash = "0xfeedfeedfeedfeedfeedfeedfeedfeedfeedfeedfeedfeedfeedfeedfeedfeed",
-                    txExplorerUrl = "https://sepolia.basescan.org/tx/0xfeedfeed",
-                ),
-                steps = previewSteps(
-                    waitingAcceptance = UpiOfframpStepStatus.Completed,
-                    sendingUpi = UpiOfframpStepStatus.Completed,
-                    waitingCompletion = UpiOfframpStepStatus.Failed,
-                ),
-                failure = null,
-                primaryButton = ButtonState(text = stringRes("Done"), onClick = {}),
                 onBack = {},
             ),
         )

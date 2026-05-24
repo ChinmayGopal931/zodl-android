@@ -31,7 +31,6 @@ import xyz.justzappit.offramp.orchestrator.KnownRevertReason
 import xyz.justzappit.offramp.orchestrator.OfframpDriver
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
-import xyz.justzappit.offramp.orchestrator.OfframpStep
 import xyz.justzappit.offramp.orchestrator.orderId
 import xyz.justzappit.offramp.orchestrator.step
 import xyz.justzappit.offramp.p2p.OrderFeeDetails
@@ -70,12 +69,6 @@ internal class UpiOfframpProgressVM(
     // The on-chain identity shown to the user: the ERC-4337 smart account, not the owner EOA.
     // Resolved once via an async factory call (see init); null until then.
     private val smartAccountAddress = MutableStateFlow<Address?>(null)
-
-    // User-initiated "bridge funds back to ZEC". State-aware in the orchestrator (decides whether
-    // to cancelOrder, autoCancelExpiredOrders, or just transfer). [refundStatus] overrides the live
-    // order status once it holds a terminal; [isRefunding] gates the button while UserOps are in flight.
-    private val refundStatus = MutableStateFlow<OfframpStatus?>(null)
-    private val isRefunding = MutableStateFlow(false)
 
     // Sticky: once the funding seam short-circuits with FundedFromBase, the FUNDING progress row
     // keeps that label for the rest of the run. Live status moves on once the next step begins, so
@@ -138,61 +131,47 @@ internal class UpiOfframpProgressVM(
         }
     }
 
-    private data class RefundState(val status: OfframpStatus?, val inFlight: Boolean)
-
-    private val refundState = combine(refundStatus, isRefunding) { s, f -> RefundState(s, f) }
-
     val state: StateFlow<UpiOfframpProgressState> =
-        combine(statusSource, feeDetails, smartAccountAddress, refundState, fundedFromBaseObserved) {
-                status, fees, addr, refund, fundedFromBase ->
-            buildState(status, fees, addr, refund, fundedFromBase)
+        combine(statusSource, feeDetails, smartAccountAddress, fundedFromBaseObserved) {
+                status, fees, addr, fundedFromBase ->
+            buildState(status, fees, addr, fundedFromBase)
         }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.Eagerly,
-                initialValue = buildState(OfframpStatus.Idle, null, null, RefundState(null, false), false),
+                initialValue = buildState(OfframpStatus.Idle, null, null, false),
             )
 
     private fun buildState(
-        liveStatus: OfframpStatus,
+        status: OfframpStatus,
         fees: OrderFeeDetails?,
         accountAddress: Address?,
-        refund: RefundState,
         fundedFromBase: Boolean,
     ): UpiOfframpProgressState {
-        val effective = refund.status ?: liveStatus
-        val orderId = effective.orderId
-        val summary = buildSummary(effective, orderId, accountAddress)
+        val orderId = status.orderId
+        val summary = buildSummary(status, orderId, accountAddress)
 
-        val title = when {
-            refund.status is OfframpStatus.FundsRecovered -> stringRes(R.string.upi_offramp_recovery_done_title)
-            refund.inFlight -> stringRes(R.string.upi_offramp_recovery_in_progress_title)
-            effective is OfframpStatus.Completed -> stringRes(R.string.upi_offramp_progress_title_completed)
-            effective is OfframpStatus.Cancelled -> stringRes(R.string.upi_offramp_progress_title_cancelled)
-            effective is OfframpStatus.Failed -> stringRes(R.string.upi_offramp_progress_title_failed)
+        val title = when (status) {
+            is OfframpStatus.Completed -> stringRes(R.string.upi_offramp_progress_title_completed)
+            is OfframpStatus.Cancelled -> stringRes(R.string.upi_offramp_progress_title_cancelled)
+            is OfframpStatus.Failed -> stringRes(R.string.upi_offramp_progress_title_failed)
             else -> stringRes(R.string.upi_offramp_progress_title_in_progress)
         }
 
-        val subtitle: StringResource? = when {
-            refund.status is OfframpStatus.FundsRecovered -> null
-            refund.inFlight -> stringRes(R.string.upi_offramp_recovery_in_progress_subtitle)
-            effective is OfframpStatus.Completed -> stringRes(R.string.upi_offramp_progress_subtitle_completed)
-            effective is OfframpStatus.Cancelled -> stringRes(R.string.upi_offramp_progress_subtitle_cancelled)
-            effective is OfframpStatus.Failed -> null
+        val subtitle: StringResource? = when (status) {
+            is OfframpStatus.Completed -> stringRes(R.string.upi_offramp_progress_subtitle_completed)
+            is OfframpStatus.Cancelled -> stringRes(R.string.upi_offramp_progress_subtitle_cancelled)
+            is OfframpStatus.Failed -> null
             else -> stringRes(R.string.upi_offramp_progress_subtitle_recipient, args.recipientUpi)
         }
 
-        val steps = buildProgressSteps(effective, network, fundedFromBaseObserved = fundedFromBase)
-        val failure = (effective as? OfframpStatus.Failed)?.let(::buildFailureCard)
-        val cancelled = (effective as? OfframpStatus.Cancelled)?.let(::buildCancelledCard)
-        val recovery = (refund.status as? OfframpStatus.FundsRecovered)?.let(::buildRecoveryCard)
+        val steps = buildProgressSteps(status, network, fundedFromBaseObserved = fundedFromBase)
+        val failure = (status as? OfframpStatus.Failed)?.let(::buildFailureCard)
+        val cancelled = (status as? OfframpStatus.Cancelled)?.let(::buildCancelledCard)
         val feeBreakdown = buildFeeBreakdown(fees)
 
-        // Matches official user-app-client: NO cancel button during PLACED/ACCEPTED/PAID. Refund only
-        // surfaces after the order is terminally cancelled (or pre-order failed), and only on mainnet
-        // (testnet has no NEAR pullback route — USDC just stays in the self-custodial smart account).
-        val showRefund = isRefundActionable(liveStatus) && refund.status !is OfframpStatus.FundsRecovered
-
+        // Refund-back-to-ZEC is reachable only from Settings → P2P transactions, never inline here.
+        // Keeps the in-flow primary action a single "done / close" once the order is terminal.
         return UpiOfframpProgressState(
             title = title,
             subtitle = subtitle,
@@ -201,68 +180,21 @@ internal class UpiOfframpProgressVM(
             steps = steps,
             failure = failure,
             cancelled = cancelled,
-            recovery = recovery,
-            primaryButton = primaryButtonFor(effective, refund, showRefund, orderId),
+            primaryButton = primaryButtonFor(status),
             onBack = { navigationRouter.back() },
         )
     }
 
-    private fun primaryButtonFor(
-        status: OfframpStatus,
-        refund: RefundState,
-        showRefund: Boolean,
-        orderId: BigInteger?,
-    ): ButtonState? = when {
-        refund.inFlight -> ButtonState(
-            text = stringRes(R.string.upi_offramp_recovery_in_progress_button),
-            isEnabled = false,
-        )
-        refund.status is OfframpStatus.FundsRecovered -> ButtonState(
+    private fun primaryButtonFor(status: OfframpStatus): ButtonState? = when (status) {
+        is OfframpStatus.Completed -> ButtonState(
             text = stringRes(R.string.upi_offramp_progress_done_button),
             onClick = { navigationRouter.back() },
         )
-        showRefund -> ButtonState(
-            text = stringRes(R.string.upi_offramp_recover_button),
-            onClick = { onRefundClick(orderId) },
-        )
-        status is OfframpStatus.Completed -> ButtonState(
-            text = stringRes(R.string.upi_offramp_progress_done_button),
-            onClick = { navigationRouter.back() },
-        )
-        status is OfframpStatus.Cancelled || status is OfframpStatus.Failed -> ButtonState(
+        is OfframpStatus.Cancelled, is OfframpStatus.Failed -> ButtonState(
             text = stringRes(R.string.upi_offramp_progress_close_button),
             onClick = { navigationRouter.back() },
         )
         else -> null
-    }
-
-    private fun isRefundActionable(liveStatus: OfframpStatus): Boolean {
-        if (network.chainId != ChainId.BASE_MAINNET) return false
-        if (liveStatus is OfframpStatus.Cancelled) return true
-        return liveStatus is OfframpStatus.Failed && liveStatus.step in PRE_ORDER_RECOVERABLE_STEPS
-    }
-
-    private fun onRefundClick(orderId: BigInteger?) {
-        if (isRefunding.value) return
-        viewModelScope.launch {
-            isRefunding.update { true }
-            try {
-                orchestrator.bridgeFundsBackToZec(orderId).collect { refundStatus.update { it } }
-            } finally {
-                isRefunding.update { false }
-            }
-        }
-    }
-
-    private fun buildRecoveryCard(recovered: OfframpStatus.FundsRecovered): UpiOfframpRecoveryCard {
-        val amountText = stringRes(R.string.upi_offramp_recovery_amount, displayUsdc(recovered.amount))
-        val txHashHex = recovered.txHash?.hex
-        return UpiOfframpRecoveryCard(
-            amount = amountText,
-            target = recovered.target?.checksumHex,
-            txHash = txHashHex,
-            txExplorerUrl = txHashHex?.let { network.txUrl(it) },
-        )
     }
 
     private fun buildSummary(
@@ -404,12 +336,6 @@ internal class UpiOfframpProgressVM(
             if (micros.signum() <= 0) return null
             return Usdc6(micros.multiply(SLIPPAGE_FLOOR_BASIS_POINTS).divide(BASIS_POINTS_DENOMINATOR))
         }
-
-        private val PRE_ORDER_RECOVERABLE_STEPS = setOf(
-            OfframpStep.FUNDING,
-            OfframpStep.APPROVING_USDC,
-            OfframpStep.PLACING_ORDER,
-        )
 
         // Locale-stable format so screenshots / fixtures don't drift across devices.
         private val terminalDateFormat: SimpleDateFormat =

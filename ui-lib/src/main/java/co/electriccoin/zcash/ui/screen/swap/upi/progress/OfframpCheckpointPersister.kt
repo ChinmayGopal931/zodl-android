@@ -5,6 +5,7 @@ import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.orchestrator.OfframpStatus
+import xyz.justzappit.offramp.orchestrator.OfframpStep
 import xyz.justzappit.offramp.orchestrator.orderId
 import xyz.justzappit.offramp.orchestrator.step
 
@@ -57,33 +58,49 @@ internal class OfframpCheckpointPersister(
         when (status) {
             is OfframpStatus.Completed,
             is OfframpStatus.Cancelled,
-            is OfframpStatus.FundsRecovered,
-            is OfframpStatus.Failed -> storage.clear()
+            is OfframpStatus.FundsRecovered -> storage.clear()
+            is OfframpStatus.Failed -> {
+                // Failed during FUNDING with a bridge already in flight means the user's ZEC may
+                // be mid-bridge on 1-Click; keep the checkpoint so the user can re-enter the
+                // progress screen and re-poll the persisted deposit address. Other failures
+                // (approve / placeOrder / setUpi) happen after the bridge has settled — clearing
+                // is safe because the USDC is in the smart account and a fresh attempt will
+                // [FundedFromBase] short-circuit.
+                if (status.step == OfframpStep.FUNDING && lastBridgeDepositAddress != null) {
+                    persistCheckpoint(orderId = null, status = status)
+                } else {
+                    storage.clear()
+                }
+            }
             else -> {
                 val orderId = status.orderId
                 // Persist once there's either an order id OR an in-flight bridge to resume — the
                 // bridge deposit address must survive process death so resume re-polls it instead of
                 // opening a second bridge. Pre-bridge steps (Idle/SelectingCircle) carry nothing.
                 if (orderId == null && lastBridgeDepositAddress == null) return
-                val previous = storage.get()
-                storage.store(
-                    OfframpCheckpoint(
-                        orderId = orderId?.toString(),
-                        currentStep = status.step,
-                        bridgeDepositAddress = lastBridgeDepositAddress ?: previous?.bridgeDepositAddress,
-                        approveTxHash = lastApproveTxHash ?: previous?.approveTxHash,
-                        placeOrderTxHash = lastPlaceOrderTxHash ?: previous?.placeOrderTxHash,
-                        setUpiTxHash = (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
-                            ?: previous?.setUpiTxHash,
-                        recipientUpi = request.recipientUpi,
-                        usdcAmountMicroDecimal = request.usdcAmount.micros.toString(),
-                        fiatAmountMicroDecimal = request.fiatAmount.micros.toString(),
-                        payeeName = request.payeeName,
-                        currency = request.currency,
-                        createdAtMillis = previous?.createdAtMillis ?: System.currentTimeMillis(),
-                    ),
-                )
+                persistCheckpoint(orderId = orderId?.toString(), status = status)
             }
         }
+    }
+
+    private suspend fun persistCheckpoint(orderId: String?, status: OfframpStatus) {
+        val previous = storage.get()
+        storage.store(
+            OfframpCheckpoint(
+                orderId = orderId,
+                currentStep = status.step,
+                bridgeDepositAddress = lastBridgeDepositAddress ?: previous?.bridgeDepositAddress,
+                approveTxHash = lastApproveTxHash ?: previous?.approveTxHash,
+                placeOrderTxHash = lastPlaceOrderTxHash ?: previous?.placeOrderTxHash,
+                setUpiTxHash = (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
+                    ?: previous?.setUpiTxHash,
+                recipientUpi = request.recipientUpi,
+                usdcAmountMicroDecimal = request.usdcAmount.micros.toString(),
+                fiatAmountMicroDecimal = request.fiatAmount.micros.toString(),
+                payeeName = request.payeeName,
+                currency = request.currency,
+                createdAtMillis = previous?.createdAtMillis ?: System.currentTimeMillis(),
+            ),
+        )
     }
 }

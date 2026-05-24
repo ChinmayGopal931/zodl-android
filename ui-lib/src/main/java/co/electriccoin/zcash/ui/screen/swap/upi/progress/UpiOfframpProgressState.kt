@@ -61,14 +61,6 @@ internal data class UpiOfframpCancelledCard(
     val tip: StringResource,
 )
 
-/** Shown after a successful pullback (bridgeFundsBackToZec → FundsRecovered). */
-internal data class UpiOfframpRecoveryCard(
-    val amount: StringResource,
-    val target: String?,
-    val txHash: String?,
-    val txExplorerUrl: String?,
-)
-
 internal data class UpiOfframpProgressState(
     val title: StringResource,
     val subtitle: StringResource?,
@@ -77,7 +69,6 @@ internal data class UpiOfframpProgressState(
     val steps: List<UpiOfframpStep>,
     val failure: UpiOfframpFailureCard?,
     val cancelled: UpiOfframpCancelledCard?,
-    val recovery: UpiOfframpRecoveryCard? = null,
     val primaryButton: ButtonState?,
     val onBack: () -> Unit,
 )

@@ -93,7 +93,9 @@ class OfframpCheckpointPersisterTest {
     }
 
     @Test
-    fun `Failed status clears the checkpoint`() = runBlocking {
+    fun `Failed past the bridge step clears the checkpoint`() = runBlocking {
+        // Bridge has long since settled; the USDC is parked in the smart account, so a fresh attempt
+        // will FundedFromBase. No reason to keep the checkpoint around for resume.
         val repo = InMemoryCheckpointStorage()
         repo.store(seededCheckpoint())
         val persister = OfframpCheckpointPersister(repo, freshRequest())
@@ -103,6 +105,48 @@ class OfframpCheckpointPersisterTest {
                 message = "kapow",
                 orderId = ORDER_ID,
                 step = OfframpStep.WAITING_FOR_ACCEPTANCE,
+            ),
+        )
+
+        assertNull(repo.get())
+    }
+
+    @Test
+    fun `Failed during FUNDING with an open bridge keeps the checkpoint for resume`() = runBlocking {
+        // The user's ZEC may be mid-bridge on 1-Click; the bridge runs server-side regardless of
+        // our orchestrator state. Clearing here would orphan the in-flight ZEC with no resume path.
+        // The persisted bridgeDepositAddress is the idempotency key for re-polling on resume.
+        val repo = InMemoryCheckpointStorage()
+        val persister = OfframpCheckpointPersister(repo, freshRequest())
+
+        persister.onStatus(OfframpStatus.BridgingFunds(amount = AMOUNT, depositAddress = "near-deposit-abc"))
+        persister.onStatus(
+            OfframpStatus.Failed(
+                message = "1Click status poll failed",
+                orderId = null,
+                step = OfframpStep.FUNDING,
+            ),
+        )
+
+        val saved = repo.get()!!
+        assertNull(saved.orderId)
+        assertEquals("near-deposit-abc", saved.bridgeDepositAddress)
+        assertEquals(OfframpStep.FUNDING, saved.currentStep)
+    }
+
+    @Test
+    fun `Failed during FUNDING with no bridge open clears the checkpoint`() = runBlocking {
+        // Failure before BridgingFunds fired means no ZEC has moved (quote fetch failed or similar).
+        // Nothing to resume — clear so the user starts fresh on the next attempt.
+        val repo = InMemoryCheckpointStorage()
+        val persister = OfframpCheckpointPersister(repo, freshRequest())
+
+        persister.onStatus(OfframpStatus.Idle)
+        persister.onStatus(
+            OfframpStatus.Failed(
+                message = "quote unavailable",
+                orderId = null,
+                step = OfframpStep.FUNDING,
             ),
         )
 
