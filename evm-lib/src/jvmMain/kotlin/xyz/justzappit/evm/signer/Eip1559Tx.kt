@@ -72,5 +72,3 @@ data class Eip1559Tx(
         private val TX_TYPE_EIP1559 = byteArrayOf(0x02)
     }
 }
-
-fun ByteArray.asHex0x(): String = "0x" + toHex()

@@ -20,6 +20,7 @@ import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.UpiQrParser
+import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getPriceConfig
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -103,14 +104,14 @@ internal class UpiOfframpVM(
             UpiOfframpAmountSide.USDC -> usdcState.value.amount?.let { usdc ->
                 inrState.update {
                     NumberTextFieldInnerState.fromAmount(
-                        usdc.multiply(newRate).setScale(INR_DECIMALS, RoundingMode.FLOOR),
+                        usdc.multiply(newRate).setScale(INR_INPUT_SCALE, RoundingMode.FLOOR),
                     )
                 }
             }
             UpiOfframpAmountSide.INR -> inrState.value.amount?.let { inr ->
                 usdcState.update {
                     NumberTextFieldInnerState.fromAmount(
-                        inr.divide(newRate, USDC_DECIMALS, RoundingMode.FLOOR),
+                        inr.divide(newRate, USDC_INPUT_SCALE, RoundingMode.FLOOR),
                     )
                 }
             }
@@ -192,12 +193,12 @@ internal class UpiOfframpVM(
                 // USDC side derives from the live rate (matches the SDK's `parseUPI` semantics).
                 primary.update { UpiOfframpAmountSide.INR }
                 inrState.update {
-                    NumberTextFieldInnerState.fromAmount(fiat.setScale(INR_DECIMALS, RoundingMode.FLOOR))
+                    NumberTextFieldInnerState.fromAmount(fiat.setScale(INR_INPUT_SCALE, RoundingMode.FLOOR))
                 }
                 val currentRate = rate.value
                 usdcState.update {
                     NumberTextFieldInnerState.fromAmount(
-                        fiat.divide(currentRate, USDC_DECIMALS, RoundingMode.FLOOR),
+                        fiat.divide(currentRate, USDC_INPUT_SCALE, RoundingMode.FLOOR),
                     )
                 }
             }
@@ -208,7 +209,7 @@ internal class UpiOfframpVM(
         primary.update { UpiOfframpAmountSide.USDC }
         usdcState.update { next }
         val currentRate = rate.value
-        val derivedInr = next.amount?.multiply(currentRate)?.setScale(INR_DECIMALS, RoundingMode.FLOOR)
+        val derivedInr = next.amount?.multiply(currentRate)?.setScale(INR_INPUT_SCALE, RoundingMode.FLOOR)
         inrState.update {
             if (derivedInr == null) NumberTextFieldInnerState() else NumberTextFieldInnerState.fromAmount(derivedInr)
         }
@@ -218,7 +219,7 @@ internal class UpiOfframpVM(
         primary.update { UpiOfframpAmountSide.INR }
         inrState.update { next }
         val currentRate = rate.value
-        val derivedUsdc = next.amount?.divide(currentRate, USDC_DECIMALS, RoundingMode.FLOOR)
+        val derivedUsdc = next.amount?.divide(currentRate, USDC_INPUT_SCALE, RoundingMode.FLOOR)
         usdcState.update {
             if (derivedUsdc == null) NumberTextFieldInnerState() else NumberTextFieldInnerState.fromAmount(derivedUsdc)
         }
@@ -259,8 +260,8 @@ internal class UpiOfframpVM(
         if (inrAmount <= BigDecimal.ZERO) return
         val upi = upiText.value
         if (upi.isBlank() || !UpiQrParser.validateUpiId(upi)) return
-        val usdcMicro = usdcAmount.movePointRight(USDC_CONTRACT_DECIMALS).toBigInteger()
-        val fiatMicro = inrAmount.movePointRight(USDC_CONTRACT_DECIMALS).toBigInteger()
+        val usdcMicro = Usdc6.ofWhole(usdcAmount).micros
+        val fiatMicro = Usdc6.ofWhole(inrAmount).micros
         navigationRouter.forward(
             UpiOfframpProgressArgs(
                 recipientUpi = upi,
@@ -281,9 +282,8 @@ internal class UpiOfframpVM(
         // R.string.upi_offramp_limit_hint and enforced here as a hard input cap.
         private val USDC_CAP: BigDecimal = BigDecimal("100")
 
-        private const val USDC_DECIMALS = 4
-        private const val USDC_CONTRACT_DECIMALS = 6
-        private const val INR_DECIMALS = 2
+        private const val USDC_INPUT_SCALE = 4
+        private const val INR_INPUT_SCALE = 2
         private const val RATE_REFRESH_INTERVAL_MS = 30_000L
     }
 }

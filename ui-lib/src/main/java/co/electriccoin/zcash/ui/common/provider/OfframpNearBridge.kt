@@ -160,7 +160,7 @@ class NearBridgeOfframpFunding(
         val quote = swapDataSource.requestQuote(
             swapMode = SwapMode.EXACT_OUTPUT,
             flexInput = false,
-            amount = request.usdcAmount.toWholeUnits(),
+            amount = request.usdcAmount.whole,
             refundAddress = wallet.zcashAddress(),
             originAsset = zecAsset(tokens),
             destinationAddress = account.checksumHex,
@@ -219,7 +219,7 @@ class NearPullbackOfframpRefund(
         val quote = swapDataSource.requestQuote(
             swapMode = SwapMode.EXACT_INPUT,
             flexInput = false,
-            amount = amount.toWholeUnits(),
+            amount = amount.whole,
             refundAddress = account.checksumHex,
             originAsset = tokens.firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
                 ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list"),
@@ -232,8 +232,3 @@ class NearPullbackOfframpRefund(
         return Address.parse(quote.depositAddress.address)
     }
 }
-
-/** USDC micros → whole-token `BigDecimal` (6 decimals), the unit `SwapDataSource.requestQuote` expects. */
-private fun Usdc6.toWholeUnits(): BigDecimal = BigDecimal(micros).movePointLeft(USDC_DECIMALS)
-
-private const val USDC_DECIMALS = 6
