@@ -15,10 +15,11 @@ data class ChatIdentity(
     val displayName: String
 ) {
     companion object {
-        fun from(zmIdentity: ZMIdentity) = ChatIdentity(
-            publicKey = zmIdentity.publicKey,
-            displayName = zmIdentity.displayName
-        )
+        fun from(zmIdentity: ZMIdentity) =
+            ChatIdentity(
+                publicKey = zmIdentity.publicKey,
+                displayName = zmIdentity.displayName
+            )
     }
 }
 
@@ -33,19 +34,21 @@ data class ChatConversation(
     val unreadCount: Int = 0
 ) {
     companion object {
-        fun from(zmConv: ZMConversation) = ChatConversation(
-            id = zmConv.id,
-            type = when (zmConv.type) {
-                xyz.justzappit.zappmessaging.models.ConversationType.GROUP -> ConversationType.GROUP
-                else -> ConversationType.DIRECT
-            },
-            displayName = zmConv.displayName,
-            lastMessage = zmConv.lastMessage,
-            lastMessageTimestamp = zmConv.lastMessageTimestamp,
-            participantIds = zmConv.participantIds,
-            isOwner = zmConv.isOwner ?: false,
-            unreadCount = zmConv.unreadCount ?: 0
-        )
+        fun from(zmConv: ZMConversation) =
+            ChatConversation(
+                id = zmConv.id,
+                type =
+                    when (zmConv.type) {
+                        xyz.justzappit.zappmessaging.models.ConversationType.GROUP -> ConversationType.GROUP
+                        else -> ConversationType.DIRECT
+                    },
+                displayName = zmConv.displayName,
+                lastMessage = zmConv.lastMessage,
+                lastMessageTimestamp = zmConv.lastMessageTimestamp,
+                participantIds = zmConv.participantIds,
+                isOwner = zmConv.isOwner ?: false,
+                unreadCount = zmConv.unreadCount ?: 0
+            )
     }
 }
 
@@ -77,25 +80,26 @@ data class ChatMessage(
     val replyToContent: String? = null
 ) {
     companion object {
-        fun from(zmMsg: ZMMessage) = ChatMessage(
-            id = zmMsg.id,
-            conversationId = zmMsg.conversationId,
-            content = zmMsg.content,
-            contentType = zmMsg.contentType,
-            senderName = zmMsg.senderName,
-            isFromMe = zmMsg.isFromMe,
-            timestamp = zmMsg.timestamp,
-            mediaId = zmMsg.mediaId,
-            mediaSize = zmMsg.mediaSize,
-            mediaWidth = zmMsg.mediaWidth,
-            mediaHeight = zmMsg.mediaHeight,
-            thumbnailData = zmMsg.thumbnailData,
-            mediaLocalPath = zmMsg.mediaLocalPath,
-            mediaTransferState = zmMsg.mediaTransferState?.name?.lowercase(),
-            status = if (zmMsg.isFromMe) MessageStatus.SENT else null,
-            // TODO: restore reply fields once zappMessaging ZMMessage exposes replyTo* (not in
-            // the currently-pinned SHA in .zapp-deps). Defaults are null, so unwired for now.
-        )
+        fun from(zmMsg: ZMMessage) =
+            ChatMessage(
+                id = zmMsg.id,
+                conversationId = zmMsg.conversationId,
+                content = zmMsg.content,
+                contentType = zmMsg.contentType,
+                senderName = zmMsg.senderName,
+                isFromMe = zmMsg.isFromMe,
+                timestamp = zmMsg.timestamp,
+                mediaId = zmMsg.mediaId,
+                mediaSize = zmMsg.mediaSize,
+                mediaWidth = zmMsg.mediaWidth,
+                mediaHeight = zmMsg.mediaHeight,
+                thumbnailData = zmMsg.thumbnailData,
+                mediaLocalPath = zmMsg.mediaLocalPath,
+                mediaTransferState = zmMsg.mediaTransferState?.name?.lowercase(),
+                status = if (zmMsg.isFromMe) MessageStatus.SENT else null,
+                // TODO: restore reply fields once zappMessaging ZMMessage exposes replyTo* (not in
+                // the currently-pinned SHA in .zapp-deps). Defaults are null, so unwired for now.
+            )
     }
 }
 
@@ -105,10 +109,11 @@ data class ChatContact(
     val walletAddress: String? = null
 ) {
     companion object {
-        fun from(zmContact: ZMContact) = ChatContact(
-            publicKey = zmContact.publicKey,
-            name = zmContact.name,
-            walletAddress = zmContact.walletAddress
-        )
+        fun from(zmContact: ZMContact) =
+            ChatContact(
+                publicKey = zmContact.publicKey,
+                name = zmContact.name,
+                walletAddress = zmContact.walletAddress
+            )
     }
 }

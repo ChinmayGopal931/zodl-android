@@ -57,7 +57,9 @@ fun BalanceChartWidget(
 
     ZashiCard(
         modifier = modifier.fillMaxWidth(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 20.dp, vertical = 18.dp),
+        contentPadding =
+            androidx.compose.foundation.layout
+                .PaddingValues(horizontal = 20.dp, vertical = 18.dp),
     ) {
         Text(
             text = stringResource(R.string.home_balance_chart_title),
@@ -85,11 +87,17 @@ fun BalanceChartWidget(
                 Footer(balance = state.periodEndBalance)
             }
 
-            is BalanceChartState.Empty -> EmptyChart()
+            is BalanceChartState.Empty -> {
+                EmptyChart()
+            }
 
-            BalanceChartState.Loading -> LoadingChart()
+            BalanceChartState.Loading -> {
+                LoadingChart()
+            }
 
-            BalanceChartState.Hidden -> Unit
+            BalanceChartState.Hidden -> {
+                Unit
+            }
         }
     }
 }
@@ -98,7 +106,9 @@ private val BalanceChartState.selectedPeriod: BalanceChartPeriod
     get() =
         when (this) {
             is BalanceChartState.Data -> selectedPeriod
+
             is BalanceChartState.Empty -> selectedPeriod
+
             BalanceChartState.Loading,
             BalanceChartState.Hidden -> BalanceChartPeriod.DEFAULT
         }
@@ -107,7 +117,9 @@ private val BalanceChartState.onPeriodClick: (BalanceChartPeriod) -> Unit
     get() =
         when (this) {
             is BalanceChartState.Data -> onPeriodClick
+
             is BalanceChartState.Empty -> onPeriodClick
+
             BalanceChartState.Loading,
             BalanceChartState.Hidden -> { _ -> }
         }

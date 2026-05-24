@@ -27,48 +27,54 @@ fun OnboardingDoneScreen(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp),
             contentAlignment = Alignment.Center,
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 BasicText(
                     text = "✓",
-                    style = ZappTheme.typography.display.copy(
-                        color = c.accent,
-                        fontSize = 88.sp,
-                        lineHeight = 92.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = (-4).sp,
-                    ),
+                    style =
+                        ZappTheme.typography.display.copy(
+                            color = c.accent,
+                            fontSize = 88.sp,
+                            lineHeight = 92.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = (-4).sp,
+                        ),
                 )
                 Spacer(Modifier.height(18.dp))
                 BasicText(
                     text = "You're\nall set.",
-                    style = ZappTheme.typography.display.copy(
-                        color = c.text,
-                        fontSize = 42.sp,
-                        lineHeight = 44.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = (-1.8).sp,
-                    ),
+                    style =
+                        ZappTheme.typography.display.copy(
+                            color = c.text,
+                            fontSize = 42.sp,
+                            lineHeight = 44.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = (-1.8).sp,
+                        ),
                 )
                 Spacer(Modifier.height(20.dp))
                 AccentRule()
                 Spacer(Modifier.height(20.dp))
                 OnbSub(
-                    text = "Identity created, wallet ready" + when (mode) {
-                        TwoFAMode.Bio -> ", secured with biometrics."
-                        TwoFAMode.Pin -> ", secured with a PIN."
-                    },
+                    text =
+                        "Identity created, wallet ready" +
+                            when (mode) {
+                                TwoFAMode.Bio -> ", secured with biometrics."
+                                TwoFAMode.Pin -> ", secured with a PIN."
+                            },
                 )
             }
         }

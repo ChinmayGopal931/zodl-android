@@ -22,8 +22,9 @@ import java.math.RoundingMode
  */
 @Serializable(with = Usdc6.Usdc6Serializer::class)
 @JvmInline
-value class Usdc6(val micros: BigInteger) : Comparable<Usdc6> {
-
+value class Usdc6(
+    val micros: BigInteger
+) : Comparable<Usdc6> {
     val whole: BigDecimal get() = BigDecimal(micros).movePointLeft(DECIMALS)
 
     /**
@@ -34,7 +35,9 @@ value class Usdc6(val micros: BigInteger) : Comparable<Usdc6> {
         if (stripTrailingZeros) whole.stripTrailingZeros().toPlainString() else whole.toPlainString()
 
     operator fun plus(other: Usdc6): Usdc6 = Usdc6(micros + other.micros)
+
     operator fun minus(other: Usdc6): Usdc6 = Usdc6(micros - other.micros)
+
     override fun compareTo(other: Usdc6): Int = micros.compareTo(other.micros)
 
     override fun toString(): String = "$whole(=${micros}µ)"
@@ -63,6 +66,7 @@ value class Usdc6(val micros: BigInteger) : Comparable<Usdc6> {
             PrimitiveSerialDescriptor("xyz.justzappit.offramp.p2p.Usdc6", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): Usdc6 = Usdc6(BigInteger(decoder.decodeString()))
+
         override fun serialize(encoder: Encoder, value: Usdc6) = encoder.encodeString(value.micros.toString())
     }
 }

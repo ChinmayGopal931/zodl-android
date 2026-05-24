@@ -58,7 +58,10 @@ internal class OfframpCheckpointPersister(
         when (status) {
             is OfframpStatus.Completed,
             is OfframpStatus.Cancelled,
-            is OfframpStatus.FundsRecovered -> storage.clear()
+            is OfframpStatus.FundsRecovered -> {
+                storage.clear()
+            }
+
             is OfframpStatus.Failed -> {
                 // Failed during FUNDING with a bridge already in flight means the user's ZEC may
                 // be mid-bridge on 1-Click; keep the checkpoint so the user can re-enter the
@@ -72,6 +75,7 @@ internal class OfframpCheckpointPersister(
                     storage.clear()
                 }
             }
+
             else -> {
                 val orderId = status.orderId
                 // Persist once there's either an order id OR an in-flight bridge to resume — the
@@ -92,8 +96,9 @@ internal class OfframpCheckpointPersister(
                 bridgeDepositAddress = lastBridgeDepositAddress ?: previous?.bridgeDepositAddress,
                 approveTxHash = lastApproveTxHash ?: previous?.approveTxHash,
                 placeOrderTxHash = lastPlaceOrderTxHash ?: previous?.placeOrderTxHash,
-                setUpiTxHash = (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
-                    ?: previous?.setUpiTxHash,
+                setUpiTxHash =
+                    (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
+                        ?: previous?.setUpiTxHash,
                 recipientUpi = request.recipientUpi,
                 usdcAmountMicroDecimal = request.usdcAmount.micros.toString(),
                 fiatAmountMicroDecimal = request.fiatAmount.micros.toString(),

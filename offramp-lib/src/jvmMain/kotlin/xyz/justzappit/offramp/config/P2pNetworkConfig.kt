@@ -32,25 +32,27 @@ data class P2pNetworkConfig(
 
 object P2pNetworks {
     // Base Sepolia test deployment with auto-accepting/-completing merchants (p2p team-provided).
-    val SEPOLIA = P2pNetworkConfig(
-        name = SEPOLIA_NAME,
-        chainId = ChainId.BASE_SEPOLIA,
-        rpcUrl = "https://sepolia.base.org",
-        diamondAddress = Address.parse("0xeb0BB8E3c014D915D9B2df03aBB130a1Fb44beb9"),
-        usdcAddress = Address.parse("0x4095fE4f1E636f11A95820BA2bB87F335Bd1040d"),
-        subgraphUrl = "https://api.studio.thegraph.com/query/1745491/event-indexer/version/latest",
-        baseExplorerUrl = "https://sepolia.basescan.org",
-    )
+    val SEPOLIA =
+        P2pNetworkConfig(
+            name = SEPOLIA_NAME,
+            chainId = ChainId.BASE_SEPOLIA,
+            rpcUrl = "https://sepolia.base.org",
+            diamondAddress = Address.parse("0xeb0BB8E3c014D915D9B2df03aBB130a1Fb44beb9"),
+            usdcAddress = Address.parse("0x4095fE4f1E636f11A95820BA2bB87F335Bd1040d"),
+            subgraphUrl = "https://api.studio.thegraph.com/query/1745491/event-indexer/version/latest",
+            baseExplorerUrl = "https://sepolia.basescan.org",
+        )
 
-    fun mainnet(rpcUrl: String, subgraphUrl: String): P2pNetworkConfig = P2pNetworkConfig(
-        name = MAINNET_NAME,
-        chainId = ChainId.BASE_MAINNET,
-        rpcUrl = rpcUrl,
-        diamondAddress = Address.parse(MAINNET_DIAMOND_ADDRESS),
-        usdcAddress = Address.parse(MAINNET_USDC_ADDRESS),
-        subgraphUrl = subgraphUrl,
-        baseExplorerUrl = MAINNET_BASE_EXPLORER_URL,
-    )
+    fun mainnet(rpcUrl: String, subgraphUrl: String): P2pNetworkConfig =
+        P2pNetworkConfig(
+            name = MAINNET_NAME,
+            chainId = ChainId.BASE_MAINNET,
+            rpcUrl = rpcUrl,
+            diamondAddress = Address.parse(MAINNET_DIAMOND_ADDRESS),
+            usdcAddress = Address.parse(MAINNET_USDC_ADDRESS),
+            subgraphUrl = subgraphUrl,
+            baseExplorerUrl = MAINNET_BASE_EXPLORER_URL,
+        )
 
     const val SEPOLIA_NAME = "sepolia"
     const val MAINNET_NAME = "mainnet"

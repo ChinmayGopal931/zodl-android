@@ -55,11 +55,12 @@ internal fun rememberMediaPickHandlers(
             if (granted) {
                 cameraCaptureState.launch()
             } else {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.chat_room_toast_camera_permission_required),
-                    Toast.LENGTH_SHORT,
-                ).show()
+                Toast
+                    .makeText(
+                        context,
+                        context.getString(R.string.chat_room_toast_camera_permission_required),
+                        Toast.LENGTH_SHORT,
+                    ).show()
             }
         }
 
@@ -72,10 +73,11 @@ internal fun rememberMediaPickHandlers(
             },
             pickFile = { filePickerLauncher.launch(arrayOf("*/*")) },
             takePhoto = {
-                val granted = ContextCompat.checkSelfPermission(
-                    context,
-                    Manifest.permission.CAMERA,
-                ) == PackageManager.PERMISSION_GRANTED
+                val granted =
+                    ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.CAMERA,
+                    ) == PackageManager.PERMISSION_GRANTED
                 if (granted) {
                     cameraCaptureState.launch()
                 } else {

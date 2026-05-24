@@ -22,10 +22,11 @@ class EciesTest {
     @Test
     fun `Kotlin round-trip - encrypt then decrypt returns original`() {
         val msg = "hello world"
-        val decrypted = Ecies.decryptWithPrivateKey(
-            PRIV_HEX,
-            Ecies.encryptWithPublicKey(PUB_HEX, msg),
-        )
+        val decrypted =
+            Ecies.decryptWithPrivateKey(
+                PRIV_HEX,
+                Ecies.encryptWithPublicKey(PUB_HEX, msg),
+            )
         assertEquals(msg, decrypted)
     }
 
@@ -51,9 +52,10 @@ class EciesTest {
     fun `tampered ciphertext is rejected with MAC mismatch`() {
         val enc = Ecies.encryptWithPublicKey(PUB_HEX, "secret")
         val tampered = enc.copy(ciphertext = "ff" + enc.ciphertext.drop(2))
-        val ex = assertFailsWith<IllegalStateException> {
-            Ecies.decryptWithPrivateKey(PRIV_HEX, tampered)
-        }
+        val ex =
+            assertFailsWith<IllegalStateException> {
+                Ecies.decryptWithPrivateKey(PRIV_HEX, tampered)
+            }
         assertTrue(ex.message!!.contains("MAC mismatch"))
     }
 
@@ -86,30 +88,33 @@ class EciesTest {
 
     @Test
     fun `empty plaintext round-trips`() {
-        val decrypted = Ecies.decryptWithPrivateKey(
-            PRIV_HEX,
-            Ecies.encryptWithPublicKey(PUB_HEX, ""),
-        )
+        val decrypted =
+            Ecies.decryptWithPrivateKey(
+                PRIV_HEX,
+                Ecies.encryptWithPublicKey(PUB_HEX, ""),
+            )
         assertEquals("", decrypted)
     }
 
     @Test
     fun `unicode plaintext round-trips`() {
         val msg = "Prashant — éèê — 你好"
-        val decrypted = Ecies.decryptWithPrivateKey(
-            PRIV_HEX,
-            Ecies.encryptWithPublicKey(PUB_HEX, msg),
-        )
+        val decrypted =
+            Ecies.decryptWithPrivateKey(
+                PRIV_HEX,
+                Ecies.encryptWithPublicKey(PUB_HEX, msg),
+            )
         assertEquals(msg, decrypted)
     }
 
     @Test
     fun `long plaintext round-trips`() {
         val msg = "A".repeat(1000)
-        val decrypted = Ecies.decryptWithPrivateKey(
-            PRIV_HEX,
-            Ecies.encryptWithPublicKey(PUB_HEX, msg),
-        )
+        val decrypted =
+            Ecies.decryptWithPrivateKey(
+                PRIV_HEX,
+                Ecies.encryptWithPublicKey(PUB_HEX, msg),
+            )
         assertEquals(msg, decrypted)
     }
 
@@ -152,46 +157,51 @@ class EciesTest {
             "1b84c5567b126440995d3ed5aaba0565d71e1834604819ff9c17f5e9d5dd078f" +
                 "70beaf8f588b541507fed6a642c5ab42dfdf8120a7f639de5122d47a69a8e8d1"
 
-        private data class Fixture(val label: String, val plaintext: String, val ciphertextHex: String)
-
-        private val SDK_FIXTURES = listOf(
-            Fixture(
-                label = "simple_ascii",
-                plaintext = "hello world",
-                ciphertextHex =
-                    "09e1b3aa1a6f42c31635c62065085d3803468fc8caea02aff1f79db99bb062d8" +
-                        "a61e9f54d1a6fdd6c6b8e1670e94de7159995420aee984cc560567b144cb6002" +
-                        "9ea6b29498354f5615cb1849fd0362dc0a1d31e83fa7995c38d1d36156a7c5ff" +
-                        "f8",
-            ),
-            Fixture(
-                label = "upi_payload",
-                plaintext = "{\"message\":\"merchant@upi\",\"signature\":\"0xdeadbeef\"}",
-                ciphertextHex =
-                    "3390bf70206364e984d5601ece6a22950365371662b585aabe8430f125c8208b" +
-                        "37dc1fdd4526ce3567efbb90bfd0b9c3bc5c21317ecd3149bbb10169ac1f473f" +
-                        "af18bc85d87d905018fdd26f328815c97fd8b75d577eed36196e9fc1d602e93e" +
-                        "493cd094a934e68457f8eaedcb9db26d1a2ece5dcb9c7bb77d5da16c81334a87" +
-                        "b49f9a56b06b41d81368b0486fb9f6ba2e",
-            ),
-            Fixture(
-                label = "unicode",
-                plaintext = "Prashant — éèê — 你好",
-                ciphertextHex =
-                    "2cad3209efb583d94d9cdf4084dea9ce02f99a8f876099c96cf29b9fb515b6a0" +
-                        "e0dd86b69629d4110909cab12c64ac90212e299471cd4dfc46e1abe138d1384f" +
-                        "98c98985010f690eea2980931cf22494008b1168d836efdcbffee7a176c7f9c7" +
-                        "22926bd1356e027540a568a1f8f5d2acfe",
-            ),
-            Fixture(
-                label = "empty",
-                plaintext = "",
-                ciphertextHex =
-                    "63dc4c5aeca6086429f074fe4f8b65df038dde6f11875c8bfd9fc16ca59d73fa" +
-                        "4e4987ee0e318984d798c9e2b015de00f504aa04212ff0389ef62795360d205f" +
-                        "1f55c6a100ccd695b857f0c32ae5bf35d253d113005fe8e7a3f54f4d6a0f4481" +
-                        "b4",
-            ),
+        private data class Fixture(
+            val label: String,
+            val plaintext: String,
+            val ciphertextHex: String
         )
+
+        private val SDK_FIXTURES =
+            listOf(
+                Fixture(
+                    label = "simple_ascii",
+                    plaintext = "hello world",
+                    ciphertextHex =
+                        "09e1b3aa1a6f42c31635c62065085d3803468fc8caea02aff1f79db99bb062d8" +
+                            "a61e9f54d1a6fdd6c6b8e1670e94de7159995420aee984cc560567b144cb6002" +
+                            "9ea6b29498354f5615cb1849fd0362dc0a1d31e83fa7995c38d1d36156a7c5ff" +
+                            "f8",
+                ),
+                Fixture(
+                    label = "upi_payload",
+                    plaintext = "{\"message\":\"merchant@upi\",\"signature\":\"0xdeadbeef\"}",
+                    ciphertextHex =
+                        "3390bf70206364e984d5601ece6a22950365371662b585aabe8430f125c8208b" +
+                            "37dc1fdd4526ce3567efbb90bfd0b9c3bc5c21317ecd3149bbb10169ac1f473f" +
+                            "af18bc85d87d905018fdd26f328815c97fd8b75d577eed36196e9fc1d602e93e" +
+                            "493cd094a934e68457f8eaedcb9db26d1a2ece5dcb9c7bb77d5da16c81334a87" +
+                            "b49f9a56b06b41d81368b0486fb9f6ba2e",
+                ),
+                Fixture(
+                    label = "unicode",
+                    plaintext = "Prashant — éèê — 你好",
+                    ciphertextHex =
+                        "2cad3209efb583d94d9cdf4084dea9ce02f99a8f876099c96cf29b9fb515b6a0" +
+                            "e0dd86b69629d4110909cab12c64ac90212e299471cd4dfc46e1abe138d1384f" +
+                            "98c98985010f690eea2980931cf22494008b1168d836efdcbffee7a176c7f9c7" +
+                            "22926bd1356e027540a568a1f8f5d2acfe",
+                ),
+                Fixture(
+                    label = "empty",
+                    plaintext = "",
+                    ciphertextHex =
+                        "63dc4c5aeca6086429f074fe4f8b65df038dde6f11875c8bfd9fc16ca59d73fa" +
+                            "4e4987ee0e318984d798c9e2b015de00f504aa04212ff0389ef62795360d205f" +
+                            "1f55c6a100ccd695b857f0c32ae5bf35d253d113005fe8e7a3f54f4d6a0f4481" +
+                            "b4",
+                ),
+            )
     }
 }

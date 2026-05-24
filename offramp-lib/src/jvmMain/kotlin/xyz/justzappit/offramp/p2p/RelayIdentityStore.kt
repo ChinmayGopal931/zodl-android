@@ -11,6 +11,7 @@ import kotlinx.coroutines.sync.withLock
  */
 interface RelayIdentityStore {
     suspend fun get(): RelayIdentity?
+
     suspend fun set(identity: RelayIdentity)
 }
 
@@ -25,9 +26,13 @@ private object RelayIdentityStoreLock {
     val mutex = Mutex()
 }
 
-class InMemoryRelayIdentityStore(initial: RelayIdentity? = null) : RelayIdentityStore {
+class InMemoryRelayIdentityStore(
+    initial: RelayIdentity? = null
+) : RelayIdentityStore {
     private var identity: RelayIdentity? = initial
+
     override suspend fun get(): RelayIdentity? = identity
+
     override suspend fun set(identity: RelayIdentity) {
         this.identity = identity
     }

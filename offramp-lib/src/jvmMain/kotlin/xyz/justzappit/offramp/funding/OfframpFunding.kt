@@ -13,10 +13,14 @@ import xyz.justzappit.offramp.p2p.getUsdcBalance
  */
 sealed interface FundingOutcome {
     /** Account already held [currentBalance] ≥ the order amount; no bridge ran. */
-    data class AlreadyFunded(val currentBalance: Usdc6) : FundingOutcome
+    data class AlreadyFunded(
+        val currentBalance: Usdc6
+    ) : FundingOutcome
 
     /** A bridge was opened at [depositAddress] and settled successfully. */
-    data class Bridged(val depositAddress: String) : FundingOutcome
+    data class Bridged(
+        val depositAddress: String
+    ) : FundingOutcome
 }
 
 /**

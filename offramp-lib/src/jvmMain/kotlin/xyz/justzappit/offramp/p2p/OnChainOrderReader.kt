@@ -8,12 +8,12 @@ class OnChainOrderReader(
     private val rpc: BaseRpcClient,
     private val network: P2pNetworkConfig,
 ) : OrderReadSource {
-
     override suspend fun fetchOrder(orderId: BigInteger): OrderSnapshot? {
-        val returnData = rpc.ethCall(
-            to = network.diamondAddress,
-            data = DiamondCalls.getOrdersByIdCalldata(orderId),
-        )
+        val returnData =
+            rpc.ethCall(
+                to = network.diamondAddress,
+                data = DiamondCalls.getOrdersByIdCalldata(orderId),
+            )
         if (returnData.isEmpty()) return null
         return OrderReader.decodeOrderSnapshot(returnData, orderId)
     }

@@ -32,9 +32,9 @@ import co.electriccoin.zcash.ui.common.usecase.NavigateToSelectRecipientUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToSwapQuoteIfAvailableUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveABContactPickedUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveClearSendUseCase
-import co.electriccoin.zcash.ui.common.usecase.PreselectSwapAssetUseCase
 import co.electriccoin.zcash.ui.common.usecase.PrefillSendData
 import co.electriccoin.zcash.ui.common.usecase.PrefillSendUseCase
+import co.electriccoin.zcash.ui.common.usecase.PreselectSwapAssetUseCase
 import co.electriccoin.zcash.ui.common.usecase.RequestSwapQuoteUseCase
 import co.electriccoin.zcash.ui.common.usecase.ValidateAddressUseCase
 import co.electriccoin.zcash.ui.design.component.AssetCardState
@@ -102,7 +102,6 @@ internal class UnifiedSendViewModel(
     private val navigateToPeerOnramp: NavigateToPeerOnrampUseCase,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
-
     // ── Internal mutable state ────────────────────────────────────────────────
 
     private val zecAmountInner = MutableStateFlow(NumberTextFieldInnerState())
@@ -141,32 +140,35 @@ internal class UnifiedSendViewModel(
         }
 
     val cancelState =
-        isCancelStateVisible.map { isVisible ->
-            if (isVisible) {
-                SwapCancelState(
-                    icon = imageRes(R.drawable.ic_swap_quote_cancel),
-                    title = stringRes(R.string.swap_cancel_title),
-                    subtitle = stringRes(R.string.swap_cancel_subtitle),
-                    negativeButton = ButtonState(
-                        text = stringRes(R.string.swap_cancel_negative),
-                        onClick = ::onCancelSwapClick
-                    ),
-                    positiveButton = ButtonState(
-                        text = stringRes(R.string.swap_cancel_positive),
-                        onClick = ::onDismissCancelClick
-                    ),
-                    onBack = ::onBack
-                )
-            } else {
-                null
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = null
-        )
+        isCancelStateVisible
+            .map { isVisible ->
+                if (isVisible) {
+                    SwapCancelState(
+                        icon = imageRes(R.drawable.ic_swap_quote_cancel),
+                        title = stringRes(R.string.swap_cancel_title),
+                        subtitle = stringRes(R.string.swap_cancel_subtitle),
+                        negativeButton =
+                            ButtonState(
+                                text = stringRes(R.string.swap_cancel_negative),
+                                onClick = ::onCancelSwapClick
+                            ),
+                        positiveButton =
+                            ButtonState(
+                                text = stringRes(R.string.swap_cancel_positive),
+                                onClick = ::onDismissCancelClick
+                            ),
+                        onBack = ::onBack
+                    )
+                } else {
+                    null
+                }
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
+                initialValue = null
+            )
 
-    private val _coreState =
+    private val coreState =
         co.electriccoin.zcash.ui.design.util.combine(
             selectedAsset,
             zecAmountInner,
@@ -228,11 +230,10 @@ internal class UnifiedSendViewModel(
         }
 
     val state =
-        _coreState
+        coreState
             .combine(isAmountSwapped) { form, swapped ->
                 form.copy(isAmountSwapped = swapped, onAmountSwap = ::onAmountSwap)
-            }
-            .stateIn(
+            }.stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
                 initialValue = null
@@ -255,8 +256,7 @@ internal class UnifiedSendViewModel(
                 zcashAddressType.update { null }
                 swapAddress.update { "" }
                 swapContact.update { null }
-            }
-            .launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
 
         // Listen for ZEC-direct AB picks (shared bus)
         viewModelScope.launch {
@@ -267,46 +267,52 @@ internal class UnifiedSendViewModel(
         }
 
         // Pre-fill address/amount/memo from external triggers (QR scan, ZIP321, tx replay)
-        prefillSend().onEach { data ->
-            when (data) {
-                is PrefillSendData.FromAddressScan -> {
-                    zcashAddress.update { data.address }
-                    zcashAddressType.update {
-                        if (data.address.isBlank()) null else validateAddress(data.address)
+        prefillSend()
+            .onEach { data ->
+                when (data) {
+                    is PrefillSendData.FromAddressScan -> {
+                        zcashAddress.update { data.address }
+                        zcashAddressType.update {
+                            if (data.address.isBlank()) null else validateAddress(data.address)
+                        }
+                    }
+
+                    is PrefillSendData.All -> {
+                        val addr = data.address.orEmpty()
+                        zcashAddress.update { addr }
+                        if (addr.isNotBlank()) {
+                            zcashAddressType.update { validateAddress(addr) }
+                        }
+                        data.memos?.firstOrNull()?.let { memo -> memoText.update { memo } }
+                        val fee = data.fee
+                        val zatoshiAmount =
+                            when {
+                                fee == null -> data.amount
+                                fee > data.amount -> data.amount
+                                else -> data.amount - fee
+                            }
+                        val zecAmount =
+                            BigDecimal(zatoshiAmount.value).divide(
+                                BigDecimal("100000000"),
+                                MathContext.DECIMAL128
+                            )
+                        onZecAmountChange(NumberTextFieldInnerState.fromAmount(zecAmount))
                     }
                 }
-                is PrefillSendData.All -> {
-                    val addr = data.address.orEmpty()
-                    zcashAddress.update { addr }
-                    if (addr.isNotBlank()) {
-                        zcashAddressType.update { validateAddress(addr) }
-                    }
-                    data.memos?.firstOrNull()?.let { memo -> memoText.update { memo } }
-                    val fee = data.fee
-                    val zatoshiAmount = when {
-                        fee == null -> data.amount
-                        fee > data.amount -> data.amount
-                        else -> data.amount - fee
-                    }
-                    val zecAmount = BigDecimal(zatoshiAmount.value).divide(
-                        BigDecimal("100000000"), MathContext.DECIMAL128
-                    )
-                    onZecAmountChange(NumberTextFieldInnerState.fromAmount(zecAmount))
-                }
-            }
-        }.launchIn(viewModelScope)
+            }.launchIn(viewModelScope)
 
         // Clear all fields when a proposal is cancelled
-        observeClearSend().onEach {
-            zcashAddress.update { "" }
-            zcashAddressType.update { null }
-            zecAmountInner.update { NumberTextFieldInnerState() }
-            fiatAmountInner.update { NumberTextFieldInnerState() }
-            fiatWasLastEdited.update { false }
-            memoText.update { "" }
-            swapAddress.update { "" }
-            swapContact.update { null }
-        }.launchIn(viewModelScope)
+        observeClearSend()
+            .onEach {
+                zcashAddress.update { "" }
+                zcashAddressType.update { null }
+                zecAmountInner.update { NumberTextFieldInnerState() }
+                fiatAmountInner.update { NumberTextFieldInnerState() }
+                fiatWasLastEdited.update { false }
+                memoText.update { "" }
+                swapAddress.update { "" }
+                swapContact.update { null }
+            }.launchIn(viewModelScope)
 
         preselectSwapAsset.observe().launchIn(viewModelScope)
 
@@ -319,14 +325,17 @@ internal class UnifiedSendViewModel(
         zecAmountInner.update { inner }
         fiatWasLastEdited.update { false }
         val zec = inner.amount ?: return
-        val price = swapRepository.assets.value.zecAsset?.usdPrice ?: return
+        val price =
+            swapRepository.assets.value.zecAsset
+                ?.usdPrice ?: return
         val fiat = zec.multiply(price, MathContext.DECIMAL128)
         fiatAmountInner.update {
             it.copy(
-                innerTextFieldState = it.innerTextFieldState.copy(
-                    value = stringResByDynamicNumber(fiat, includeGroupingSeparator = false),
-                    selection = TextSelection.End
-                ),
+                innerTextFieldState =
+                    it.innerTextFieldState.copy(
+                        value = stringResByDynamicNumber(fiat, includeGroupingSeparator = false),
+                        selection = TextSelection.End
+                    ),
                 amount = fiat,
                 lastValidAmount = fiat
             )
@@ -337,15 +346,18 @@ internal class UnifiedSendViewModel(
         fiatAmountInner.update { inner }
         fiatWasLastEdited.update { true }
         val fiat = inner.amount ?: return
-        val price = swapRepository.assets.value.zecAsset?.usdPrice ?: return
+        val price =
+            swapRepository.assets.value.zecAsset
+                ?.usdPrice ?: return
         if (price == BigDecimal.ZERO) return
         val zec = fiat.divide(price, MathContext.DECIMAL128)
         zecAmountInner.update {
             it.copy(
-                innerTextFieldState = it.innerTextFieldState.copy(
-                    value = stringResByDynamicNumber(zec, includeGroupingSeparator = false),
-                    selection = TextSelection.End
-                ),
+                innerTextFieldState =
+                    it.innerTextFieldState.copy(
+                        value = stringResByDynamicNumber(zec, includeGroupingSeparator = false),
+                        selection = TextSelection.End
+                    ),
                 amount = zec,
                 lastValidAmount = zec
             )
@@ -454,12 +466,13 @@ internal class UnifiedSendViewModel(
                 val walletAddr = toWalletAddress(addr, type)
                 val zatoshi = zecAmt.convertZecToZatoshi()
                 val memoStr = if (type == AddressType.Transparent) "" else memoText.value
-                val zecSend = ZecSend(
-                    destination = walletAddr,
-                    amount = zatoshi,
-                    memo = Memo(memoStr),
-                    proposal = null
-                )
+                val zecSend =
+                    ZecSend(
+                        destination = walletAddr,
+                        amount = zatoshi,
+                        memo = Memo(memoStr),
+                        proposal = null
+                    )
                 createProposal(zecSend, fiatWasLastEdited.value)
             } catch (_: Exception) {
                 // createProposal handles navigation to error/review internally
@@ -520,109 +533,132 @@ internal class UnifiedSendViewModel(
     ): UnifiedSendFormState {
         val hasAmount = zecValue != null && zecValue > BigDecimal.ZERO
         val isAmountValid = !zecAmount.isError && hasAmount
-        val isAddressValid = if (isSwap) {
-            (contact?.address ?: swapAddr).isNotBlank()
-        } else {
-            zcashType != null && zcashType !is AddressType.Invalid && zcashAddr.isNotEmpty()
-        }
+        val isAddressValid =
+            if (isSwap) {
+                (contact?.address ?: swapAddr).isNotBlank()
+            } else {
+                zcashType != null && zcashType !is AddressType.Invalid && zcashAddr.isNotEmpty()
+            }
         val isMemoValid = zcashType == AddressType.Transparent || memo.toByteArray().size <= 512
 
         val theyReceiveLabel = computeTheyReceiveLabel(isSwap, asset, zecValue, zecUsdPrice)
-        val slippageLabel: StringResource? = if (isSwap) {
-            stringResByNumber(slippage, minDecimals = 0) + stringRes("%")
-        } else {
-            null
-        }
+        val slippageLabel: StringResource? =
+            if (isSwap) {
+                stringResByNumber(slippage, minDecimals = 0) + stringRes("%")
+            } else {
+                null
+            }
 
         return UnifiedSendFormState(
             asset = buildAssetState(asset, isRequesting),
-            address = TextFieldState(
-                value = stringRes(if (isSwap) swapAddr else zcashAddr),
-                error = if (!isSwap && zcashAddr.isNotEmpty() && zcashType is AddressType.Invalid) {
-                    stringRes(R.string.send_address_invalid)
+            address =
+                TextFieldState(
+                    value = stringRes(if (isSwap) swapAddr else zcashAddr),
+                    error =
+                        if (!isSwap && zcashAddr.isNotEmpty() && zcashType is AddressType.Invalid) {
+                            stringRes(R.string.send_address_invalid)
+                        } else {
+                            null
+                        },
+                    onValueChange = ::onAddressChange,
+                    isEnabled = !isRequesting,
+                ),
+            addressPlaceholder =
+                if (isSwap && asset != null) {
+                    stringRes(
+                        co.electriccoin.zcash.ui.design.R.string.general_enter_address_partial,
+                        asset.chainName
+                    )
+                } else {
+                    stringRes(R.string.unified_send_address_placeholder)
+                },
+            abContact =
+                if (contact == null) {
+                    null
+                } else {
+                    ChipButtonState(
+                        text = stringRes(contact.contact.name),
+                        onClick = ::onDeleteSwapContactClick,
+                        endIcon = co.electriccoin.zcash.ui.design.R.drawable.ic_chip_close,
+                        isEnabled = !isRequesting,
+                    )
+                },
+            abButton =
+                IconButtonState(
+                    icon = R.drawable.send_address_book,
+                    onClick = { onAddressBookClick(isSwap) },
+                    isEnabled = !isRequesting
+                ),
+            qrButton =
+                IconButtonState(
+                    icon = R.drawable.qr_code_icon,
+                    onClick = ::onQrScannerClick,
+                    isEnabled = !isRequesting
+                ),
+            isABHintVisible = abHintVisible,
+            zecAmount =
+                NumberTextFieldState(
+                    innerState = zecAmount,
+                    onValueChange = ::onZecAmountChange,
+                    isEnabled = !isRequesting,
+                    explicitError = if (!hasFunds && hasAmount) stringRes("") else null
+                ),
+            fiatAmount =
+                NumberTextFieldState(
+                    innerState = fiatAmount,
+                    onValueChange = ::onFiatAmountChange,
+                    isEnabled = !isRequesting && zecUsdPrice != null,
+                    explicitError = if (!hasFunds && hasAmount) stringRes("") else null
+                ),
+            isAmountSwapped = false, // overridden by outer combine with isAmountSwapped flow
+            onAmountSwap = ::onAmountSwap, // overridden by outer combine
+            amountError =
+                if (!hasFunds && hasAmount) {
+                    stringRes(R.string.send_amount_insufficient_balance)
                 } else {
                     null
                 },
-                onValueChange = ::onAddressChange,
-                isEnabled = !isRequesting,
-            ),
-            addressPlaceholder = if (isSwap && asset != null) {
-                stringRes(
-                    co.electriccoin.zcash.ui.design.R.string.general_enter_address_partial,
-                    asset.chainName
-                )
-            } else {
-                stringRes(R.string.unified_send_address_placeholder)
-            },
-            abContact = if (contact == null) null else ChipButtonState(
-                text = stringRes(contact.contact.name),
-                onClick = ::onDeleteSwapContactClick,
-                endIcon = co.electriccoin.zcash.ui.design.R.drawable.ic_chip_close,
-                isEnabled = !isRequesting,
-            ),
-            abButton = IconButtonState(
-                icon = R.drawable.send_address_book,
-                onClick = { onAddressBookClick(isSwap) },
-                isEnabled = !isRequesting
-            ),
-            qrButton = IconButtonState(
-                icon = R.drawable.qr_code_icon,
-                onClick = ::onQrScannerClick,
-                isEnabled = !isRequesting
-            ),
-            isABHintVisible = abHintVisible,
-            zecAmount = NumberTextFieldState(
-                innerState = zecAmount,
-                onValueChange = ::onZecAmountChange,
-                isEnabled = !isRequesting,
-                explicitError = if (!hasFunds && hasAmount) stringRes("") else null
-            ),
-            fiatAmount = NumberTextFieldState(
-                innerState = fiatAmount,
-                onValueChange = ::onFiatAmountChange,
-                isEnabled = !isRequesting && zecUsdPrice != null,
-                explicitError = if (!hasFunds && hasAmount) stringRes("") else null
-            ),
-            isAmountSwapped = false, // overridden by outer combine with isAmountSwapped flow
-            onAmountSwap = ::onAmountSwap, // overridden by outer combine
-            amountError = if (!hasFunds && hasAmount) {
-                stringRes(R.string.send_amount_insufficient_balance)
-            } else {
-                null
-            },
             theyReceiveLabel = theyReceiveLabel,
             slippage = slippageLabel,
-            onSlippageClick = if (isSwap) {
-                { onSlippageClick(zecValue) }
-            } else {
-                null
-            },
-            memo = if (isSwap) null else MemoFieldState.Editable(
-                text = memo,
-                byteCount = memo.toByteArray().size,
-                maxBytes = 512,
-                isEnabled = zcashType != AddressType.Transparent,
-                onValueChange = ::onMemoChange
-            ),
+            onSlippageClick =
+                if (isSwap) {
+                    { onSlippageClick(zecValue) }
+                } else {
+                    null
+                },
+            memo =
+                if (isSwap) {
+                    null
+                } else {
+                    MemoFieldState.Editable(
+                        text = memo,
+                        byteCount = memo.toByteArray().size,
+                        maxBytes = 512,
+                        isEnabled = zcashType != AddressType.Transparent,
+                        onValueChange = ::onMemoChange
+                    )
+                },
             amountErrorFooter = null,
             errorFooter = buildErrorFooter(swapAssets),
-            infoFooter = if (!isSwap && (hasZeroBalance || (hasAmount && isAmountValid && !hasFunds))) {
-                stringRes(R.string.peer_onramp_subtitle)
-            } else {
-                null
-            },
+            infoFooter =
+                if (!isSwap && (hasZeroBalance || (hasAmount && isAmountValid && !hasFunds))) {
+                    stringRes(R.string.peer_onramp_subtitle)
+                } else {
+                    null
+                },
             onBack = ::onBack,
-            primaryButton = buildPrimaryButton(
-                isSwap = isSwap,
-                isRequesting = isRequesting,
-                swapAssets = swapAssets,
-                isAddressValid = isAddressValid,
-                isAmountValid = isAmountValid,
-                hasAmount = hasAmount,
-                hasFunds = hasFunds,
-                hasZeroBalance = hasZeroBalance,
-                isMemoValid = isMemoValid,
-            ),
+            primaryButton =
+                buildPrimaryButton(
+                    isSwap = isSwap,
+                    isRequesting = isRequesting,
+                    swapAssets = swapAssets,
+                    isAddressValid = isAddressValid,
+                    isAmountValid = isAmountValid,
+                    hasAmount = hasAmount,
+                    hasFunds = hasFunds,
+                    hasZeroBalance = hasZeroBalance,
+                    isMemoValid = isMemoValid,
+                ),
         )
     }
 
@@ -635,9 +671,10 @@ internal class UnifiedSendViewModel(
         if (!isSwap || asset == null || zecValue == null || zecUsdPrice == null) return null
         val tokenPrice = asset.usdPrice ?: return null
         if (tokenPrice == BigDecimal.ZERO) return null
-        val tokenAmount = zecValue
-            .multiply(zecUsdPrice, MathContext.DECIMAL128)
-            .divide(tokenPrice, MathContext.DECIMAL128)
+        val tokenAmount =
+            zecValue
+                .multiply(zecUsdPrice, MathContext.DECIMAL128)
+                .divide(tokenPrice, MathContext.DECIMAL128)
         return stringRes(R.string.unified_send_they_receive_approx) + " " +
             stringResByDynamicCurrencyNumber(tokenAmount, asset.tokenTicker)
     }
@@ -645,12 +682,13 @@ internal class UnifiedSendViewModel(
     private fun onSlippageClick(zecValue: BigDecimal?) =
         navigationRouter.forward(
             SwapSlippageArgs(
-                fiatAmount = zecValue
-                    ?.multiply(
-                        swapRepository.assets.value.zecAsset?.usdPrice ?: BigDecimal.ZERO,
-                        MathContext.DECIMAL128
-                    )
-                    ?.toPlainString(),
+                fiatAmount =
+                    zecValue
+                        ?.multiply(
+                            swapRepository.assets.value.zecAsset
+                                ?.usdPrice ?: BigDecimal.ZERO,
+                            MathContext.DECIMAL128
+                        )?.toPlainString(),
                 mode = SwapMode.EXACT_INPUT
             )
         )
@@ -672,19 +710,23 @@ internal class UnifiedSendViewModel(
 
     private fun buildErrorFooter(swapAssets: SwapAssetsData): SwapErrorFooterState? {
         if (swapAssets.error == null) return null
-        val isUnavailable = swapAssets.error is ResponseException &&
-            swapAssets.error.response.status.isServiceUnavailable()
+        val isUnavailable =
+            swapAssets.error is ResponseException &&
+                swapAssets.error.response.status
+                    .isServiceUnavailable()
         return SwapErrorFooterState(
-            title = if (isUnavailable) {
-                stringRes(co.electriccoin.zcash.ui.design.R.string.general_service_unavailable)
-            } else {
-                stringRes(co.electriccoin.zcash.ui.design.R.string.general_unexpected_error)
-            },
-            subtitle = if (isUnavailable) {
-                stringRes(co.electriccoin.zcash.ui.design.R.string.general_please_try_again)
-            } else {
-                stringRes(co.electriccoin.zcash.ui.design.R.string.general_check_connection)
-            }
+            title =
+                if (isUnavailable) {
+                    stringRes(co.electriccoin.zcash.ui.design.R.string.general_service_unavailable)
+                } else {
+                    stringRes(co.electriccoin.zcash.ui.design.R.string.general_unexpected_error)
+                },
+            subtitle =
+                if (isUnavailable) {
+                    stringRes(co.electriccoin.zcash.ui.design.R.string.general_please_try_again)
+                } else {
+                    stringRes(co.electriccoin.zcash.ui.design.R.string.general_check_connection)
+                }
         )
     }
 
@@ -702,7 +744,8 @@ internal class UnifiedSendViewModel(
     ): PrimaryButtonState {
         // Service unavailable blocks button
         if (isSwap && swapAssets.error is ResponseException &&
-            swapAssets.error.response.status.isServiceUnavailable()
+            swapAssets.error.response.status
+                .isServiceUnavailable()
         ) {
             return PrimaryButtonState.Disabled
         }
@@ -719,16 +762,23 @@ internal class UnifiedSendViewModel(
 
         return if (isSwap) {
             when {
-                swapAssets.error != null -> PrimaryButtonState.Review(
-                    isLoading = swapAssets.isLoading && swapAssets.data == null,
-                    onClick = ::onTryAgainClick
-                )
-                swapAssets.data != null && isAddressValid && isAmountValid && !isRequesting ->
+                swapAssets.error != null -> {
+                    PrimaryButtonState.Review(
+                        isLoading = swapAssets.isLoading && swapAssets.data == null,
+                        onClick = ::onTryAgainClick
+                    )
+                }
+
+                swapAssets.data != null && isAddressValid && isAmountValid && !isRequesting -> {
                     PrimaryButtonState.Review(
                         isLoading = isRequesting,
                         onClick = { onPrimaryButtonClick(true) }
                     )
-                else -> PrimaryButtonState.Disabled
+                }
+
+                else -> {
+                    PrimaryButtonState.Disabled
+                }
             }
         } else {
             if (isAddressValid && isAmountValid && hasFunds && isMemoValid) {

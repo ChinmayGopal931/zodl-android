@@ -41,10 +41,11 @@ object RpcHttpClient {
         engineFactory: HttpClientEngineFactory<T>,
         config: Config = Config(),
         engineBlock: T.() -> Unit = {},
-    ): HttpClient = HttpClient(engineFactory) {
-        engine(engineBlock)
-        applyDefaults(config)
-    }
+    ): HttpClient =
+        HttpClient(engineFactory) {
+            engine(engineBlock)
+            applyDefaults(config)
+        }
 
     fun create(engine: HttpClientEngine, config: Config = Config()): HttpClient =
         HttpClient(engine) { applyDefaults(config) }
@@ -77,12 +78,13 @@ object RpcHttpClient {
         }
     }
 
-    private fun isTransientTransportError(cause: Throwable): Boolean = when (cause) {
-        is ConnectTimeoutException -> true
-        is SocketTimeoutException -> true
-        is IOException -> true
-        else -> false
-    }
+    private fun isTransientTransportError(cause: Throwable): Boolean =
+        when (cause) {
+            is ConnectTimeoutException -> true
+            is SocketTimeoutException -> true
+            is IOException -> true
+            else -> false
+        }
 
     private val SERVER_ERROR_RANGE = 500..599
 }

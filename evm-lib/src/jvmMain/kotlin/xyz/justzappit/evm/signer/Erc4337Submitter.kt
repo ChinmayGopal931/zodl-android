@@ -39,7 +39,6 @@ class Erc4337Submitter(
     private val receiptTimeoutMs: Long = DEFAULT_RECEIPT_TIMEOUT_MS,
     private val receiptPollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
 ) : TxSubmitter {
-
     /**
      * Local nonce cursor. After a successful `eth_sendUserOperation`, the next sequential nonce is
      * deterministically `cursor + 1` — no RPC read needed. Sidesteps the cross-RPC race on
@@ -50,42 +49,46 @@ class Erc4337Submitter(
     private var nonceCursor: BigInteger? = null
 
     override suspend fun sendTransaction(to: Address, value: Wei, data: ByteArray): TxHash {
-        val initCode = if (rpc.ethGetCode(smartAccount).isEmpty()) {
-            ThirdwebSmartAccount.initCode(accountFactory, owner.address)
-        } else {
-            ByteArray(0)
-        }
+        val initCode =
+            if (rpc.ethGetCode(smartAccount).isEmpty()) {
+                ThirdwebSmartAccount.initCode(accountFactory, owner.address)
+            } else {
+                ByteArray(0)
+            }
         val gasPrice = bundler.getUserOperationGasPrice()
         val nonce = nonceCursor ?: entryPointNonce().also { nonceCursor = it }
 
-        val draft = UserOperationV06(
-            sender = smartAccount,
-            nonce = nonce,
-            initCode = initCode,
-            callData = ThirdwebSmartAccount.executeCalldata(to, value, data),
-            callGasLimit = BigInteger.ZERO,
-            verificationGasLimit = BigInteger.ZERO,
-            preVerificationGas = BigInteger.ZERO,
-            maxFeePerGas = hexToBig(gasPrice.maxFeePerGas),
-            maxPriorityFeePerGas = hexToBig(gasPrice.maxPriorityFeePerGas),
-            paymasterAndData = ByteArray(0),
-            signature = DUMMY_SIGNATURE,
-        )
+        val draft =
+            UserOperationV06(
+                sender = smartAccount,
+                nonce = nonce,
+                initCode = initCode,
+                callData = ThirdwebSmartAccount.executeCalldata(to, value, data),
+                callGasLimit = BigInteger.ZERO,
+                verificationGasLimit = BigInteger.ZERO,
+                preVerificationGas = BigInteger.ZERO,
+                maxFeePerGas = hexToBig(gasPrice.maxFeePerGas),
+                maxPriorityFeePerGas = hexToBig(gasPrice.maxPriorityFeePerGas),
+                paymasterAndData = ByteArray(0),
+                signature = DUMMY_SIGNATURE,
+            )
 
         // ERC-7677: estimate with a paymaster stub (so the estimate covers paymaster validation),
         // then request the real sponsorship. Stub and final paymasterAndData share a length, so the
         // gas estimate stays valid.
         val stubbed = draft.copy(paymasterAndData = bundler.getPaymasterStubData(draft).paymasterAndData.hexToBytes())
         val estimate = bundler.estimateUserOperationGas(stubbed)
-        val withGas = stubbed.copy(
-            callGasLimit = hexToBig(estimate.callGasLimit).buffered(),
-            verificationGasLimit = hexToBig(estimate.verificationGasLimit).buffered(),
-            preVerificationGas = hexToBig(estimate.preVerificationGas).buffered(),
-        )
+        val withGas =
+            stubbed.copy(
+                callGasLimit = hexToBig(estimate.callGasLimit).buffered(),
+                verificationGasLimit = hexToBig(estimate.verificationGasLimit).buffered(),
+                preVerificationGas = hexToBig(estimate.preVerificationGas).buffered(),
+            )
 
-        val sponsored = withGas.copy(
-            paymasterAndData = bundler.sponsorUserOperation(withGas).paymasterAndData.hexToBytes(),
-        )
+        val sponsored =
+            withGas.copy(
+                paymasterAndData = bundler.sponsorUserOperation(withGas).paymasterAndData.hexToBytes(),
+            )
         val signed = sponsored.copy(signature = signOwner(sponsored.userOpHash(entryPoint, chainId)))
         val txHash = bundler.sendUserOperation(signed)
         // Bundler accepted the op for this nonce — advance the cursor now so the next call doesn't
@@ -115,13 +118,15 @@ class Erc4337Submitter(
      * the node RPC because Pimlico's bundler endpoint does not serve `eth_call`.
      */
     private suspend fun entryPointNonce(): BigInteger {
-        val ret = rpc.ethCall(
-            to = entryPoint,
-            data = AbiEncoder.encodeFunctionCall(
-                "getNonce(address,uint192)",
-                listOf(AbiAddress(smartAccount), AbiUint(BigInteger.ZERO)),
-            ),
-        )
+        val ret =
+            rpc.ethCall(
+                to = entryPoint,
+                data =
+                    AbiEncoder.encodeFunctionCall(
+                        "getNonce(address,uint192)",
+                        listOf(AbiAddress(smartAccount), AbiUint(BigInteger.ZERO)),
+                    ),
+            )
         return if (ret.isEmpty()) BigInteger.ZERO else BigInteger(1, ret)
     }
 

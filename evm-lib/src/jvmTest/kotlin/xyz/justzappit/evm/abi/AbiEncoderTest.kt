@@ -10,7 +10,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class AbiEncoderTest {
-
     @Test
     fun `function selector for approve matches the well-known value`() {
         assertEquals("095ea7b3", FunctionSelector.computeHex("approve(address,uint256)"))
@@ -107,13 +106,15 @@ class AbiEncoderTest {
     @Test
     fun `approve calldata matches the hand-computed reference`() {
         // approve(0xce868398FDaDcA368EAc203222874D6888532aE2, 1_000_000)
-        val calldata = AbiEncoder.encodeFunctionCall(
-            "approve(address,uint256)",
-            listOf(
-                AbiAddress(Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2")),
-                AbiUint(BigInteger.valueOf(1_000_000)),
-            ),
-        ).toHex()
+        val calldata =
+            AbiEncoder
+                .encodeFunctionCall(
+                    "approve(address,uint256)",
+                    listOf(
+                        AbiAddress(Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2")),
+                        AbiUint(BigInteger.valueOf(1_000_000)),
+                    ),
+                ).toHex()
         assertEquals(
             "095ea7b3" +
                 "000000000000000000000000ce868398fdadca368eac203222874d6888532ae2" +
@@ -150,13 +151,15 @@ class AbiEncoderTest {
     fun `mixed static and dynamic args use correct offsets`() {
         // (uint256, string, uint256) — string starts at offset 96 (3 head slots),
         // length+data follow.
-        val encoded = AbiEncoder.encode(
-            listOf(
-                AbiUint(BigInteger.valueOf(42)),
-                AbiString("ab"),
-                AbiUint(BigInteger.valueOf(7)),
-            ),
-        ).toHex()
+        val encoded =
+            AbiEncoder
+                .encode(
+                    listOf(
+                        AbiUint(BigInteger.valueOf(42)),
+                        AbiString("ab"),
+                        AbiUint(BigInteger.valueOf(7)),
+                    ),
+                ).toHex()
         val expected =
             "000000000000000000000000000000000000000000000000000000000000002a" + // 42
                 "0000000000000000000000000000000000000000000000000000000000000060" + // offset 96
@@ -212,5 +215,4 @@ class AbiEncoderTest {
         assertFailsWith<IllegalArgumentException> { AbiInt(max + BigInteger.ONE) } // 2^255
         assertFailsWith<IllegalArgumentException> { AbiInt(min - BigInteger.ONE) } // -2^255 - 1
     }
-
 }

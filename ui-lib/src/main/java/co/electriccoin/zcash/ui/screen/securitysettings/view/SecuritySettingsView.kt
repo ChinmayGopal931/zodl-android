@@ -81,30 +81,41 @@ fun SecuritySettingsView(
     onBack: () -> Unit,
 ) {
     when (state) {
-        is SecuritySettingsState.Menu -> AppLockHub(
-            state = state,
-            onTabSelected = onTabSelected,
-            onSaveChanges = onSaveChanges,
-            onClearSuccessMessage = onClearSuccessMessage,
-            onBack = onBack,
-        )
-        is SecuritySettingsState.VerifyingCurrentPin -> PinVerifyScreen(
-            hasError = pinError,
-            showBack = true,
-            lockoutSecondsRemaining = lockoutSeconds,
-            onPinSubmit = onPinSubmit,
-            onCancel = onBack,
-        )
-        is SecuritySettingsState.SettingNewPin -> ChangePinScreen(
-            onNewPinConfirmed = onNewPinConfirmed,
-            onBack = onBack,
-        )
-        SecuritySettingsState.SettingNewBio -> BioScanScreen(
-            isEnrolling = isEnrollingBio,
-            errorMessage = bioError,
-            onEnroll = onBioEnroll,
-            onCancel = onBack,
-        )
+        is SecuritySettingsState.Menu -> {
+            AppLockHub(
+                state = state,
+                onTabSelected = onTabSelected,
+                onSaveChanges = onSaveChanges,
+                onClearSuccessMessage = onClearSuccessMessage,
+                onBack = onBack,
+            )
+        }
+
+        is SecuritySettingsState.VerifyingCurrentPin -> {
+            PinVerifyScreen(
+                hasError = pinError,
+                showBack = true,
+                lockoutSecondsRemaining = lockoutSeconds,
+                onPinSubmit = onPinSubmit,
+                onCancel = onBack,
+            )
+        }
+
+        is SecuritySettingsState.SettingNewPin -> {
+            ChangePinScreen(
+                onNewPinConfirmed = onNewPinConfirmed,
+                onBack = onBack,
+            )
+        }
+
+        SecuritySettingsState.SettingNewBio -> {
+            BioScanScreen(
+                isEnrolling = isEnrollingBio,
+                errorMessage = bioError,
+                onEnroll = onBioEnroll,
+                onCancel = onBack,
+            )
+        }
     }
 }
 
@@ -138,17 +149,19 @@ private fun AppLockHub(
         containerColor = c.bg,
     ) { _ ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars),
         ) {
             ZappScreenHeader(title = "App lock")
 
             // Illustration fills remaining vertical space
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 AuthMethodIllustration(selectedTab = state.selectedTab)
@@ -163,11 +176,12 @@ private fun AppLockHub(
             // Contextual action row
             ZappGroupHeader(text = "Actions")
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp)
-                    .background(c.surface, RectangleShape)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp)
+                        .background(c.surface, RectangleShape)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape),
             ) {
                 if (state.selectedTab == "pin") {
                     ZappRow(
@@ -206,38 +220,40 @@ private fun AppLockTabSelector(
     val c = ZappTheme.colors
     val tabs = listOf("pin" to "6-digit PIN", "biometric" to "Biometrics")
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 8.dp)
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .padding(3.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 8.dp)
+                .background(c.surface, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         tabs.forEach { (key, label) ->
             val isSelected = selectedTab == key
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 48.dp)
-                    .background(if (isSelected) c.accent else Color.Transparent, RectangleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = c.accent),
-                        onClick = { onTabSelected(key) },
-                    )
-                    .semantics(mergeDescendants = true) {
-                        contentDescription = label
-                        role = Role.Tab
-                    },
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = 48.dp)
+                        .background(if (isSelected) c.accent else Color.Transparent, RectangleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(color = c.accent),
+                            onClick = { onTabSelected(key) },
+                        ).semantics(mergeDescendants = true) {
+                            contentDescription = label
+                            role = Role.Tab
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = label,
-                    style = ZappTheme.typography.caption.copy(
-                        color = if (isSelected) c.onAccent else c.textMuted,
-                        fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
-                    ),
+                    style =
+                        ZappTheme.typography.caption.copy(
+                            color = if (isSelected) c.onAccent else c.textMuted,
+                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
+                        ),
                 )
             }
         }
@@ -252,9 +268,10 @@ private fun AuthMethodIllustration(selectedTab: String) {
         modifier = Modifier.padding(horizontal = 28.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(100.dp)
-                .background(c.accentSoft, RectangleShape),
+            modifier =
+                Modifier
+                    .size(100.dp)
+                    .background(c.accentSoft, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -267,23 +284,27 @@ private fun AuthMethodIllustration(selectedTab: String) {
         Spacer(Modifier.height(20.dp))
         BasicText(
             text = if (selectedTab == "pin") "6-digit PIN" else "Biometrics",
-            style = ZappTheme.typography.display.copy(
-                color = c.text,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-0.5).sp,
-            ),
+            style =
+                ZappTheme.typography.display.copy(
+                    color = c.text,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-0.5).sp,
+                ),
         )
         Spacer(Modifier.height(8.dp))
         BasicText(
-            text = if (selectedTab == "pin")
-                "A PIN is required each time you open the app."
-            else
-                "Fingerprint or face recognition unlocks the app.\nA PIN fallback is always kept as backup.",
-            style = ZappTheme.typography.body.copy(
-                color = c.textMuted,
-                textAlign = TextAlign.Center,
-            ),
+            text =
+                if (selectedTab == "pin") {
+                    "A PIN is required each time you open the app."
+                } else {
+                    "Fingerprint or face recognition unlocks the app.\nA PIN fallback is always kept as backup."
+                },
+            style =
+                ZappTheme.typography.body.copy(
+                    color = c.textMuted,
+                    textAlign = TextAlign.Center,
+                ),
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -293,45 +314,56 @@ private fun AuthMethodIllustration(selectedTab: String) {
 private fun HubBottomDock(onBack: () -> Unit, onSaveChanges: () -> Unit) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.bg)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.bg)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         Box(
-            modifier = Modifier
-                .size(width = 72.dp, height = 52.dp)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .clickable(onClick = onBack)
-                .semantics { contentDescription = "Go back"; role = Role.Button },
+            modifier =
+                Modifier
+                    .size(width = 72.dp, height = 52.dp)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .clickable(onClick = onBack)
+                    .semantics {
+                        contentDescription = "Go back"
+                        role = Role.Button
+                    },
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
                 text = "←",
-                style = ZappTheme.typography.button.copy(
-                    color = c.text,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.button.copy(
+                        color = c.text,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
         }
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(52.dp)
-                .background(c.accent, RectangleShape)
-                .clickable(onClick = onSaveChanges)
-                .semantics { contentDescription = "Save Changes"; role = Role.Button },
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .height(52.dp)
+                    .background(c.accent, RectangleShape)
+                    .clickable(onClick = onSaveChanges)
+                    .semantics {
+                        contentDescription = "Save Changes"
+                        role = Role.Button
+                    },
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
                 text = "SAVE CHANGES",
-                style = ZappTheme.typography.button.copy(
-                    color = c.onAccent,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.6.sp,
-                ),
+                style =
+                    ZappTheme.typography.button.copy(
+                        color = c.onAccent,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.6.sp,
+                    ),
             )
         }
     }
@@ -382,55 +414,62 @@ private fun ChangePinScreen(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             // Title + subtitle anchored to top-left — mirrors PinVerifyScreen
             Column(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .align(Alignment.TopStart)
+                        .fillMaxWidth(),
             ) {
                 Spacer(Modifier.height(14.dp))
                 BasicText(
                     text = if (isConfirmPhase) "Confirm\nyour PIN" else "Change\nyour PIN",
-                    style = ZappTheme.typography.display.copy(
-                        color = c.text,
-                        fontSize = 42.sp,
-                        lineHeight = 44.sp,
-                        letterSpacing = (-1.8).sp,
-                        fontWeight = FontWeight.Black,
-                    ),
+                    style =
+                        ZappTheme.typography.display.copy(
+                            color = c.text,
+                            fontSize = 42.sp,
+                            lineHeight = 44.sp,
+                            letterSpacing = (-1.8).sp,
+                            fontWeight = FontWeight.Black,
+                        ),
                 )
                 Spacer(Modifier.height(14.dp))
                 BasicText(
-                    text = when {
-                        mismatchError -> "PINs don't match. Try again."
-                        isConfirmPhase -> "Re-enter your new PIN to confirm."
-                        else -> "Enter a new 6-digit PIN."
-                    },
-                    style = ZappTheme.typography.body.copy(
-                        color = if (mismatchError) c.danger else c.textMuted,
-                        fontSize = 13.sp,
-                        lineHeight = 22.sp,
-                    ),
+                    text =
+                        when {
+                            mismatchError -> "PINs don't match. Try again."
+                            isConfirmPhase -> "Re-enter your new PIN to confirm."
+                            else -> "Enter a new 6-digit PIN."
+                        },
+                    style =
+                        ZappTheme.typography.body.copy(
+                            color = if (mismatchError) c.danger else c.textMuted,
+                            fontSize = 13.sp,
+                            lineHeight = 22.sp,
+                        ),
                 )
             }
 
             // Dots + keypad anchored to the bottom — mirrors PinVerifyScreen
             Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PinDotsRow(filledCount = currentInput.length, hasError = mismatchError)
@@ -451,51 +490,59 @@ private fun ChangePinScreen(
 
         // Bottom dock: ← | progress counter (always disabled — auto-submits at 6)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(c.bg)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(c.bg)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .windowInsetsPadding(WindowInsets.navigationBars),
         ) {
             Box(
-                modifier = Modifier
-                    .size(width = 72.dp, height = 52.dp)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable(onClick = {
-                        if (isConfirmPhase) {
-                            isConfirmPhase = false
-                            currentInput = ""
-                            firstPin = ""
-                        } else {
-                            onBack()
-                        }
-                    })
-                    .semantics { contentDescription = "Go back"; role = Role.Button },
+                modifier =
+                    Modifier
+                        .size(width = 72.dp, height = 52.dp)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape)
+                        .clickable(onClick = {
+                            if (isConfirmPhase) {
+                                isConfirmPhase = false
+                                currentInput = ""
+                                firstPin = ""
+                            } else {
+                                onBack()
+                            }
+                        })
+                        .semantics {
+                            contentDescription = "Go back"
+                            role = Role.Button
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = "←",
-                    style = ZappTheme.typography.button.copy(
-                        color = c.text,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Black,
-                    ),
+                    style =
+                        ZappTheme.typography.button.copy(
+                            color = c.text,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Black,
+                        ),
                 )
             }
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(52.dp)
-                    .background(c.surfaceAlt, RectangleShape),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .height(52.dp)
+                        .background(c.surfaceAlt, RectangleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = "${currentInput.length} of 6 entered",
-                    style = ZappTheme.typography.button.copy(
-                        color = c.textSubtle,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.2.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.button.copy(
+                            color = c.textSubtle,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.2.sp,
+                        ),
                 )
             }
         }
@@ -512,16 +559,17 @@ private fun PinDotsRow(filledCount: Int, hasError: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         repeat(6) { i ->
             Box(
-                modifier = Modifier
-                    .size(14.dp)
-                    .background(
-                        when {
-                            hasError -> c.danger
-                            i < filledCount -> c.text
-                            else -> c.border
-                        },
-                        RectangleShape,
-                    ),
+                modifier =
+                    Modifier
+                        .size(14.dp)
+                        .background(
+                            when {
+                                hasError -> c.danger
+                                i < filledCount -> c.text
+                                else -> c.border
+                            },
+                            RectangleShape,
+                        ),
             )
         }
     }
@@ -530,12 +578,13 @@ private fun PinDotsRow(filledCount: Int, hasError: Boolean) {
 @Composable
 private fun PinKeypadGrid(modifier: Modifier = Modifier, onKey: (String) -> Unit) {
     val c = ZappTheme.colors
-    val rows = listOf(
-        listOf("1", "2", "3"),
-        listOf("4", "5", "6"),
-        listOf("7", "8", "9"),
-        listOf(null, "0", "⌫"),
-    )
+    val rows =
+        listOf(
+            listOf("1", "2", "3"),
+            listOf("4", "5", "6"),
+            listOf("7", "8", "9"),
+            listOf(null, "0", "⌫"),
+        )
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(1.dp)) {
         rows.forEach { row ->
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -544,24 +593,26 @@ private fun PinKeypadGrid(modifier: Modifier = Modifier, onKey: (String) -> Unit
                         Box(modifier = Modifier.weight(1f).height(60.dp))
                     } else {
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(60.dp)
-                                .border(1.dp, c.border, RectangleShape)
-                                .clickable(onClick = { onKey(key) })
-                                .semantics(mergeDescendants = true) {
-                                    contentDescription = if (key == "⌫") "Delete" else key
-                                    role = Role.Button
-                                },
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(60.dp)
+                                    .border(1.dp, c.border, RectangleShape)
+                                    .clickable(onClick = { onKey(key) })
+                                    .semantics(mergeDescendants = true) {
+                                        contentDescription = if (key == "⌫") "Delete" else key
+                                        role = Role.Button
+                                    },
                             contentAlignment = Alignment.Center,
                         ) {
                             BasicText(
                                 text = key,
-                                style = ZappTheme.typography.button.copy(
-                                    color = c.text,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Black,
-                                ),
+                                style =
+                                    ZappTheme.typography.button.copy(
+                                        color = c.text,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Black,
+                                    ),
                             )
                         }
                     }

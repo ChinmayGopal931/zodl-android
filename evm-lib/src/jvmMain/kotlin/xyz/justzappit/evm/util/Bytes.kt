@@ -8,8 +8,9 @@ private const val WORD = 32
  * needs to land in the canonical 32-byte slot. Truncation removes the high bytes (matching the
  * `unchecked uintN(value)` semantics of solc for in-range values).
  */
-fun ByteArray.padLeftToWord(): ByteArray = when {
-    size == WORD -> this
-    size > WORD -> copyOfRange(size - WORD, size)
-    else -> ByteArray(WORD).also { System.arraycopy(this, 0, it, WORD - size, size) }
-}
+fun ByteArray.padLeftToWord(): ByteArray =
+    when {
+        size == WORD -> this
+        size > WORD -> copyOfRange(size - WORD, size)
+        else -> ByteArray(WORD).also { System.arraycopy(this, 0, it, WORD - size, size) }
+    }

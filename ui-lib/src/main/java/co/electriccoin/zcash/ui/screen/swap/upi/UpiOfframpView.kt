@@ -41,9 +41,9 @@ import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.IconButtonState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
-import co.electriccoin.zcash.ui.design.component.ZashiIconButton
 import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.component.ZashiAddressTextField
+import co.electriccoin.zcash.ui.design.component.ZashiIconButton
 import co.electriccoin.zcash.ui.design.component.ZashiImageButton
 import co.electriccoin.zcash.ui.design.component.ZashiNumberTextField
 import co.electriccoin.zcash.ui.design.component.ZashiNumberTextFieldDefaults
@@ -70,11 +70,12 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
 
     Column(modifier = Modifier.fillMaxSize().background(c.bg)) {
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BODY_VERTICAL_PADDING.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BODY_VERTICAL_PADDING.dp),
         ) {
             AmountFieldBlock(
                 label = stringResource(R.string.upi_offramp_you_send),
@@ -120,11 +121,12 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 Box(modifier = Modifier.weight(1f)) { UpiHandleField(state.upiField) }
                 Spacer(modifier = Modifier.width(GAP_SM.dp))
                 ZashiIconButton(
-                    state = IconButtonState(
-                        icon = R.drawable.qr_code_icon,
-                        contentDescription = stringRes(R.string.upi_offramp_scan_qr_cd),
-                        onClick = state.onScanQr,
-                    ),
+                    state =
+                        IconButtonState(
+                            icon = R.drawable.qr_code_icon,
+                            contentDescription = stringRes(R.string.upi_offramp_scan_qr_cd),
+                            onClick = state.onScanQr,
+                        ),
                     modifier = Modifier.size(SCAN_ICON_BUTTON_SIZE.dp),
                 )
             }
@@ -134,10 +136,11 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
             state.errorText?.let { err ->
                 BasicText(
                     text = err.getValue(),
-                    style = ZappTheme.typography.caption.copy(
-                        color = c.danger,
-                        fontWeight = FontWeight.Medium,
-                    ),
+                    style =
+                        ZappTheme.typography.caption.copy(
+                            color = c.danger,
+                            fontWeight = FontWeight.Medium,
+                        ),
                 )
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
             }
@@ -153,10 +156,11 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
                 BasicText(
                     text = plan.getValue(),
-                    style = ZappTheme.typography.caption.copy(
-                        color = c.text,
-                        fontWeight = FontWeight.Medium,
-                    ),
+                    style =
+                        ZappTheme.typography.caption.copy(
+                            color = c.text,
+                            fontWeight = FontWeight.Medium,
+                        ),
                 )
             }
 
@@ -164,10 +168,11 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
                 BasicText(
                     text = stringResource(R.string.upi_offramp_discard_in_flight),
-                    style = ZappTheme.typography.caption.copy(
-                        color = c.danger,
-                        textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
-                    ),
+                    style =
+                        ZappTheme.typography.caption.copy(
+                            color = c.danger,
+                            textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                        ),
                     modifier = Modifier.clickable(onClick = onDiscard),
                 )
             }
@@ -208,17 +213,19 @@ private fun AmountFieldBlock(
     }
     Spacer(modifier = Modifier.height(GAP_SM.dp))
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, if (isActive) c.accent else c.border))
-            .padding(horizontal = AMOUNT_PADDING.dp, vertical = AMOUNT_PADDING.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .border(BorderStroke(1.dp, if (isActive) c.accent else c.border))
+                .padding(horizontal = AMOUNT_PADDING.dp, vertical = AMOUNT_PADDING.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .background(c.surfaceAlt)
-                .padding(horizontal = TOKEN_PADDING_H.dp, vertical = TOKEN_PADDING_V.dp),
+            modifier =
+                Modifier
+                    .background(c.surfaceAlt)
+                    .padding(horizontal = TOKEN_PADDING_H.dp, vertical = TOKEN_PADDING_V.dp),
         ) {
             BasicText(
                 text = tokenLabel,
@@ -229,11 +236,12 @@ private fun AmountFieldBlock(
         ZashiNumberTextField(
             state = state,
             modifier = Modifier.fillMaxWidth(),
-            textStyle = ZappTheme.typography.display.copy(
-                color = c.text,
-                fontWeight = FontWeight.SemiBold,
-                textAlign = TextAlign.End,
-            ),
+            textStyle =
+                ZappTheme.typography.display.copy(
+                    color = c.text,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.End,
+                ),
             contentPadding = PaddingValues(horizontal = INNER_FIELD_PADDING.dp, vertical = INNER_FIELD_PADDING.dp),
             placeholder = {
                 ZashiNumberTextFieldDefaults.Placeholder(
@@ -256,18 +264,20 @@ private fun DirectionSwapButton(onClick: () -> Unit) {
     ) {
         val c = ZappTheme.colors
         Box(
-            modifier = Modifier
-                .size(DIRECTION_BUTTON_SIZE.dp)
-                .background(c.surfaceAlt)
-                .border(BorderStroke(1.dp, c.border))
-                .padding(0.dp),
+            modifier =
+                Modifier
+                    .size(DIRECTION_BUTTON_SIZE.dp)
+                    .background(c.surfaceAlt)
+                    .border(BorderStroke(1.dp, c.border))
+                    .padding(0.dp),
             contentAlignment = Alignment.Center,
         ) {
             ZashiImageButton(
-                state = IconButtonState(
-                    icon = R.drawable.ic_swap_change_mode,
-                    onClick = onClick,
-                ),
+                state =
+                    IconButtonState(
+                        icon = R.drawable.ic_swap_change_mode,
+                        onClick = onClick,
+                    ),
                 modifier = Modifier.size(DIRECTION_BUTTON_SIZE.dp),
             )
         }
@@ -287,10 +297,11 @@ private fun UpiHandleField(field: TextFieldState) {
                 color = c.textSubtle,
             )
         },
-        keyboardOptions = KeyboardOptions(
-            keyboardType = KeyboardType.Email,
-            imeAction = ImeAction.Done,
-        ),
+        keyboardOptions =
+            KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Done,
+            ),
     )
 }
 
@@ -298,12 +309,13 @@ private fun UpiHandleField(field: TextFieldState) {
 private fun BottomBar(send: ButtonState) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BOTTOM_BAR_VERTICAL_PADDING.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BOTTOM_BAR_VERTICAL_PADDING.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.End,
     ) {
@@ -335,18 +347,19 @@ private const val SCAN_ICON_BUTTON_SIZE = 44
 private fun PreviewEmpty() {
     ZcashTheme {
         UpiOfframpView(
-            state = UpiOfframpState(
-                primary = UpiOfframpAmountSide.INR,
-                usdcInput = NumberTextFieldState(NumberTextFieldInnerState(), onValueChange = {}),
-                inrInput = NumberTextFieldState(NumberTextFieldInnerState(), onValueChange = {}),
-                onSwapSides = {},
-                rateText = stringRes("1 USDC ≈ ₹85"),
-                upiField = TextFieldState(stringRes("")) {},
-                infoText = null,
-                errorText = null,
-                sendButton = ButtonState(stringRes("Send")),
-                onScanQr = {},
-            ),
+            state =
+                UpiOfframpState(
+                    primary = UpiOfframpAmountSide.INR,
+                    usdcInput = NumberTextFieldState(NumberTextFieldInnerState(), onValueChange = {}),
+                    inrInput = NumberTextFieldState(NumberTextFieldInnerState(), onValueChange = {}),
+                    onSwapSides = {},
+                    rateText = stringRes("1 USDC ≈ ₹85"),
+                    upiField = TextFieldState(stringRes("")) {},
+                    infoText = null,
+                    errorText = null,
+                    sendButton = ButtonState(stringRes("Send")),
+                    onScanQr = {},
+                ),
         )
     }
 }
@@ -356,26 +369,29 @@ private fun PreviewEmpty() {
 private fun PreviewFilled() {
     ZcashTheme {
         UpiOfframpView(
-            state = UpiOfframpState(
-                primary = UpiOfframpAmountSide.INR,
-                usdcInput = NumberTextFieldState(
-                    NumberTextFieldInnerState.fromAmount(BigDecimal("5.8824")),
-                    onValueChange = {},
+            state =
+                UpiOfframpState(
+                    primary = UpiOfframpAmountSide.INR,
+                    usdcInput =
+                        NumberTextFieldState(
+                            NumberTextFieldInnerState.fromAmount(BigDecimal("5.8824")),
+                            onValueChange = {},
+                        ),
+                    inrInput =
+                        NumberTextFieldState(
+                            NumberTextFieldInnerState.fromAmount(BigDecimal("500.00")),
+                            onValueChange = {},
+                        ),
+                    onSwapSides = {},
+                    rateText = stringRes("1 USDC ≈ ₹85"),
+                    upiField = TextFieldState(stringRes("merchant@upi")) {},
+                    infoText = stringRes("Final amount locks when merchant accepts."),
+                    errorText = null,
+                    sendButton = ButtonState(stringRes("Send"), isEnabled = true),
+                    onScanQr = {},
+                    baseBalanceText = stringRes("Available: 0.85 USDC"),
+                    fundingPlanText = stringRes("Will bridge 5.88 USDC from your ZEC via NEAR"),
                 ),
-                inrInput = NumberTextFieldState(
-                    NumberTextFieldInnerState.fromAmount(BigDecimal("500.00")),
-                    onValueChange = {},
-                ),
-                onSwapSides = {},
-                rateText = stringRes("1 USDC ≈ ₹85"),
-                upiField = TextFieldState(stringRes("merchant@upi")) {},
-                infoText = stringRes("Final amount locks when merchant accepts."),
-                errorText = null,
-                sendButton = ButtonState(stringRes("Send"), isEnabled = true),
-                onScanQr = {},
-                baseBalanceText = stringRes("Available: 0.85 USDC"),
-                fundingPlanText = stringRes("Will bridge 5.88 USDC from your ZEC via NEAR"),
-            ),
         )
     }
 }

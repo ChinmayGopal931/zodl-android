@@ -9,11 +9,12 @@ import kotlin.test.assertTrue
 class UpiPayUriTest {
     @Test
     fun `build emits canonical upi pay URI with all fields percent-encoded`() {
-        val uri = UpiPayUri.build(
-            vpa = "merchant@okhdfcbank",
-            payeeName = "Yuvasri 2002",
-            inrAmount = BigDecimal("37.28"),
-        )
+        val uri =
+            UpiPayUri.build(
+                vpa = "merchant@okhdfcbank",
+                payeeName = "Yuvasri 2002",
+                inrAmount = BigDecimal("37.28"),
+            )
         assertEquals("upi://pay?pa=merchant@okhdfcbank&pn=Yuvasri%202002&am=37.28&cu=INR", uri)
     }
 
@@ -40,19 +41,21 @@ class UpiPayUriTest {
 
     @Test
     fun `parsedUsdcMicros mirrors SDK parseAmount (floor at 6 decimals)`() {
-        val micros = UpiPayUri.parsedUsdcMicros(
-            inrAmount = BigDecimal("445.00"),
-            sellPriceInrPerUsdc = BigDecimal("89.00"),
-        )
+        val micros =
+            UpiPayUri.parsedUsdcMicros(
+                inrAmount = BigDecimal("445.00"),
+                sellPriceInrPerUsdc = BigDecimal("89.00"),
+            )
         assertEquals(5_000_000L, micros)
     }
 
     @Test
     fun `parsedUsdcMicros floors so user never gets more than they typed`() {
-        val micros = UpiPayUri.parsedUsdcMicros(
-            inrAmount = BigDecimal("36"),
-            sellPriceInrPerUsdc = BigDecimal("93.20"),
-        )
+        val micros =
+            UpiPayUri.parsedUsdcMicros(
+                inrAmount = BigDecimal("36"),
+                sellPriceInrPerUsdc = BigDecimal("93.20"),
+            )
         assertEquals(386_266L, micros)
     }
 }

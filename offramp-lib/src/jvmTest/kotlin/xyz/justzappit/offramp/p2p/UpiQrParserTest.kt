@@ -16,7 +16,6 @@ import kotlin.test.assertTrue
  * UPI for a handle the SDK can't process. Keep these in lockstep.
  */
 class UpiQrParserTest {
-
     // -- validateUpiId — strict form (matches `country/currencies/inr.ts`) ----------------------
 
     @Test

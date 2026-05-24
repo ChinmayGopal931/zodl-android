@@ -21,11 +21,13 @@ data class Eip1559Tx(
     fun signingPayload(): ByteArray = TX_TYPE_EIP1559 + Rlp.encode(toRlpList())
 
     fun encodeSigned(sig: EcdsaSignature): ByteArray {
-        val items = (toRlpList() as RlpItem.L).items + listOf(
-            rlpInt(sig.yParity.toLong()),
-            rlpInt(sig.r),
-            rlpInt(sig.s),
-        )
+        val items =
+            (toRlpList() as RlpItem.L).items +
+                listOf(
+                    rlpInt(sig.yParity.toLong()),
+                    rlpInt(sig.r),
+                    rlpInt(sig.s),
+                )
         return TX_TYPE_EIP1559 + Rlp.encode(RlpItem.L(items))
     }
 
@@ -56,17 +58,18 @@ data class Eip1559Tx(
         return h
     }
 
-    private fun toRlpList(): RlpItem = rlpList(
-        rlpInt(chainId.value),
-        rlpInt(nonce.value),
-        rlpInt(maxPriorityFeePerGas.value),
-        rlpInt(maxFeePerGas.value),
-        rlpInt(gasLimit.value),
-        rlpBytes(to.bytes),
-        rlpInt(value.value),
-        rlpBytes(data),
-        rlpList(emptyList()),
-    )
+    private fun toRlpList(): RlpItem =
+        rlpList(
+            rlpInt(chainId.value),
+            rlpInt(nonce.value),
+            rlpInt(maxPriorityFeePerGas.value),
+            rlpInt(maxFeePerGas.value),
+            rlpInt(gasLimit.value),
+            rlpBytes(to.bytes),
+            rlpInt(value.value),
+            rlpBytes(data),
+            rlpList(emptyList()),
+        )
 
     companion object {
         private val TX_TYPE_EIP1559 = byteArrayOf(0x02)

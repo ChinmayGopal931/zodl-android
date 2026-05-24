@@ -149,48 +149,57 @@ enum class OfframpStep {
 
     companion object {
         /** Steps surfaced to the UI progress indicator (skips INITIALIZATION + ENCRYPTING_UPI). */
-        val UI_PROGRESS: List<OfframpStep> = listOf(
-            SELECTING_CIRCLE,
-            FUNDING,
-            APPROVING_USDC,
-            PLACING_ORDER,
-            WAITING_FOR_ACCEPTANCE,
-            SENDING_UPI,
-            WAITING_FOR_COMPLETION,
-        )
+        val UI_PROGRESS: List<OfframpStep> =
+            listOf(
+                SELECTING_CIRCLE,
+                FUNDING,
+                APPROVING_USDC,
+                PLACING_ORDER,
+                WAITING_FOR_ACCEPTANCE,
+                SENDING_UPI,
+                WAITING_FOR_COMPLETION,
+            )
     }
 }
 
 /** The on-chain order id once the flow has placed one, else null (pre-order steps + Idle). */
-val OfframpStatus.orderId: BigInteger? get() = when (this) {
-    is OfframpStatus.WaitingForMerchantAcceptance -> orderId
-    is OfframpStatus.SendingEncryptedUpi -> orderId
-    is OfframpStatus.WaitingForCompletion -> orderId
-    is OfframpStatus.Completed -> orderId
-    is OfframpStatus.Cancelled -> orderId
-    is OfframpStatus.Failed -> orderId
-    OfframpStatus.Idle,
-    is OfframpStatus.SelectingCircle,
-    is OfframpStatus.BridgingFunds,
-    is OfframpStatus.FundedFromBase,
-    is OfframpStatus.FundsRecovered,
-    is OfframpStatus.ApprovingUsdc,
-    is OfframpStatus.PlacingOrder -> null
-}
+val OfframpStatus.orderId: BigInteger? get() =
+    when (this) {
+        is OfframpStatus.WaitingForMerchantAcceptance -> orderId
+
+        is OfframpStatus.SendingEncryptedUpi -> orderId
+
+        is OfframpStatus.WaitingForCompletion -> orderId
+
+        is OfframpStatus.Completed -> orderId
+
+        is OfframpStatus.Cancelled -> orderId
+
+        is OfframpStatus.Failed -> orderId
+
+        OfframpStatus.Idle,
+        is OfframpStatus.SelectingCircle,
+        is OfframpStatus.BridgingFunds,
+        is OfframpStatus.FundedFromBase,
+        is OfframpStatus.FundsRecovered,
+        is OfframpStatus.ApprovingUsdc,
+        is OfframpStatus.PlacingOrder -> null
+    }
 
 /** Derives the canonical [OfframpStep] from any [OfframpStatus] instance. */
-val OfframpStatus.step: OfframpStep get() = when (this) {
-    OfframpStatus.Idle -> OfframpStep.INITIALIZATION
-    is OfframpStatus.SelectingCircle -> OfframpStep.SELECTING_CIRCLE
-    is OfframpStatus.BridgingFunds -> OfframpStep.FUNDING
-    is OfframpStatus.FundedFromBase -> OfframpStep.FUNDING
-    is OfframpStatus.FundsRecovered -> OfframpStep.FUNDING
-    is OfframpStatus.ApprovingUsdc -> OfframpStep.APPROVING_USDC
-    is OfframpStatus.PlacingOrder -> OfframpStep.PLACING_ORDER
-    is OfframpStatus.WaitingForMerchantAcceptance -> OfframpStep.WAITING_FOR_ACCEPTANCE
-    is OfframpStatus.SendingEncryptedUpi -> OfframpStep.SENDING_UPI
-    is OfframpStatus.WaitingForCompletion -> OfframpStep.WAITING_FOR_COMPLETION
-    is OfframpStatus.Completed -> OfframpStep.WAITING_FOR_COMPLETION
-    is OfframpStatus.Cancelled -> OfframpStep.WAITING_FOR_COMPLETION
-    is OfframpStatus.Failed -> this.step
-}
+val OfframpStatus.step: OfframpStep get() =
+    when (this) {
+        OfframpStatus.Idle -> OfframpStep.INITIALIZATION
+        is OfframpStatus.SelectingCircle -> OfframpStep.SELECTING_CIRCLE
+        is OfframpStatus.BridgingFunds -> OfframpStep.FUNDING
+        is OfframpStatus.FundedFromBase -> OfframpStep.FUNDING
+        is OfframpStatus.FundsRecovered -> OfframpStep.FUNDING
+        is OfframpStatus.ApprovingUsdc -> OfframpStep.APPROVING_USDC
+        is OfframpStatus.PlacingOrder -> OfframpStep.PLACING_ORDER
+        is OfframpStatus.WaitingForMerchantAcceptance -> OfframpStep.WAITING_FOR_ACCEPTANCE
+        is OfframpStatus.SendingEncryptedUpi -> OfframpStep.SENDING_UPI
+        is OfframpStatus.WaitingForCompletion -> OfframpStep.WAITING_FOR_COMPLETION
+        is OfframpStatus.Completed -> OfframpStep.WAITING_FOR_COMPLETION
+        is OfframpStatus.Cancelled -> OfframpStep.WAITING_FOR_COMPLETION
+        is OfframpStatus.Failed -> this.step
+    }

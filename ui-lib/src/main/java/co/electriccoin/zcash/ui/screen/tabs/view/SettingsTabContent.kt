@@ -11,9 +11,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -56,8 +56,8 @@ import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
 import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
-import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
+import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -82,18 +82,20 @@ fun SettingsTabContent(
         containerColor = c.bg,
     ) { _ ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.statusBars),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.statusBars),
         ) {
             ZappScreenHeader(title = "Settings")
 
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-                    .padding(bottom = ZappNavBar.CLEARANCE_DP.dp),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .windowInsetsPadding(WindowInsets.navigationBars)
+                        .padding(bottom = ZappNavBar.CLEARANCE_DP.dp),
             ) {
                 identity?.let { id ->
                     ProfileCard(displayName = id.displayName)
@@ -187,16 +189,18 @@ private fun ProfileCard(displayName: String) {
     val initials = remember(displayName) { initialsOf(displayName) }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(72.dp)
-                .background(c.accent, RectangleShape),
+            modifier =
+                Modifier
+                    .size(72.dp)
+                    .background(c.accent, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
@@ -222,11 +226,12 @@ private fun SettingsGroup(
     val c = ZappTheme.colors
     ZappGroupHeader(text = title)
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 14.dp)
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp)
+                .background(c.surface, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape),
     ) {
         content()
     }

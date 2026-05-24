@@ -1,8 +1,8 @@
 package xyz.justzappit.offramp.p2p
 
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import xyz.justzappit.evm.crypto.Ecies
 import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
@@ -50,15 +50,16 @@ class P2pOrderHistorySource(
         val relay = relayIdentityStore.get()
         val snapshots = paginateUserOrders(userAddress, maxOrders)
         return coroutineScope {
-            snapshots.map { snapshot ->
-                async {
-                    decryptItem(
-                        snapshot = snapshot,
-                        relay = relay,
-                        cachedRecipientUpi = orderRecipientUpiCache.get(snapshot.orderId.toString()),
-                    )
-                }
-            }.awaitAll()
+            snapshots
+                .map { snapshot ->
+                    async {
+                        decryptItem(
+                            snapshot = snapshot,
+                            relay = relay,
+                            cachedRecipientUpi = orderRecipientUpiCache.get(snapshot.orderId.toString()),
+                        )
+                    }
+                }.awaitAll()
         }
     }
 

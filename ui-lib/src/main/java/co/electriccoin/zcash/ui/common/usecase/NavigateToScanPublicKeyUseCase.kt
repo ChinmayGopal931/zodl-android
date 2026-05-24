@@ -39,7 +39,9 @@ class NavigateToScanPublicKeyUseCase(
 private sealed interface ScanPublicKeyPipelineResult {
     val args: ChatScanPublicKeyArgs
 
-    data class Cancelled(override val args: ChatScanPublicKeyArgs) : ScanPublicKeyPipelineResult
+    data class Cancelled(
+        override val args: ChatScanPublicKeyArgs
+    ) : ScanPublicKeyPipelineResult
 
     data class Scanned(
         val publicKey: String,

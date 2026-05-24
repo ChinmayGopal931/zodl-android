@@ -43,26 +43,28 @@ internal fun ConfirmDialog(
     val confirmFg = if (isDestructive) c.bg else c.onAccent
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.overlay)
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = onDismiss,
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 28.dp)
-                .background(c.surface, RectangleShape)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.overlay)
                 .clickable(
                     indication = null,
                     interactionSource = remember { MutableInteractionSource() },
-                    onClick = {},
-                ).padding(24.dp),
+                    onClick = onDismiss,
+                ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp)
+                    .background(c.surface, RectangleShape)
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() },
+                        onClick = {},
+                    ).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             BasicText(
@@ -105,18 +107,20 @@ private fun ConfirmDialogButton(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .height(48.dp)
-            .background(background, RectangleShape)
-            .clickable(onClick = onClick),
+        modifier =
+            modifier
+                .height(48.dp)
+                .background(background, RectangleShape)
+                .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = text,
-            style = ZappTheme.typography.button.copy(
-                color = textColor,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.button.copy(
+                    color = textColor,
+                    fontWeight = FontWeight.Black,
+                ),
         )
     }
 }

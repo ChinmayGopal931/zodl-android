@@ -33,7 +33,9 @@ sealed interface SupportChatUiState {
      * createConversation + sendMessage round-trip is in flight; the picker should disable
      * tapping and show a progress indicator so a slow network doesn't look like a freeze.
      */
-    data class SelectCategory(val isSubmitting: Boolean = false) : SupportChatUiState
+    data class SelectCategory(
+        val isSubmitting: Boolean = false
+    ) : SupportChatUiState
 
     /** Category has been selected; free-form chat is active. */
     data class Chat(

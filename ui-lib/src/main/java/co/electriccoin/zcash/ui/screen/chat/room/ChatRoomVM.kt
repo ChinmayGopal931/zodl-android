@@ -11,6 +11,7 @@ import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.usecase.GetZashiAccountUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListChipVariant
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListConnectionStatus
@@ -25,7 +26,6 @@ import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.model.MessageStatus
 import co.electriccoin.zcash.ui.screen.chat.model.MimeTypes
 import co.electriccoin.zcash.ui.screen.chat.model.ReportCategory
-import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 import kotlinx.coroutines.Dispatchers
@@ -174,7 +174,8 @@ class ChatRoomVM(
     ): ChatRoomState =
         ChatRoomState(
             title =
-                conversation?.displayName
+                conversation
+                    ?.displayName
                     ?.takeIf { it.isNotBlank() }
                     ?.let { stringRes(it) }
                     ?: stringRes(R.string.chat_room_title_fallback),
@@ -202,11 +203,12 @@ class ChatRoomVM(
                     onAttachClick = ::onAttachClick,
                     replyPreview =
                         replyingTo?.let { msg ->
-                            val fallbackRes = if (msg.isFromMe) {
-                                R.string.chat_room_reply_sender_self
-                            } else {
-                                R.string.chat_room_reply_sender_unknown
-                            }
+                            val fallbackRes =
+                                if (msg.isFromMe) {
+                                    R.string.chat_room_reply_sender_self
+                                } else {
+                                    R.string.chat_room_reply_sender_unknown
+                                }
                             ChatRoomReplyPreviewState(
                                 senderName = msg.senderName ?: application.getString(fallbackRes),
                                 content = msg.content.take(REPLY_PREVIEW_MAX_LENGTH),
@@ -286,49 +288,91 @@ class ChatRoomVM(
 
     private fun chipText(connection: ConnectionSnapshot): StringResource =
         when (connection.status) {
-            ChatListConnectionStatus.CONNECTED ->
+            ChatListConnectionStatus.CONNECTED -> {
                 when {
                     connection.peerOnline == true -> stringRes(R.string.chat_room_chip_online)
                     connection.dhtHealth == ChatListDhtHealth.CRITICAL -> stringRes(R.string.chat_room_chip_dht)
                     connection.peerCount > 0 -> stringRes(connection.peerCount.toString())
                     else -> stringRes(R.string.chat_list_status_connecting)
                 }
-            ChatListConnectionStatus.CONNECTING -> stringRes(R.string.chat_list_status_connecting)
-            ChatListConnectionStatus.DISCONNECTED -> stringRes(R.string.chat_room_chip_off)
-            ChatListConnectionStatus.ERROR -> stringRes(R.string.chat_room_chip_err)
+            }
+
+            ChatListConnectionStatus.CONNECTING -> {
+                stringRes(R.string.chat_list_status_connecting)
+            }
+
+            ChatListConnectionStatus.DISCONNECTED -> {
+                stringRes(R.string.chat_room_chip_off)
+            }
+
+            ChatListConnectionStatus.ERROR -> {
+                stringRes(R.string.chat_room_chip_err)
+            }
         }
 
     private fun chipVariant(connection: ConnectionSnapshot): ChatListChipVariant =
         when (connection.status) {
-            ChatListConnectionStatus.CONNECTED ->
+            ChatListConnectionStatus.CONNECTED -> {
                 when {
                     connection.peerOnline == true -> ChatListChipVariant.Success
                     connection.dhtHealth == ChatListDhtHealth.CRITICAL -> ChatListChipVariant.Danger
                     connection.peerCount > 0 -> ChatListChipVariant.Success
                     else -> ChatListChipVariant.Accent
                 }
-            ChatListConnectionStatus.CONNECTING -> ChatListChipVariant.Accent
+            }
+
+            ChatListConnectionStatus.CONNECTING -> {
+                ChatListChipVariant.Accent
+            }
+
             ChatListConnectionStatus.DISCONNECTED,
             ChatListConnectionStatus.ERROR,
-            -> ChatListChipVariant.Danger
+            -> {
+                ChatListChipVariant.Danger
+            }
         }
 
     private fun subtitleText(connection: ConnectionSnapshot): StringResource =
         when (connection.status) {
-            ChatListConnectionStatus.CONNECTED ->
+            ChatListConnectionStatus.CONNECTED -> {
                 when {
-                    connection.peerOnline == true -> stringRes(R.string.chat_room_subtitle_peer_online)
-                    connection.dhtHealth == ChatListDhtHealth.CRITICAL ->
+                    connection.peerOnline == true -> {
+                        stringRes(R.string.chat_room_subtitle_peer_online)
+                    }
+
+                    connection.dhtHealth == ChatListDhtHealth.CRITICAL -> {
                         stringRes(R.string.chat_room_subtitle_dht_unreachable)
-                    connection.peerOnline == false -> stringRes(R.string.chat_room_subtitle_peer_offline)
-                    connection.peerCount > 0 -> stringRes(R.string.chat_room_subtitle_p2p_connected)
-                    connection.dhtHealth == ChatListDhtHealth.DEGRADED ->
+                    }
+
+                    connection.peerOnline == false -> {
+                        stringRes(R.string.chat_room_subtitle_peer_offline)
+                    }
+
+                    connection.peerCount > 0 -> {
+                        stringRes(R.string.chat_room_subtitle_p2p_connected)
+                    }
+
+                    connection.dhtHealth == ChatListDhtHealth.DEGRADED -> {
                         stringRes(R.string.chat_room_subtitle_dht_degraded)
-                    else -> stringRes(R.string.chat_room_subtitle_waiting_for_peer)
+                    }
+
+                    else -> {
+                        stringRes(R.string.chat_room_subtitle_waiting_for_peer)
+                    }
                 }
-            ChatListConnectionStatus.CONNECTING -> stringRes(R.string.chat_room_subtitle_connecting)
-            ChatListConnectionStatus.DISCONNECTED -> stringRes(R.string.chat_room_subtitle_offline)
-            ChatListConnectionStatus.ERROR -> stringRes(R.string.chat_room_subtitle_error)
+            }
+
+            ChatListConnectionStatus.CONNECTING -> {
+                stringRes(R.string.chat_room_subtitle_connecting)
+            }
+
+            ChatListConnectionStatus.DISCONNECTED -> {
+                stringRes(R.string.chat_room_subtitle_offline)
+            }
+
+            ChatListConnectionStatus.ERROR -> {
+                stringRes(R.string.chat_room_subtitle_error)
+            }
         }
 
     // ── Sources / observers ───────────────────────────────────────────────────
@@ -346,7 +390,8 @@ class ChatRoomVM(
         try {
             runChatCall("ChatRoomVM: loadMessages failed") {
                 val list =
-                    sdk.getMessages(conversationId)
+                    sdk
+                        .getMessages(conversationId)
                         .map(ChatMessage::from)
                         .filterNot { msg -> moderationRepository.isBlocked(msg.senderName.orEmpty()) }
                 messages.value = list
@@ -381,22 +426,24 @@ class ChatRoomVM(
         observeGroupDeletion()
     }
 
-    private fun observeIncomingMessages() = viewModelScope.launch {
-        sdk.messageReceived.collect { (incomingConvId, msg) ->
-            if (incomingConvId != conversationId) return@collect
-            if (moderationRepository.isBlocked(msg.senderId)) return@collect
-            messages.update { it + ChatMessage.from(msg) }
-        }
-    }
-
-    private fun observeMessageStatus() = viewModelScope.launch {
-        sdk.messageStatus.collect { (messageId, _, status) ->
-            val mapped = mapMessageStatus(status) ?: return@collect
-            messages.update { list ->
-                list.map { m -> if (m.id == messageId) m.copy(status = mapped) else m }
+    private fun observeIncomingMessages() =
+        viewModelScope.launch {
+            sdk.messageReceived.collect { (incomingConvId, msg) ->
+                if (incomingConvId != conversationId) return@collect
+                if (moderationRepository.isBlocked(msg.senderId)) return@collect
+                messages.update { it + ChatMessage.from(msg) }
             }
         }
-    }
+
+    private fun observeMessageStatus() =
+        viewModelScope.launch {
+            sdk.messageStatus.collect { (messageId, _, status) ->
+                val mapped = mapMessageStatus(status) ?: return@collect
+                messages.update { list ->
+                    list.map { m -> if (m.id == messageId) m.copy(status = mapped) else m }
+                }
+            }
+        }
 
     private fun mapMessageStatus(status: String): MessageStatus? =
         when (status) {
@@ -406,57 +453,62 @@ class ChatRoomVM(
             else -> null
         }
 
-    private fun observeMediaDownloads() = viewModelScope.launch {
-        sdk.mediaDownloadComplete.collect { (mediaId, filePath) ->
-            messages.update { list ->
-                list.map { m ->
-                    if (m.mediaId == mediaId && m.mediaLocalPath == null) {
-                        m.copy(mediaLocalPath = filePath)
-                    } else {
-                        m
+    private fun observeMediaDownloads() =
+        viewModelScope.launch {
+            sdk.mediaDownloadComplete.collect { (mediaId, filePath) ->
+                messages.update { list ->
+                    list.map { m ->
+                        if (m.mediaId == mediaId && m.mediaLocalPath == null) {
+                            m.copy(mediaLocalPath = filePath)
+                        } else {
+                            m
+                        }
                     }
                 }
             }
         }
-    }
 
-    private fun observeGroupRenames() = viewModelScope.launch {
-        sdk.groupRenamed.collect { (renamedId, newName) ->
-            if (renamedId == conversationId) {
-                conversation.update { it?.copy(displayName = newName) }
-            }
-        }
-    }
-
-    private fun observeMemberLeaves() = viewModelScope.launch {
-        sdk.memberLeft.collect { (leftConvId, peer) ->
-            if (leftConvId == conversationId) {
-                conversation.update { conv ->
-                    conv?.copy(participantIds = conv.participantIds.filter { it != peer })
+    private fun observeGroupRenames() =
+        viewModelScope.launch {
+            sdk.groupRenamed.collect { (renamedId, newName) ->
+                if (renamedId == conversationId) {
+                    conversation.update { it?.copy(displayName = newName) }
                 }
             }
         }
-    }
 
-    private fun observeMemberJoins() = viewModelScope.launch {
-        sdk.memberAdded.collect { (addedConvId, peer, _) ->
-            if (addedConvId == conversationId) {
-                conversation.update { conv ->
-                    if (conv != null && peer !in conv.participantIds) {
-                        conv.copy(participantIds = conv.participantIds + peer)
-                    } else {
-                        conv
+    private fun observeMemberLeaves() =
+        viewModelScope.launch {
+            sdk.memberLeft.collect { (leftConvId, peer) ->
+                if (leftConvId == conversationId) {
+                    conversation.update { conv ->
+                        conv?.copy(participantIds = conv.participantIds.filter { it != peer })
                     }
                 }
             }
         }
-    }
 
-    private fun observeGroupDeletion() = viewModelScope.launch {
-        sdk.groupDeleted.collect { deletedId ->
-            if (deletedId == conversationId) navigationRouter.back()
+    private fun observeMemberJoins() =
+        viewModelScope.launch {
+            sdk.memberAdded.collect { (addedConvId, peer, _) ->
+                if (addedConvId == conversationId) {
+                    conversation.update { conv ->
+                        if (conv != null && peer !in conv.participantIds) {
+                            conv.copy(participantIds = conv.participantIds + peer)
+                        } else {
+                            conv
+                        }
+                    }
+                }
+            }
         }
-    }
+
+    private fun observeGroupDeletion() =
+        viewModelScope.launch {
+            sdk.groupDeleted.collect { deletedId ->
+                if (deletedId == conversationId) navigationRouter.back()
+            }
+        }
 
     private fun observePeerStatus() {
         viewModelScope.launch {
@@ -638,10 +690,11 @@ class ChatRoomVM(
         runChatCall("ChatRoomVM: sendMessage failed") {
             // TODO: thread replyTo through once zappMessaging sdk.sendMessage accepts replyTo*
             // params (not in the currently-pinned SHA in .zapp-deps). Local-only echo for now.
-            val zmMessage = sdk.sendMessage(
-                conversationId = conversationId,
-                content = text,
-            )
+            val zmMessage =
+                sdk.sendMessage(
+                    conversationId = conversationId,
+                    content = text,
+                )
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
@@ -752,9 +805,11 @@ class ChatRoomVM(
     }
 
     private fun resolvePeerWalletAddress(): String? =
-        messages.value.lastOrNull { msg ->
-            msg.contentType == MimeTypes.WALLET_ADDRESS && !msg.isFromMe
-        }?.content?.takeIf { it.isNotBlank() }
+        messages.value
+            .lastOrNull { msg ->
+                msg.contentType == MimeTypes.WALLET_ADDRESS && !msg.isFromMe
+            }?.content
+            ?.takeIf { it.isNotBlank() }
 
     companion object {
         const val STATUS_SENT = "sent"

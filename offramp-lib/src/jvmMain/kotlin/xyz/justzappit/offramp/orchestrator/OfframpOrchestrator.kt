@@ -11,15 +11,15 @@ import kotlinx.serialization.json.put
 import xyz.justzappit.evm.abi.AbiDecoder
 import xyz.justzappit.evm.abi.AbiEncoder
 import xyz.justzappit.evm.abi.keccak256
-import xyz.justzappit.evm.signer.EcdsaSigner
-import xyz.justzappit.evm.util.hexToBytes
-import xyz.justzappit.evm.util.padLeftToWord
 import xyz.justzappit.evm.crypto.Ecies
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.RpcException
+import xyz.justzappit.evm.signer.EcdsaSigner
 import xyz.justzappit.evm.signer.TxSubmitter
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.TxHash
+import xyz.justzappit.evm.util.hexToBytes
+import xyz.justzappit.evm.util.padLeftToWord
 import xyz.justzappit.evm.util.toHex
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.funding.FundingOutcome
@@ -32,12 +32,11 @@ import xyz.justzappit.offramp.p2p.DiamondCalls
 import xyz.justzappit.offramp.p2p.Erc20Calls
 import xyz.justzappit.offramp.p2p.InMemoryOrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.InMemoryRelayIdentityStore
-import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
-import xyz.justzappit.offramp.p2p.getUsdcBalance
-import xyz.justzappit.offramp.p2p.OrderEvents
 import xyz.justzappit.offramp.p2p.OnChainOrderReader
+import xyz.justzappit.offramp.p2p.OrderEvents
 import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.OrderReader
+import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.OrderSnapshot
 import xyz.justzappit.offramp.p2p.OrderStatus
 import xyz.justzappit.offramp.p2p.OrderType
@@ -48,10 +47,12 @@ import xyz.justzappit.offramp.p2p.SubgraphClient
 import xyz.justzappit.offramp.p2p.UpiPayUri
 import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getOrCreate
+import xyz.justzappit.offramp.p2p.getUsdcBalance
 import java.math.BigInteger
 
 interface OfframpDriver {
     fun run(request: OfframpRequest): Flow<OfframpStatus>
+
     fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus>
 
     /**
@@ -97,10 +98,11 @@ class OfframpOrchestrator(
     // VPA from the chain alone. In-memory default for tests; Android injects encrypted prefs.
     private val orderRecipientUpiCache: OrderRecipientUpiCache = InMemoryOrderRecipientUpiCache(),
 ) : OfframpDriver {
-    override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
-        emit(OfframpStatus.Idle)
-        driveNewOrder(request, resumeBridgeHandle = null)
-    }
+    override fun run(request: OfframpRequest): Flow<OfframpStatus> =
+        flow {
+            emit(OfframpStatus.Idle)
+            driveNewOrder(request, resumeBridgeHandle = null)
+        }
 
     // [resumeBridgeHandle] is a persisted 1-Click deposit address — passing it forces the funding
     // step to re-poll the existing bridge instead of opening a second one, so a crash mid-bridge
@@ -120,10 +122,11 @@ class OfframpOrchestrator(
             val circles = subgraph.circlesForRouting(currencyHex)
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size))
 
-            val selectedCircle = router.selectCircleForOrder(
-                circles = circles,
-                orderCurrency = currencyHex,
-            ) { id -> validateCircleOnChain(id, request) }
+            val selectedCircle =
+                router.selectCircleForOrder(
+                    circles = circles,
+                    orderCurrency = currencyHex,
+                ) { id -> validateCircleOnChain(id, request) }
             val circleId = selectedCircle.value
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
@@ -131,9 +134,10 @@ class OfframpOrchestrator(
             // USDC refunded into the smart account; emit a distinct status so the UI renders
             // "Using Base balance" instead of "Bridging funds".
             currentStep = OfframpStep.FUNDING
-            val outcome = funding.ensureFunded(accountAddress, request, resumeHandle = resumeBridgeHandle) { depositAddress ->
-                emit(OfframpStatus.BridgingFunds(amount = request.usdcAmount, depositAddress = depositAddress))
-            }
+            val outcome =
+                funding.ensureFunded(accountAddress, request, resumeHandle = resumeBridgeHandle) { depositAddress ->
+                    emit(OfframpStatus.BridgingFunds(amount = request.usdcAmount, depositAddress = depositAddress))
+                }
             if (outcome is FundingOutcome.AlreadyFunded) {
                 emit(OfframpStatus.FundedFromBase(amount = request.usdcAmount, baseBalance = outcome.currentBalance))
             }
@@ -149,32 +153,36 @@ class OfframpOrchestrator(
             // Cover placed + smallOrderFixedFeePay: the Diamond pulls the fee as a second
             // transferFrom inside setSellOrderUpi and silent-cancels if allowance is short. See
             // [readSmallOrderFixedFeePay] for the empirical mainnet trace.
-            val smallOrderFee = runCatching { readSmallOrderFixedFeePay(request.currency) }
-                .getOrDefault(Usdc6.ZERO)
+            val smallOrderFee =
+                runCatching { readSmallOrderFixedFeePay(request.currency) }
+                    .getOrDefault(Usdc6.ZERO)
             val approveAmount = Usdc6(request.usdcAmount.micros + smallOrderFee.micros)
-            val approveHash = submitter.sendTransaction(
-                to = network.usdcAddress,
-                data = Erc20Calls.approveCalldata(network.diamondAddress, approveAmount),
-            )
+            val approveHash =
+                submitter.sendTransaction(
+                    to = network.usdcAddress,
+                    data = Erc20Calls.approveCalldata(network.diamondAddress, approveAmount),
+                )
             lastTxHash = approveHash
             emit(OfframpStatus.ApprovingUsdc(txHash = approveHash, amount = approveAmount))
             require(submitter.awaitReceipt(approveHash).success) { "USDC approve reverted" }
 
             currentStep = OfframpStep.PLACING_ORDER
-            val placeOrderHash = submitter.sendTransaction(
-                to = network.diamondAddress,
-                data = DiamondCalls.placeOrderCalldata(
-                    PlaceOrderArgs(
-                        relayPubKeyEthCrypto = relay.publicKeyHex,
-                        usdcAmount = request.usdcAmount,
-                        recipientAddress = accountAddress,
-                        orderType = OrderType.PAY,
-                        currency = request.currency,
-                        circleId = circleId,
-                        fiatAmountLimit = request.fiatAmountLimit ?: Usdc6.ZERO,
-                    ),
-                ),
-            )
+            val placeOrderHash =
+                submitter.sendTransaction(
+                    to = network.diamondAddress,
+                    data =
+                        DiamondCalls.placeOrderCalldata(
+                            PlaceOrderArgs(
+                                relayPubKeyEthCrypto = relay.publicKeyHex,
+                                usdcAmount = request.usdcAmount,
+                                recipientAddress = accountAddress,
+                                orderType = OrderType.PAY,
+                                currency = request.currency,
+                                circleId = circleId,
+                                fiatAmountLimit = request.fiatAmountLimit ?: Usdc6.ZERO,
+                            ),
+                        ),
+                )
             lastTxHash = placeOrderHash
             emit(
                 OfframpStatus.PlacingOrder(
@@ -215,78 +223,89 @@ class OfframpOrchestrator(
     //  - orderId non-null → resume at merchant-acceptance / completion polling.
     //  - orderId null → fresh start; if a mainnet bridge was already opened,
     //    [bridgeDepositAddress] makes [driveNewOrder] re-poll it instead of re-quoting.
-    override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
-        emit(OfframpStatus.Idle)
-        val fallbackFiat = checkpoint.fiatAmount ?: resolveFallbackFiat(checkpoint)
-        val request = checkpoint.toRequest(fallbackFiatAmount = fallbackFiat)
-        val orderId = checkpoint.orderIdBig
-        if (orderId == null) {
-            driveNewOrder(request, resumeBridgeHandle = checkpoint.bridgeDepositAddress)
-            return@flow
+    override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> =
+        flow {
+            emit(OfframpStatus.Idle)
+            val fallbackFiat = checkpoint.fiatAmount ?: resolveFallbackFiat(checkpoint)
+            val request = checkpoint.toRequest(fallbackFiatAmount = fallbackFiat)
+            val orderId = checkpoint.orderIdBig
+            if (orderId == null) {
+                driveNewOrder(request, resumeBridgeHandle = checkpoint.bridgeDepositAddress)
+                return@flow
+            }
+            var currentStep = checkpoint.currentStep
+            var lastTxHash: TxHash? = checkpoint.setUpiTxHash ?: checkpoint.placeOrderTxHash
+            try {
+                awaitMerchantAndComplete(
+                    orderId = orderId,
+                    request = request,
+                    knownSetUpiHash = checkpoint.setUpiTxHash,
+                    onStep = { currentStep = it },
+                    onTxHash = { lastTxHash = it },
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                emit(buildFailedStatus(e, orderId, currentStep, lastTxHash))
+            }
         }
-        var currentStep = checkpoint.currentStep
-        var lastTxHash: TxHash? = checkpoint.setUpiTxHash ?: checkpoint.placeOrderTxHash
-        try {
-            awaitMerchantAndComplete(
-                orderId = orderId,
-                request = request,
-                knownSetUpiHash = checkpoint.setUpiTxHash,
-                onStep = { currentStep = it },
-                onTxHash = { lastTxHash = it },
-            )
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            emit(buildFailedStatus(e, orderId, currentStep, lastTxHash))
-        }
-    }
 
-    override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> = flow {
-        try {
-            cleanUpOrderIfNeeded(orderId)
-            val balance = Usdc6(usdcBalanceOf(accountAddress))
-            if (balance <= Usdc6.ZERO) {
-                emit(OfframpStatus.FundsRecovered(amount = Usdc6.ZERO))
-                return@flow
+    override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> =
+        flow {
+            try {
+                cleanUpOrderIfNeeded(orderId)
+                val balance = Usdc6(usdcBalanceOf(accountAddress))
+                if (balance <= Usdc6.ZERO) {
+                    emit(OfframpStatus.FundsRecovered(amount = Usdc6.ZERO))
+                    return@flow
+                }
+                val target = refund.pullbackTarget(accountAddress, balance)
+                if (target == null) {
+                    // No NEAR route (testnet): USDC is already in the self-custodial account.
+                    emit(OfframpStatus.FundsRecovered(amount = balance))
+                    return@flow
+                }
+                val transferHash =
+                    submitter.sendTransaction(
+                        to = network.usdcAddress,
+                        data = Erc20Calls.transferCalldata(target, balance),
+                    )
+                require(submitter.awaitReceipt(transferHash).success) { "USDC pull-back transfer reverted" }
+                emit(OfframpStatus.FundsRecovered(amount = balance, target = target, txHash = transferHash))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                emit(buildFailedStatus(e, orderId, OfframpStep.WAITING_FOR_ACCEPTANCE, null))
             }
-            val target = refund.pullbackTarget(accountAddress, balance)
-            if (target == null) {
-                // No NEAR route (testnet): USDC is already in the self-custodial account.
-                emit(OfframpStatus.FundsRecovered(amount = balance))
-                return@flow
-            }
-            val transferHash = submitter.sendTransaction(
-                to = network.usdcAddress,
-                data = Erc20Calls.transferCalldata(target, balance),
-            )
-            require(submitter.awaitReceipt(transferHash).success) { "USDC pull-back transfer reverted" }
-            emit(OfframpStatus.FundsRecovered(amount = balance, target = target, txHash = transferHash))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Throwable) {
-            emit(buildFailedStatus(e, orderId, OfframpStep.WAITING_FOR_ACCEPTANCE, null))
         }
-    }
 
     private suspend fun cleanUpOrderIfNeeded(orderId: BigInteger?) {
         if (orderId == null) return
         val status = runCatching { orderReader.fetchOrder(orderId)?.status }.getOrNull() ?: return
         when (status) {
             OrderStatus.ACCEPTED, OrderStatus.PAID -> {
-                val hash = submitter.sendTransaction(
-                    to = network.diamondAddress,
-                    data = DiamondCalls.cancelOrderCalldata(orderId),
-                )
+                val hash =
+                    submitter.sendTransaction(
+                        to = network.diamondAddress,
+                        data = DiamondCalls.cancelOrderCalldata(orderId),
+                    )
                 require(submitter.awaitReceipt(hash).success) { "cancelOrder reverted" }
             }
-            OrderStatus.PLACED -> if (checkOrderExpired(orderId)) {
-                val hash = submitter.sendTransaction(
-                    to = network.diamondAddress,
-                    data = DiamondCalls.autoCancelExpiredOrdersCalldata(listOf(orderId)),
-                )
-                require(submitter.awaitReceipt(hash).success) { "autoCancelExpiredOrders reverted" }
+
+            OrderStatus.PLACED -> {
+                if (checkOrderExpired(orderId)) {
+                    val hash =
+                        submitter.sendTransaction(
+                            to = network.diamondAddress,
+                            data = DiamondCalls.autoCancelExpiredOrdersCalldata(listOf(orderId)),
+                        )
+                    require(submitter.awaitReceipt(hash).success) { "autoCancelExpiredOrders reverted" }
+                }
             }
-            OrderStatus.COMPLETED, OrderStatus.CANCELLED -> Unit
+
+            OrderStatus.COMPLETED, OrderStatus.CANCELLED -> {
+                Unit
+            }
         }
     }
 
@@ -306,8 +325,9 @@ class OfframpOrchestrator(
     // if subgraph omitted the field, trust the on-chain value (it's the source of truth anyway).
     private suspend fun verifiedMerchantPubKey(orderId: BigInteger, accepted: OrderSnapshot): String {
         if (accepted.source == OrderSnapshot.Source.OnChain) return accepted.merchantPubKey
-        val onChain = onChainOrderReader.fetchOrder(orderId)
-            ?: error("Cannot verify merchant pubkey on-chain for order $orderId — refusing to encrypt UPI")
+        val onChain =
+            onChainOrderReader.fetchOrder(orderId)
+                ?: error("Cannot verify merchant pubkey on-chain for order $orderId — refusing to encrypt UPI")
         check(onChain.merchantPubKey.isNotBlank()) {
             "On-chain merchant pubkey is empty for order $orderId — refusing to encrypt UPI"
         }
@@ -339,19 +359,21 @@ class OfframpOrchestrator(
         // resume paths could carry a 3dp checkpoint, and we want the URI's `am=` to be exactly
         // what we'll feed into `parsedUsdcMicros` so both sides see identical input.
         val inrAmount = request.fiatAmount.whole.setScale(UpiPayUri.INR_DECIMAL_PLACES, java.math.RoundingMode.FLOOR)
-        val qrUri = UpiPayUri.build(
-            vpa = request.recipientUpi,
-            payeeName = request.payeeName,
-            inrAmount = inrAmount,
-            currencyCode = request.currency.code,
-        )
+        val qrUri =
+            UpiPayUri.build(
+                vpa = request.recipientUpi,
+                payeeName = request.payeeName,
+                inrAmount = inrAmount,
+                currencyCode = request.currency.code,
+            )
 
         val sellPrice = runCatching { readSellPriceInrPerUsdc(request.currency) }.getOrNull()
-        val parsedUsdcMicros = if (sellPrice != null && sellPrice.signum() > 0) {
-            UpiPayUri.parsedUsdcMicros(inrAmount, sellPrice).toBigInteger()
-        } else {
-            request.usdcAmount.micros
-        }
+        val parsedUsdcMicros =
+            if (sellPrice != null && sellPrice.signum() > 0) {
+                UpiPayUri.parsedUsdcMicros(inrAmount, sellPrice).toBigInteger()
+            } else {
+                request.usdcAmount.micros
+            }
         val placedMicros = request.usdcAmount.micros
         val updatedAmount = parsedUsdcMicros.max(placedMicros)
 
@@ -359,13 +381,15 @@ class OfframpOrchestrator(
             // Diamond pulls (updatedAmount - placed) AND the small-order fixed fee at setUpi.
             // Top up to cover both — initial approve was `placed + fee`, of which `placed` is
             // already gone, leaving `fee`. Re-approving to `updatedAmount + fee` overwrites that.
-            val topUpFee = runCatching { readSmallOrderFixedFeePay(request.currency) }
-                .getOrDefault(Usdc6.ZERO)
+            val topUpFee =
+                runCatching { readSmallOrderFixedFeePay(request.currency) }
+                    .getOrDefault(Usdc6.ZERO)
             val topUpAmount = Usdc6(updatedAmount + topUpFee.micros)
-            val topUpHash = submitter.sendTransaction(
-                to = network.usdcAddress,
-                data = Erc20Calls.approveCalldata(network.diamondAddress, topUpAmount),
-            )
+            val topUpHash =
+                submitter.sendTransaction(
+                    to = network.usdcAddress,
+                    data = Erc20Calls.approveCalldata(network.diamondAddress, topUpAmount),
+                )
             require(submitter.awaitReceipt(topUpHash).success) {
                 "USDC allowance top-up reverted (updatedAmount=$updatedAmount > placed=$placedMicros)"
             }
@@ -375,11 +399,12 @@ class OfframpOrchestrator(
         onStep(OfframpStep.SENDING_UPI)
         return submitter.sendTransaction(
             to = network.diamondAddress,
-            data = DiamondCalls.setSellOrderUpiCalldata(
-                orderId = orderId,
-                encryptedUpiHex = cipherHex,
-                updatedAmount = updatedAmount,
-            ),
+            data =
+                DiamondCalls.setSellOrderUpiCalldata(
+                    orderId = orderId,
+                    encryptedUpiHex = cipherHex,
+                    updatedAmount = updatedAmount,
+                ),
         )
     }
 
@@ -399,25 +424,29 @@ class OfframpOrchestrator(
         val privateKey = java.math.BigInteger(1, relay.privateKeyHex.removePrefix("0x").hexToBytes())
         val messageHash = keccak256(qrUri.toByteArray(Charsets.UTF_8))
         val sig = EcdsaSigner.sign(messageHash, privateKey)
-        val sigBytes = sig.r.toByteArray().padLeftToWord() +
-            sig.s.toByteArray().padLeftToWord() +
-            byteArrayOf((sig.yParity + SIG_V_OFFSET).toByte())
+        val sigBytes =
+            sig.r.toByteArray().padLeftToWord() +
+                sig.s.toByteArray().padLeftToWord() +
+                byteArrayOf((sig.yParity + SIG_V_OFFSET).toByte())
         val sigHex = "0x" + sigBytes.toHex()
-        val payload = Json.encodeToString(
-            kotlinx.serialization.json.JsonObject.serializer(),
-            buildJsonObject {
-                put("message", qrUri)
-                put("signature", sigHex)
-            },
-        )
+        val payload =
+            Json.encodeToString(
+                kotlinx.serialization.json.JsonObject
+                    .serializer(),
+                buildJsonObject {
+                    put("message", qrUri)
+                    put("signature", sigHex)
+                },
+            )
         return Ecies.cipherStringify(Ecies.encryptWithPublicKey(merchantPubKey, payload))
     }
 
     private suspend fun readSellPriceInrPerUsdc(currency: CurrencyCode): java.math.BigDecimal {
-        val ret = rpc.ethCall(
-            to = network.diamondAddress,
-            data = DiamondCalls.getPriceConfigCalldata(currency),
-        )
+        val ret =
+            rpc.ethCall(
+                to = network.diamondAddress,
+                data = DiamondCalls.getPriceConfigCalldata(currency),
+            )
         return PriceConfigDecoder.decode(ret).sellPriceAsRate()
     }
 
@@ -428,10 +457,11 @@ class OfframpOrchestrator(
     // 0.99 USDC orders cancelled atomically with allowance == placed; same orders completed once
     // we approved `placed + fee`. user-app-client sidesteps this by approving `MAX_UINT256` once.
     private suspend fun readSmallOrderFixedFeePay(currency: CurrencyCode): Usdc6 {
-        val ret = rpc.ethCall(
-            to = network.diamondAddress,
-            data = DiamondCalls.getSmallOrderFixedFeePayCalldata(currency),
-        )
+        val ret =
+            rpc.ethCall(
+                to = network.diamondAddress,
+                data = DiamondCalls.getSmallOrderFixedFeePayCalldata(currency),
+            )
         return Usdc6(AbiDecoder(ret).also { it.requireWords(1) }.uint(0))
     }
 
@@ -452,26 +482,32 @@ class OfframpOrchestrator(
         onTxHash: (TxHash) -> Unit,
     ) {
         onStep(OfframpStep.WAITING_FOR_ACCEPTANCE)
-        val accepted = when (val r = pollForAcceptance(orderId)) {
-            is PollOutcome.Cancelled -> {
-                emitCancelled(orderId, r.snapshot)
-                return
+        val accepted =
+            when (val r = pollForAcceptance(orderId)) {
+                is PollOutcome.Cancelled -> {
+                    emitCancelled(orderId, r.snapshot)
+                    return
+                }
+
+                is PollOutcome.Matched -> {
+                    r.snapshot
+                }
             }
-            is PollOutcome.Matched -> r.snapshot
-        }
-        val acceptedMerchant = requireNotNull(accepted.acceptedMerchantAddress) {
-            "Order $orderId reached ACCEPTED but acceptedMerchantAddress is null"
-        }
+        val acceptedMerchant =
+            requireNotNull(accepted.acceptedMerchantAddress) {
+                "Order $orderId reached ACCEPTED but acceptedMerchantAddress is null"
+            }
 
         onStep(OfframpStep.ENCRYPTING_UPI)
         // Resume safety: if the encrypted UPI is already on-chain — the setSellOrderUpi tx landed
         // before its hash was checkpointed, or the order already advanced past ACCEPTED — re-sending
         // it reverts with UpiAlreadySent. Broadcast only when we have not already done so.
-        val setUpiHash: TxHash? = when {
-            knownSetUpiHash != null -> knownSetUpiHash
-            isUpiAlreadyOnChain(orderId, accepted) -> null
-            else -> broadcastSetSellOrderUpi(orderId, accepted, request, onStep)
-        }
+        val setUpiHash: TxHash? =
+            when {
+                knownSetUpiHash != null -> knownSetUpiHash
+                isUpiAlreadyOnChain(orderId, accepted) -> null
+                else -> broadcastSetSellOrderUpi(orderId, accepted, request, onStep)
+            }
         if (setUpiHash != null) {
             onTxHash(setUpiHash)
             onStep(OfframpStep.SENDING_UPI)
@@ -488,13 +524,17 @@ class OfframpOrchestrator(
         }
 
         onStep(OfframpStep.WAITING_FOR_COMPLETION)
-        val finished = when (val r = pollForCompletion(orderId, accepted)) {
-            is PollOutcome.Cancelled -> {
-                emitCancelled(orderId, r.snapshot, fallbackAccepted = accepted)
-                return
+        val finished =
+            when (val r = pollForCompletion(orderId, accepted)) {
+                is PollOutcome.Cancelled -> {
+                    emitCancelled(orderId, r.snapshot, fallbackAccepted = accepted)
+                    return
+                }
+
+                is PollOutcome.Matched -> {
+                    r.snapshot
+                }
             }
-            is PollOutcome.Matched -> r.snapshot
-        }
         emit(
             OfframpStatus.Completed(
                 orderId = orderId,
@@ -519,8 +559,9 @@ class OfframpOrchestrator(
                 // On cancellation the contract refunds the placed USDC; subgraph's actualUsdcAmount
                 // is only populated on COMPLETED, so fall back to the originally-placed amount.
                 refundedUsdcAmount = snapshot.actualUsdcAmount ?: snapshot.usdcAmount,
-                acceptedMerchant = snapshot.acceptedMerchantAddress
-                    ?: fallbackAccepted?.acceptedMerchantAddress,
+                acceptedMerchant =
+                    snapshot.acceptedMerchantAddress
+                        ?: fallbackAccepted?.acceptedMerchantAddress,
             ),
         )
     }
@@ -528,21 +569,24 @@ class OfframpOrchestrator(
     private suspend fun validateCircleOnChain(
         circleId: CircleId,
         request: OfframpRequest,
-    ): Boolean = runCatching {
-        val ret = rpc.ethCall(
-            to = network.diamondAddress,
-            data = DiamondCalls.getAssignableMerchantsFromCircleCalldata(
-                circleId = circleId.value,
-                assignUpTo = BigInteger.valueOf(ASSIGN_UP_TO),
-                currency = request.currency,
-                user = accountAddress,
-                usdtAmount = request.usdcAmount,
-                fiatAmount = Usdc6.ZERO,
-                orderType = OrderType.PAY,
-            ),
-        )
-        OrderReader.decodeAddressArrayNonEmpty(ret)
-    }.getOrDefault(false)
+    ): Boolean =
+        runCatching {
+            val ret =
+                rpc.ethCall(
+                    to = network.diamondAddress,
+                    data =
+                        DiamondCalls.getAssignableMerchantsFromCircleCalldata(
+                            circleId = circleId.value,
+                            assignUpTo = BigInteger.valueOf(ASSIGN_UP_TO),
+                            currency = request.currency,
+                            user = accountAddress,
+                            usdtAmount = request.usdcAmount,
+                            fiatAmount = Usdc6.ZERO,
+                            orderType = OrderType.PAY,
+                        ),
+                )
+            OrderReader.decodeAddressArrayNonEmpty(ret)
+        }.getOrDefault(false)
 
     private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): PollOutcome =
         pollOrderUntil(
@@ -579,10 +623,11 @@ class OfframpOrchestrator(
             predicate = { it.status == OrderStatus.COMPLETED },
         )
 
-    private suspend fun checkOrderExpired(orderId: BigInteger): Boolean = runCatching {
-        val ret = rpc.ethCall(to = network.diamondAddress, data = DiamondCalls.isOrderExpiredCalldata(orderId))
-        ret.isNotEmpty() && BigInteger(1, ret).signum() != 0
-    }.getOrDefault(false)
+    private suspend fun checkOrderExpired(orderId: BigInteger): Boolean =
+        runCatching {
+            val ret = rpc.ethCall(to = network.diamondAddress, data = DiamondCalls.isOrderExpiredCalldata(orderId))
+            ret.isNotEmpty() && BigInteger(1, ret).signum() != 0
+        }.getOrDefault(false)
 
     // No client-side deadline (see [stalledAfterMs] for the UX-only "taking a while" signal).
     // CANCELLED is a normal terminal — the contract has refunded the user's USDC on-chain — and
@@ -599,14 +644,15 @@ class OfframpOrchestrator(
         while (true) {
             attempt++
             val stalled = clockMs() - startedAtMs >= stalledAfterMs
-            val snapshot = try {
-                orderReader.fetchOrder(orderId)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (_: Throwable) {
-                // FallbackOrderReader already logs both legs; orchestrator just keeps polling.
-                null
-            }
+            val snapshot =
+                try {
+                    orderReader.fetchOrder(orderId)
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (_: Throwable) {
+                    // FallbackOrderReader already logs both legs; orchestrator just keeps polling.
+                    null
+                }
             if (snapshot != null) {
                 if (snapshot.status == OrderStatus.CANCELLED) {
                     return PollOutcome.Cancelled(snapshot)
@@ -622,8 +668,13 @@ class OfframpOrchestrator(
     }
 
     private sealed class PollOutcome {
-        data class Matched(val snapshot: OrderSnapshot) : PollOutcome()
-        data class Cancelled(val snapshot: OrderSnapshot) : PollOutcome()
+        data class Matched(
+            val snapshot: OrderSnapshot
+        ) : PollOutcome()
+
+        data class Cancelled(
+            val snapshot: OrderSnapshot
+        ) : PollOutcome()
     }
 
     private fun buildFailedStatus(
@@ -631,53 +682,59 @@ class OfframpOrchestrator(
         orderId: BigInteger?,
         step: OfframpStep,
         lastTxHash: TxHash?,
-    ): OfframpStatus.Failed = when (error) {
-        is RpcException.ExecutionReverted -> {
-            val lookup = KnownReverts.lookup(error.selector)
-            OfframpStatus.Failed(
-                message = error.message ?: "execution reverted",
-                orderId = orderId,
-                step = step,
-                txHash = lastTxHash,
-                revertSelector = error.selector,
-                knownRevertReason = lookup.reason,
-                sdkErrorName = lookup.sdkName,
-                sdkErrorMessage = lookup.sdkMessage,
-                solidityErrorString = error.solidityErrorString,
-                cause = error,
-            )
+    ): OfframpStatus.Failed =
+        when (error) {
+            is RpcException.ExecutionReverted -> {
+                val lookup = KnownReverts.lookup(error.selector)
+                OfframpStatus.Failed(
+                    message = error.message ?: "execution reverted",
+                    orderId = orderId,
+                    step = step,
+                    txHash = lastTxHash,
+                    revertSelector = error.selector,
+                    knownRevertReason = lookup.reason,
+                    sdkErrorName = lookup.sdkName,
+                    sdkErrorMessage = lookup.sdkMessage,
+                    solidityErrorString = error.solidityErrorString,
+                    cause = error,
+                )
+            }
+
+            // ERC-4337 reverts surface as an opaque bundler error message ("...reverted during
+            // simulation with reason: 0xea8e4eb5"), not a structured ExecutionReverted. Recover the
+            // selector from the message so AA-path reverts map to the same curated/SDK reasons.
+            is RpcException.Unknown -> {
+                val selector = KnownReverts.selectorFromMessage(error.errorMessage ?: error.raw)
+                val lookup = KnownReverts.lookup(selector)
+                OfframpStatus.Failed(
+                    message = error.errorMessage ?: error.message ?: "Unknown error",
+                    orderId = orderId,
+                    step = step,
+                    txHash = lastTxHash,
+                    revertSelector = selector,
+                    knownRevertReason = lookup.reason,
+                    sdkErrorName = lookup.sdkName,
+                    sdkErrorMessage = lookup.sdkMessage,
+                    cause = error,
+                )
+            }
+
+            else -> {
+                OfframpStatus.Failed(
+                    message = error.message ?: error::class.simpleName ?: "Unknown error",
+                    orderId = orderId,
+                    step = step,
+                    txHash = lastTxHash,
+                    cause = error,
+                )
+            }
         }
-        // ERC-4337 reverts surface as an opaque bundler error message ("...reverted during
-        // simulation with reason: 0xea8e4eb5"), not a structured ExecutionReverted. Recover the
-        // selector from the message so AA-path reverts map to the same curated/SDK reasons.
-        is RpcException.Unknown -> {
-            val selector = KnownReverts.selectorFromMessage(error.errorMessage ?: error.raw)
-            val lookup = KnownReverts.lookup(selector)
-            OfframpStatus.Failed(
-                message = error.errorMessage ?: error.message ?: "Unknown error",
-                orderId = orderId,
-                step = step,
-                txHash = lastTxHash,
-                revertSelector = selector,
-                knownRevertReason = lookup.reason,
-                sdkErrorName = lookup.sdkName,
-                sdkErrorMessage = lookup.sdkMessage,
-                cause = error,
-            )
-        }
-        else -> OfframpStatus.Failed(
-            message = error.message ?: error::class.simpleName ?: "Unknown error",
-            orderId = orderId,
-            step = step,
-            txHash = lastTxHash,
-            cause = error,
-        )
-    }
 
     companion object {
         private const val ASSIGN_UP_TO = 3L
         private const val DEFAULT_POLL_INTERVAL_MS = 3_000L
         private const val DEFAULT_STALLED_AFTER_MS = 5L * 60 * 1000
+
         // viem `serializeSignature` v offset — adds 27 to recId so v ∈ {0x1b, 0x1c}.
         private const val SIG_V_OFFSET = 27
     }

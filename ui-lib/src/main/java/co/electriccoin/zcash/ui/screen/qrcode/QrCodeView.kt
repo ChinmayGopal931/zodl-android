@@ -114,9 +114,14 @@ internal fun QrCodeView(
     snackbarHostState: SnackbarHostState,
 ) {
     when (state) {
-        QrCodeState.Loading -> CircularScreenProgressIndicator()
-        is QrCodeState.Prepared -> ProvideZappTheme {
-            QrCodePrepared(state = state, snackbarHostState = snackbarHostState)
+        QrCodeState.Loading -> {
+            CircularScreenProgressIndicator()
+        }
+
+        is QrCodeState.Prepared -> {
+            ProvideZappTheme {
+                QrCodePrepared(state = state, snackbarHostState = snackbarHostState)
+            }
         }
     }
 }
@@ -139,12 +144,13 @@ private fun QrCodePrepared(
     ) { paddingValues ->
         QrCodeContents(
             state = state,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    top = paddingValues.calculateTopPadding(),
-                    bottom = paddingValues.calculateBottomPadding(),
-                ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(
+                        top = paddingValues.calculateTopPadding(),
+                        bottom = paddingValues.calculateBottomPadding(),
+                    ),
         )
     }
 }
@@ -174,18 +180,20 @@ private fun QrCodeContents(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp),
+        modifier =
+            modifier
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 28.dp),
         horizontalAlignment = CenterHorizontally,
     ) {
         Spacer(Modifier.height(12.dp))
 
         Box(
-            modifier = Modifier
-                .background(c.bg, RectangleShape)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .padding(12.dp),
+            modifier =
+                Modifier
+                    .background(c.bg, RectangleShape)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .padding(12.dp),
         ) {
             QrCode(state = state)
         }
@@ -198,14 +206,15 @@ private fun QrCodeContents(
 
         BasicText(
             text = stringResource(id = addressLabelRes(state)),
-            style = ZappTheme.typography.display.copy(
-                color = c.text,
-                fontSize = 18.sp,
-                lineHeight = 22.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-0.4).sp,
-                textAlign = TextAlign.Center,
-            ),
+            style =
+                ZappTheme.typography.display.copy(
+                    color = c.text,
+                    fontSize = 18.sp,
+                    lineHeight = 22.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-0.4).sp,
+                    textAlign = TextAlign.Center,
+                ),
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -220,8 +229,9 @@ private fun QrCodeContents(
 @Composable
 private fun AddressTypeChip(state: QrCodeState.Prepared) {
     val c = ZappTheme.colors
-    val isShielded = state.walletAddress is WalletAddress.Unified ||
-        state.walletAddress is WalletAddress.Sapling
+    val isShielded =
+        state.walletAddress is WalletAddress.Unified ||
+            state.walletAddress is WalletAddress.Sapling
     if (isShielded) {
         ZappStatusChip(
             text = stringResource(id = R.string.qr_code_privacy_level_shielded).uppercase(),
@@ -242,29 +252,32 @@ private fun AddressTypeChip(state: QrCodeState.Prepared) {
 private fun ExpandableAddressRow(state: QrCodeState.Prepared) {
     val c = ZappTheme.colors
     var expanded by rememberSaveable { mutableStateOf(false) }
-    val text = if (expanded) {
-        StringResource.ByString(state.walletAddress.address).styleAsAddress()
-    } else {
-        state.formatterAddress
-    }
+    val text =
+        if (expanded) {
+            StringResource.ByString(state.walletAddress.address).styleAsAddress()
+        } else {
+            state.formatterAddress
+        }
     BasicText(
         text = text.getValue(),
-        style = ZappTheme.typography.body.copy(
-            color = c.textMuted,
-            fontSize = 12.sp,
-            lineHeight = 18.sp,
-            fontFamily = FontFamily.Monospace,
-            textAlign = TextAlign.Center,
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .animateContentSize()
-            .combinedClickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() },
-                onClick = { expanded = !expanded },
-                onLongClick = { state.onAddressCopy(state.walletAddress.address) },
+        style =
+            ZappTheme.typography.body.copy(
+                color = c.textMuted,
+                fontSize = 12.sp,
+                lineHeight = 18.sp,
+                fontFamily = FontFamily.Monospace,
+                textAlign = TextAlign.Center,
             ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .animateContentSize()
+                .combinedClickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() },
+                    onClick = { expanded = !expanded },
+                    onLongClick = { state.onAddressCopy(state.walletAddress.address) },
+                ),
     )
 }
 
@@ -272,25 +285,38 @@ private fun ExpandableAddressRow(state: QrCodeState.Prepared) {
 private fun QrCode(state: QrCodeState.Prepared) {
     val addressType = state.walletAddress.toAddressType()
     ZashiQr(
-        state = state.toQrState(
-            contentDescription = stringRes(addressType.qrContentDescription),
-            centerImageResId = addressType.qrCenterImage,
-        ),
+        state =
+            state.toQrState(
+                contentDescription = stringRes(addressType.qrContentDescription),
+                centerImageResId = addressType.qrCenterImage,
+            ),
     )
 }
 
-private fun addressLabelRes(state: QrCodeState.Prepared): Int = when (state.walletAddress) {
-    is WalletAddress.Unified -> when (state.qrCodeType) {
-        QrCodeType.ZASHI -> R.string.qr_code_wallet_address_shielded
-        QrCodeType.KEYSTONE -> R.string.qr_code_wallet_address_shielded_keystone
+private fun addressLabelRes(state: QrCodeState.Prepared): Int =
+    when (state.walletAddress) {
+        is WalletAddress.Unified -> {
+            when (state.qrCodeType) {
+                QrCodeType.ZASHI -> R.string.qr_code_wallet_address_shielded
+                QrCodeType.KEYSTONE -> R.string.qr_code_wallet_address_shielded_keystone
+            }
+        }
+
+        is WalletAddress.Sapling -> {
+            when (state.qrCodeType) {
+                QrCodeType.ZASHI -> R.string.qr_code_wallet_address_sapling
+                QrCodeType.KEYSTONE -> R.string.qr_code_wallet_address_sapling_keystone
+            }
+        }
+
+        is WalletAddress.Transparent -> {
+            R.string.qr_code_wallet_address_transparent
+        }
+
+        else -> {
+            error("Unsupported address type: ${state.walletAddress}")
+        }
     }
-    is WalletAddress.Sapling -> when (state.qrCodeType) {
-        QrCodeType.ZASHI -> R.string.qr_code_wallet_address_sapling
-        QrCodeType.KEYSTONE -> R.string.qr_code_wallet_address_sapling_keystone
-    }
-    is WalletAddress.Transparent -> R.string.qr_code_wallet_address_transparent
-    else -> error("Unsupported address type: ${state.walletAddress}")
-}
 
 private enum class AddressType {
     UNIFIED,
@@ -298,17 +324,19 @@ private enum class AddressType {
     TRANSPARENT;
 
     val qrContentDescription: Int
-        get() = when (this) {
-            UNIFIED -> R.string.qr_code_unified_content_description
-            SAPLING -> R.string.qr_code_sapling_content_description
-            TRANSPARENT -> R.string.qr_code_transparent_content_description
-        }
+        get() =
+            when (this) {
+                UNIFIED -> R.string.qr_code_unified_content_description
+                SAPLING -> R.string.qr_code_sapling_content_description
+                TRANSPARENT -> R.string.qr_code_transparent_content_description
+            }
 
     val qrCenterImage: Int
-        get() = when (this) {
-            UNIFIED, SAPLING -> R.drawable.ic_zec_qr_shielded
-            TRANSPARENT -> R.drawable.ic_zec_qr_transparent
-        }
+        get() =
+            when (this) {
+                UNIFIED, SAPLING -> R.drawable.ic_zec_qr_shielded
+                TRANSPARENT -> R.drawable.ic_zec_qr_transparent
+            }
 }
 
 private fun WalletAddress.toAddressType() =

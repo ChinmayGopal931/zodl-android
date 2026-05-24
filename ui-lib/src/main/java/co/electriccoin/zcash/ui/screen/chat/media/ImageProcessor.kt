@@ -16,9 +16,10 @@ object ImageProcessor {
 
     fun compressImage(context: Context, uri: Uri, maxSize: Int = MAX_IMAGE_SIZE): File? =
         try {
-            val bitmap = context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it)
-            } ?: return null
+            val bitmap =
+                context.contentResolver.openInputStream(uri)?.use {
+                    BitmapFactory.decodeStream(it)
+                } ?: return null
 
             val scaledBitmap = scaleBitmap(bitmap, maxSize)
             val outputFile = File(context.cacheDir, "compressed_${System.currentTimeMillis()}.jpg")
@@ -34,9 +35,10 @@ object ImageProcessor {
 
     fun generateThumbnail(context: Context, uri: Uri): String? =
         try {
-            val bitmap = context.contentResolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it)
-            } ?: return null
+            val bitmap =
+                context.contentResolver.openInputStream(uri)?.use {
+                    BitmapFactory.decodeStream(it)
+                } ?: return null
 
             val thumbnail = scaleBitmap(bitmap, THUMBNAIL_MAX_SIZE)
             val base64 = bitmapToBase64(thumbnail)
@@ -53,11 +55,12 @@ object ImageProcessor {
         if (width <= maxSize && height <= maxSize) return bitmap
 
         val ratio = width.toFloat() / height.toFloat()
-        val (newWidth, newHeight) = if (width > height) {
-            maxSize to (maxSize / ratio).toInt()
-        } else {
-            (maxSize * ratio).toInt() to maxSize
-        }
+        val (newWidth, newHeight) =
+            if (width > height) {
+                maxSize to (maxSize / ratio).toInt()
+            } else {
+                (maxSize * ratio).toInt() to maxSize
+            }
         return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
     }
 

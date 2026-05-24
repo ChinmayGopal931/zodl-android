@@ -18,19 +18,20 @@ class UserOperationV06Test {
         //   cast call 0x5FF137D4... \
         //     "getUserOpHash((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes))(bytes32)" \
         //     '(0x0000000000000000000000000000000000000001,1,0x,0xdeadbeef,2,3,4,5,6,0x,0x)'
-        val op = UserOperationV06(
-            sender = Address.parse("0x0000000000000000000000000000000000000001"),
-            nonce = BigInteger.ONE,
-            initCode = ByteArray(0),
-            callData = "deadbeef".hexToBytes(),
-            callGasLimit = BigInteger.valueOf(2),
-            verificationGasLimit = BigInteger.valueOf(3),
-            preVerificationGas = BigInteger.valueOf(4),
-            maxFeePerGas = BigInteger.valueOf(5),
-            maxPriorityFeePerGas = BigInteger.valueOf(6),
-            paymasterAndData = ByteArray(0),
-            signature = ByteArray(0),
-        )
+        val op =
+            UserOperationV06(
+                sender = Address.parse("0x0000000000000000000000000000000000000001"),
+                nonce = BigInteger.ONE,
+                initCode = ByteArray(0),
+                callData = "deadbeef".hexToBytes(),
+                callGasLimit = BigInteger.valueOf(2),
+                verificationGasLimit = BigInteger.valueOf(3),
+                preVerificationGas = BigInteger.valueOf(4),
+                maxFeePerGas = BigInteger.valueOf(5),
+                maxPriorityFeePerGas = BigInteger.valueOf(6),
+                paymasterAndData = ByteArray(0),
+                signature = ByteArray(0),
+            )
         assertEquals(
             "12fbc9ec3ac58304724217290201c9ab56bf4c25a16b1b1fc201876841660e1e",
             op.userOpHash(entryPoint, ChainId.BASE_SEPOLIA).toHex(),
@@ -39,18 +40,19 @@ class UserOperationV06Test {
 
     @Test
     fun `signature does not affect userOpHash`() {
-        val base = UserOperationV06(
-            sender = Address.parse("0x0000000000000000000000000000000000000001"),
-            nonce = BigInteger.ONE,
-            initCode = ByteArray(0),
-            callData = "deadbeef".hexToBytes(),
-            callGasLimit = BigInteger.valueOf(2),
-            verificationGasLimit = BigInteger.valueOf(3),
-            preVerificationGas = BigInteger.valueOf(4),
-            maxFeePerGas = BigInteger.valueOf(5),
-            maxPriorityFeePerGas = BigInteger.valueOf(6),
-            paymasterAndData = ByteArray(0),
-        )
+        val base =
+            UserOperationV06(
+                sender = Address.parse("0x0000000000000000000000000000000000000001"),
+                nonce = BigInteger.ONE,
+                initCode = ByteArray(0),
+                callData = "deadbeef".hexToBytes(),
+                callGasLimit = BigInteger.valueOf(2),
+                verificationGasLimit = BigInteger.valueOf(3),
+                preVerificationGas = BigInteger.valueOf(4),
+                maxFeePerGas = BigInteger.valueOf(5),
+                maxPriorityFeePerGas = BigInteger.valueOf(6),
+                paymasterAndData = ByteArray(0),
+            )
         val signed = base.copy(signature = "aabbcc".hexToBytes())
         assertEquals(
             base.userOpHash(entryPoint, ChainId.BASE_SEPOLIA).toHex(),

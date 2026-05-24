@@ -30,44 +30,48 @@ internal class ScanUpiVM(
     private val mutex = Mutex()
     private var hasBeenScannedSuccessfully = false
 
-    fun onScanned(result: String) = viewModelScope.launch {
-        mutex.withLock {
-            if (hasBeenScannedSuccessfully) return@withLock
-            when (val parsed = UpiQrParser.parseQr(result)) {
-                is UpiQrParseResult.Success -> {
-                    hasBeenScannedSuccessfully = true
-                    state.update { ScanValidationState.VALID }
-                    navigateToScanUpi.onScanned(
-                        paymentAddress = parsed.parsed.paymentAddress,
-                        fiatAmount = parsed.parsed.fiatAmount,
-                        args = args,
-                    )
-                }
-                is UpiQrParseResult.Failure -> {
-                    Twig.info { "ScanUpiVM: rejecting scanned payload, error=${parsed.error.diagnosticTag()}" }
-                    state.update { ScanValidationState.INVALID }
-                }
-            }
-        }
-    }
+    fun onScanned(result: String) =
+        viewModelScope.launch {
+            mutex.withLock {
+                if (hasBeenScannedSuccessfully) return@withLock
+                when (val parsed = UpiQrParser.parseQr(result)) {
+                    is UpiQrParseResult.Success -> {
+                        hasBeenScannedSuccessfully = true
+                        state.update { ScanValidationState.VALID }
+                        navigateToScanUpi.onScanned(
+                            paymentAddress = parsed.parsed.paymentAddress,
+                            fiatAmount = parsed.parsed.fiatAmount,
+                            args = args,
+                        )
+                    }
 
-    fun onImageScanned(result: ImageToQrCodeResult) = viewModelScope.launch {
-        mutex.withLock {
-            if (hasBeenScannedSuccessfully) return@withLock
-            when (result) {
-                is ImageToQrCodeResult.SingleCode -> onScanned(result.text)
-                ImageToQrCodeResult.MultipleCodes -> state.update { ScanValidationState.SEVERAL_CODES_FOUND }
-                ImageToQrCodeResult.NoCode -> state.update { ScanValidationState.INVALID_IMAGE }
+                    is UpiQrParseResult.Failure -> {
+                        Twig.info { "ScanUpiVM: rejecting scanned payload, error=${parsed.error.diagnosticTag()}" }
+                        state.update { ScanValidationState.INVALID }
+                    }
+                }
             }
         }
-    }
+
+    fun onImageScanned(result: ImageToQrCodeResult) =
+        viewModelScope.launch {
+            mutex.withLock {
+                if (hasBeenScannedSuccessfully) return@withLock
+                when (result) {
+                    is ImageToQrCodeResult.SingleCode -> onScanned(result.text)
+                    ImageToQrCodeResult.MultipleCodes -> state.update { ScanValidationState.SEVERAL_CODES_FOUND }
+                    ImageToQrCodeResult.NoCode -> state.update { ScanValidationState.INVALID_IMAGE }
+                }
+            }
+        }
 
     fun onBack() = viewModelScope.launch { navigateToScanUpi.onScanCancelled(args) }
 
-    private fun UpiQrError.diagnosticTag(): String = when (this) {
-        is UpiQrError.EmptyQr -> "empty"
-        is UpiQrError.MissingPaymentAddress -> "missing-pa"
-        is UpiQrError.InvalidUpiId -> "invalid-upi"
-        is UpiQrError.InvalidAmount -> "invalid-amount"
-    }
+    private fun UpiQrError.diagnosticTag(): String =
+        when (this) {
+            is UpiQrError.EmptyQr -> "empty"
+            is UpiQrError.MissingPaymentAddress -> "missing-pa"
+            is UpiQrError.InvalidUpiId -> "invalid-upi"
+            is UpiQrError.InvalidAmount -> "invalid-amount"
+        }
 }

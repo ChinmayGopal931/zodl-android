@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
@@ -56,17 +56,19 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 internal fun P2pTransactionsView(state: P2pTransactionsState) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
     ) {
         ZappScreenHeader(title = stringResource(R.string.p2p_transactions_title))
 
         LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
             contentPadding = PaddingValues(horizontal = HORIZONTAL_PADDING.dp, vertical = SECTION_GAP.dp),
             verticalArrangement = Arrangement.spacedBy(GAP_MD.dp),
         ) {
@@ -91,9 +93,10 @@ internal fun P2pTransactionsView(state: P2pTransactionsState) {
             state.emptyMessage?.let { msg ->
                 item {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = EMPTY_PADDING_V.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = EMPTY_PADDING_V.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         BasicText(
@@ -134,18 +137,26 @@ private fun BalanceCard(state: BalanceState, refund: RefundUiState, isRefreshing
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 when (state) {
-                    BalanceState.Loading -> BasicText(
-                        text = stringResource(R.string.p2p_transactions_balance_loading),
-                        style = ZappTheme.typography.display.copy(color = c.text, fontWeight = FontWeight.SemiBold),
-                    )
-                    BalanceState.Unavailable -> BasicText(
-                        text = stringResource(R.string.p2p_transactions_balance_unavailable),
-                        style = ZappTheme.typography.body.copy(color = c.danger),
-                    )
-                    is BalanceState.Loaded -> BasicText(
-                        text = state.balanceUsdc.getValue(),
-                        style = ZappTheme.typography.display.copy(color = c.text, fontWeight = FontWeight.SemiBold),
-                    )
+                    BalanceState.Loading -> {
+                        BasicText(
+                            text = stringResource(R.string.p2p_transactions_balance_loading),
+                            style = ZappTheme.typography.display.copy(color = c.text, fontWeight = FontWeight.SemiBold),
+                        )
+                    }
+
+                    BalanceState.Unavailable -> {
+                        BasicText(
+                            text = stringResource(R.string.p2p_transactions_balance_unavailable),
+                            style = ZappTheme.typography.body.copy(color = c.danger),
+                        )
+                    }
+
+                    is BalanceState.Loaded -> {
+                        BasicText(
+                            text = state.balanceUsdc.getValue(),
+                            style = ZappTheme.typography.display.copy(color = c.text, fontWeight = FontWeight.SemiBold),
+                        )
+                    }
                 }
             }
             RefundControl(refund)
@@ -168,7 +179,10 @@ private fun BalanceCard(state: BalanceState, refund: RefundUiState, isRefreshing
 private fun RefundControl(refund: RefundUiState) {
     val c = ZappTheme.colors
     when (refund) {
-        RefundUiState.Hidden -> Unit
+        RefundUiState.Hidden -> {
+            Unit
+        }
+
         is RefundUiState.Available -> {
             Spacer(Modifier.width(GAP_MD.dp))
             CompactPrimaryButton(
@@ -176,6 +190,7 @@ private fun RefundControl(refund: RefundUiState) {
                 onClick = refund.onClick,
             )
         }
+
         RefundUiState.InProgress -> {
             Spacer(Modifier.width(GAP_MD.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -191,6 +206,7 @@ private fun RefundControl(refund: RefundUiState) {
                 )
             }
         }
+
         is RefundUiState.FailedRetry -> {
             Spacer(Modifier.width(GAP_MD.dp))
             CompactPrimaryButton(
@@ -210,10 +226,11 @@ private fun RefundControl(refund: RefundUiState) {
 private fun CompactPrimaryButton(text: String, onClick: () -> Unit) {
     val c = ZappTheme.colors
     Box(
-        modifier = Modifier
-            .background(c.accent, RectangleShape)
-            .clickable(onClick = onClick)
-            .padding(horizontal = COMPACT_BUTTON_PADDING_H.dp, vertical = COMPACT_BUTTON_PADDING_V.dp),
+        modifier =
+            Modifier
+                .background(c.accent, RectangleShape)
+                .clickable(onClick = onClick)
+                .padding(horizontal = COMPACT_BUTTON_PADDING_H.dp, vertical = COMPACT_BUTTON_PADDING_V.dp),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
@@ -264,9 +281,10 @@ private fun RefundConfirmDialog(dialog: ConfirmRefundDialog) {
 @Composable
 private fun DialogTextButton(label: String, color: androidx.compose.ui.graphics.Color, onClick: () -> Unit) {
     Box(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = DIALOG_BUTTON_PADDING.dp, vertical = DIALOG_BUTTON_PADDING_V.dp),
+        modifier =
+            Modifier
+                .clickable(onClick = onClick)
+                .padding(horizontal = DIALOG_BUTTON_PADDING.dp, vertical = DIALOG_BUTTON_PADDING_V.dp),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
@@ -288,12 +306,16 @@ private fun AccountAddressRow(addressShort: String, explorerUrl: String?) {
         Spacer(Modifier.weight(1f))
         BasicText(
             text = addressShort,
-            style = ZappTheme.typography.chip.copy(
-                color = if (explorerUrl != null) c.accent else c.text,
-            ),
-            modifier = if (explorerUrl != null) {
-                Modifier.clickable { uriHandler.openUri(explorerUrl) }
-            } else Modifier,
+            style =
+                ZappTheme.typography.chip.copy(
+                    color = if (explorerUrl != null) c.accent else c.text,
+                ),
+            modifier =
+                if (explorerUrl != null) {
+                    Modifier.clickable { uriHandler.openUri(explorerUrl) }
+                } else {
+                    Modifier
+                },
         )
     }
 }
@@ -346,13 +368,14 @@ private fun TransactionCard(row: P2pTransactionRow) {
                 Spacer(Modifier.width(GAP_SM.dp))
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = stringResource(
-                        if (expanded) {
-                            R.string.p2p_transactions_detail_collapse_content_description
-                        } else {
-                            R.string.p2p_transactions_detail_expand_content_description
-                        },
-                    ),
+                    contentDescription =
+                        stringResource(
+                            if (expanded) {
+                                R.string.p2p_transactions_detail_collapse_content_description
+                            } else {
+                                R.string.p2p_transactions_detail_expand_content_description
+                            },
+                        ),
                     tint = c.textSubtle,
                     modifier = Modifier.size(CHEVRON_SIZE.dp),
                 )
@@ -372,10 +395,11 @@ private fun TransactionDetailPanel(detail: TransactionDetail) {
     Column(verticalArrangement = Arrangement.spacedBy(GAP_SM.dp)) {
         Spacer(Modifier.height(GAP_SM.dp))
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(c.border),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(c.border),
         )
 
         detail.recipientUpiPlain?.let { vpa ->
@@ -423,10 +447,11 @@ private fun DetailRow(label: String, value: String, onValueClick: (() -> Unit)? 
         )
         BasicText(
             text = value,
-            style = ZappTheme.typography.caption.copy(
-                color = if (onValueClick != null) c.accent else c.text,
-                fontWeight = FontWeight.Medium,
-            ),
+            style =
+                ZappTheme.typography.caption.copy(
+                    color = if (onValueClick != null) c.accent else c.text,
+                    fontWeight = FontWeight.Medium,
+                ),
             modifier = if (onValueClick != null) Modifier.clickable(onClick = onValueClick) else Modifier,
         )
     }
@@ -444,17 +469,19 @@ private fun TransactionDetail.hasAnything(): Boolean =
 @Composable
 private fun StatusPill(label: String, tone: P2pTransactionRow.StatusTone) {
     val c = ZappTheme.colors
-    val (fg, bg) = when (tone) {
-        P2pTransactionRow.StatusTone.Success -> c.accentText to c.accentSoft
-        P2pTransactionRow.StatusTone.Pending -> c.text to c.surfaceAlt
-        P2pTransactionRow.StatusTone.Cancelled -> c.textMuted to c.surfaceAlt
-        P2pTransactionRow.StatusTone.Failed -> c.danger to c.surfaceAlt
-    }
+    val (fg, bg) =
+        when (tone) {
+            P2pTransactionRow.StatusTone.Success -> c.accentText to c.accentSoft
+            P2pTransactionRow.StatusTone.Pending -> c.text to c.surfaceAlt
+            P2pTransactionRow.StatusTone.Cancelled -> c.textMuted to c.surfaceAlt
+            P2pTransactionRow.StatusTone.Failed -> c.danger to c.surfaceAlt
+        }
     Box(
-        modifier = Modifier
-            .background(bg, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .padding(horizontal = PILL_PADDING_H.dp, vertical = PILL_PADDING_V.dp),
+        modifier =
+            Modifier
+                .background(bg, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .padding(horizontal = PILL_PADDING_H.dp, vertical = PILL_PADDING_V.dp),
     ) {
         BasicText(
             text = label,
@@ -479,45 +506,50 @@ private const val CHEVRON_SIZE = 18
 
 @PreviewScreens
 @Composable
-private fun PreviewLoaded() = ProvideZappTheme {
-    P2pTransactionsView(
-        state = P2pTransactionsState(
-            onBack = {},
-            onRefresh = {},
-            isRefreshing = false,
-            balance = BalanceState.Loaded(
-                balanceUsdc = stringRes("4.5 USDC on Base"),
-                accountAddressShort = "0x3a28…558a",
-                accountExplorerUrl = null,
-            ),
-            refund = RefundUiState.Available(onClick = {}),
-            confirmRefund = null,
-            rows = listOf(
-                P2pTransactionRow(
-                    orderId = "547444",
-                    typeLabel = stringRes("Pay"),
-                    statusLabel = stringRes("Completed"),
-                    statusTone = P2pTransactionRow.StatusTone.Success,
-                    amountUsdc = stringRes("0.4 USDC"),
-                    amountFiat = stringRes("37.28 INR"),
-                    fromLabel = stringRes("From merchant@okhdfc"),
-                    toLabel = stringRes("To friend@ybl"),
-                    timestamp = stringRes("23 May 2026, 14:21"),
-                    explorerUrl = null,
-                    detail = TransactionDetail(
-                        recipientUpiPlain = "friend@ybl",
-                        merchantUpiPlain = "merchant@okhdfc",
-                        merchantAddressShort = "0xa8e6…fab2",
-                        merchantExplorerUrl = null,
-                        placedAt = stringRes("23 May 2026, 14:21"),
-                        completedAt = stringRes("23 May 2026, 14:23"),
-                        cancelledAt = null,
-                        duration = stringRes("1m 32s"),
-                    ),
+private fun PreviewLoaded() =
+    ProvideZappTheme {
+        P2pTransactionsView(
+            state =
+                P2pTransactionsState(
+                    onBack = {},
+                    onRefresh = {},
+                    isRefreshing = false,
+                    balance =
+                        BalanceState.Loaded(
+                            balanceUsdc = stringRes("4.5 USDC on Base"),
+                            accountAddressShort = "0x3a28…558a",
+                            accountExplorerUrl = null,
+                        ),
+                    refund = RefundUiState.Available(onClick = {}),
+                    confirmRefund = null,
+                    rows =
+                        listOf(
+                            P2pTransactionRow(
+                                orderId = "547444",
+                                typeLabel = stringRes("Pay"),
+                                statusLabel = stringRes("Completed"),
+                                statusTone = P2pTransactionRow.StatusTone.Success,
+                                amountUsdc = stringRes("0.4 USDC"),
+                                amountFiat = stringRes("37.28 INR"),
+                                fromLabel = stringRes("From merchant@okhdfc"),
+                                toLabel = stringRes("To friend@ybl"),
+                                timestamp = stringRes("23 May 2026, 14:21"),
+                                explorerUrl = null,
+                                detail =
+                                    TransactionDetail(
+                                        recipientUpiPlain = "friend@ybl",
+                                        merchantUpiPlain = "merchant@okhdfc",
+                                        merchantAddressShort = "0xa8e6…fab2",
+                                        merchantExplorerUrl = null,
+                                        placedAt = stringRes("23 May 2026, 14:21"),
+                                        completedAt = stringRes("23 May 2026, 14:23"),
+                                        cancelledAt = null,
+                                        duration = stringRes("1m 32s"),
+                                    ),
+                            ),
+                        ),
+                    emptyMessage = null,
+                    errorMessage = null,
                 ),
-            ),
-            emptyMessage = null,
-            errorMessage = null,
-        ),
-    )
-}
+        )
+    }

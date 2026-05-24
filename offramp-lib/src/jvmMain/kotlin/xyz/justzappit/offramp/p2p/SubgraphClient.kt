@@ -18,24 +18,35 @@ class SubgraphClient(
     private val httpClient: HttpClient,
     private val subgraphUrl: String,
 ) {
-    private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+        }
 
     suspend fun circlesForRouting(currencyBytes32Hex: String): List<CircleForRouting> {
-        val data = query(
-            query = CIRCLES_FOR_ROUTING_QUERY,
-            variables = buildJsonObject { put("currency", currencyBytes32Hex) },
-        )
+        val data =
+            query(
+                query = CIRCLES_FOR_ROUTING_QUERY,
+                variables = buildJsonObject { put("currency", currencyBytes32Hex) },
+            )
         val circles = data["circles"]?.jsonArray ?: error("subgraph response missing 'circles'")
         return circles
             .map { json.decodeFromJsonElement(CircleForRouting.serializer(), it) }
-            .filter { (it.metrics.scoreState.activeMerchantsCount.toIntOrNull() ?: 0) > 0 }
+            .filter {
+                (
+                    it.metrics.scoreState.activeMerchantsCount
+                        .toIntOrNull() ?: 0
+                ) > 0
+            }
     }
 
     suspend fun rawOrderById(orderId: String): JsonObject? {
-        val data = query(
-            query = ORDER_BY_ID_QUERY,
-            variables = buildJsonObject { put("orderId", orderId) },
-        )
+        val data =
+            query(
+                query = ORDER_BY_ID_QUERY,
+                variables = buildJsonObject { put("orderId", orderId) },
+            )
         val orders = data["orders_collection"]?.jsonArray ?: return null
         return orders.firstOrNull()?.jsonObject
     }
@@ -46,27 +57,32 @@ class SubgraphClient(
      * returns fewer than [first] rows.
      */
     suspend fun ordersForUser(userAddress: String, first: Int, skip: Int): List<JsonObject> {
-        val data = query(
-            query = USER_ORDERS_QUERY,
-            variables = buildJsonObject {
-                put("userAddress", userAddress.lowercase())
-                put("first", first)
-                put("skip", skip)
-            },
-        )
+        val data =
+            query(
+                query = USER_ORDERS_QUERY,
+                variables =
+                    buildJsonObject {
+                        put("userAddress", userAddress.lowercase())
+                        put("first", first)
+                        put("skip", skip)
+                    },
+            )
         val orders = data["orders_collection"]?.jsonArray ?: return emptyList()
         return orders.map { it.jsonObject }
     }
 
     private suspend fun query(query: String, variables: JsonElement): JsonObject {
-        val payload = buildJsonObject {
-            put("query", query)
-            put("variables", variables)
-        }
-        val response: JsonObject = httpClient.post(subgraphUrl) {
-            contentType(ContentType.Application.Json)
-            setBody(payload)
-        }.body()
+        val payload =
+            buildJsonObject {
+                put("query", query)
+                put("variables", variables)
+            }
+        val response: JsonObject =
+            httpClient
+                .post(subgraphUrl) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }.body()
 
         response["errors"]?.let { errs -> error("subgraph errors: $errs") }
         return response["data"]?.jsonObject ?: error("subgraph response missing 'data': $response")

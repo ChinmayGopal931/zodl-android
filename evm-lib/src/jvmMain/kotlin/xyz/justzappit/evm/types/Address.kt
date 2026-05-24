@@ -17,13 +17,17 @@ import java.util.Locale
  * EIP-55-checksummed `0x...`.
  */
 @Serializable(with = Address.AddressSerializer::class)
-class Address private constructor(val checksumHex: String) {
+class Address private constructor(
+    val checksumHex: String
+) {
     val bytes: ByteArray get() = checksumHex.substring(PREFIX.length).hexToBytes()
     val lowercaseHex: String get() = PREFIX + checksumHex.substring(PREFIX.length).lowercase(Locale.ROOT)
 
     override fun toString(): String = checksumHex
+
     override fun equals(other: Any?): Boolean =
         this === other || (other is Address && checksumHex.equals(other.checksumHex, ignoreCase = true))
+
     override fun hashCode(): Int = lowercaseHex.hashCode()
 
     companion object {
@@ -31,12 +35,14 @@ class Address private constructor(val checksumHex: String) {
         const val HEX_LEN = LEN_BYTES * 2
         const val PREFIX = "0x"
 
-        fun parse(input: String): Address = parseOrNull(input)
-            ?: throw IllegalArgumentException("Not a valid EVM address: '$input'")
+        fun parse(input: String): Address =
+            parseOrNull(input)
+                ?: throw IllegalArgumentException("Not a valid EVM address: '$input'")
 
         fun parseOrNull(input: String): Address? {
-            val raw = (if (input.startsWith(PREFIX) || input.startsWith("0X")) input.substring(2) else input)
-                .takeIf { it.length == HEX_LEN } ?: return null
+            val raw =
+                (if (input.startsWith(PREFIX) || input.startsWith("0X")) input.substring(2) else input)
+                    .takeIf { it.length == HEX_LEN } ?: return null
             if (!raw.all { it in HEX_CHARS }) return null
             return Address(PREFIX + toEip55(raw.lowercase(Locale.ROOT)))
         }
@@ -74,6 +80,7 @@ class Address private constructor(val checksumHex: String) {
             PrimitiveSerialDescriptor("xyz.justzappit.evm.types.Address", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): Address = parse(decoder.decodeString())
+
         override fun serialize(encoder: Encoder, value: Address) = encoder.encodeString(value.checksumHex)
     }
 }

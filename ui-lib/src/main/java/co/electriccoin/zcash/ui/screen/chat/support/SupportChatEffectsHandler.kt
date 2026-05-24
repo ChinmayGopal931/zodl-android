@@ -7,11 +7,12 @@ import co.electriccoin.zcash.ui.screen.chat.media.rememberMediaPickHandlers
 
 @Composable
 internal fun SupportChatEffectsHandler(viewModel: SupportChatVM) {
-    val handlers = rememberMediaPickHandlers(
-        onMediaPicked = viewModel::onMediaPicked,
-        onFilePicked = viewModel::onFilePicked,
-        onCameraCaptured = viewModel::onCameraCaptured,
-    )
+    val handlers =
+        rememberMediaPickHandlers(
+            onMediaPicked = viewModel::onMediaPicked,
+            onFilePicked = viewModel::onFilePicked,
+            onCameraCaptured = viewModel::onCameraCaptured,
+        )
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->

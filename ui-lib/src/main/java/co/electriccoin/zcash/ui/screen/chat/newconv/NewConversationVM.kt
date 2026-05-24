@@ -198,7 +198,10 @@ class NewConversationVM(
         }
     }
 
-    private data class SelectedParticipant(val publicKey: String, val displayName: String)
+    private data class SelectedParticipant(
+        val publicKey: String,
+        val displayName: String
+    )
 
     companion object {
         private const val PUBLIC_KEY_HEX_LENGTH = 64

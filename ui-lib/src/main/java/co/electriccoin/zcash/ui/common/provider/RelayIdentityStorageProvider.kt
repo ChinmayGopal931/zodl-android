@@ -11,6 +11,7 @@ class RelayIdentityStorageProvider(
     private val store = EncryptedJsonStore(encryptedPreferenceProvider, PREF_KEY, RelayIdentity.serializer())
 
     override suspend fun get(): RelayIdentity? = store.get()
+
     override suspend fun set(identity: RelayIdentity) = store.set(identity)
 
     companion object {

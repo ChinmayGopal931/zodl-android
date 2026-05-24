@@ -37,18 +37,20 @@ fun BioScanScreen(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
             OnbProgress(step = 3)
         }
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
             contentAlignment = Alignment.Center,
         ) {
             Column(
@@ -57,38 +59,43 @@ fun BioScanScreen(
             ) {
                 BasicText(
                     text = "◉",
-                    style = ZappTheme.typography.display.copy(
-                        color = when {
-                            isEnrolling -> c.accent
-                            errorMessage != null -> c.danger
-                            else -> c.text
-                        },
-                        fontSize = 72.sp,
-                        fontWeight = FontWeight.Black,
-                    ),
+                    style =
+                        ZappTheme.typography.display.copy(
+                            color =
+                                when {
+                                    isEnrolling -> c.accent
+                                    errorMessage != null -> c.danger
+                                    else -> c.text
+                                },
+                            fontSize = 72.sp,
+                            fontWeight = FontWeight.Black,
+                        ),
                 )
                 Spacer(Modifier.height(20.dp))
                 BasicText(
-                    text = when {
-                        isEnrolling -> "Verifying…"
-                        else -> "Biometric unlock"
-                    },
-                    style = ZappTheme.typography.display.copy(
-                        color = c.text,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = (-0.8).sp,
-                    ),
+                    text =
+                        when {
+                            isEnrolling -> "Verifying…"
+                            else -> "Biometric unlock"
+                        },
+                    style =
+                        ZappTheme.typography.display.copy(
+                            color = c.text,
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = (-0.8).sp,
+                        ),
                 )
                 Spacer(Modifier.height(8.dp))
                 if (errorMessage != null) {
                     BasicText(
                         text = errorMessage,
-                        style = ZappTheme.typography.body.copy(
-                            color = c.danger,
-                            fontSize = 13.sp,
-                            lineHeight = 20.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.body.copy(
+                                color = c.danger,
+                                fontSize = 13.sp,
+                                lineHeight = 20.sp,
+                            ),
                         modifier = Modifier.fillMaxWidth(0.9f),
                     )
                 } else {
@@ -100,11 +107,12 @@ fun BioScanScreen(
             }
         }
         OnbBottomDock(
-            cta = when {
-                isEnrolling -> "Verifying…"
-                errorMessage != null -> "Retry"
-                else -> "Enable Biometrics"
-            },
+            cta =
+                when {
+                    isEnrolling -> "Verifying…"
+                    errorMessage != null -> "Retry"
+                    else -> "Enable Biometrics"
+                },
             onCta = onEnroll,
             ctaEnabled = !isEnrolling,
             showBack = true,

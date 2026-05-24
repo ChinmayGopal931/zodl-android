@@ -21,22 +21,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 enum class PinVerifyIntent { ChangePinSetNew, SwitchToBiometric }
+
 enum class NewPinIntent { ChangeExisting, SwitchFromBiometric }
 
 sealed class SecuritySettingsState {
     /** Hub: shows current method, tab selector, action row, and Save Changes dock. */
     data class Menu(
-        val currentMethod: String,      // "pin" | "biometric" — the persisted method
-        val selectedTab: String,        // "pin" | "biometric" — what the segmented selector shows
+        val currentMethod: String, // "pin" | "biometric" — the persisted method
+        val selectedTab: String, // "pin" | "biometric" — what the segmented selector shows
         val isBioAvailable: Boolean,
         val successMessage: String? = null,
     ) : SecuritySettingsState()
 
     /** Verifying the existing PIN before advancing to the next step. */
-    data class VerifyingCurrentPin(val intent: PinVerifyIntent) : SecuritySettingsState()
+    data class VerifyingCurrentPin(
+        val intent: PinVerifyIntent
+    ) : SecuritySettingsState()
 
     /** Two-phase new PIN entry (settings context — no onboarding chrome). */
-    data class SettingNewPin(val intent: NewPinIntent) : SecuritySettingsState()
+    data class SettingNewPin(
+        val intent: NewPinIntent
+    ) : SecuritySettingsState()
 
     /** Biometric enrollment prompt. */
     data object SettingNewBio : SecuritySettingsState()
@@ -49,10 +54,10 @@ class SecuritySettingsViewModel(
     private val encryptedPreferenceProvider: EncryptedPreferenceProvider,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
-
-    private val _uiState = MutableStateFlow<SecuritySettingsState>(
-        SecuritySettingsState.Menu(currentMethod = "pin", selectedTab = "pin", isBioAvailable = false)
-    )
+    private val _uiState =
+        MutableStateFlow<SecuritySettingsState>(
+            SecuritySettingsState.Menu(currentMethod = "pin", selectedTab = "pin", isBioAvailable = false)
+        )
     val uiState: StateFlow<SecuritySettingsState> = _uiState.asStateFlow()
 
     private val _pinError = MutableStateFlow(false)
@@ -70,11 +75,12 @@ class SecuritySettingsViewModel(
     init {
         viewModelScope.launch {
             val method = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
-            _uiState.value = SecuritySettingsState.Menu(
-                currentMethod = method,
-                selectedTab = method,
-                isBioAvailable = checkBioAvailable(),
-            )
+            _uiState.value =
+                SecuritySettingsState.Menu(
+                    currentMethod = method,
+                    selectedTab = method,
+                    isBioAvailable = checkBioAvailable(),
+                )
             val lockMs = PinAuthGate.msUntilUnlock(standardPreferenceProvider)
             if (lockMs > 0) {
                 _pinLockoutSeconds.value = (lockMs / 1000L).toInt().coerceAtLeast(1)
@@ -120,13 +126,16 @@ class SecuritySettingsViewModel(
                 _pinError.value = false
                 _uiState.value = SecuritySettingsState.VerifyingCurrentPin(PinVerifyIntent.ChangePinSetNew)
             }
+
             menu.selectedTab == "pin" && menu.currentMethod == "biometric" -> {
                 _uiState.value = SecuritySettingsState.SettingNewPin(NewPinIntent.SwitchFromBiometric)
             }
+
             menu.selectedTab == "biometric" && menu.currentMethod == "pin" -> {
                 _pinError.value = false
                 _uiState.value = SecuritySettingsState.VerifyingCurrentPin(PinVerifyIntent.SwitchToBiometric)
             }
+
             menu.selectedTab == "biometric" && menu.currentMethod == "biometric" -> {
                 triggerBioEnrollment()
             }
@@ -140,14 +149,17 @@ class SecuritySettingsViewModel(
                 PinAuthGate.Result.Success -> {
                     _pinError.value = false
                     val current = _uiState.value as? SecuritySettingsState.VerifyingCurrentPin ?: return@launch
-                    _uiState.value = when (current.intent) {
-                        PinVerifyIntent.ChangePinSetNew -> SecuritySettingsState.SettingNewPin(NewPinIntent.ChangeExisting)
-                        PinVerifyIntent.SwitchToBiometric -> SecuritySettingsState.SettingNewBio
-                    }
+                    _uiState.value =
+                        when (current.intent) {
+                            PinVerifyIntent.ChangePinSetNew -> SecuritySettingsState.SettingNewPin(NewPinIntent.ChangeExisting)
+                            PinVerifyIntent.SwitchToBiometric -> SecuritySettingsState.SettingNewBio
+                        }
                 }
+
                 PinAuthGate.Result.Wrong -> {
                     _pinError.value = true
                 }
+
                 is PinAuthGate.Result.Locked -> {
                     _pinLockoutSeconds.value = (result.msUntilUnlock / 1000L).toInt().coerceAtLeast(1)
                     launchLockoutCountdown()
@@ -168,15 +180,17 @@ class SecuritySettingsViewModel(
                 StandardPreferenceKeys.AUTH_METHOD.putValue(standardPreferenceProvider(), "pin")
             }
             val method = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
-            _uiState.value = SecuritySettingsState.Menu(
-                currentMethod = method,
-                selectedTab = method,
-                isBioAvailable = checkBioAvailable(),
-                successMessage = when (settingState.intent) {
-                    NewPinIntent.SwitchFromBiometric -> "Switched to PIN successfully."
-                    NewPinIntent.ChangeExisting -> "PIN changed successfully."
-                },
-            )
+            _uiState.value =
+                SecuritySettingsState.Menu(
+                    currentMethod = method,
+                    selectedTab = method,
+                    isBioAvailable = checkBioAvailable(),
+                    successMessage =
+                        when (settingState.intent) {
+                            NewPinIntent.SwitchFromBiometric -> "Switched to PIN successfully."
+                            NewPinIntent.ChangeExisting -> "PIN changed successfully."
+                        },
+                )
         }
     }
 
@@ -194,19 +208,21 @@ class SecuritySettingsViewModel(
                 StandardPreferenceKeys.FAILED_PIN_ATTEMPTS_COUNT.putValue(prefs, 0)
                 StandardPreferenceKeys.PIN_LOCKOUT_END_WALLTIME_MS.putValue(prefs, 0L)
                 val method = "biometric"
-                _uiState.value = SecuritySettingsState.Menu(
-                    currentMethod = method,
-                    selectedTab = method,
-                    isBioAvailable = checkBioAvailable(),
-                    successMessage = "Biometrics enrolled successfully.",
-                )
+                _uiState.value =
+                    SecuritySettingsState.Menu(
+                        currentMethod = method,
+                        selectedTab = method,
+                        isBioAvailable = checkBioAvailable(),
+                        successMessage = "Biometrics enrolled successfully.",
+                    )
             } catch (_: BiometricsCancelledException) {
                 val method = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
-                _uiState.value = SecuritySettingsState.Menu(
-                    currentMethod = method,
-                    selectedTab = method,
-                    isBioAvailable = checkBioAvailable(),
-                )
+                _uiState.value =
+                    SecuritySettingsState.Menu(
+                        currentMethod = method,
+                        selectedTab = method,
+                        isBioAvailable = checkBioAvailable(),
+                    )
             } catch (_: BiometricsFailureException) {
                 _bioError.value = "Biometric enrollment failed. Tap to retry."
             } finally {
@@ -233,16 +249,22 @@ class SecuritySettingsViewModel(
 
     fun onBack() {
         when (_uiState.value) {
-            is SecuritySettingsState.Menu -> navigationRouter.back()
-            else -> viewModelScope.launch {
-                val method = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
-                _uiState.value = SecuritySettingsState.Menu(
-                    currentMethod = method,
-                    selectedTab = method,
-                    isBioAvailable = checkBioAvailable(),
-                )
-                _pinError.value = false
-                _bioError.value = null
+            is SecuritySettingsState.Menu -> {
+                navigationRouter.back()
+            }
+
+            else -> {
+                viewModelScope.launch {
+                    val method = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
+                    _uiState.value =
+                        SecuritySettingsState.Menu(
+                            currentMethod = method,
+                            selectedTab = method,
+                            isBioAvailable = checkBioAvailable(),
+                        )
+                    _pinError.value = false
+                    _bioError.value = null
+                }
             }
         }
     }

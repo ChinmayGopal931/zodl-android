@@ -28,10 +28,18 @@ internal object SubgraphOrderParser {
             paidAtEpochSeconds = parseEpochSecondsOrNull(node.optionalString("paidAt")),
             completedAtEpochSeconds = parseEpochSecondsOrNull(node.optionalString("completedAt")),
             cancelledAtEpochSeconds = parseEpochSecondsOrNull(node.optionalString("cancelledAt")),
-            actualUsdcAmount = node.optionalString("actualUsdcAmount")
-                ?.takeIf { it != "0" }?.toBigInteger()?.let(::Usdc6),
-            actualFiatAmount = node.optionalString("actualFiatAmount")
-                ?.takeIf { it != "0" }?.toBigInteger()?.let(::Usdc6),
+            actualUsdcAmount =
+                node
+                    .optionalString("actualUsdcAmount")
+                    ?.takeIf { it != "0" }
+                    ?.toBigInteger()
+                    ?.let(::Usdc6),
+            actualFiatAmount =
+                node
+                    .optionalString("actualFiatAmount")
+                    ?.takeIf { it != "0" }
+                    ?.toBigInteger()
+                    ?.let(::Usdc6),
             placedTxHash = node.optionalString("transactionHash")?.takeIf { it.isNotBlank() }?.let(TxHash::fromHex),
             source = OrderSnapshot.Source.Subgraph,
         )

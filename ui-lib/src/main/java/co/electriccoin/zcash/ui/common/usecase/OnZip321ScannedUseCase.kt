@@ -19,8 +19,8 @@ import co.electriccoin.zcash.ui.screen.scan.ScanArgs
 import co.electriccoin.zcash.ui.screen.scan.ScanFlow.ADDRESS_BOOK
 import co.electriccoin.zcash.ui.screen.scan.ScanFlow.HOMEPAGE
 import co.electriccoin.zcash.ui.screen.scan.ScanFlow.SEND
-import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 import co.electriccoin.zcash.ui.screen.texunsupported.TEXUnsupportedArgs
+import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 
 class OnZip321ScannedUseCase(
     private val keystoneProposalRepository: KeystoneProposalRepository,

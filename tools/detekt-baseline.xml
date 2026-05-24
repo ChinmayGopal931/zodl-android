@@ -1,26 +1,1016 @@
 <?xml version="1.0" ?>
 <SmellBaseline>
-  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @LargeTest @SdkSuppress(minSdkVersion = Build.VERSION_CODES.Q) fun take_screenshots_for_new_wallet_and_rest_of_app_dark_en_US()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @LargeTest fun take_screenshots_for_new_wallet_and_rest_of_app_light_ar_XB()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @LargeTest fun take_screenshots_for_new_wallet_and_rest_of_app_light_en_US()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @LargeTest fun take_screenshots_for_new_wallet_and_rest_of_app_light_en_XA()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @MediumTest @SdkSuppress(minSdkVersion = Build.VERSION_CODES.Q) fun take_screenshots_for_restore_wallet_dark_en_US()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @MediumTest fun take_screenshots_for_restore_wallet_light_ar_XB()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @MediumTest fun take_screenshots_for_restore_wallet_light_en_US()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$@Test @MediumTest fun take_screenshots_for_restore_wallet_light_en_XA()</ID>
-    <ID>FunctionNaming:ScreenshotTest.kt$ScreenshotTest$private fun take_screenshots_for_new_wallet_and_rest_of_app(resContext: Context, tag: String)</ID>
-    <ID>MagicNumber:ScreenshotTest.kt$3</ID>
-    <ID>MagicNumber:ScreenshotTest.kt$4</ID>
+    <ID>ClassNaming:Secant_androidBuildConventionsPlugin.kt$Secant_androidBuildConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_dependencyConventionsPlugin.kt$Secant_dependencyConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_detektConventionsPlugin.kt$Secant_detektConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_emulatorWtfConventionsPlugin.kt$Secant_emulatorWtfConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_jacocoConventionsPlugin.kt$Secant_jacocoConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_kotlinMultiplatformBuildConventionsPlugin.kt$Secant_kotlinMultiplatformBuildConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_koverConventionsPlugin.kt$Secant_koverConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_ktlintConventionsPlugin.kt$Secant_ktlintConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_publishConventionsPlugin.kt$Secant_publishConventionsPlugin : Plugin</ID>
+    <ID>ClassNaming:Secant_rosettaConventionsPlugin.kt$Secant_rosettaConventionsPlugin : Plugin</ID>
+    <ID>ComplexCondition:ChatMessageBubble.kt$(isFromMe &amp;&amp; offsetX &lt; -swipeThreshold) || (!isFromMe &amp;&amp; offsetX &gt; swipeThreshold)</ID>
+    <ID>ComplexCondition:ChatMessageBubble.kt$(offsetX &gt; SWIPE_ICON_APPEAR_THRESHOLD &amp;&amp; !isFromMe) || (offsetX &lt; -SWIPE_ICON_APPEAR_THRESHOLD &amp;&amp; isFromMe)</ID>
+    <ID>ComplexCondition:EcdsaSigner.kt$EcdsaSigner$r.signum() &lt;= 0 || s.signum() &lt;= 0 || r &gt;= curve.n || s &gt;= curve.n</ID>
+    <ID>ComplexCondition:MediaBubble.kt$w != null &amp;&amp; h != null &amp;&amp; w &gt; 0 &amp;&amp; h &gt; 0</ID>
+    <ID>ComplexCondition:UnifiedSendViewModel.kt$UnifiedSendViewModel$!isSwap &amp;&amp; (hasZeroBalance || (hasAmount &amp;&amp; isAmountValid &amp;&amp; !hasFunds))</ID>
+    <ID>ComplexCondition:UnifiedSendViewModel.kt$UnifiedSendViewModel$!isSwap || asset == null || zecValue == null || zecUsdPrice == null</ID>
+    <ID>ComplexCondition:UnifiedSendViewModel.kt$UnifiedSendViewModel$isAddressValid &amp;&amp; isAmountValid &amp;&amp; hasFunds &amp;&amp; isMemoValid</ID>
+    <ID>ComplexCondition:UpiPayUri.kt$UpiPayUri$c in 'A'..'Z' || c in 'a'..'z' || c in '0'..'9' || c == '-' || c == '_' || c == '.' || c == '~' || c == '@'</ID>
+    <ID>ComplexCondition:WalletAddressField.kt$t.startsWith("0x") &amp;&amp; t.length == 42 &amp;&amp; t.drop(2).all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }</ID>
+    <ID>CyclomaticComplexMethod:AddContactSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun AddContactSheet( scannedMessagingKey: String?, onConsumeScannedMessagingKey: () -&gt; Unit, onScanMessagingKey: () -&gt; Unit, scannedAddress: String?, onConsumeScannedAddress: () -&gt; Unit, onScanWalletAddress: () -&gt; Unit, scanTargetField: String?, onScanAddrField: (addrType: String) -&gt; Unit, onConsumeScanTarget: () -&gt; Unit, onDismiss: () -&gt; Unit, onAdd: (name: String, messagingKey: String, walletAddress: String, walletAddresses: Map&lt;String, String&gt;) -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:AddressBookSerializer.kt$AddressBookSerializer$fun deserializeAddressBook(inputStream: InputStream): AddressBook</ID>
+    <ID>CyclomaticComplexMethod:AddressBookView.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun AddressBookView( state: AddressBookState )</ID>
+    <ID>CyclomaticComplexMethod:ChatMessageBubble.kt$@Composable internal fun MessageBubble( message: ChatMessage, onReplyToMessage: ((ChatMessage) -&gt; Unit)? = null, onImageClick: ((ChatMessage) -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:ChatRoomVM.kt$ChatRoomVM$private fun createState( conversation: ChatConversation?, messages: List&lt;ChatMessage&gt;, isLoading: Boolean, connection: ConnectionSnapshot, messageInput: String, replyingTo: ChatMessage?, showAttachmentSheet: Boolean, showMediaSheet: Boolean, showNetworkSheet: Boolean, connectionDetails: ConnectionDetailsUi?, showEditContact: Boolean, showBlockDialog: Boolean, showReportDialog: Boolean, ): ChatRoomState</ID>
+    <ID>CyclomaticComplexMethod:ChatRoomView.kt$@Composable internal fun ChatRoomView( state: ChatRoomState, onReplyToMessage: (ChatMessage) -&gt; Unit = {}, modifier: Modifier = Modifier, )</ID>
+    <ID>CyclomaticComplexMethod:EditContactSheet.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable internal fun EditContactSheet( editData: EditContactData, scannedAddress: String?, onConsumeScannedAddress: () -&gt; Unit, scanTargetField: String?, onScanAddrField: (addrType: String) -&gt; Unit, onConsumeScanTarget: () -&gt; Unit, onDismiss: () -&gt; Unit, onSave: (name: String, walletAddress: String, walletAddresses: Map&lt;String, String&gt;) -&gt; Unit, onDelete: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:ExactInputVMMapper.kt$ExactInputVMMapper$fun createState( internalState: InternalState, onBack: () -&gt; Unit, onSwapInfoClick: () -&gt; Unit, onSwapAssetPickerClick: () -&gt; Unit, onSwapCurrencyTypeClick: (BigDecimal?) -&gt; Unit, onSlippageClick: (BigDecimal?) -&gt; Unit, onRequestSwapQuoteClick: (BigDecimal, String) -&gt; Unit, onTryAgainClick: () -&gt; Unit, onAddressChange: (String) -&gt; Unit, onTextFieldChange: (NumberTextFieldInnerState) -&gt; Unit, onQrCodeScannerClick: () -&gt; Unit, onAddressBookClick: () -&gt; Unit, onDeleteSelectedContactClick: () -&gt; Unit, onBalanceButtonClick: () -&gt; Unit, onChangeButtonClick: () -&gt; Unit, onAddressClick: () -&gt; Unit, onTopUpClick: () -&gt; Unit, onChangeReceivingAddress: () -&gt; Unit, ): SwapState</ID>
+    <ID>CyclomaticComplexMethod:ImageViewerOverlay.kt$private fun saveImageToGallery(context: Context, message: ChatMessage)</ID>
+    <ID>CyclomaticComplexMethod:MediaBubble.kt$@Composable internal fun MediaBubble( message: ChatMessage, isFromMe: Boolean, onImageClick: ((ChatMessage) -&gt; Unit)? = null, )</ID>
+    <ID>CyclomaticComplexMethod:NetworkStatus.kt$@Composable fun ConnectionPill( connectionStatus: ChatListConnectionStatus, peerCount: Int, dhtHealth: ChatListDhtHealth, onClick: (() -&gt; Unit)? = null )</ID>
+    <ID>CyclomaticComplexMethod:NetworkStatus.kt$@OptIn(ExperimentalMaterial3Api::class) @Composable fun NetworkDetailsSheet( connectionStatus: ChatListConnectionStatus, peerCount: Int, dhtHealth: ChatListDhtHealth, connectionDetails: ConnectionDetailsUi?, onDismiss: () -&gt; Unit )</ID>
+    <ID>CyclomaticComplexMethod:OfframpStatusToSteps.kt$private fun stepDetail(status: OfframpStatus, step: OfframpStep): List&lt;StringResource&gt;</ID>
+    <ID>CyclomaticComplexMethod:PinVerifyScreen.kt$@Composable fun PinVerifyScreen( hasError: Boolean, showBack: Boolean = true, lockoutSecondsRemaining: Int = 0, onPinSubmit: (String) -&gt; Unit, onCancel: () -&gt; Unit = {}, )</ID>
+    <ID>CyclomaticComplexMethod:SecuritySettingsView.kt$@Composable private fun ChangePinScreen( onNewPinConfirmed: (String) -&gt; Unit, onBack: () -&gt; Unit, )</ID>
+    <ID>CyclomaticComplexMethod:UpiOfframpProgressVM.kt$UpiOfframpProgressVM$private fun curatedRevertStringRes(reason: KnownRevertReason): Int</ID>
+    <ID>CyclomaticComplexMethod:UpiOfframpVM.kt$UpiOfframpVM$private fun buildState( side: UpiOfframpAmountSide, usdc: NumberTextFieldInnerState, inr: NumberTextFieldInnerState, upi: String, currentRate: BigDecimal, inFlightCheckpoint: OfframpCheckpoint?, balance: Usdc6?, ): UpiOfframpState</ID>
+    <ID>CyclomaticComplexMethod:ZappOnboardingFlow.kt$@Composable fun ZappOnboardingFlow( onComplete: () -&gt; Unit, onBackToWelcome: () -&gt; Unit, walletViewModel: WalletViewModel, chatBootstrap: ChatBootstrap, navigationRouter: NavigationRouter, )</ID>
+    <ID>ForbiddenComment:ChatModels.kt$ChatMessage.Companion$// TODO: restore reply fields once zappMessaging ZMMessage exposes replyTo* (not in</ID>
+    <ID>ForbiddenComment:ChatRoomVM.kt$ChatRoomVM$// TODO: thread replyTo through once zappMessaging sdk.sendMessage accepts replyTo*</ID>
+    <ID>ForbiddenImport:AccountDataSource.kt$import co.electriccoin.zcash.ui.util.loggable</ID>
+    <ID>FunctionNaming:Accessors2oadk7let745pm8ahqypkqzlk.kt$internal fun org.gradle.api.Project.`sourceSets`(configure: Action&lt;org.gradle.api.tasks.SourceSetContainer&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors32ikgp1isdd8mwexzgbe6rirl.kt$internal fun io.gitlab.arturbosch.detekt.extensions.DetektExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors33qjl5yednlyp9tyvd6yykvt5.kt$internal fun org.gradle.api.plugins.BasePluginExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors3lkj8uvuyc1fes1zjdaceqluw.kt$internal fun org.gradle.api.internal.plugins.DefaultArtifactPublicationSet.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$internal fun org.gradle.api.artifacts.dsl.RepositoryHandler.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors4ymijgaek646mzru18sdmblu7.kt$internal fun org.gradle.api.Project.`detekt`(configure: Action&lt;io.gitlab.arturbosch.detekt.extensions.DetektExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors6aep9gs3nuz3lpck4wir0rbwq.kt$internal fun org.gradle.testing.jacoco.plugins.JacocoPluginExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors72pwwp7evk4t6494cyybv7kk7.kt$internal fun org.gradle.api.tasks.SourceSetContainer.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors7axcot3v1j7qpduaewb3aezf4.kt$internal fun org.gradle.testing.base.TestingExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$internal fun org.gradle.api.artifacts.dsl.DependencyHandler.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors8qpm3vfqh4wz80t5pf9qmw88r.kt$internal fun org.gradle.api.Project.`jacoco`(configure: Action&lt;org.gradle.testing.jacoco.plugins.JacocoPluginExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors8zd6u262ixrjkrpgx69mnl0hj.kt$internal fun org.gradle.api.plugins.JavaPluginExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors96b3ii45gitqpy1kb3tvcvtxv.kt$internal fun org.gradle.api.Project.`java`(configure: Action&lt;org.gradle.api.plugins.JavaPluginExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessors9ofjxssccbksmuzem03z8pl6.kt$internal fun org.gradle.api.Project.`base`(configure: Action&lt;org.gradle.api.plugins.BasePluginExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorsaofthkmarv0q41bodk71vcqi7.kt$internal fun org.gradle.api.Project.`defaultArtifacts`(configure: Action&lt;org.gradle.api.internal.plugins.DefaultArtifactPublicationSet&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$internal fun org.gradle.api.Project.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorsbp4j8g31qsxo0ekjysvxih5jg.kt$internal fun org.gradle.api.Project.`javaToolchains`(configure: Action&lt;org.gradle.jvm.toolchain.JavaToolchainService&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorsbtc8iwv8u9b0f38ikfmodj8ns.kt$internal fun org.gradle.api.Project.`reporting`(configure: Action&lt;org.gradle.api.reporting.ReportingExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorsdjndpeyafmkvjrxu9kp0ma1gn.kt$internal fun org.gradle.jvm.toolchain.JavaToolchainService.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$internal fun org.gradle.api.Project.`versionCatalogs`(configure: Action&lt;org.gradle.api.artifacts.VersionCatalogsExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorse3nu4a2kmhhq7smy0tcmgt45g.kt$internal fun org.gradle.api.tasks.SourceSet.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorse63o1t85fyc2j2y6mbe9ytoeh.kt$internal fun org.gradle.api.Project.`testing`(configure: Action&lt;org.gradle.testing.base.TestingExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$internal fun org.gradle.api.artifacts.VersionCatalogsExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:Accessorseessl0al0otcsbyqqruvoncpd.kt$internal fun org.gradle.api.reporting.ReportingExtension.`ext`(configure: Action&lt;org.gradle.api.plugins.ExtraPropertiesExtension&gt;): Unit</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`annotationProcessor`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun ArtifactHandler.`annotationProcessor`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun ArtifactHandler.`annotationProcessor`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`annotationProcessor`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`annotationProcessor`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`annotationProcessor`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`annotationProcessor`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`annotationProcessor`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`annotationProcessor`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:AnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`annotationProcessor`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`apiElements`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun ArtifactHandler.`apiElements`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun ArtifactHandler.`apiElements`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`apiElements`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`apiElements`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun DependencyHandler.`apiElements`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun DependencyHandler.`apiElements`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun DependencyHandler.`apiElements`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun DependencyHandler.`apiElements`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:ApiElementsConfigurationAccessors.kt$internal fun DependencyHandler.`apiElements`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`archives`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun ArtifactHandler.`archives`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun ArtifactHandler.`archives`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`archives`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`archives`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun DependencyHandler.`archives`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun DependencyHandler.`archives`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun DependencyHandler.`archives`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun DependencyHandler.`archives`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:ArchivesConfigurationAccessors.kt$internal fun DependencyHandler.`archives`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`compileClasspath`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`compileClasspath`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`compileClasspath`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`compileClasspath`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`compileClasspath`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`compileClasspath`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`compileClasspath`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`compileClasspath`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`compileClasspath`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:CompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`compileClasspath`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`compileOnly`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`compileOnly`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`compileOnly`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`compileOnly`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`compileOnly`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`compileOnly`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`compileOnly`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`compileOnly`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`compileOnly`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:CompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`compileOnly`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`default`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun ArtifactHandler.`default`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun ArtifactHandler.`default`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`default`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`default`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun DependencyHandler.`default`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun DependencyHandler.`default`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun DependencyHandler.`default`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun DependencyHandler.`default`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:DefaultConfigurationAccessors.kt$internal fun DependencyHandler.`default`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`detekt`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun ArtifactHandler.`detekt`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun ArtifactHandler.`detekt`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`detekt`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`detekt`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun DependencyHandler.`detekt`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun DependencyHandler.`detekt`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun DependencyHandler.`detekt`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun DependencyHandler.`detekt`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:DetektConfigurationAccessors.kt$internal fun DependencyHandler.`detekt`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`detektPlugins`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun ArtifactHandler.`detektPlugins`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun ArtifactHandler.`detektPlugins`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`detektPlugins`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`detektPlugins`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun DependencyHandler.`detektPlugins`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun DependencyHandler.`detektPlugins`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun DependencyHandler.`detektPlugins`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun DependencyHandler.`detektPlugins`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:DetektPluginsConfigurationAccessors.kt$internal fun DependencyHandler.`detektPlugins`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`implementation`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun ArtifactHandler.`implementation`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun ArtifactHandler.`implementation`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`implementation`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`implementation`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`implementation`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`implementation`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`implementation`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`implementation`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:ImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`implementation`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`jacocoAgent`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun ArtifactHandler.`jacocoAgent`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun ArtifactHandler.`jacocoAgent`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`jacocoAgent`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`jacocoAgent`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAgent`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAgent`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAgent`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAgent`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:JacocoAgentConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAgent`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`jacocoAnt`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun ArtifactHandler.`jacocoAnt`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun ArtifactHandler.`jacocoAnt`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`jacocoAnt`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`jacocoAnt`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAnt`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAnt`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAnt`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAnt`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:JacocoAntConfigurationAccessors.kt$internal fun DependencyHandler.`jacocoAnt`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`mainSourceElements`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun ArtifactHandler.`mainSourceElements`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun ArtifactHandler.`mainSourceElements`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`mainSourceElements`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`mainSourceElements`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun DependencyHandler.`mainSourceElements`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun DependencyHandler.`mainSourceElements`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun DependencyHandler.`mainSourceElements`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun DependencyHandler.`mainSourceElements`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:MainSourceElementsConfigurationAccessors.kt$internal fun DependencyHandler.`mainSourceElements`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`runtimeClasspath`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`runtimeClasspath`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`runtimeClasspath`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`runtimeClasspath`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`runtimeClasspath`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeClasspath`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeClasspath`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeClasspath`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeClasspath`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:RuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeClasspath`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`runtimeElements`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun ArtifactHandler.`runtimeElements`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun ArtifactHandler.`runtimeElements`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`runtimeElements`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`runtimeElements`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeElements`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeElements`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeElements`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeElements`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:RuntimeElementsConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeElements`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`runtimeOnly`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`runtimeOnly`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`runtimeOnly`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`runtimeOnly`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`runtimeOnly`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeOnly`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeOnly`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeOnly`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeOnly`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:RuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`runtimeOnly`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`testAnnotationProcessor`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun ArtifactHandler.`testAnnotationProcessor`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun ArtifactHandler.`testAnnotationProcessor`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testAnnotationProcessor`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testAnnotationProcessor`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`testAnnotationProcessor`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`testAnnotationProcessor`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`testAnnotationProcessor`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`testAnnotationProcessor`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestAnnotationProcessorConfigurationAccessors.kt$internal fun DependencyHandler.`testAnnotationProcessor`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`testCompileClasspath`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`testCompileClasspath`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`testCompileClasspath`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testCompileClasspath`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testCompileClasspath`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileClasspath`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileClasspath`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileClasspath`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileClasspath`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestCompileClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileClasspath`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`testCompileOnly`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`testCompileOnly`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`testCompileOnly`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testCompileOnly`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testCompileOnly`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileOnly`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileOnly`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileOnly`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileOnly`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestCompileOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testCompileOnly`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`testImplementation`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun ArtifactHandler.`testImplementation`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun ArtifactHandler.`testImplementation`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testImplementation`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testImplementation`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`testImplementation`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`testImplementation`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`testImplementation`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`testImplementation`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestImplementationConfigurationAccessors.kt$internal fun DependencyHandler.`testImplementation`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`testResultsElementsForTest`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun ArtifactHandler.`testResultsElementsForTest`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun ArtifactHandler.`testResultsElementsForTest`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testResultsElementsForTest`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testResultsElementsForTest`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun DependencyHandler.`testResultsElementsForTest`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun DependencyHandler.`testResultsElementsForTest`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun DependencyHandler.`testResultsElementsForTest`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun DependencyHandler.`testResultsElementsForTest`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestResultsElementsForTestConfigurationAccessors.kt$internal fun DependencyHandler.`testResultsElementsForTest`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`testRuntimeClasspath`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`testRuntimeClasspath`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun ArtifactHandler.`testRuntimeClasspath`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testRuntimeClasspath`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testRuntimeClasspath`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeClasspath`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeClasspath`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeClasspath`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeClasspath`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestRuntimeClasspathConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeClasspath`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun &lt;T : ModuleDependency&gt; DependencyHandler.`testRuntimeOnly`( dependency: T, dependencyConfiguration: T.() -&gt; Unit ): T</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`testRuntimeOnly`( artifactNotation: Any, configureAction: ConfigurablePublishArtifact.() -&gt; Unit ): PublishArtifact</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun ArtifactHandler.`testRuntimeOnly`(artifactNotation: Any): PublishArtifact</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testRuntimeOnly`(constraintNotation: Any): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun DependencyConstraintHandler.`testRuntimeOnly`(constraintNotation: Any, block: DependencyConstraint.() -&gt; Unit): DependencyConstraint</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeOnly`( dependencyNotation: Provider&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeOnly`( dependencyNotation: ProviderConvertible&lt;*&gt;, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): Unit</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeOnly`( dependencyNotation: String, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt; ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeOnly`( group: String, name: String, version: String? = null, configuration: String? = null, classifier: String? = null, ext: String? = null, dependencyConfiguration: Action&lt;ExternalModuleDependency&gt;? = null ): ExternalModuleDependency</ID>
+    <ID>FunctionNaming:TestRuntimeOnlyConfigurationAccessors.kt$internal fun DependencyHandler.`testRuntimeOnly`(dependencyNotation: Any): Dependency?</ID>
+    <ID>FunctionOnlyReturningConstant:Eip1559TxTest.kt$Eip1559TxTest$fun rlpEmpty()</ID>
+    <ID>FunctionOnlyReturningConstant:Eip1559TxTest.kt$Eip1559TxTest$fun rlpEmptyList()</ID>
+    <ID>ImplicitDefaultLocale:MessagingIdentityView.kt$String.format("%02d", idx + 1)</ID>
+    <ID>ImplicitDefaultLocale:OnbComponents.kt$String.format("%02d", n)</ID>
+    <ID>ImplicitDefaultLocale:WalletBackupView.kt$String.format("%02d", idx + 1)</ID>
+    <ID>LargeClass:ChatRoomVM.kt$ChatRoomVM : ViewModel</ID>
+    <ID>LargeClass:UnifiedSendViewModel.kt$UnifiedSendViewModel : ViewModel</ID>
+    <ID>LoopWithTooManyJumpStatements:P2pOrderHistory.kt$P2pOrderHistorySource$while</ID>
+    <ID>LoopWithTooManyJumpStatements:UpiQrParser.kt$UpiQrParser$for</ID>
+    <ID>MagicNumber:AbiDecoder.kt$AbiDecoder$0xff</ID>
+    <ID>MagicNumber:AddChatContactSheet.kt$10</ID>
+    <ID>MagicNumber:AddChatContactSheet.kt$6</ID>
+    <ID>MagicNumber:AddChatContactVM.kt$AddChatContactVM$64</ID>
+    <ID>MagicNumber:AddContactSheet.kt$10</ID>
+    <ID>MagicNumber:AddContactSheet.kt$6</ID>
+    <ID>MagicNumber:AddContactSheet.kt$64</ID>
+    <ID>MagicNumber:Address.kt$Address.Companion$16</ID>
+    <ID>MagicNumber:AdvancedSettingsView.kt$0.45f</ID>
+    <ID>MagicNumber:AuthenticationViewModel.kt$AuthenticationViewModel$1000</ID>
+    <ID>MagicNumber:AuthenticationViewModel.kt$AuthenticationViewModel$1_000</ID>
+    <ID>MagicNumber:AuthenticationViewModel.kt$AuthenticationViewModel$1_500</ID>
+    <ID>MagicNumber:AuthenticationViewModel.kt$AuthenticationViewModel$999</ID>
+    <ID>MagicNumber:BalanceChartPeriod.kt$BalanceChartPeriod.H24$24</ID>
+    <ID>MagicNumber:BalanceChartPeriod.kt$BalanceChartPeriod.M1$30</ID>
+    <ID>MagicNumber:BalanceChartPeriod.kt$BalanceChartPeriod.W1$7</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$200_000_000.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$220_000_000.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$225_000_000.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$260_000_000.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$290_000_000.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$290_000_000L</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$3.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$310_000_000.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$4.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$400_000_000.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$5.0</ID>
+    <ID>MagicNumber:BalanceChartWidget.kt$BalanceChartWidgetStateFixture$6.0</ID>
+    <ID>MagicNumber:BaseRpcClient.kt$16</ID>
+    <ID>MagicNumber:BioScanScreen.kt$0.9f</ID>
+    <ID>MagicNumber:ChatMessageBubble.kt$80f</ID>
+    <ID>MagicNumber:ChatRestoreView.kt$0.94f</ID>
+    <ID>MagicNumber:ChatScanPublicKeyVM.kt$ChatScanPublicKeyVM$64</ID>
+    <ID>MagicNumber:EoaSigner.kt$EoaSigner$100L</ID>
+    <ID>MagicNumber:Erc4337Submitter.kt$Erc4337Submitter$100L</ID>
+    <ID>MagicNumber:Erc4337Submitter.kt$Erc4337Submitter$60_000</ID>
+    <ID>MagicNumber:Erc4337Submitter.kt$Erc4337Submitter.Companion$16</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$0x8000_0000L</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$0xff</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$0xffff_ffffL</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$16</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$24</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$44</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$60</ID>
+    <ID>MagicNumber:EvmKeyDerivation.kt$EvmKeyDerivation$8</ID>
+    <ID>MagicNumber:FileUtils.kt$FileUtils$1024</ID>
+    <ID>MagicNumber:FileUtils.kt$FileUtils$1024.0</ID>
+    <ID>MagicNumber:FloatingPillNavBar.kt$99</ID>
+    <ID>MagicNumber:Hex.kt$0xff</ID>
+    <ID>MagicNumber:Hex.kt$16</ID>
+    <ID>MagicNumber:Hex.kt$4</ID>
+    <ID>MagicNumber:ImageViewerOverlay.kt$5f</ID>
+    <ID>MagicNumber:MessagingIdentityView.kt$0.92f</ID>
+    <ID>MagicNumber:MessagingIdentityView.kt$20</ID>
+    <ID>MagicNumber:MessagingIdentityView.kt$3</ID>
+    <ID>MagicNumber:OrderReader.kt$OrderStatus.CANCELLED$4</ID>
+    <ID>MagicNumber:OrderReader.kt$OrderStatus.COMPLETED$3</ID>
+    <ID>MagicNumber:PinComponents.kt$6</ID>
+    <ID>MagicNumber:PinSetupScreen.kt$6</ID>
+    <ID>MagicNumber:PinVerifyScreen.kt$6</ID>
+    <ID>MagicNumber:ReceiveView.kt$0.92f</ID>
+    <ID>MagicNumber:RequestQrCodeView.kt$0.92f</ID>
+    <ID>MagicNumber:RequestQrCodeView.kt$10</ID>
+    <ID>MagicNumber:RequestQrCodeView.kt$16</ID>
+    <ID>MagicNumber:RequestQrCodeView.kt$6</ID>
+    <ID>MagicNumber:ReviewTransactionVM.kt$ReviewTransactionVM$1000</ID>
+    <ID>MagicNumber:ReviewTransactionVM.kt$ReviewTransactionVM$1_000</ID>
+    <ID>MagicNumber:ReviewTransactionVM.kt$ReviewTransactionVM$1_500</ID>
+    <ID>MagicNumber:ReviewTransactionVM.kt$ReviewTransactionVM$999</ID>
+    <ID>MagicNumber:Rlp.kt$Rlp$0x80</ID>
+    <ID>MagicNumber:Rlp.kt$Rlp$0xc0</ID>
+    <ID>MagicNumber:Rlp.kt$Rlp$0xff</ID>
+    <ID>MagicNumber:RpcHttpClient.kt$RpcHttpClient$500</ID>
+    <ID>MagicNumber:RpcHttpClient.kt$RpcHttpClient$599</ID>
+    <ID>MagicNumber:SecuritySettingsView.kt$1500</ID>
+    <ID>MagicNumber:SecuritySettingsView.kt$6</ID>
+    <ID>MagicNumber:SecuritySettingsViewModel.kt$SecuritySettingsViewModel$1000</ID>
+    <ID>MagicNumber:SecuritySettingsViewModel.kt$SecuritySettingsViewModel$1000L</ID>
+    <ID>MagicNumber:StringResource.kt$3</ID>
+    <ID>MagicNumber:StringResource.kt$8</ID>
+    <ID>MagicNumber:TransactionBubble.kt$4</ID>
+    <ID>MagicNumber:TransactionBubble.kt$8</ID>
+    <ID>MagicNumber:UnifiedSendViewModel.kt$UnifiedSendViewModel$512</ID>
+    <ID>MagicNumber:WalletAddressField.kt$32</ID>
+    <ID>MagicNumber:WalletAddressField.kt$34</ID>
+    <ID>MagicNumber:WalletAddressField.kt$36</ID>
+    <ID>MagicNumber:WalletAddressField.kt$42</ID>
+    <ID>MagicNumber:WalletAddressField.kt$44</ID>
+    <ID>MagicNumber:WalletAddressField.kt$6</ID>
+    <ID>MagicNumber:WalletAddressField.kt$78</ID>
+    <ID>MagicNumber:WalletAddressField.kt$8</ID>
+    <ID>MagicNumber:WalletBackupView.kt$0.95f</ID>
+    <ID>MagicNumber:WalletBackupView.kt$3</ID>
+    <ID>MagicNumber:WalletBackupViewModel.kt$WalletBackupViewModel$1000</ID>
+    <ID>MagicNumber:WalletBackupViewModel.kt$WalletBackupViewModel$1_000</ID>
+    <ID>MagicNumber:WalletBackupViewModel.kt$WalletBackupViewModel$1_500</ID>
+    <ID>MagicNumber:WalletBackupViewModel.kt$WalletBackupViewModel$999</ID>
+    <ID>MagicNumber:WalletBalanceCard.kt$100</ID>
+    <ID>MagicNumber:WalletBalanceCard.kt$100.0</ID>
+    <ID>MagicNumber:WalletBalanceCard.kt$100_000_000L</ID>
+    <ID>MagicNumber:WalletBalanceCard.kt$6</ID>
+    <ID>MagicNumber:WalletBalanceCard.kt$8</ID>
+    <ID>MagicNumber:WalletPhaseIntroView.kt$0.94f</ID>
+    <ID>MagicNumber:WalletSyncStateVM.kt$WalletSyncStateVM$100</ID>
+    <ID>MagicNumber:WalletSyncStateVM.kt$WalletSyncStateVM$100f</ID>
+    <ID>MagicNumber:WalletSyncStatusViews.kt$0.02f</ID>
+    <ID>MagicNumber:WalletSyncStatusViews.kt$100</ID>
+    <ID>MagicNumber:WalletSyncStatusViews.kt$100f</ID>
+    <ID>MagicNumber:WalletTabContent.kt$0.94f</ID>
+    <ID>MagicNumber:WelcomeGateView.kt$0.85f</ID>
+    <ID>MagicNumber:ZappComponents.kt$0.45f</ID>
+    <ID>MagicNumber:ZappPalette.kt$0x14141210</ID>
+    <ID>MagicNumber:ZappPalette.kt$0x73141210</ID>
+    <ID>MagicNumber:ZappPalette.kt$0x80000000</ID>
+    <ID>MagicNumber:ZappPalette.kt$0x8C000000</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF0F0E0C</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF15120D</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF171512</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF1A140B</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF1A2E24</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF1B1916</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF1C1A16</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF1F1C18</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF201D19</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF2A2622</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF2E1A18</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF2F9D6A</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF3A2713</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF3A342D</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF5FD49C</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF6B645A</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF726A60</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFF9A9288</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFA59C90</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFA65500</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFD7F0E3</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFD94545</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFD9D4CA</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFEBE7E0</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFECEBE5</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFEF6A5F</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFEFECE5</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFF4F2EE</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFF6F2EA</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFF6F4F0</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFFDE2E0</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFFF9417</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFFFB26B</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFFFE7CC</ID>
+    <ID>MagicNumber:ZappPalette.kt$0xFFFFFFFF</ID>
+    <ID>MatchingDeclarationName:AndroidTabs.kt$TabsArgs</ID>
+    <ID>MatchingDeclarationName:ChatProfileSegmentedRow.kt$SegmentItem</ID>
+    <ID>MatchingDeclarationName:FloatingPillNavBar.kt$ZappTab</ID>
+    <ID>MatchingDeclarationName:SecuritySettingsScreen.kt$SecuritySettingsArgs</ID>
+    <ID>MatchingDeclarationName:SparkChart.kt$SparkChartData</ID>
+    <ID>MatchingDeclarationName:TwoFAChoiceScreen.kt$TwoFAMode</ID>
+    <ID>MatchingDeclarationName:ZappTypography.kt$ZappTextStyles</ID>
+    <ID>MaxLineLength:Accessors15c80wxji7qdhvcsteytc58m6.kt$val</ID>
+    <ID>MaxLineLength:Accessors20m89wvqrtvolhrxzuq1utrar.kt$val</ID>
+    <ID>MaxLineLength:Accessors21zhoq018jw7yza6oupdxasaq.kt$val</ID>
+    <ID>MaxLineLength:Accessors2oadk7let745pm8ahqypkqzlk.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("sourceSets") as org.gradle.api.tasks.SourceSetContainer</ID>
+    <ID>MaxLineLength:Accessors30fkku080rcvoj344u192bkfh.kt$val</ID>
+    <ID>MaxLineLength:Accessors32ikgp1isdd8mwexzgbe6rirl.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors32ikgp1isdd8mwexzgbe6rirl.kt$fun</ID>
+    <ID>MaxLineLength:Accessors32ikgp1isdd8mwexzgbe6rirl.kt$val</ID>
+    <ID>MaxLineLength:Accessors32yk85ycsljiuajc2oknj21lt.kt$val</ID>
+    <ID>MaxLineLength:Accessors33qjl5yednlyp9tyvd6yykvt5.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors33qjl5yednlyp9tyvd6yykvt5.kt$fun</ID>
+    <ID>MaxLineLength:Accessors3dn3adhcpitetfd8lbt7c66zr.kt$val</ID>
+    <ID>MaxLineLength:Accessors3lkj8uvuyc1fes1zjdaceqluw.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors3lkj8uvuyc1fes1zjdaceqluw.kt$fun</ID>
+    <ID>MaxLineLength:Accessors3lkj8uvuyc1fes1zjdaceqluw.kt$val</ID>
+    <ID>MaxLineLength:Accessors3y5fen13324igdkixmxh57kt8.kt$val</ID>
+    <ID>MaxLineLength:Accessors45cftp2do14y8dm8cnj0yfjzm.kt$val</ID>
+    <ID>MaxLineLength:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$fun</ID>
+    <ID>MaxLineLength:Accessors49985hyy071qu5jjdlrughl86.kt$val</ID>
+    <ID>MaxLineLength:Accessors4g3ee48g3j8ovb2sfufkb1xgh.kt$val</ID>
+    <ID>MaxLineLength:Accessors4ymijgaek646mzru18sdmblu7.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("detekt") as io.gitlab.arturbosch.detekt.extensions.DetektExtension</ID>
+    <ID>MaxLineLength:Accessors5dc5ntgnadimckiddcyeoreq.kt$val</ID>
+    <ID>MaxLineLength:Accessors5r7od1ls1rcal14bwiw1aolf3.kt$val</ID>
+    <ID>MaxLineLength:Accessors60wvtf0hlc6m7pu4zcziugmri.kt$val</ID>
+    <ID>MaxLineLength:Accessors62xgvb04612dadp03ybl5vf12.kt$val</ID>
+    <ID>MaxLineLength:Accessors6aep9gs3nuz3lpck4wir0rbwq.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors6aep9gs3nuz3lpck4wir0rbwq.kt$fun</ID>
+    <ID>MaxLineLength:Accessors6aep9gs3nuz3lpck4wir0rbwq.kt$val</ID>
+    <ID>MaxLineLength:Accessors6m89nhcqblthog8es93pjkmhg.kt$val</ID>
+    <ID>MaxLineLength:Accessors6xkpc5r938hqmmzagr5yicp7s.kt$val</ID>
+    <ID>MaxLineLength:Accessors72k7tti784t7idmqtg2upvaru.kt$val</ID>
+    <ID>MaxLineLength:Accessors72pwwp7evk4t6494cyybv7kk7.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors72pwwp7evk4t6494cyybv7kk7.kt$fun</ID>
+    <ID>MaxLineLength:Accessors7axcot3v1j7qpduaewb3aezf4.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors7axcot3v1j7qpduaewb3aezf4.kt$fun</ID>
+    <ID>MaxLineLength:Accessors7oo2sidj7gyb285w6yifp9nn4.kt$val</ID>
+    <ID>MaxLineLength:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$fun</ID>
+    <ID>MaxLineLength:Accessors8qpm3vfqh4wz80t5pf9qmw88r.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("jacoco") as org.gradle.testing.jacoco.plugins.JacocoPluginExtension</ID>
+    <ID>MaxLineLength:Accessors8zd6u262ixrjkrpgx69mnl0hj.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessors8zd6u262ixrjkrpgx69mnl0hj.kt$fun</ID>
+    <ID>MaxLineLength:Accessors96b3ii45gitqpy1kb3tvcvtxv.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("java") as org.gradle.api.plugins.JavaPluginExtension</ID>
+    <ID>MaxLineLength:Accessors9ofjxssccbksmuzem03z8pl6.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("base") as org.gradle.api.plugins.BasePluginExtension</ID>
+    <ID>MaxLineLength:Accessors9upc35ddn1m31thgty51w1nrj.kt$val</ID>
+    <ID>MaxLineLength:Accessors9xim6xjdq0ry1lmc4wm5ei8eh.kt$val</ID>
+    <ID>MaxLineLength:Accessorsa47105wcmcbzx75lm7p2ciqqb.kt$val</ID>
+    <ID>MaxLineLength:Accessorsaofthkmarv0q41bodk71vcqi7.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("defaultArtifacts") as org.gradle.api.internal.plugins.DefaultArtifactPublicationSet</ID>
+    <ID>MaxLineLength:Accessorsaofthkmarv0q41bodk71vcqi7.kt$fun</ID>
+    <ID>MaxLineLength:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessorsbp4j8g31qsxo0ekjysvxih5jg.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("javaToolchains") as org.gradle.jvm.toolchain.JavaToolchainService</ID>
+    <ID>MaxLineLength:Accessorsbtc8iwv8u9b0f38ikfmodj8ns.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("reporting") as org.gradle.api.reporting.ReportingExtension</ID>
+    <ID>MaxLineLength:Accessorsdemns0nrfvv4tm1e985ahms6r.kt$val</ID>
+    <ID>MaxLineLength:Accessorsdjndpeyafmkvjrxu9kp0ma1gn.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessorsdjndpeyafmkvjrxu9kp0ma1gn.kt$fun</ID>
+    <ID>MaxLineLength:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("versionCatalogs") as org.gradle.api.artifacts.VersionCatalogsExtension</ID>
+    <ID>MaxLineLength:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$fun</ID>
+    <ID>MaxLineLength:Accessorse3nu4a2kmhhq7smy0tcmgt45g.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessorse63o1t85fyc2j2y6mbe9ytoeh.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("testing") as org.gradle.testing.base.TestingExtension</ID>
+    <ID>MaxLineLength:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$fun</ID>
+    <ID>MaxLineLength:Accessorseessl0al0otcsbyqqruvoncpd.kt$(this as org.gradle.api.plugins.ExtensionAware).extensions.getByName("ext") as org.gradle.api.plugins.ExtraPropertiesExtension</ID>
+    <ID>MaxLineLength:Accessorseessl0al0otcsbyqqruvoncpd.kt$fun</ID>
+    <ID>MaxLineLength:AccountDataSource.kt$AccountDataSourceImpl$log("retrying address derivation for ${sdkAccount.accountUuid}, attempt $attempt", cause as? Exception)</ID>
+    <ID>MaxLineLength:AddChatContactVM.kt$AddChatContactVM$private val onSaveContact: (publicKey: String, name: String, walletAddress: String, walletAddresses: Map&lt;String, String&gt;) -&gt; Unit</ID>
+    <ID>MaxLineLength:AddContactSheet.kt$if (evmAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.text.trim())</ID>
+    <ID>MaxLineLength:AddContactSheet.kt$if (solanaAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.text.trim())</ID>
+    <ID>MaxLineLength:AddressBookVM.kt$AddressBookVM$private</ID>
+    <ID>MaxLineLength:AnnotationProcessorConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:ApiElementsConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:ArchivesConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:ChatMessageBubble.kt$if</ID>
+    <ID>MaxLineLength:ChatRestoreView.kt$text = "Enter the display name and 24-word recovery phrase from the device where you previously used Zapp."</ID>
+    <ID>MaxLineLength:ChatTermsDialog.kt$"2. Not share illegal content, including but not limited to child exploitation material, illegal substances, or stolen financial information."</ID>
+    <ID>MaxLineLength:ChatTermsDialog.kt$"Messages are sent peer-to-peer and are end-to-end encrypted. Zapp does not store or have access to your message content."</ID>
+    <ID>MaxLineLength:ChatTermsDialog.kt$"Users who violate these guidelines may be blocked by other users. You can block or report any user from the conversation settings menu."</ID>
+    <ID>MaxLineLength:CompileClasspathConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:CompileOnlyConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:DefaultConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:DetektConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:DetektPluginsConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:EditChatContactVM.kt$EditChatContactVM$private val onSaveContact: (publicKey: String, name: String, walletAddress: String, walletAddresses: Map&lt;String, String&gt;) -&gt; Unit</ID>
+    <ID>MaxLineLength:EditContactSheet.kt$if (transparentAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.text.trim())</ID>
+    <ID>MaxLineLength:EoaSignerTest.kt$EoaSignerTest$"""{"jsonrpc":"2.0","id":1,"result":{"number":"0x100","timestamp":"0x68000000","baseFeePerGas":"0x77359400"}}"""</ID>
+    <ID>MaxLineLength:Erc4337Submitter.kt$Erc4337Submitter$/** thirdweb's prebuilt Account contract validates the owner's ECDSA signature over the EIP-191-prefixed userOpHash. */</ID>
+    <ID>MaxLineLength:ImageViewerOverlay.kt$Toast.makeText(context, context.getString(R.string.chat_room_image_viewer_save_failed), Toast.LENGTH_SHORT).show()</ID>
+    <ID>MaxLineLength:ImplementationConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:JacocoAgentConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:JacocoAntConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Entry("MERCHANT_NOT_FULLFILLED_ELIGIBILITY_THRESHOLD", "Merchant has not fulfilled eligibility threshold")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Entry("USER_HAS_NO_REPUTATION", "Kindly do ZK social verifications and increase your limits to place more orders")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x0ece93a6") to Entry("RECOMMENDATION_ALREADY_CLAIMED", "Recommendation already claimed")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x138b9d5a") to Entry("INVALID_ORDER_AMOUNT_TO_COVER_FEE", "Order amount is not enough to cover fee")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x181b1b2e") to Entry("ORDER_STATUS_INVALID", "Order with placed status only can be re-assigned")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x1b19ad97") to Entry("MERCHANT_MONTHLY_REFERRAL_LIMIT_REACHED", "Merchant monthly referral limit reached")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x1b5433c8") to Entry("ACCOUNT_BOUND_TO_ANOTHER_CIRCLE", "Account is bound to another circle")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x20d5910f") to Entry("ORDER_TOO_LATE_FOR_REASSIGNMENT", "Order is too late for reassignment")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x279bbc0c") to Entry("USDC_TRANSFER_FAILED_WITH_PANIC", "USDC transfer failed with panic")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x2a829f07") to Entry("INVALID_ORDER_STATUS_TO_RAISE_DISPUTE", "Invalid order status to raise dispute")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x36bdb7b6") to Entry("ZK_PASSPORT_IDENTIFIER_ALREADY_VERIFIED", "ZK Passport identifier already verified")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x3a8fbef4") to Entry("NOT_PRICE_UPDATER_FOR_CURRENCY", "Not the price updater for this currency")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x47bfece5") to Entry("USDC_TRANSFER_FAILED_WITH_ERROR_MESSAGE", "USDC transfer failed with error message")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x48183836") to Entry("ZK_PASSPORT_MIN_AGE_TOO_HIGH", "ZK Passport minimum age too high")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x487add97") to Entry("NEW_PAYMENT_CHANNEL_SHOULD_BE_ACTIVE", "New payment channel should be active")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x549e2555") to Entry("EXIT_AMOUNT_EXCEEDED_CIRCLE_BALANCE", "Exit amount exceeded circle balance")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x64301cb8") to Entry("SELL_ORDER_AMOUNT_LIMIT_EXCEEDED", "Sell order amount limit exceeded")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x675dbc86") to Entry("MONTHLY_BUY_ORDER_LIMIT_EXCEEDED", "Monthly buy order count limit exceeded")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x81c2b982") to Entry("NO_FIAT_LIQUIDITY", "No fiat liquidity on exchange to complete order")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0x91da284f") to Entry("BUY_ORDER_AMOUNT_EXCEEDS_LIMIT", "Buy order amount exceeds limit")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xa18ea4e8") to Entry("USER_ID_ALREADY_VERIFIED", "The social media account's user ID is already verified")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xab284291") to Entry("PAYMENT_CHANNEL_NOT_REJECTED", "Payment channel has not been rejected")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xab948796") to Entry("ONLY_ROUTER_CAN_FULFILL", "Only the router can fulfill this request")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xb14a1ff3") to Entry("USER_YEARLY_VOLUME_LIMIT_EXCEEDED", "Yearly volume limit exceeded")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xb407b9ec") to Entry("SELL_ORDER_AMOUNT_EXCEEDS_LIMIT", "Sell order amount exceeds limit")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xbb776720") to Entry("ORDER_TOO_EARLY_FOR_REASSIGNMENT", "Order is too early for reassignment")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xbba2edf9") to Entry("SELL_AMOUNT_EXCEEDS_FIAT_LIMIT", "Sell amount exceeds fiat limit")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xbf2d0ba1") to Entry("P2P_UNSTAKE_COOLDOWN_NOT_PASSED", "P2P unstake cooldown period has not passed")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xc905b99a") to Entry("SAME_PAYMENT_CHANNEL", "Old and new payment channels are the same")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xcedb41f1") to Entry("OLD_PAYMENT_CHANNEL_SHOULD_BE_INACTIVE", "Old payment channel should be inactive")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xd2e1e6e0") to Entry("ZERO_REPUTATION_POINTS", "Cannot place buy orders with 0 reputation points")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xdab11ea6") to Entry("P2P_UNSTAKE_REQUEST_PENDING", "A P2P unstake request is already pending")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xe595a7bf") to Entry("DAILY_BUY_ORDER_LIMIT_EXCEEDED", "Daily buy order count limit exceeded")</ID>
+    <ID>MaxLineLength:KnownContractErrors.kt$KnownContractErrors$Selector4.fromHex("0xec4b3ce6") to Entry("EXIT_WOULD_BREACH_DELEGATION_INVARIANT", "Exit would breach delegation invariant")</ID>
+    <ID>MaxLineLength:MainSourceElementsConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:MessagingIdentityView.kt$ValidationRow(isLong = isLong &amp;&amp; username.isNotEmpty(), isShort = isShort, isClean = isClean &amp;&amp; username.isNotEmpty())</ID>
+    <ID>MaxLineLength:MessagingIdentityView.kt$style = ZappTheme.typography.button.copy(color = c.onAccent, fontSize = 12.sp, fontWeight = FontWeight.Black)</ID>
+    <ID>MaxLineLength:MessagingIdentityView.kt$text = "I've written all ${words.size} words in order. I understand this phrase cannot be recovered if lost."</ID>
+    <ID>MaxLineLength:NearApiProvider.kt$"Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjIwMjUtMDEtMTItdjEifQ.eyJ2IjoxLCJrZXlfdHlwZSI6ImRpc3RyaWJ1dGlvbl9jaGFubmVsIiwicGFydG5lcl9pZCI6InphcHAiLCJpYXQiOjE3NzgxNTU1ODQsImV4cCI6MTgwOTY5MTU4NH0.R7Nk8UI0ZI-q4h0nFHjij8-zZBIzHkeKAGHtySUX8FL3GLsDm53hnqoiGArQqcj2Iwf-x9fcg0GSV8-WAnlFTakQh6RBke91cU7CemIcqbffzw98wqiSw6iDGZxpbLDwUN7dD_6PNPhp4ZUWfiwmi7U6VcpARqqc2KJAiCn2GbZF6E_dQ-uNBFi7T4Paw641E-mKSrSDvn2OCUQbQLF3iY8_JyLMfbf8kCQPq8-MPv93nvMXieogeu5c6Z9PmZfWCKEfuMbCpjBHEe9BDD8_S9CcuzQCOLtdHkXEbmT4QQ7nBVAY-DMpYVGgOs1mzCK4xmW8frtStYBn194C-DK6yA"</ID>
+    <ID>MaxLineLength:OfframpCheckpoint.kt$OfframpCheckpoint$/** Nullable for back-compat with checkpoints written before fiat was tracked; resume falls back to live sellPrice. */</ID>
+    <ID>MaxLineLength:OfframpCheckpointPersisterTest.kt$OfframpCheckpointPersisterTest$persister.onStatus(OfframpStatus.PlacingOrder(txHash = PLACE_ORDER_HASH, circleId = BigInteger.ONE, amount = AMOUNT))</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest$"""{"jsonrpc":"2.0","id":1,"result":{"number":"0x100","timestamp":"0x68000000","baseFeePerGas":"0x77359400"}}"""</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest$assertEquals(listOf&lt;String?&gt;("near-deposit-abc"), seenResumeHandles, "resume must pass the persisted handle")</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest$onChainVerifier.next = snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS)</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest$orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = ATTACKER_PUBKEY, merchant = MERCHANT_ADDRESS))</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest$orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest$orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest$orderReader.enqueue(snapshot(status = OrderStatus.PAID, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))</ID>
+    <ID>MaxLineLength:OfframpOrchestratorTest.kt$OfframpOrchestratorTest.Companion$private const</ID>
+    <ID>MaxLineLength:P2pTransactionsFormat.kt$amountUsdc = stringRes(R.string.p2p_transactions_row_amount_usdc, usdcAmount.toDisplayString(stripTrailingZeros = true))</ID>
+    <ID>MaxLineLength:P2pTransactionsFormat.kt$fromLabel = fromForType(orderType)?.let(::extractUpiVpa)?.let { stringRes(R.string.p2p_transactions_row_from, it) }</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.asset-pack-bundle` plugin implemented by [com.android.build.gradle.internal.plugins.AssetPackBundlePlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.asset-pack` plugin implemented by [com.android.build.gradle.internal.plugins.AssetPackPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.dynamic-feature` plugin implemented by [com.android.build.gradle.internal.plugins.DynamicFeaturePlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.fused-library` plugin implemented by [com.android.build.gradle.internal.plugins.FusedLibraryPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.kotlin.multiplatform.library` plugin implemented by [com.android.build.gradle.internal.plugins.KotlinMultiplatformAndroidPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.privacy-sandbox-sdk` plugin implemented by [com.android.build.gradle.internal.plugins.PrivacySandboxSdkPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.reporting` plugin implemented by [com.android.build.gradle.internal.plugins.ReportingPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.internal.version-check` plugin implemented by [com.android.build.gradle.internal.plugins.VersionCheckPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `com.android.kotlin.multiplatform.library` plugin implemented by [com.android.build.gradle.api.KotlinMultiplatformAndroidPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `io.github.detekt.gradle.compiler-plugin` plugin implemented by [io.github.detekt.gradle.DetektKotlinCompilerPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `kotlin-android-extensions` plugin implemented by [org.jetbrains.kotlin.gradle.internal.AndroidExtensionsSubpluginIndicator].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `kotlin-composecompiler` plugin implemented by [org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradleSubplugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `kotlin-multiplatform` plugin implemented by [org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `kotlin-native-cocoapods` plugin implemented by [org.jetbrains.kotlin.gradle.plugin.cocoapods.KotlinCocoapodsPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `kotlin-scripting` plugin implemented by [org.jetbrains.kotlin.gradle.scripting.internal.ScriptingGradleSubplugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.clang-compiler` plugin implemented by [org.gradle.nativeplatform.toolchain.plugins.ClangCompilerPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.component-model-base` plugin implemented by [org.gradle.language.base.plugins.ComponentModelBasePlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.google-test-test-suite` plugin implemented by [org.gradle.nativeplatform.test.googletest.plugins.GoogleTestPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.google-test` plugin implemented by [org.gradle.nativeplatform.test.googletest.plugins.GoogleTestConventionPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.groovy-gradle-plugin` plugin implemented by [org.gradle.plugin.devel.internal.precompiled.PrecompiledGroovyPluginsPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.jacoco-report-aggregation` plugin implemented by [org.gradle.testing.jacoco.plugins.JacocoReportAggregationPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.java-library-distribution` plugin implemented by [org.gradle.api.plugins.JavaLibraryDistributionPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.jvm-toolchain-management` plugin implemented by [org.gradle.api.plugins.JvmToolchainManagementPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.microsoft-visual-cpp-compiler` plugin implemented by [org.gradle.nativeplatform.toolchain.plugins.MicrosoftVisualCppCompilerPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.native-component-model` plugin implemented by [org.gradle.nativeplatform.plugins.NativeComponentModelPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.objective-c-lang` plugin implemented by [org.gradle.language.objectivec.plugins.ObjectiveCLangPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.objective-cpp-lang` plugin implemented by [org.gradle.language.objectivecpp.plugins.ObjectiveCppLangPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.standard-tool-chains` plugin implemented by [org.gradle.nativeplatform.toolchain.internal.plugins.StandardToolChainsPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.gradle.windows-resource-script` plugin implemented by [org.gradle.language.rc.plugins.WindowsResourceScriptPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.jetbrains.kotlin.android` plugin implemented by [org.jetbrains.kotlin.gradle.plugin.KotlinAndroidPluginWrapper].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.jetbrains.kotlin.fus-statistics-gradle-plugin` plugin implemented by [org.jetbrains.kotlin.gradle.fus.FusStatisticsPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.jetbrains.kotlin.multiplatform` plugin implemented by [org.jetbrains.kotlin.gradle.plugin.KotlinMultiplatformPluginWrapper].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.jetbrains.kotlin.native.cocoapods` plugin implemented by [org.jetbrains.kotlin.gradle.plugin.cocoapods.KotlinCocoapodsPlugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.jetbrains.kotlin.plugin.compose` plugin implemented by [org.jetbrains.kotlin.compose.compiler.gradle.ComposeCompilerGradleSubplugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.jetbrains.kotlin.plugin.parcelize` plugin implemented by [org.jetbrains.kotlin.gradle.internal.ParcelizeSubplugin].</ID>
+    <ID>MaxLineLength:PluginSpecBuilders.kt$* The `org.jetbrains.kotlin.plugin.scripting` plugin implemented by [org.jetbrains.kotlin.gradle.scripting.internal.ScriptingGradleSubplugin].</ID>
+    <ID>MaxLineLength:PreFundedOfframpFundingTest.kt$PreFundedOfframpFundingTest$fundingWithBalance(BigInteger.valueOf(500_000)).ensureFunded(account, request, resumeHandle = null) {}</ID>
+    <ID>MaxLineLength:RuntimeClasspathConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:RuntimeElementsConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:RuntimeOnlyConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:Secant_kotlinMultiplatformBuildConventionsPlugin.kt$Secant_kotlinMultiplatformBuildConventionsPlugin$*</ID>
+    <ID>MaxLineLength:SecuritySettingsViewModel.kt$SecuritySettingsViewModel$PinVerifyIntent.ChangePinSetNew -&gt; SecuritySettingsState.SettingNewPin(NewPinIntent.ChangeExisting)</ID>
+    <ID>MaxLineLength:SelectABRecipientVM.kt$SelectABRecipientVM$private</ID>
+    <ID>MaxLineLength:TestAnnotationProcessorConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:TestCompileClasspathConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:TestCompileOnlyConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:TestImplementationConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:TestResultsElementsForTestConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:TestRuntimeClasspathConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:TestRuntimeOnlyConfigurationAccessors.kt$fun</ID>
+    <ID>MaxLineLength:UpiOfframpProgressVM.kt$UpiOfframpProgressVM$.</ID>
+    <ID>MaxLineLength:UpiOfframpProgressVM.kt$UpiOfframpProgressVM$combine</ID>
+    <ID>MaxLineLength:UpiOfframpProgressView.kt$"Still connecting you to a merchant. Your USDC stays in your account; if no merchant accepts, the order auto-cancels on chain."</ID>
+    <ID>MaxLineLength:UpiOfframpProgressView.kt$subtitle = stringRes("No merchant completed this order in time. Your USDC has been refunded on-chain.")</ID>
+    <ID>MaxLineLength:UpiOfframpProgressView.kt$tip = stringRes("Tip: ask the merchant to generate the UPI QR only after this screen opens.")</ID>
+    <ID>MaxLineLength:UpiQrParser.kt$UpiQrParser$val paymentAddress = params[PARAM_PAYMENT_ADDRESS] ?: return UpiQrParseResult.Failure(UpiQrError.MissingPaymentAddress)</ID>
+    <ID>MaxLineLength:UserOperationV06Test.kt$UserOperationV06Test$// "getUserOpHash((address,uint256,bytes,bytes,uint256,uint256,uint256,uint256,uint256,bytes,bytes))(bytes32)" \</ID>
+    <ID>MaxLineLength:WalletAddressField.kt$return</ID>
+    <ID>MaxLineLength:WalletAddressField.kt$return if ((t.startsWith("t1") || t.startsWith("t3")) &amp;&amp; t.length in 34..36) AddrValidation.VALID else AddrValidation.INVALID</ID>
+    <ID>MaxLineLength:WalletPhaseIntroView.kt$sub = "These 24 words restore both your wallet funds and your messaging identity. Back them up offline — they cover everything."</ID>
+    <ID>MaxLineLength:build.gradle.kts$.</ID>
+    <ID>MayBeConst:CurrencyUtil.kt$val CURRENCY_TICKER: String = "ZEC"</ID>
     <ID>MayBeConst:EncryptedPreferenceProviderTest.kt$EncryptedPreferenceProviderTest.Companion$private val FILENAME = "encrypted_preference_test"</ID>
     <ID>MayBeConst:StandardPreferenceProviderTest.kt$StandardPreferenceProviderTest.Companion$private val FILENAME = "encrypted_preference_test"</ID>
-    <ID>MayBeConst:SupportViewTest.kt$SupportViewTest.Companion$internal val DEFAULT_MESSAGE = "I can haz cheezburger?"</ID>
+    <ID>NestedBlockDepth:FileUtils.kt$FileUtils$fun getFileName(context: Context, uri: Uri): String?</ID>
+    <ID>NestedBlockDepth:UpiQrParser.kt$UpiQrParser$private fun urlDecode(s: String): String</ID>
+    <ID>PackageNaming:Accessors15c80wxji7qdhvcsteytc58m6.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors16h8i8yvcoyu6adqodek0vazl.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors1crcmgpg53bs3tut9tzeov9zs.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors1je17tzadwn2i8n7cte4ejjuc.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors1y0x5zjrw062ti39iwig4ztsq.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors20m89wvqrtvolhrxzuq1utrar.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors21zhoq018jw7yza6oupdxasaq.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors2oadk7let745pm8ahqypkqzlk.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors2s1m7qhtdel2iy5x5gc2gv6f5.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors30fkku080rcvoj344u192bkfh.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors32ikgp1isdd8mwexzgbe6rirl.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors32yk85ycsljiuajc2oknj21lt.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors33qjl5yednlyp9tyvd6yykvt5.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors3dn3adhcpitetfd8lbt7c66zr.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors3lkj8uvuyc1fes1zjdaceqluw.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors3y5fen13324igdkixmxh57kt8.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessors45cftp2do14y8dm8cnj0yfjzm.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$package gradle.kotlin.dsl.accessors._b43a41b3a2c24e7f863347686afebb31</ID>
+    <ID>PackageNaming:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors49985hyy071qu5jjdlrughl86.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors4g3ee48g3j8ovb2sfufkb1xgh.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors4ymijgaek646mzru18sdmblu7.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors4ymn32ugs7fc7ez4f1y4vdr9n.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors5cx8iclyvbivcabq86i8mlot5.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors5dc5ntgnadimckiddcyeoreq.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors5fk7ujd52n5i4lgh9rsd3nr80.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors5r7od1ls1rcal14bwiw1aolf3.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors5x03zd2mf47s5vj1qv3jvhdru.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors60wvtf0hlc6m7pu4zcziugmri.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors62xgvb04612dadp03ybl5vf12.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors6aep9gs3nuz3lpck4wir0rbwq.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessors6m89nhcqblthog8es93pjkmhg.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors6xkpc5r938hqmmzagr5yicp7s.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors72k7tti784t7idmqtg2upvaru.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors72pwwp7evk4t6494cyybv7kk7.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors7axcot3v1j7qpduaewb3aezf4.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors7hvycqvau4uyj5knata7lx0yx.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors7oo2sidj7gyb285w6yifp9nn4.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessors7pildy6t6pgcmk0gyewx4z8k1.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$package gradle.kotlin.dsl.accessors._b43a41b3a2c24e7f863347686afebb31</ID>
+    <ID>PackageNaming:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessors8qpm3vfqh4wz80t5pf9qmw88r.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessors8uzlaa9ndo750hmo4da2vgu2v.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors8zd6u262ixrjkrpgx69mnl0hj.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors96b3ii45gitqpy1kb3tvcvtxv.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors9ofjxssccbksmuzem03z8pl6.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors9upc35ddn1m31thgty51w1nrj.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors9xbdx9ypglb5iceqwefq3l2u.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessors9xim6xjdq0ry1lmc4wm5ei8eh.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsa47105wcmcbzx75lm7p2ciqqb.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsa5ptgikd9fb816fav4742zvaq.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessorsaofthkmarv0q41bodk71vcqi7.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$package gradle.kotlin.dsl.accessors._b43a41b3a2c24e7f863347686afebb31</ID>
+    <ID>PackageNaming:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessorsbp4j8g31qsxo0ekjysvxih5jg.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsbtc8iwv8u9b0f38ikfmodj8ns.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsbtc8iwv8u9b0f38ikfmodj8ns.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessorsbtc8iwv8u9b0f38ikfmodj8ns.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessorscosmuqa5m4pz5v4rp16nnpsrn.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsdemns0nrfvv4tm1e985ahms6r.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsdirr8g3rs0a9h4cvi2o23j1gy.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsdjndpeyafmkvjrxu9kp0ma1gn.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$package gradle.kotlin.dsl.accessors._b43a41b3a2c24e7f863347686afebb31</ID>
+    <ID>PackageNaming:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessorse3nu4a2kmhhq7smy0tcmgt45g.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorse63o1t85fyc2j2y6mbe9ytoeh.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$package gradle.kotlin.dsl.accessors._b43a41b3a2c24e7f863347686afebb31</ID>
+    <ID>PackageNaming:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessorseessl0al0otcsbyqqruvoncpd.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorseessl0al0otcsbyqqruvoncpd.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:Accessorseessl0al0otcsbyqqruvoncpd.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:Accessorsem8w6wnof1lrw3ubqr6eh9gcj.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsf2jx22njgpl8k21k7scc1t0rw.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsfbf92xd7bth9xw3u4y6q8qcd.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:Accessorsw34mwj3hroscfmyxar5atwjz.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:AnnotationProcessorConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:ApiElementsConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:ArchivesConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:CompileClasspathConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:CompileOnlyConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:DefaultConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:DetektConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:DetektPluginsConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._caaef686956ef05d8c7d73205bf1c4b7</ID>
+    <ID>PackageNaming:ImplementationConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:JacocoAgentConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:JacocoAntConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._974bb6068716f58bd65bdc33b2cd7b23</ID>
+    <ID>PackageNaming:MainSourceElementsConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:PluginSpecBuilders.kt$package gradle.kotlin.dsl.plugins._fcec397f08bda9f141caababce4713a6</ID>
+    <ID>PackageNaming:RuntimeClasspathConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:RuntimeElementsConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:RuntimeOnlyConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:TestAnnotationProcessorConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:TestCompileClasspathConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:TestCompileOnlyConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:TestImplementationConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:TestResultsElementsForTestConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:TestRuntimeClasspathConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>PackageNaming:TestRuntimeOnlyConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
+    <ID>ReturnCount:AbiDecoder.kt$AbiDecoder$fun dynamicStringAt(byteOffset: Int): String</ID>
+    <ID>ReturnCount:Address.kt$Address.Companion$fun parseOrNull(input: String): Address?</ID>
+    <ID>ReturnCount:AddressHex.kt$internal fun parseEpochSecondsOrNull(value: String?): Long?</ID>
+    <ID>ReturnCount:AddressHex.kt$internal fun parseNullableAddress(hex: String?): Address?</ID>
+    <ID>ReturnCount:BalanceChartVM.kt$BalanceChartVM$private fun createState( history: List&lt;BalanceHistoryPoint&gt;?, period: BalanceChartPeriod, ): BalanceChartState</ID>
+    <ID>ReturnCount:BalanceChartVM.kt$BalanceChartVM$private fun windowForPeriod( history: List&lt;BalanceHistoryPoint&gt;, period: BalanceChartPeriod, ): List&lt;BalanceHistoryPoint&gt;</ID>
+    <ID>ReturnCount:BaseRpcClient.kt$BaseRpcClient$suspend fun ethGetTransactionReceipt(txHash: TxHash): TransactionReceipt?</ID>
+    <ID>ReturnCount:CircleRouter.kt$CircleRouter$fun selectCircle(eligible: List&lt;CircleForRouting&gt;): CircleForRouting?</ID>
+    <ID>ReturnCount:CircleRouter.kt$CircleRouter$private fun weightedRandomChoice( circles: List&lt;CircleForRouting&gt;, weights: List&lt;Double&gt;, ): CircleForRouting</ID>
+    <ID>ReturnCount:EcdsaSigner.kt$EcdsaSigner$fun recoverPublicKey(recId: Int, r: BigInteger, s: BigInteger, messageHash: ByteArray): ECPoint?</ID>
+    <ID>ReturnCount:EvmKeyDerivation.kt$EvmKeyDerivation$private fun ckdPrivOnce(parent: ExtKey, index: Int): ExtKey?</ID>
+    <ID>ReturnCount:ExactInputVMMapper.kt$ExactInputVMMapper$private fun createTopUpButtonState( state: ExactInputInternalState, onTopUpClick: () -&gt; Unit, ): ButtonState?</ID>
+    <ID>ReturnCount:ImageViewerOverlay.kt$private fun saveImageToGallery(context: Context, message: ChatMessage)</ID>
+    <ID>ReturnCount:OfframpOrchestrator.kt$OfframpOrchestrator$private suspend fun isUpiAlreadyOnChain(orderId: BigInteger, accepted: OrderSnapshot): Boolean</ID>
+    <ID>ReturnCount:OfframpStatusToSteps.kt$private fun computeStepStatus( index: Int, order: List&lt;OfframpStep&gt;, currentStep: OfframpStep?, failedStep: OfframpStep?, status: OfframpStatus, ): UpiOfframpStepStatus</ID>
+    <ID>ReturnCount:OfframpVM.kt$OfframpVM$private fun computeFiat(amount: String, rate: ExchangeRateState): StringResource?</ID>
+    <ID>ReturnCount:OrderEvents.kt$OrderEvents$fun parseOrderIdFromLog(log: EvmLog): BigInteger?</ID>
+    <ID>ReturnCount:OrderReader.kt$OrderReader$fun decodeAddressArrayNonEmpty(returnData: ByteArray): Boolean</ID>
+    <ID>ReturnCount:P2pTransactionsVM.kt$P2pTransactionsVM$private fun refundUi(bal: BalanceLoad, rf: RefundFlow): RefundUiState</ID>
+    <ID>ReturnCount:SolidityErrors.kt$SolidityErrors$fun decodeErrorString(revertData: ByteArray): String?</ID>
+    <ID>ReturnCount:UnifiedSendViewModel.kt$UnifiedSendViewModel$@Suppress("CyclomaticComplexMethod") private fun buildPrimaryButton( isSwap: Boolean, isRequesting: Boolean, swapAssets: SwapAssetsData, isAddressValid: Boolean, isAmountValid: Boolean, hasAmount: Boolean, hasFunds: Boolean, hasZeroBalance: Boolean, isMemoValid: Boolean, ): PrimaryButtonState</ID>
+    <ID>ReturnCount:UnifiedSendViewModel.kt$UnifiedSendViewModel$fun onFiatAmountChange(inner: NumberTextFieldInnerState)</ID>
+    <ID>ReturnCount:UnifiedSendViewModel.kt$UnifiedSendViewModel$private fun computeTheyReceiveLabel( isSwap: Boolean, asset: SwapAsset?, zecValue: BigDecimal?, zecUsdPrice: BigDecimal?, ): StringResource?</ID>
+    <ID>ReturnCount:UpiOfframpProgressVM.kt$UpiOfframpProgressVM$private fun buildFeeBreakdown(fees: OrderFeeDetails?): UpiOfframpFeeBreakdown?</ID>
+    <ID>ReturnCount:UpiOfframpProgressVM.kt$UpiOfframpProgressVM$private fun decodedReason(failed: OfframpStatus.Failed): StringResource?</ID>
+    <ID>ReturnCount:UpiOfframpProgressVM.kt$UpiOfframpProgressVM.Companion$private fun computeFiatAmountLimit(fiatAmountMicro: String): Usdc6?</ID>
+    <ID>ReturnCount:UpiOfframpVM.kt$UpiOfframpVM$private fun onSendClick()</ID>
+    <ID>ReturnCount:UpiOfframpVM.kt$UpiOfframpVM$private fun validate(usdc: BigDecimal?, upi: String): StringResource?</ID>
+    <ID>ReturnCount:UpiQrParser.kt$UpiQrParser$fun parseQr(qrData: String): UpiQrParseResult</ID>
+    <ID>ReturnCount:WalletBalanceCard.kt$@Composable private fun BalanceWidgetState.toFiatFormatted(): FormattedFiat?</ID>
+    <ID>ReturnCount:WalletBalanceCard.kt$private fun BalanceChartState.computeDelta(): BalanceDeltaResult?</ID>
     <ID>SwallowedException:AndroidUncaughtExceptionHandlerTest.kt$AndroidUncaughtExceptionHandlerTest$e: IllegalStateException</ID>
-    <ID>UseRequire:CheckUpdateViewModel.kt$CheckUpdateViewModel.CheckUpdateViewModelFactory$throw IllegalArgumentException("ViewModel Not Found.")</ID>
+    <ID>SwallowedException:FileUtils.kt$FileUtils$e: Exception</ID>
+    <ID>SwallowedException:ImageProcessor.kt$ImageProcessor$e: Exception</ID>
+    <ID>ThrowsCount:BaseRpcClient.kt$BaseRpcClient$private suspend fun rpcCall(method: String, params: JsonArray): JsonElement</ID>
+    <ID>ThrowsCount:BundlerClient.kt$BundlerClient$private suspend fun rpcCall(method: String, params: JsonArray): JsonElement</ID>
+    <ID>TooGenericExceptionCaught:FallbackOrderReader.kt$FallbackOrderReader$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:FileUtils.kt$FileUtils$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ImageProcessor.kt$ImageProcessor$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:OfframpOrchestrator.kt$OfframpOrchestrator$e: Throwable</ID>
+    <ID>TooGenericExceptionCaught:SubmitProposalUseCase.kt$SubmitProposalUseCase$e: Exception</ID>
+    <ID>TooGenericExceptionCaught:ZcashApplication.kt$ZcashApplication$e: Exception</ID>
+    <ID>TooManyFunctions:AddChatContactVM.kt$AddChatContactVM</ID>
+    <ID>TooManyFunctions:AddressBookVM.kt$AddressBookVM : ViewModel</ID>
+    <ID>TooManyFunctions:AuthenticationViewModel.kt$AuthenticationViewModel : AndroidViewModel</ID>
+    <ID>TooManyFunctions:BaseRpcClient.kt$BaseRpcClient</ID>
+    <ID>TooManyFunctions:BundlerClient.kt$BundlerClient</ID>
+    <ID>TooManyFunctions:EditChatContactVM.kt$EditChatContactVM</ID>
+    <ID>TooManyFunctions:OfframpOrchestrator.kt$OfframpOrchestrator : OfframpDriver</ID>
+    <ID>TooManyFunctions:P2pTransactionsView.kt$co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsView.kt</ID>
+    <ID>TooManyFunctions:SecuritySettingsViewModel.kt$SecuritySettingsViewModel : ViewModel</ID>
+    <ID>TooManyFunctions:SelectABRecipientVM.kt$SelectABRecipientVM : ViewModel</ID>
+    <ID>TooManyFunctions:SupportTicketListVM.kt$SupportTicketListVM : ViewModel</ID>
+    <ID>TooManyFunctions:SwapView.kt$co.electriccoin.zcash.ui.screen.swap.SwapView.kt</ID>
+    <ID>TooManyFunctions:UpiOfframpProgressView.kt$co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressView.kt</ID>
+    <ID>TooManyFunctions:UpiOfframpVM.kt$UpiOfframpVM : ViewModel</ID>
+    <ID>TooManyFunctions:WalletBalanceCard.kt$co.electriccoin.zcash.ui.screen.tabs.view.WalletBalanceCard.kt</ID>
+    <ID>TooManyFunctions:ZappComponents.kt$co.electriccoin.zcash.ui.design.component.zapp.ZappComponents.kt</ID>
+    <ID>UnusedParameter:ChatNavGraph.kt$navigationRouter: NavigationRouter</ID>
+    <ID>UnusedParameter:ChatRoomVM.kt$ChatRoomVM$replyTo: ChatMessage? = null</ID>
+    <ID>UnusedParameter:ReceiveView.kt$appBarState: ZashiMainTopAppBarState?</ID>
+    <ID>UnusedParameter:RootNavGraph.kt$walletViewModel: WalletViewModel</ID>
+    <ID>UnusedParameter:SwapView.kt$appBarState: ZashiMainTopAppBarState</ID>
+    <ID>UnusedPrivateMember:RequestVM.kt$RequestVM$private fun onAmountDone(conversion: FiatCurrencyConversion?)</ID>
+    <ID>UnusedPrivateProperty:HomeMessage.kt$val bottomCornerSize by animateDpAsState( targetValue = if (isVisible) BOTTOM_CUTOUT_HEIGHT_DP.dp else 0.dp, animationSpec = animationSpec() )</ID>
+    <ID>UnusedPrivateProperty:SettingsTabContent.kt$val scope = rememberCoroutineScope()</ID>
+    <ID>UnusedPrivateProperty:UpiOfframpProgressView.kt$private const val CARD_PADDING = 14</ID>
     <ID>UseRequire:ExceptionPath.kt$ExceptionPath$throw IllegalArgumentException("Directories couldn't be created")</ID>
     <ID>UseRequire:ExceptionPath.kt$ExceptionPath$throw IllegalArgumentException("Path is a file when a directory was expected")</ID>
     <ID>UseRequire:ExceptionPath.kt$ExceptionPath$throw IllegalArgumentException("Path is not writeable")</ID>
-    <ID>UseRequire:UpdateViewModel.kt$UpdateViewModel.UpdateViewModelFactory$throw IllegalArgumentException("ViewModel Not Found.")</ID>
+    <ID>WildcardImport:Accessors15c80wxji7qdhvcsteytc58m6.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors15c80wxji7qdhvcsteytc58m6.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors16h8i8yvcoyu6adqodek0vazl.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors16h8i8yvcoyu6adqodek0vazl.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors1crcmgpg53bs3tut9tzeov9zs.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors1crcmgpg53bs3tut9tzeov9zs.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors1je17tzadwn2i8n7cte4ejjuc.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors1je17tzadwn2i8n7cte4ejjuc.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors1y0x5zjrw062ti39iwig4ztsq.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors1y0x5zjrw062ti39iwig4ztsq.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors20m89wvqrtvolhrxzuq1utrar.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors20m89wvqrtvolhrxzuq1utrar.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors21zhoq018jw7yza6oupdxasaq.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors21zhoq018jw7yza6oupdxasaq.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors2oadk7let745pm8ahqypkqzlk.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors2oadk7let745pm8ahqypkqzlk.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors2s1m7qhtdel2iy5x5gc2gv6f5.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors2s1m7qhtdel2iy5x5gc2gv6f5.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors30fkku080rcvoj344u192bkfh.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors30fkku080rcvoj344u192bkfh.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors32ikgp1isdd8mwexzgbe6rirl.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors32ikgp1isdd8mwexzgbe6rirl.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors32yk85ycsljiuajc2oknj21lt.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors32yk85ycsljiuajc2oknj21lt.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors33qjl5yednlyp9tyvd6yykvt5.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors33qjl5yednlyp9tyvd6yykvt5.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors3dn3adhcpitetfd8lbt7c66zr.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors3dn3adhcpitetfd8lbt7c66zr.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors3lkj8uvuyc1fes1zjdaceqluw.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors3lkj8uvuyc1fes1zjdaceqluw.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors3y5fen13324igdkixmxh57kt8.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors3y5fen13324igdkixmxh57kt8.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors45cftp2do14y8dm8cnj0yfjzm.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors45cftp2do14y8dm8cnj0yfjzm.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors46nwrg1rs44ofdqpi7vyy3pfc.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors49985hyy071qu5jjdlrughl86.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors49985hyy071qu5jjdlrughl86.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors4g3ee48g3j8ovb2sfufkb1xgh.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors4g3ee48g3j8ovb2sfufkb1xgh.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors4ymijgaek646mzru18sdmblu7.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors4ymijgaek646mzru18sdmblu7.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors4ymn32ugs7fc7ez4f1y4vdr9n.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors4ymn32ugs7fc7ez4f1y4vdr9n.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors5cx8iclyvbivcabq86i8mlot5.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors5cx8iclyvbivcabq86i8mlot5.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors5dc5ntgnadimckiddcyeoreq.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors5dc5ntgnadimckiddcyeoreq.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors5fk7ujd52n5i4lgh9rsd3nr80.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors5fk7ujd52n5i4lgh9rsd3nr80.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors5r7od1ls1rcal14bwiw1aolf3.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors5r7od1ls1rcal14bwiw1aolf3.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors5x03zd2mf47s5vj1qv3jvhdru.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors5x03zd2mf47s5vj1qv3jvhdru.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors60wvtf0hlc6m7pu4zcziugmri.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors60wvtf0hlc6m7pu4zcziugmri.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors62xgvb04612dadp03ybl5vf12.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors62xgvb04612dadp03ybl5vf12.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors6aep9gs3nuz3lpck4wir0rbwq.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors6aep9gs3nuz3lpck4wir0rbwq.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors6m89nhcqblthog8es93pjkmhg.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors6m89nhcqblthog8es93pjkmhg.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors6xkpc5r938hqmmzagr5yicp7s.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors6xkpc5r938hqmmzagr5yicp7s.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors72k7tti784t7idmqtg2upvaru.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors72k7tti784t7idmqtg2upvaru.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors72pwwp7evk4t6494cyybv7kk7.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors72pwwp7evk4t6494cyybv7kk7.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors7axcot3v1j7qpduaewb3aezf4.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors7axcot3v1j7qpduaewb3aezf4.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors7hvycqvau4uyj5knata7lx0yx.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors7hvycqvau4uyj5knata7lx0yx.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors7oo2sidj7gyb285w6yifp9nn4.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors7oo2sidj7gyb285w6yifp9nn4.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors7pildy6t6pgcmk0gyewx4z8k1.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors7pildy6t6pgcmk0gyewx4z8k1.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors8lcri9ibgd9oj8dt3t8z8nvfx.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors8qpm3vfqh4wz80t5pf9qmw88r.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors8qpm3vfqh4wz80t5pf9qmw88r.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors8uzlaa9ndo750hmo4da2vgu2v.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors8uzlaa9ndo750hmo4da2vgu2v.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors8zd6u262ixrjkrpgx69mnl0hj.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors8zd6u262ixrjkrpgx69mnl0hj.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors96b3ii45gitqpy1kb3tvcvtxv.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors96b3ii45gitqpy1kb3tvcvtxv.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors9ofjxssccbksmuzem03z8pl6.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors9ofjxssccbksmuzem03z8pl6.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors9upc35ddn1m31thgty51w1nrj.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors9upc35ddn1m31thgty51w1nrj.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors9xbdx9ypglb5iceqwefq3l2u.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors9xbdx9ypglb5iceqwefq3l2u.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessors9xim6xjdq0ry1lmc4wm5ei8eh.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessors9xim6xjdq0ry1lmc4wm5ei8eh.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsa47105wcmcbzx75lm7p2ciqqb.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsa47105wcmcbzx75lm7p2ciqqb.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsa5ptgikd9fb816fav4742zvaq.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsa5ptgikd9fb816fav4742zvaq.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsaofthkmarv0q41bodk71vcqi7.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsaofthkmarv0q41bodk71vcqi7.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsblypoh2ruc9u3bx9djsfqsntg.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsbp4j8g31qsxo0ekjysvxih5jg.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsbp4j8g31qsxo0ekjysvxih5jg.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsbtc8iwv8u9b0f38ikfmodj8ns.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsbtc8iwv8u9b0f38ikfmodj8ns.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorscosmuqa5m4pz5v4rp16nnpsrn.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorscosmuqa5m4pz5v4rp16nnpsrn.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsdemns0nrfvv4tm1e985ahms6r.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsdemns0nrfvv4tm1e985ahms6r.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsdirr8g3rs0a9h4cvi2o23j1gy.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsdirr8g3rs0a9h4cvi2o23j1gy.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsdjndpeyafmkvjrxu9kp0ma1gn.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsdjndpeyafmkvjrxu9kp0ma1gn.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorse3bcayds3ygcyd5zodeo0v3sh.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorse3nu4a2kmhhq7smy0tcmgt45g.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorse3nu4a2kmhhq7smy0tcmgt45g.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorse63o1t85fyc2j2y6mbe9ytoeh.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorse63o1t85fyc2j2y6mbe9ytoeh.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorse6ex1mefr8h1znr2ivlnwcx4n.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorseessl0al0otcsbyqqruvoncpd.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorseessl0al0otcsbyqqruvoncpd.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsem8w6wnof1lrw3ubqr6eh9gcj.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsem8w6wnof1lrw3ubqr6eh9gcj.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsf2jx22njgpl8k21k7scc1t0rw.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsf2jx22njgpl8k21k7scc1t0rw.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsfbf92xd7bth9xw3u4y6q8qcd.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsfbf92xd7bth9xw3u4y6q8qcd.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:Accessorsw34mwj3hroscfmyxar5atwjz.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:Accessorsw34mwj3hroscfmyxar5atwjz.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:AnnotationProcessorConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:AnnotationProcessorConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:ApiElementsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:ApiElementsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:ArchivesConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:ArchivesConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:CompileClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:CompileClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:CompileOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:CompileOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:DefaultConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:DefaultConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:DetektConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:DetektConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:DetektPluginsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:DetektPluginsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:ImplementationConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:ImplementationConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:JacocoAgentConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:JacocoAgentConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:JacocoAntConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:JacocoAntConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:MainSourceElementsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:MainSourceElementsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:RuntimeClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:RuntimeClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:RuntimeElementsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:RuntimeElementsConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:RuntimeOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:RuntimeOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:TestAnnotationProcessorConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:TestAnnotationProcessorConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:TestCompileClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:TestCompileClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:TestCompileOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:TestCompileOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:TestImplementationConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:TestImplementationConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:TestResultsElementsForTestConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:TestResultsElementsForTestConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:TestRuntimeClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:TestRuntimeClasspathConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
+    <ID>WildcardImport:TestRuntimeOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.*</ID>
+    <ID>WildcardImport:TestRuntimeOnlyConfigurationAccessors.kt$import org.gradle.kotlin.dsl.accessors.runtime.*</ID>
   </CurrentIssues>
 </SmellBaseline>

@@ -83,10 +83,11 @@ private fun SupportChatView(state: SupportChatScreenState) {
     val uiState = state.uiState
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             SupportTopBar(
@@ -159,13 +160,14 @@ private fun SupportTopBar(
         title = title,
         left = {
             Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(bounded = false),
-                        onClick = onBack,
-                    ),
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(bounded = false),
+                            onClick = onBack,
+                        ),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -180,13 +182,14 @@ private fun SupportTopBar(
             if (showOverflow) {
                 Box {
                     Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = ripple(bounded = false),
-                                onClick = { showMenu = true },
-                            ),
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = ripple(bounded = false),
+                                    onClick = { showMenu = true },
+                                ),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -204,9 +207,10 @@ private fun SupportTopBar(
                             text = {
                                 BasicText(
                                     text = stringRes(R.string.support_chat_overflow_close).getValue(),
-                                    style = ZappTheme.typography.body.copy(
-                                        color = ZappTheme.colors.danger,
-                                    ),
+                                    style =
+                                        ZappTheme.typography.body.copy(
+                                            color = ZappTheme.colors.danger,
+                                        ),
                                 )
                             },
                             onClick = {
@@ -232,18 +236,20 @@ private fun CategoryPickerFullScreen(
     val c = ZappTheme.colors
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 48.dp)
-                .alpha(if (isSubmitting) PICKER_DIMMED_ALPHA else 1f),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 48.dp)
+                    .alpha(if (isSubmitting) PICKER_DIMMED_ALPHA else 1f),
         ) {
             BasicText(
                 text = stringRes(R.string.support_chat_pick_topic).getValue(),
@@ -252,18 +258,18 @@ private fun CategoryPickerFullScreen(
             Spacer(Modifier.height(16.dp))
             SupportCategory.entries.forEach { category ->
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .background(c.surfaceAlt, RectangleShape)
-                        .border(BorderStroke(1.dp, c.border), RectangleShape)
-                        .clickable(
-                            enabled = !isSubmitting,
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(color = c.accent),
-                            onClick = { onSelected(category) },
-                        )
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .background(c.surfaceAlt, RectangleShape)
+                            .border(BorderStroke(1.dp, c.border), RectangleShape)
+                            .clickable(
+                                enabled = !isSubmitting,
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = ripple(color = c.accent),
+                                onClick = { onSelected(category) },
+                            ).padding(horizontal = 16.dp, vertical = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
@@ -320,24 +326,26 @@ private fun SupportMessageBubble(message: SupportUiMessage) {
     val isFromLocalUser = message.isFromLocalUser
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 4.dp),
         horizontalArrangement = if (isFromLocalUser) Arrangement.End else Arrangement.Start,
     ) {
         Box(
-            modifier = Modifier
-                .background(
-                    if (isFromLocalUser) c.accent else c.surface,
-                    RectangleShape,
-                )
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .background(
+                        if (isFromLocalUser) c.accent else c.surface,
+                        RectangleShape,
+                    ).padding(horizontal = 12.dp, vertical = 8.dp),
         ) {
             BasicText(
                 text = message.content,
-                style = ZappTheme.typography.body.copy(
-                    color = if (isFromLocalUser) c.onAccent else c.text,
-                ),
+                style =
+                    ZappTheme.typography.body.copy(
+                        color = if (isFromLocalUser) c.onAccent else c.text,
+                    ),
             )
         }
     }
@@ -356,23 +364,25 @@ private fun SupportInputBar(
     val canSend = input.isNotBlank()
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .padding(horizontal = 8.dp, vertical = 8.dp)
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .padding(horizontal = 8.dp, vertical = 8.dp)
+                .windowInsetsPadding(WindowInsets.navigationBars),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(c.surfaceAlt, RectangleShape)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(color = c.accent),
-                    onClick = onAttach,
-                ),
+            modifier =
+                Modifier
+                    .size(36.dp)
+                    .background(c.surfaceAlt, RectangleShape)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(color = c.accent),
+                        onClick = onAttach,
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -388,9 +398,10 @@ private fun SupportInputBar(
         TextField(
             value = input,
             onValueChange = onInputChange,
-            modifier = Modifier
-                .weight(1f)
-                .defaultMinSize(minHeight = 36.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .defaultMinSize(minHeight = 36.dp),
             placeholder = {
                 BasicText(
                     text = stringRes(R.string.support_chat_input_placeholder).getValue(),
@@ -399,30 +410,32 @@ private fun SupportInputBar(
             },
             maxLines = 4,
             shape = RectangleShape,
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = c.surfaceInput,
-                unfocusedContainerColor = c.surfaceInput,
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent,
-                focusedTextColor = c.text,
-                unfocusedTextColor = c.text,
-                cursorColor = c.accent,
-            ),
+            colors =
+                TextFieldDefaults.colors(
+                    focusedContainerColor = c.surfaceInput,
+                    unfocusedContainerColor = c.surfaceInput,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    focusedTextColor = c.text,
+                    unfocusedTextColor = c.text,
+                    cursorColor = c.accent,
+                ),
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
         Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(if (canSend) c.accent else c.surfaceAlt, RectangleShape)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .clickable(
-                    enabled = canSend,
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(color = c.onAccent),
-                    onClick = onSend,
-                ),
+            modifier =
+                Modifier
+                    .size(36.dp)
+                    .background(if (canSend) c.accent else c.surfaceAlt, RectangleShape)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .clickable(
+                        enabled = canSend,
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(color = c.onAccent),
+                        onClick = onSend,
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(

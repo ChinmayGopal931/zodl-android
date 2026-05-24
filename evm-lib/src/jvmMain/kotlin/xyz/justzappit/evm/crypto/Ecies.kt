@@ -45,15 +45,22 @@ object Ecies {
         val ephemPubPoint = curve.g.multiply(ephemPriv).normalize()
         val ephemPubUncompressed = ephemPubPoint.getEncoded(false)
 
-        val sharedSecret = pubPoint.multiply(ephemPriv).normalize().affineXCoord.encoded
+        val sharedSecret =
+            pubPoint
+                .multiply(ephemPriv)
+                .normalize()
+                .affineXCoord.encoded
         val (encKey, macKey) = deriveKeys(sharedSecret)
 
         val iv = ByteArray(IV_BYTES).also { random.nextBytes(it) }
         val plaintext = message.toByteArray(Charsets.UTF_8)
 
-        val ciphertext = Cipher.getInstance("AES/CBC/PKCS5Padding").apply {
-            init(Cipher.ENCRYPT_MODE, SecretKeySpec(encKey, "AES"), IvParameterSpec(iv))
-        }.doFinal(plaintext)
+        val ciphertext =
+            Cipher
+                .getInstance("AES/CBC/PKCS5Padding")
+                .apply {
+                    init(Cipher.ENCRYPT_MODE, SecretKeySpec(encKey, "AES"), IvParameterSpec(iv))
+                }.doFinal(plaintext)
 
         val mac = hmacSha256(macKey, iv + ephemPubUncompressed + ciphertext)
 
@@ -73,7 +80,11 @@ object Ecies {
         val macBytes = encrypted.mac.hexToBytes()
 
         val ephemPubPoint = curve.curve.decodePoint(ephemPubBytes)
-        val sharedSecret = ephemPubPoint.multiply(priv).normalize().affineXCoord.encoded
+        val sharedSecret =
+            ephemPubPoint
+                .multiply(priv)
+                .normalize()
+                .affineXCoord.encoded
         val (encKey, macKey) = deriveKeys(sharedSecret)
 
         val computedMac = hmacSha256(macKey, iv + ephemPubBytes + ciphertext)
@@ -81,9 +92,12 @@ object Ecies {
             "MAC mismatch — ciphertext may be corrupted or tampered with"
         }
 
-        val plaintext = Cipher.getInstance("AES/CBC/PKCS5Padding").apply {
-            init(Cipher.DECRYPT_MODE, SecretKeySpec(encKey, "AES"), IvParameterSpec(iv))
-        }.doFinal(ciphertext)
+        val plaintext =
+            Cipher
+                .getInstance("AES/CBC/PKCS5Padding")
+                .apply {
+                    init(Cipher.DECRYPT_MODE, SecretKeySpec(encKey, "AES"), IvParameterSpec(iv))
+                }.doFinal(ciphertext)
 
         return plaintext.toString(Charsets.UTF_8)
     }
@@ -91,10 +105,11 @@ object Ecies {
     fun cipherStringify(encrypted: Encrypted): String {
         val ephemPubPoint = curve.curve.decodePoint(encrypted.ephemPublicKey.hexToBytes())
         val compressed = ephemPubPoint.getEncoded(true)
-        val out = encrypted.iv.hexToBytes() +
-            compressed +
-            encrypted.mac.hexToBytes() +
-            encrypted.ciphertext.hexToBytes()
+        val out =
+            encrypted.iv.hexToBytes() +
+                compressed +
+                encrypted.mac.hexToBytes() +
+                encrypted.ciphertext.hexToBytes()
         return out.toHex()
     }
 
@@ -145,4 +160,3 @@ object Ecies {
     private fun hmacSha256(key: ByteArray, data: ByteArray): ByteArray =
         Mac.getInstance("HmacSHA256").apply { init(SecretKeySpec(key, "HmacSHA256")) }.doFinal(data)
 }
-

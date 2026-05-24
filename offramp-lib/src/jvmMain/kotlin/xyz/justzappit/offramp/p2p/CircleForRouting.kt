@@ -15,7 +15,9 @@ data class CircleForRouting(
 
 /** An on-chain circle identifier. Typed so it can't be confused with an order id or amount. */
 @JvmInline
-value class CircleId(val value: BigInteger)
+value class CircleId(
+    val value: BigInteger
+)
 
 enum class CircleStatus {
     PAUSED,

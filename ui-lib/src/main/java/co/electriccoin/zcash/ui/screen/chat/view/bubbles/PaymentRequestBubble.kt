@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Payment
 import androidx.compose.material3.Icon
@@ -18,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
@@ -28,7 +28,12 @@ import java.util.Locale
 
 @Composable
 fun PaymentRequestBubble(message: ChatMessage, isFromMe: Boolean) {
-    val parsed = try { JSONObject(message.content) } catch (_: Exception) { null }
+    val parsed =
+        try {
+            JSONObject(message.content)
+        } catch (_: Exception) {
+            null
+        }
     val amount = parsed?.optDouble("amount", 0.0) ?: 0.0
     val memo = parsed?.optString("memo", "")?.takeIf { it.isNotEmpty() }
     val token = parsed?.optString("token", "ZEC") ?: "ZEC"

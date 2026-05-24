@@ -19,25 +19,26 @@ object KnownReverts {
         val sdkMessage: String?,
     )
 
-    private val CURATED: Map<Selector4, KnownRevertReason> = mapOf(
-        Selector4.fromHex("0x91da284f") to KnownRevertReason.BuyOrderAmountExceedsLimit,
-        Selector4.fromHex("0x412dd2b1") to KnownRevertReason.InsufficientReputation,
-        Selector4.fromHex("0xf42e41a1") to KnownRevertReason.OrderAmountExceedsLimit,
-        Selector4.fromHex("0xbba2edf9") to KnownRevertReason.SellAmountExceedsFiatLimit,
-        Selector4.fromHex("0x02a6fdd2") to KnownRevertReason.CurrencyNotSupported,
-        Selector4.fromHex("0xebb6f34b") to KnownRevertReason.UserIsBlacklisted,
-        Selector4.fromHex("0x4bbac5de") to KnownRevertReason.ExchangeNotOperational,
-        Selector4.fromHex("0x5d04ff4c") to KnownRevertReason.NotEnoughEligibleMerchants,
-        Selector4.fromHex("0xc56873ba") to KnownRevertReason.OrderExpired,
-        Selector4.fromHex("0xc1654697") to KnownRevertReason.UpiAlreadySent,
-        Selector4.fromHex("0xaa60ec26") to KnownRevertReason.InvalidOrderUpi,
-        Selector4.fromHex("0x6b1b90b4") to KnownRevertReason.OrderNotAccepted,
-        // Three Diamond variants for "USDC transferFrom failed" collapse to one user-facing reason.
-        Selector4.fromHex("0x149f9fca") to KnownRevertReason.UsdcTransferFailed,
-        Selector4.fromHex("0x47bfece5") to KnownRevertReason.UsdcTransferFailed,
-        Selector4.fromHex("0x279bbc0c") to KnownRevertReason.UsdcTransferFailed,
-        Selector4.fromHex("0xea8e4eb5") to KnownRevertReason.NotAuthorized,
-    )
+    private val CURATED: Map<Selector4, KnownRevertReason> =
+        mapOf(
+            Selector4.fromHex("0x91da284f") to KnownRevertReason.BuyOrderAmountExceedsLimit,
+            Selector4.fromHex("0x412dd2b1") to KnownRevertReason.InsufficientReputation,
+            Selector4.fromHex("0xf42e41a1") to KnownRevertReason.OrderAmountExceedsLimit,
+            Selector4.fromHex("0xbba2edf9") to KnownRevertReason.SellAmountExceedsFiatLimit,
+            Selector4.fromHex("0x02a6fdd2") to KnownRevertReason.CurrencyNotSupported,
+            Selector4.fromHex("0xebb6f34b") to KnownRevertReason.UserIsBlacklisted,
+            Selector4.fromHex("0x4bbac5de") to KnownRevertReason.ExchangeNotOperational,
+            Selector4.fromHex("0x5d04ff4c") to KnownRevertReason.NotEnoughEligibleMerchants,
+            Selector4.fromHex("0xc56873ba") to KnownRevertReason.OrderExpired,
+            Selector4.fromHex("0xc1654697") to KnownRevertReason.UpiAlreadySent,
+            Selector4.fromHex("0xaa60ec26") to KnownRevertReason.InvalidOrderUpi,
+            Selector4.fromHex("0x6b1b90b4") to KnownRevertReason.OrderNotAccepted,
+            // Three Diamond variants for "USDC transferFrom failed" collapse to one user-facing reason.
+            Selector4.fromHex("0x149f9fca") to KnownRevertReason.UsdcTransferFailed,
+            Selector4.fromHex("0x47bfece5") to KnownRevertReason.UsdcTransferFailed,
+            Selector4.fromHex("0x279bbc0c") to KnownRevertReason.UsdcTransferFailed,
+            Selector4.fromHex("0xea8e4eb5") to KnownRevertReason.NotAuthorized,
+        )
 
     // A standalone 4-byte selector embedded in a bundler error message, e.g. the ERC-4337 bundler
     // reports an on-chain revert as "...reverted during simulation with reason: 0xea8e4eb5". The

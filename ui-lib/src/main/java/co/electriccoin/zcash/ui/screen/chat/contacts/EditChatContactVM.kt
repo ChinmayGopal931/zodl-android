@@ -67,8 +67,7 @@ class EditChatContactVM(
                     }
                     onConsumeScannedWalletAddress()
                 }
-            }
-            .launchIn(scope)
+            }.launchIn(scope)
     }
 
     val state: StateFlow<EditChatContactState> =
@@ -82,9 +81,10 @@ class EditChatContactVM(
             val (nameVal, walletVal) = primary
             val (tAddr, eAddr, sAddr) = extras
             val originalWallet = contact.walletAddress.orEmpty()
-            val hasChanges = nameVal.text.trim() != contact.name ||
-                walletVal.text.trim() != originalWallet ||
-                tAddr.text.isNotBlank() || eAddr.text.isNotBlank() || sAddr.text.isNotBlank()
+            val hasChanges =
+                nameVal.text.trim() != contact.name ||
+                    walletVal.text.trim() != originalWallet ||
+                    tAddr.text.isNotBlank() || eAddr.text.isNotBlank() || sAddr.text.isNotBlank()
             val isSaveEnabled = hasChanges && nameVal.text.isNotBlank()
             EditChatContactState(
                 publicKey = contact.publicKey,
@@ -192,17 +192,18 @@ class EditChatContactVM(
             error.value = stringRes(R.string.chat_contact_error_name_required)
             return
         }
-        val addrs = buildMap {
-            if (transparentAddr.value.text.isNotBlank()) {
-                put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.value.text.trim())
+        val addrs =
+            buildMap {
+                if (transparentAddr.value.text.isNotBlank()) {
+                    put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.value.text.trim())
+                }
+                if (evmAddr.value.text.isNotBlank()) {
+                    put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.value.text.trim())
+                }
+                if (solanaAddr.value.text.isNotBlank()) {
+                    put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.value.text.trim())
+                }
             }
-            if (evmAddr.value.text.isNotBlank()) {
-                put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.value.text.trim())
-            }
-            if (solanaAddr.value.text.isNotBlank()) {
-                put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.value.text.trim())
-            }
-        }
         onSaveContact(contact.publicKey, nameVal, walletAddress.value.text.trim(), addrs)
     }
 
@@ -217,5 +218,4 @@ class EditChatContactVM(
     private fun onConfirmDelete() {
         onDeleteContact(contact.publicKey)
     }
-
 }

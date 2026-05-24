@@ -12,37 +12,42 @@ import kotlin.test.assertEquals
  * encoder ever drifts from viem, exactly one of these assertions will fail.
  */
 class ViemCalldataParityTest {
-
     @Test
     fun `approve calldata matches viem`() {
-        val got = Erc20Calls.approveCalldata(
-            spender = Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2"),
-            amount = Usdc6.ofMicros(1_000_000),
-        ).toHex()
+        val got =
+            Erc20Calls
+                .approveCalldata(
+                    spender = Address.parse("0xce868398FDaDcA368EAc203222874D6888532aE2"),
+                    amount = Usdc6.ofMicros(1_000_000),
+                ).toHex()
         assertEquals(VIEM_APPROVE.removePrefix("0x"), got)
     }
 
     @Test
     fun `placeOrder calldata matches viem (PAY, INR, with relay pubkey)`() {
-        val got = DiamondCalls.placeOrderCalldata(
-            PlaceOrderArgs(
-                relayPubKeyEthCrypto = RELAY_PUBKEY,
-                usdcAmount = Usdc6.ofMicros(5_000_000),
-                recipientAddress = Address.parse("0x000000000000000000000000000000000000dead"),
-                orderType = OrderType.PAY,
-                currency = CurrencyCode.Inr,
-                circleId = BigInteger.ONE,
-            ),
-        ).toHex()
+        val got =
+            DiamondCalls
+                .placeOrderCalldata(
+                    PlaceOrderArgs(
+                        relayPubKeyEthCrypto = RELAY_PUBKEY,
+                        usdcAmount = Usdc6.ofMicros(5_000_000),
+                        recipientAddress = Address.parse("0x000000000000000000000000000000000000dead"),
+                        orderType = OrderType.PAY,
+                        currency = CurrencyCode.Inr,
+                        circleId = BigInteger.ONE,
+                    ),
+                ).toHex()
         assertEquals(VIEM_PLACE_ORDER.removePrefix("0x"), got)
     }
 
     @Test
     fun `setSellOrderUpi calldata matches viem`() {
-        val got = DiamondCalls.setSellOrderUpiCalldata(
-            orderId = BigInteger.valueOf(42),
-            encryptedUpiHex = "a".repeat(170),
-        ).toHex()
+        val got =
+            DiamondCalls
+                .setSellOrderUpiCalldata(
+                    orderId = BigInteger.valueOf(42),
+                    encryptedUpiHex = "a".repeat(170),
+                ).toHex()
         assertEquals(VIEM_SET_SELL_ORDER_UPI.removePrefix("0x"), got)
     }
 
@@ -60,15 +65,17 @@ class ViemCalldataParityTest {
 
     @Test
     fun `getAssignableMerchantsFromCircle calldata matches viem`() {
-        val got = DiamondCalls.getAssignableMerchantsFromCircleCalldata(
-            circleId = BigInteger.ONE,
-            assignUpTo = BigInteger.valueOf(3),
-            currency = CurrencyCode.Inr,
-            user = Address.parse("0x000000000000000000000000000000000000beef"),
-            usdtAmount = Usdc6.ofMicros(5_000_000),
-            fiatAmount = Usdc6.ofMicros(418_000_000),
-            orderType = OrderType.PAY,
-        ).toHex()
+        val got =
+            DiamondCalls
+                .getAssignableMerchantsFromCircleCalldata(
+                    circleId = BigInteger.ONE,
+                    assignUpTo = BigInteger.valueOf(3),
+                    currency = CurrencyCode.Inr,
+                    user = Address.parse("0x000000000000000000000000000000000000beef"),
+                    usdtAmount = Usdc6.ofMicros(5_000_000),
+                    fiatAmount = Usdc6.ofMicros(418_000_000),
+                    orderType = OrderType.PAY,
+                ).toHex()
         assertEquals(VIEM_GET_ASSIGNABLE.removePrefix("0x"), got)
     }
 

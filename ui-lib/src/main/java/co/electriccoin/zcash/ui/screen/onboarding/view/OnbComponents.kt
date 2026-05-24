@@ -42,10 +42,11 @@ fun OnbProgress(
     ) {
         repeat(total) { i ->
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(2.dp)
-                    .background(if (i < step) c.accent else c.border, RectangleShape),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .height(2.dp)
+                        .background(if (i < step) c.accent else c.border, RectangleShape),
             )
         }
     }
@@ -61,13 +62,14 @@ fun GhostNum(n: Int, modifier: Modifier = Modifier) {
     BasicText(
         text = String.format("%02d", n),
         modifier = modifier,
-        style = ZappTheme.typography.display.copy(
-            color = c.surfaceAlt,
-            fontSize = 130.sp,
-            lineHeight = 130.sp,
-            letterSpacing = (-6).sp,
-            fontWeight = FontWeight.Black,
-        ),
+        style =
+            ZappTheme.typography.display.copy(
+                color = c.surfaceAlt,
+                fontSize = 130.sp,
+                lineHeight = 130.sp,
+                letterSpacing = (-6).sp,
+                fontWeight = FontWeight.Black,
+            ),
     )
 }
 
@@ -78,12 +80,13 @@ fun Eyebrow(text: String, modifier: Modifier = Modifier) {
     BasicText(
         text = text.uppercase(),
         modifier = modifier,
-        style = ZappTheme.typography.eyebrow.copy(
-            color = c.accent,
-            fontSize = 10.sp,
-            letterSpacing = 2.5.sp,
-            fontWeight = FontWeight.Black,
-        ),
+        style =
+            ZappTheme.typography.eyebrow.copy(
+                color = c.accent,
+                fontSize = 10.sp,
+                letterSpacing = 2.5.sp,
+                fontWeight = FontWeight.Black,
+            ),
     )
 }
 
@@ -92,10 +95,11 @@ fun Eyebrow(text: String, modifier: Modifier = Modifier) {
 fun AccentRule(modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     Box(
-        modifier = modifier
-            .width(36.dp)
-            .height(3.dp)
-            .background(c.text, RectangleShape),
+        modifier =
+            modifier
+                .width(36.dp)
+                .height(3.dp)
+                .background(c.text, RectangleShape),
     )
 }
 
@@ -116,10 +120,11 @@ fun OnbBottomDock(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .let { if (noBorder) it else it.border(1.dp, c.text, RectangleShape) }
-            .windowInsetsPadding(WindowInsets.navigationBars),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .let { if (noBorder) it else it.border(1.dp, c.text, RectangleShape) }
+                .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -127,11 +132,12 @@ fun OnbBottomDock(
         ) {
             if (showBack) {
                 Box(
-                    modifier = Modifier
-                        .height(52.dp)
-                        .let { if (showCta) it.width(72.dp) else it.fillMaxWidth() }
-                        .clickable(onClick = onBack)
-                        .border(1.dp, c.border, RectangleShape),
+                    modifier =
+                        Modifier
+                            .height(52.dp)
+                            .let { if (showCta) it.width(72.dp) else it.fillMaxWidth() }
+                            .clickable(onClick = onBack)
+                            .border(1.dp, c.border, RectangleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(
@@ -140,20 +146,22 @@ fun OnbBottomDock(
                     ) {
                         BasicText(
                             text = "←",
-                            style = ZappTheme.typography.button.copy(
-                                color = c.text,
-                                fontWeight = FontWeight.Black,
-                                fontSize = 18.sp,
-                            ),
+                            style =
+                                ZappTheme.typography.button.copy(
+                                    color = c.text,
+                                    fontWeight = FontWeight.Black,
+                                    fontSize = 18.sp,
+                                ),
                         )
                         if (!showCta) {
                             BasicText(
                                 text = "back",
-                                style = ZappTheme.typography.button.copy(
-                                    color = c.textSubtle,
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 15.sp,
-                                ),
+                                style =
+                                    ZappTheme.typography.button.copy(
+                                        color = c.textSubtle,
+                                        fontWeight = FontWeight.Black,
+                                        fontSize = 15.sp,
+                                    ),
                             )
                         }
                     }
@@ -163,21 +171,23 @@ fun OnbBottomDock(
                 val bg = if (ctaEnabled) c.accent else c.surfaceAlt
                 val fg = if (ctaEnabled) c.onAccent else c.textSubtle
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(52.dp)
-                        .background(bg, RectangleShape)
-                        .clickable(enabled = ctaEnabled, onClick = onCta),
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .height(52.dp)
+                            .background(bg, RectangleShape)
+                            .clickable(enabled = ctaEnabled, onClick = onCta),
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = cta,
-                        style = ZappTheme.typography.button.copy(
-                            color = fg,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.2.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.button.copy(
+                                color = fg,
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.2.sp,
+                            ),
                     )
                 }
             }
@@ -192,13 +202,14 @@ fun OnbHero(text: String, modifier: Modifier = Modifier) {
     BasicText(
         text = text,
         modifier = modifier,
-        style = ZappTheme.typography.display.copy(
-            color = c.text,
-            fontSize = 42.sp,
-            lineHeight = 44.sp,
-            letterSpacing = (-1.8).sp,
-            fontWeight = FontWeight.Black,
-        ),
+        style =
+            ZappTheme.typography.display.copy(
+                color = c.text,
+                fontSize = 42.sp,
+                lineHeight = 44.sp,
+                letterSpacing = (-1.8).sp,
+                fontWeight = FontWeight.Black,
+            ),
     )
 }
 
@@ -209,11 +220,12 @@ fun OnbSub(text: String, modifier: Modifier = Modifier) {
     BasicText(
         text = text,
         modifier = modifier,
-        style = ZappTheme.typography.body.copy(
-            color = c.textMuted,
-            fontSize = 13.sp,
-            lineHeight = 22.sp,
-        ),
+        style =
+            ZappTheme.typography.body.copy(
+                color = c.textMuted,
+                fontSize = 13.sp,
+                lineHeight = 22.sp,
+            ),
     )
 }
 
@@ -242,17 +254,19 @@ fun OnbActionListCard(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, c.border, RectangleShape),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .border(1.dp, c.border, RectangleShape),
     ) {
         actions.forEachIndexed { index, action ->
             if (index > 0) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .background(c.border, RectangleShape),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .background(c.border, RectangleShape),
                 )
             }
             OnbActionRow(action = action, modifier = Modifier.fillMaxWidth())
@@ -274,54 +288,60 @@ fun OnbActionRow(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .background(if (action.highlight) c.accentSoft else c.bg, RectangleShape)
-            .clickable(onClick = action.onClick)
-            .padding(18.dp),
+        modifier =
+            modifier
+                .background(if (action.highlight) c.accentSoft else c.bg, RectangleShape)
+                .clickable(onClick = action.onClick)
+                .padding(18.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .width(36.dp)
-                .height(36.dp)
-                .background(if (action.highlight) c.accent else c.surfaceAlt, RectangleShape),
+            modifier =
+                Modifier
+                    .width(36.dp)
+                    .height(36.dp)
+                    .background(if (action.highlight) c.accent else c.surfaceAlt, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
                 text = action.icon,
-                style = ZappTheme.typography.body.copy(
-                    color = if (action.highlight) c.onAccent else c.text,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.body.copy(
+                        color = if (action.highlight) c.onAccent else c.text,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
         }
         Spacer(Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             BasicText(
                 text = action.label,
-                style = ZappTheme.typography.rowTitle.copy(
-                    color = c.text,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.rowTitle.copy(
+                        color = c.text,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
             Spacer(Modifier.height(2.dp))
             BasicText(
                 text = action.sub,
-                style = ZappTheme.typography.rowSubtitle.copy(
-                    color = c.textMuted,
-                    fontSize = 12.sp,
-                ),
+                style =
+                    ZappTheme.typography.rowSubtitle.copy(
+                        color = c.textMuted,
+                        fontSize = 12.sp,
+                    ),
             )
         }
         BasicText(
             text = "›",
-            style = ZappTheme.typography.body.copy(
-                color = c.textSubtle,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.body.copy(
+                    color = c.textSubtle,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Black,
+                ),
         )
     }
 }
@@ -338,36 +358,40 @@ fun OnbBulletRow(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .let { if (isFirst) it.border(1.dp, c.border, RectangleShape) else it }
-            .padding(top = 14.dp, bottom = 14.dp, end = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .let { if (isFirst) it.border(1.dp, c.border, RectangleShape) else it }
+                .padding(top = 14.dp, bottom = 14.dp, end = 14.dp),
     ) {
         Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(38.dp)
-                .background(c.accent, RectangleShape),
+            modifier =
+                Modifier
+                    .width(3.dp)
+                    .height(38.dp)
+                    .background(c.accent, RectangleShape),
         )
         Spacer(Modifier.width(16.dp))
         Column {
             BasicText(
                 text = label,
-                style = ZappTheme.typography.rowTitle.copy(
-                    color = c.text,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = (-0.2).sp,
-                ),
+                style =
+                    ZappTheme.typography.rowTitle.copy(
+                        color = c.text,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.2).sp,
+                    ),
             )
             if (sub != null) {
                 Spacer(Modifier.height(3.dp))
                 BasicText(
                     text = sub,
-                    style = ZappTheme.typography.rowSubtitle.copy(
-                        color = c.textMuted,
-                        fontSize = 12.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.rowSubtitle.copy(
+                            color = c.textMuted,
+                            fontSize = 12.sp,
+                        ),
                 )
             }
         }

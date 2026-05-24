@@ -7,9 +7,9 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
-import co.electriccoin.zcash.ui.common.usecase.NavigateToPeerOnrampUseCase
 import co.electriccoin.zcash.ui.common.model.WalletAccount
 import co.electriccoin.zcash.ui.common.repository.ExchangeRateRepository
+import co.electriccoin.zcash.ui.common.usecase.NavigateToPeerOnrampUseCase
 import co.electriccoin.zcash.ui.common.wallet.ExchangeRateState
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.balances.spendable.SpendableBalanceArgs
@@ -105,7 +105,9 @@ class BalanceWidgetVM(
             onAddZec = if (account?.totalBalance == Zatoshi(0)) ::onAddZecClick else null,
         )
 
-    private fun onAddZecClick() { viewModelScope.launch { navigateToPeerOnramp() } }
+    private fun onAddZecClick() {
+        viewModelScope.launch { navigateToPeerOnramp() }
+    }
 
     private fun onBalanceButtonClick() = navigationRouter.forward(SpendableBalanceArgs)
 }

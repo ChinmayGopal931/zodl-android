@@ -68,20 +68,22 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 fun TransactionProgressView(state: TransactionProgressState) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout))
-            .imePadding(),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout))
+                .imePadding(),
     ) {
         TopBar(state)
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(if (state.transactionIds == null) 80.dp else 24.dp))
@@ -111,18 +113,20 @@ fun TransactionProgressView(state: TransactionProgressState) {
 private fun TopBar(state: TransactionProgressState) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 18.dp, vertical = 10.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (state.showAppBar) {
             Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable(onClick = state.onBack),
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape)
+                        .clickable(onClick = state.onBack),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -139,19 +143,21 @@ private fun TopBar(state: TransactionProgressState) {
 @Composable
 private fun TitleBlock(state: TransactionProgressState) {
     val c = ZappTheme.colors
-    val accent = when (state.background) {
-        SUCCESS -> c.success
-        ERROR -> c.danger
-        PENDING, null -> c.accent
-    }
+    val accent =
+        when (state.background) {
+            SUCCESS -> c.success
+            ERROR -> c.danger
+            PENDING, null -> c.accent
+        }
 
     // Tiny eyebrow indicator above the title — mirrors the Swiss "section label" style
-    val eyebrowText = when (state.background) {
-        SUCCESS -> "RESULT"
-        ERROR -> "RESULT"
-        PENDING -> "STATUS"
-        null -> null
-    }
+    val eyebrowText =
+        when (state.background) {
+            SUCCESS -> "RESULT"
+            ERROR -> "RESULT"
+            PENDING -> "STATUS"
+            null -> null
+        }
     if (eyebrowText != null) {
         BasicText(
             text = eyebrowText,
@@ -167,10 +173,11 @@ private fun TitleBlock(state: TransactionProgressState) {
     Spacer(Modifier.height(12.dp))
     BasicText(
         text = state.subtitle.getValue(),
-        style = ZappTheme.typography.body.copy(
-            color = c.textMuted,
-            textAlign = TextAlign.Center,
-        ),
+        style =
+            ZappTheme.typography.body.copy(
+                color = c.textMuted,
+                textAlign = TextAlign.Center,
+            ),
         modifier = Modifier.fillMaxWidth(),
     )
 }
@@ -187,10 +194,11 @@ private fun TransactionIdList(ids: List<co.electriccoin.zcash.ui.design.util.Str
         ids.forEachIndexed { index, item ->
             if (index != 0) Spacer(Modifier.height(8.dp))
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(c.surfaceAlt, RectangleShape)
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .background(c.surfaceAlt, RectangleShape)
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 BasicText(
                     text = item.getValue(),
@@ -208,12 +216,13 @@ private fun BottomBar(state: TransactionProgressState) {
     if (state.secondaryButton == null && state.primaryButton == null) return
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         state.secondaryButton?.let { btn ->
@@ -252,12 +261,13 @@ private fun ImageOrLoading(imageResource: ImageResource) {
             val progress by animateLottieCompositionAsState(composition, iterations = LottieConstants.IterateForever)
 
             LottieAnimation(
-                modifier = Modifier
-                    .size(150.dp)
-                    .graphicsLayer {
-                        scaleX = LOTTIE_ANIM_SCALE
-                        scaleY = LOTTIE_ANIM_SCALE
-                    },
+                modifier =
+                    Modifier
+                        .size(150.dp)
+                        .graphicsLayer {
+                            scaleX = LOTTIE_ANIM_SCALE
+                            scaleY = LOTTIE_ANIM_SCALE
+                        },
                 composition = composition,
                 progress = { progress },
                 maintainOriginalImageBounds = true,

@@ -22,8 +22,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Icon
@@ -51,29 +51,32 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 fun AdvancedSettings(state: AdvancedSettingsState) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(
-                WindowInsets.statusBars.union(WindowInsets.displayCutout)
-            ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(
+                    WindowInsets.statusBars.union(WindowInsets.displayCutout)
+                ),
     ) {
         ZappScreenHeader(title = stringResource(R.string.advanced_settings_title))
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
         ) {
             Spacer(Modifier.height(8.dp))
 
             // Items card
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp)
-                    .background(c.surface, RectangleShape)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp)
+                        .background(c.surface, RectangleShape)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape),
             ) {
                 state.items.forEachIndexed { index, item ->
                     ZappRow(
@@ -92,9 +95,10 @@ fun AdvancedSettings(state: AdvancedSettingsState) {
 
             // Info hint
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
             ) {
@@ -119,9 +123,10 @@ fun AdvancedSettings(state: AdvancedSettingsState) {
                 text = stringResource(R.string.advanced_settings_delete_button),
                 variant = ZappButtonVariant.Danger,
                 onClick = state.onDeleteWallet,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp),
             )
 
             Spacer(Modifier.height(20.dp))
@@ -136,27 +141,29 @@ fun AdvancedSettings(state: AdvancedSettingsState) {
 private fun AdvancedSettingsPreview() =
     ProvideZappTheme {
         AdvancedSettings(
-            state = AdvancedSettingsState(
-                onBack = {},
-                items = listOf(
-                    AdvancedSettingsItem(
-                        title = stringRes("Recovery phrase"),
-                        icon = Icons.Default.Key,
-                        onClick = {},
-                    ),
-                    AdvancedSettingsItem(
-                        title = stringRes("Export data"),
-                        icon = Icons.Default.FileDownload,
-                        onClick = {},
-                    ),
-                    AdvancedSettingsItem(
-                        title = stringRes("Tax export"),
-                        icon = Icons.Default.Receipt,
-                        isEnabled = false,
-                        onClick = {},
-                    ),
+            state =
+                AdvancedSettingsState(
+                    onBack = {},
+                    items =
+                        listOf(
+                            AdvancedSettingsItem(
+                                title = stringRes("Recovery phrase"),
+                                icon = Icons.Default.Key,
+                                onClick = {},
+                            ),
+                            AdvancedSettingsItem(
+                                title = stringRes("Export data"),
+                                icon = Icons.Default.FileDownload,
+                                onClick = {},
+                            ),
+                            AdvancedSettingsItem(
+                                title = stringRes("Tax export"),
+                                icon = Icons.Default.Receipt,
+                                isEnabled = false,
+                                onClick = {},
+                            ),
+                        ),
+                    onDeleteWallet = {},
                 ),
-                onDeleteWallet = {},
-            ),
         )
     }

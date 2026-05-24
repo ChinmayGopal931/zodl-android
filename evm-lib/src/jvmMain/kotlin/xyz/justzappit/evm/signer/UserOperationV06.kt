@@ -27,20 +27,21 @@ data class UserOperationV06(
     val signature: ByteArray = ByteArray(0),
 ) {
     fun userOpHash(entryPoint: Address, chainId: ChainId): ByteArray {
-        val packed = AbiEncoder.encode(
-            listOf(
-                AbiAddress(sender),
-                AbiUint(nonce),
-                AbiBytes32(keccak256(initCode)),
-                AbiBytes32(keccak256(callData)),
-                AbiUint(callGasLimit),
-                AbiUint(verificationGasLimit),
-                AbiUint(preVerificationGas),
-                AbiUint(maxFeePerGas),
-                AbiUint(maxPriorityFeePerGas),
-                AbiBytes32(keccak256(paymasterAndData)),
-            ),
-        )
+        val packed =
+            AbiEncoder.encode(
+                listOf(
+                    AbiAddress(sender),
+                    AbiUint(nonce),
+                    AbiBytes32(keccak256(initCode)),
+                    AbiBytes32(keccak256(callData)),
+                    AbiUint(callGasLimit),
+                    AbiUint(verificationGasLimit),
+                    AbiUint(preVerificationGas),
+                    AbiUint(maxFeePerGas),
+                    AbiUint(maxPriorityFeePerGas),
+                    AbiBytes32(keccak256(paymasterAndData)),
+                ),
+            )
         return keccak256(
             AbiEncoder.encode(
                 listOf(

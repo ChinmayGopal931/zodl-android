@@ -13,13 +13,16 @@ package xyz.justzappit.offramp.p2p
  */
 interface OrderRecipientUpiCache {
     suspend fun put(orderId: String, recipientUpi: String)
+
     suspend fun get(orderId: String): String?
 }
 
 class InMemoryOrderRecipientUpiCache : OrderRecipientUpiCache {
     private val map = mutableMapOf<String, String>()
+
     override suspend fun put(orderId: String, recipientUpi: String) {
         map[orderId] = recipientUpi
     }
+
     override suspend fun get(orderId: String): String? = map[orderId]
 }

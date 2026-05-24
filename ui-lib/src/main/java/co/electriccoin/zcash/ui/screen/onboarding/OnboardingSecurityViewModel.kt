@@ -29,7 +29,6 @@ class OnboardingSecurityViewModel(
     private val standardPreferenceProvider: StandardPreferenceProvider,
     private val encryptedPreferenceProvider: EncryptedPreferenceProvider,
 ) : ViewModel() {
-
     sealed class BioState {
         /** No prompt in flight, no error. */
         object Idle : BioState()
@@ -41,7 +40,9 @@ class OnboardingSecurityViewModel(
         object Success : BioState()
 
         /** Authentication failed or hardware unavailable; [message] shown to the user. */
-        data class Error(val message: String) : BioState()
+        data class Error(
+            val message: String
+        ) : BioState()
     }
 
     private val _bioState = MutableStateFlow<BioState>(BioState.Idle)
@@ -52,15 +53,17 @@ class OnboardingSecurityViewModel(
 
     /** True when the device has at least one biometric enrolled and the hardware is available. */
     val isBiometricAvailable: Boolean
-        get() = biometricManager.canAuthenticate(biometricRepository.allowedAuthenticators) ==
-            BiometricManager.BIOMETRIC_SUCCESS
+        get() =
+            biometricManager.canAuthenticate(biometricRepository.allowedAuthenticators) ==
+                BiometricManager.BIOMETRIC_SUCCESS
 
     fun triggerBiometricSetup() {
         viewModelScope.launch {
             if (!isBiometricAvailable) {
-                _bioState.value = BioState.Error(
-                    "No biometrics enrolled on this device. Add a fingerprint or face in Settings, then try again."
-                )
+                _bioState.value =
+                    BioState.Error(
+                        "No biometrics enrolled on this device. Add a fingerprint or face in Settings, then try again."
+                    )
                 return@launch
             }
             _bioState.value = BioState.Prompting

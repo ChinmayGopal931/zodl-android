@@ -18,24 +18,28 @@ class OrderEventsTest {
         val orderId = BigInteger.valueOf(123)
         val orderIdTopic = orderId.toString(16).padStart(64, '0').let { "0x$it" }
 
-        val log1 = sampleLog(
-            diamond.lowercaseHex,
-            topics = listOf(
-                OrderEvents.ORDER_PLACED_TOPIC,
-                orderIdTopic,
-                addressAsTopic(otherUser.lowercaseHex),
-                addressAsTopic(diamond.lowercaseHex),
-            ),
-        )
-        val log2 = sampleLog(
-            diamond.lowercaseHex,
-            topics = listOf(
-                OrderEvents.ORDER_PLACED_TOPIC,
-                orderIdTopic,
-                addressAsTopic(user.lowercaseHex),
-                addressAsTopic(diamond.lowercaseHex),
-            ),
-        )
+        val log1 =
+            sampleLog(
+                diamond.lowercaseHex,
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        orderIdTopic,
+                        addressAsTopic(otherUser.lowercaseHex),
+                        addressAsTopic(diamond.lowercaseHex),
+                    ),
+            )
+        val log2 =
+            sampleLog(
+                diamond.lowercaseHex,
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        orderIdTopic,
+                        addressAsTopic(user.lowercaseHex),
+                        addressAsTopic(diamond.lowercaseHex),
+                    ),
+            )
 
         val receipt = sampleReceipt(logs = listOf(log1, log2))
         assertEquals(orderId, OrderEvents.parseOrderIdFromReceipt(receipt, diamond, user))
@@ -47,15 +51,17 @@ class OrderEventsTest {
         val orderId = BigInteger.valueOf(7)
         val orderIdTopic = "0x" + orderId.toString(16).padStart(64, '0')
 
-        val log = sampleLog(
-            diamond.lowercaseHex,
-            topics = listOf(
-                OrderEvents.ORDER_PLACED_TOPIC,
-                orderIdTopic,
-                addressAsTopic("0x000000000000000000000000000000000000beef"),
-                addressAsTopic(diamond.lowercaseHex),
-            ),
-        )
+        val log =
+            sampleLog(
+                diamond.lowercaseHex,
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        orderIdTopic,
+                        addressAsTopic("0x000000000000000000000000000000000000beef"),
+                        addressAsTopic(diamond.lowercaseHex),
+                    ),
+            )
         val receipt = sampleReceipt(logs = listOf(log))
         // user not in any topic; falls back to first matching event
         val unknownUser = Address.parse("0x000000000000000000000000000000000000cafe")
@@ -80,15 +86,17 @@ class OrderEventsTest {
         // Topic[0] matches OrderPlaced but only one topic — no orderId at topics[1].
         val malformed = sampleLog(diamond.lowercaseHex, topics = listOf(OrderEvents.ORDER_PLACED_TOPIC))
         // A second well-formed log later in the receipt should still resolve.
-        val wellFormed = sampleLog(
-            diamond.lowercaseHex,
-            topics = listOf(
-                OrderEvents.ORDER_PLACED_TOPIC,
-                orderIdTopic,
-                addressAsTopic(user.lowercaseHex),
-                addressAsTopic(diamond.lowercaseHex),
-            ),
-        )
+        val wellFormed =
+            sampleLog(
+                diamond.lowercaseHex,
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        orderIdTopic,
+                        addressAsTopic(user.lowercaseHex),
+                        addressAsTopic(diamond.lowercaseHex),
+                    ),
+            )
         val receipt = sampleReceipt(logs = listOf(malformed, wellFormed))
         assertEquals(orderId, OrderEvents.parseOrderIdFromReceipt(receipt, diamond, user))
     }
@@ -100,15 +108,17 @@ class OrderEventsTest {
         val user = Address.parse("0x9858effd232b4033e47d90003d41ec34ecaeda94")
         val orderId = BigInteger.valueOf(42)
         val orderIdTopic = "0x" + orderId.toString(16).padStart(64, '0')
-        val log = sampleLog(
-            other.lowercaseHex,
-            topics = listOf(
-                OrderEvents.ORDER_PLACED_TOPIC,
-                orderIdTopic,
-                addressAsTopic(user.lowercaseHex),
-                addressAsTopic(diamond.lowercaseHex),
-            ),
-        )
+        val log =
+            sampleLog(
+                other.lowercaseHex,
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        orderIdTopic,
+                        addressAsTopic(user.lowercaseHex),
+                        addressAsTopic(diamond.lowercaseHex),
+                    ),
+            )
         val receipt = sampleReceipt(logs = listOf(log))
         assertNull(OrderEvents.parseOrderIdFromReceipt(receipt, diamond, user))
     }
@@ -116,34 +126,38 @@ class OrderEventsTest {
     @Test
     fun `parseOrderIdFromLog extracts uint256 from topics 1`() {
         val orderId = BigInteger.valueOf(99)
-        val log = sampleLog(
-            "0xdiamond",
-            topics = listOf(
-                OrderEvents.ORDER_PLACED_TOPIC,
-                "0x" + orderId.toString(16).padStart(64, '0'),
-                "0x" + "00".repeat(32),
-                "0x" + "00".repeat(32),
-            ),
-        )
+        val log =
+            sampleLog(
+                "0xdiamond",
+                topics =
+                    listOf(
+                        OrderEvents.ORDER_PLACED_TOPIC,
+                        "0x" + orderId.toString(16).padStart(64, '0'),
+                        "0x" + "00".repeat(32),
+                        "0x" + "00".repeat(32),
+                    ),
+            )
         assertEquals(orderId, OrderEvents.parseOrderIdFromLog(log))
     }
 
-    private fun sampleLog(address: String, topics: List<String>) = EvmLog(
-        address = address,
-        topics = topics,
-        data = "0x",
-        blockNumber = "0x1",
-        transactionHash = "0xtx",
-        logIndex = "0x0",
-    )
+    private fun sampleLog(address: String, topics: List<String>) =
+        EvmLog(
+            address = address,
+            topics = topics,
+            data = "0x",
+            blockNumber = "0x1",
+            transactionHash = "0xtx",
+            logIndex = "0x0",
+        )
 
-    private fun sampleReceipt(logs: List<EvmLog>) = TransactionReceipt(
-        transactionHash = "0xtx",
-        blockNumber = "0x1",
-        status = "0x1",
-        gasUsed = "0x5208",
-        logs = logs,
-    )
+    private fun sampleReceipt(logs: List<EvmLog>) =
+        TransactionReceipt(
+            transactionHash = "0xtx",
+            blockNumber = "0x1",
+            status = "0x1",
+            gasUsed = "0x5208",
+            logs = logs,
+        )
 
     private fun addressAsTopic(address: String): String {
         val raw = address.removePrefix("0x").lowercase()

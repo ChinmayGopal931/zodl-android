@@ -27,16 +27,17 @@ internal fun PinDotRow(filledCount: Int, hasError: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         repeat(6) { i ->
             Box(
-                modifier = Modifier
-                    .size(14.dp)
-                    .background(
-                        when {
-                            hasError -> c.danger
-                            i < filledCount -> c.text
-                            else -> c.border
-                        },
-                        RectangleShape,
-                    ),
+                modifier =
+                    Modifier
+                        .size(14.dp)
+                        .background(
+                            when {
+                                hasError -> c.danger
+                                i < filledCount -> c.text
+                                else -> c.border
+                            },
+                            RectangleShape,
+                        ),
             )
         }
     }
@@ -46,12 +47,13 @@ internal fun PinDotRow(filledCount: Int, hasError: Boolean) {
 @Composable
 internal fun PinKeypad(modifier: Modifier = Modifier, onKey: (String) -> Unit) {
     val c = ZappTheme.colors
-    val rows = listOf(
-        listOf("1", "2", "3"),
-        listOf("4", "5", "6"),
-        listOf("7", "8", "9"),
-        listOf(null, "0", "⌫"),
-    )
+    val rows =
+        listOf(
+            listOf("1", "2", "3"),
+            listOf("4", "5", "6"),
+            listOf("7", "8", "9"),
+            listOf(null, "0", "⌫"),
+        )
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(1.dp)) {
         rows.forEach { row ->
             Row(modifier = Modifier.fillMaxWidth()) {
@@ -60,20 +62,22 @@ internal fun PinKeypad(modifier: Modifier = Modifier, onKey: (String) -> Unit) {
                         Box(modifier = Modifier.weight(1f).height(60.dp))
                     } else {
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(60.dp)
-                                .border(1.dp, c.border, RectangleShape)
-                                .clickable(onClick = { onKey(key) }),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .height(60.dp)
+                                    .border(1.dp, c.border, RectangleShape)
+                                    .clickable(onClick = { onKey(key) }),
                             contentAlignment = Alignment.Center,
                         ) {
                             BasicText(
                                 text = key,
-                                style = ZappTheme.typography.button.copy(
-                                    color = c.text,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Black,
-                                ),
+                                style =
+                                    ZappTheme.typography.button.copy(
+                                        color = c.text,
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Black,
+                                    ),
                             )
                         }
                     }

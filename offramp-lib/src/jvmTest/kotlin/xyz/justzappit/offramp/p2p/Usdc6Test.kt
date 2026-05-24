@@ -6,7 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class Usdc6Test {
-
     @Test
     fun `ofWhole converts whole tokens to micros`() {
         assertEquals(BigInteger.valueOf(5_500_000), Usdc6.ofWhole(BigDecimal("5.50")).micros)

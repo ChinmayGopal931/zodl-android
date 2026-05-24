@@ -9,7 +9,9 @@ import java.math.BigInteger
  * general ABI codec: it covers the static-word and dynamic-`string` shapes those calls use, and
  * fails loudly on out-of-bounds reads so a malformed response can't masquerade as valid data.
  */
-class AbiDecoder(private val data: ByteArray) {
+class AbiDecoder(
+    private val data: ByteArray
+) {
     val byteSize: Int get() = data.size
 
     /** Asserts the buffer holds at least [words] 32-byte words. */

@@ -32,15 +32,15 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.CachePolicy
 import coil.request.ImageRequest
-import co.electriccoin.zcash.ui.R
-import co.electriccoin.zcash.ui.design.theme.ZappTheme
-import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -57,109 +57,136 @@ internal fun MediaBubble(
     val isSending = message.mediaTransferState == "sending"
 
     val context = LocalContext.current
-    val gifImageLoader = remember(context) {
-        ImageLoader.Builder(context)
-            .components {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    add(ImageDecoderDecoder.Factory())
-                } else {
-                    add(GifDecoder.Factory())
+    val gifImageLoader =
+        remember(context) {
+            ImageLoader
+                .Builder(context)
+                .components {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        add(ImageDecoderDecoder.Factory())
+                    } else {
+                        add(GifDecoder.Factory())
+                    }
+                }.build()
+        }
+
+    val hasLocalFile =
+        message.mediaLocalPath != null &&
+            File(message.mediaLocalPath).exists()
+
+    val imageModel: Any? =
+        remember(message.mediaLocalPath, message.thumbnailData) {
+            when {
+                hasLocalFile -> {
+                    ImageRequest
+                        .Builder(context)
+                        .data(File(message.mediaLocalPath))
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .crossfade(true)
+                        .build()
+                }
+
+                message.thumbnailData != null -> {
+                    try {
+                        val bytes = Base64.decode(message.thumbnailData, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    } catch (_: Exception) {
+                        null
+                    }
+                }
+
+                else -> {
+                    null
                 }
             }
-            .build()
-    }
-
-    val hasLocalFile = message.mediaLocalPath != null &&
-        File(message.mediaLocalPath).exists()
-
-    val imageModel: Any? = remember(message.mediaLocalPath, message.thumbnailData) {
-        when {
-            hasLocalFile -> ImageRequest.Builder(context)
-                .data(File(message.mediaLocalPath))
-                .memoryCachePolicy(CachePolicy.ENABLED)
-                .diskCachePolicy(CachePolicy.ENABLED)
-                .crossfade(true)
-                .build()
-            message.thumbnailData != null -> try {
-                val bytes = Base64.decode(message.thumbnailData, Base64.DEFAULT)
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            } catch (_: Exception) { null }
-            else -> null
         }
-    }
 
-    val aspectRatio = remember(message.mediaWidth, message.mediaHeight) {
-        val w = message.mediaWidth
-        val h = message.mediaHeight
-        if (w != null && h != null && w > 0 && h > 0) {
-            w.toFloat() / h.toFloat()
-        } else {
-            null
+    val aspectRatio =
+        remember(message.mediaWidth, message.mediaHeight) {
+            val w = message.mediaWidth
+            val h = message.mediaHeight
+            if (w != null && h != null && w > 0 && h > 0) {
+                w.toFloat() / h.toFloat()
+            } else {
+                null
+            }
         }
-    }
 
-    val shape = RoundedCornerShape(
-        topStart = 0.dp,
-        topEnd = 0.dp,
-        bottomStart = if (isFromMe) 0.dp else 4.dp,
-        bottomEnd = if (isFromMe) 4.dp else 0.dp
-    )
+    val shape =
+        RoundedCornerShape(
+            topStart = 0.dp,
+            topEnd = 0.dp,
+            bottomStart = if (isFromMe) 0.dp else 4.dp,
+            bottomEnd = if (isFromMe) 4.dp else 0.dp
+        )
 
     Surface(
         shape = shape,
-        color = if (isFromMe) ZappTheme.colors.accent
-        else ZappTheme.colors.surfaceAlt,
+        color =
+            if (isFromMe) {
+                ZappTheme.colors.accent
+            } else {
+                ZappTheme.colors.surfaceAlt
+            },
         modifier = Modifier.widthIn(max = 260.dp)
     ) {
         Column {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .then(
-                        if (aspectRatio != null) {
-                            Modifier.aspectRatio(aspectRatio.coerceIn(MIN_ASPECT, MAX_ASPECT))
-                        } else {
-                            Modifier.heightIn(min = 120.dp, max = 300.dp)
-                        }
-                    )
-                    .clip(RectangleShape)
-                    .then(
-                        if (onImageClick != null && !isVideo && !isSending) {
-                            Modifier.clickable { onImageClick(message) }
-                        } else {
-                            Modifier
-                        }
-                    ),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .then(
+                            if (aspectRatio != null) {
+                                Modifier.aspectRatio(aspectRatio.coerceIn(MIN_ASPECT, MAX_ASPECT))
+                            } else {
+                                Modifier.heightIn(min = 120.dp, max = 300.dp)
+                            }
+                        ).clip(RectangleShape)
+                        .then(
+                            if (onImageClick != null && !isVideo && !isSending) {
+                                Modifier.clickable { onImageClick(message) }
+                            } else {
+                                Modifier
+                            }
+                        ),
                 contentAlignment = Alignment.Center
             ) {
                 if (imageModel != null) {
                     AsyncImage(
                         model = imageModel,
                         imageLoader = if (isGif) gifImageLoader else ImageLoader(context),
-                        contentDescription = when {
-                            isGif -> stringResource(R.string.chat_room_media_content_description_gif)
-                            isVideo -> stringResource(R.string.chat_room_media_content_description_video)
-                            else -> stringResource(R.string.chat_room_media_content_description_image)
-                        },
+                        contentDescription =
+                            when {
+                                isGif -> stringResource(R.string.chat_room_media_content_description_gif)
+                                isVideo -> stringResource(R.string.chat_room_media_content_description_video)
+                                else -> stringResource(R.string.chat_room_media_content_description_image)
+                            },
                         modifier = Modifier.fillMaxWidth(),
                         contentScale = if (hasLocalFile) ContentScale.Fit else ContentScale.Fit,
                     )
                 } else {
                     Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(120.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(120.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (isVideo) {
-                                stringResource(R.string.chat_room_media_placeholder_video)
-                            } else {
-                                stringResource(R.string.chat_room_media_placeholder_image)
-                            },
+                            text =
+                                if (isVideo) {
+                                    stringResource(R.string.chat_room_media_placeholder_video)
+                                } else {
+                                    stringResource(R.string.chat_room_media_placeholder_image)
+                                },
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (isFromMe) ZappTheme.colors.onAccent.copy(alpha = 0.5f)
-                            else ZappTheme.colors.textMuted
+                            color =
+                                if (isFromMe) {
+                                    ZappTheme.colors.onAccent.copy(alpha = 0.5f)
+                                } else {
+                                    ZappTheme.colors.textMuted
+                                }
                         )
                     }
                 }
@@ -187,16 +214,24 @@ internal fun MediaBubble(
                     Text(
                         text = message.content,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = if (isFromMe) ZappTheme.colors.onAccent
-                        else ZappTheme.colors.text
+                        color =
+                            if (isFromMe) {
+                                ZappTheme.colors.onAccent
+                            } else {
+                                ZappTheme.colors.text
+                            }
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                 }
                 Text(
                     text = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(message.timestamp)),
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (isFromMe) ZappTheme.colors.onAccent.copy(alpha = 0.7f)
-                    else ZappTheme.colors.textMuted
+                    color =
+                        if (isFromMe) {
+                            ZappTheme.colors.onAccent.copy(alpha = 0.7f)
+                        } else {
+                            ZappTheme.colors.textMuted
+                        }
                 )
             }
         }

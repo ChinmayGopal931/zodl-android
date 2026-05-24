@@ -33,7 +33,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
-import kotlin.math.roundToInt
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
@@ -43,10 +42,11 @@ import co.electriccoin.zcash.ui.screen.chat.view.bubbles.MediaBubble
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.PaymentRequestBubble
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.TransactionBubble
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.WalletAddressBubble
+import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import org.json.JSONObject
+import kotlin.math.roundToInt
 
 @Composable
 internal fun MessageBubble(
@@ -66,44 +66,47 @@ internal fun MessageBubble(
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = if (isFromMe) Alignment.CenterEnd else Alignment.CenterStart,
     ) {
-        if (offsetX > SWIPE_ICON_APPEAR_THRESHOLD && !isFromMe || offsetX < -SWIPE_ICON_APPEAR_THRESHOLD && isFromMe) {
+        if ((offsetX > SWIPE_ICON_APPEAR_THRESHOLD && !isFromMe) || (offsetX < -SWIPE_ICON_APPEAR_THRESHOLD && isFromMe)) {
             Icon(
                 Icons.AutoMirrored.Filled.Reply,
                 contentDescription = stringResource(R.string.chat_room_reply_action),
                 tint = c.textSubtle,
-                modifier = Modifier
-                    .align(if (isFromMe) Alignment.CenterEnd else Alignment.CenterStart)
-                    .padding(horizontal = 8.dp)
-                    .size(20.dp),
+                modifier =
+                    Modifier
+                        .align(if (isFromMe) Alignment.CenterEnd else Alignment.CenterStart)
+                        .padding(horizontal = 8.dp)
+                        .size(20.dp),
             )
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset { IntOffset(offsetX.roundToInt(), 0) }
-                .pointerInput(onReplyToMessage) {
-                    if (onReplyToMessage == null) return@pointerInput
-                    detectHorizontalDragGestures(
-                        onDragEnd = {
-                            if ((isFromMe && offsetX < -swipeThreshold) ||
-                                (!isFromMe && offsetX > swipeThreshold)
-                            ) {
-                                runCatching { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
-                                onReplyToMessage(message)
-                            }
-                            offsetX = 0f
-                        },
-                        onDragCancel = { offsetX = 0f },
-                    ) { _, dragAmount ->
-                        val newOffset = offsetX + dragAmount
-                        offsetX = if (isFromMe) {
-                            newOffset.coerceIn(-SWIPE_MAX_OFFSET, 0f)
-                        } else {
-                            newOffset.coerceIn(0f, SWIPE_MAX_OFFSET)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .offset { IntOffset(offsetX.roundToInt(), 0) }
+                    .pointerInput(onReplyToMessage) {
+                        if (onReplyToMessage == null) return@pointerInput
+                        detectHorizontalDragGestures(
+                            onDragEnd = {
+                                if ((isFromMe && offsetX < -swipeThreshold) ||
+                                    (!isFromMe && offsetX > swipeThreshold)
+                                ) {
+                                    runCatching { haptic.performHapticFeedback(HapticFeedbackType.LongPress) }
+                                    onReplyToMessage(message)
+                                }
+                                offsetX = 0f
+                            },
+                            onDragCancel = { offsetX = 0f },
+                        ) { _, dragAmount ->
+                            val newOffset = offsetX + dragAmount
+                            offsetX =
+                                if (isFromMe) {
+                                    newOffset.coerceIn(-SWIPE_MAX_OFFSET, 0f)
+                                } else {
+                                    newOffset.coerceIn(0f, SWIPE_MAX_OFFSET)
+                                }
                         }
-                    }
-                },
+                    },
             horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start,
         ) {
             if (!isFromMe && message.senderName != null) {
@@ -116,10 +119,11 @@ internal fun MessageBubble(
 
             if (message.replyToId != null) {
                 Box(
-                    modifier = Modifier
-                        .widthIn(max = 280.dp)
-                        .background(if (isFromMe) c.accent else c.surfaceAlt, RectangleShape)
-                        .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 4.dp),
+                    modifier =
+                        Modifier
+                            .widthIn(max = 280.dp)
+                            .background(if (isFromMe) c.accent else c.surfaceAlt, RectangleShape)
+                            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 4.dp),
                 ) {
                     QuotedReplyBlock(
                         senderName = message.replyToSenderName,
@@ -130,21 +134,37 @@ internal fun MessageBubble(
             }
 
             when {
-                contentType == CONTENT_TYPE_PAYMENT_REQUEST ->
+                contentType == CONTENT_TYPE_PAYMENT_REQUEST -> {
                     PaymentRequestBubble(message = message, isFromMe = isFromMe)
-                contentType == CONTENT_TYPE_WALLET_ADDRESS ->
+                }
+
+                contentType == CONTENT_TYPE_WALLET_ADDRESS -> {
                     WalletAddressBubble(message = message, isFromMe = isFromMe)
-                contentType == CONTENT_TYPE_ZEC_TRANSACTION ->
+                }
+
+                contentType == CONTENT_TYPE_ZEC_TRANSACTION -> {
                     TransactionBubble(message = message, isFromMe = isFromMe)
-                contentType == CONTENT_TYPE_LOCATION ->
+                }
+
+                contentType == CONTENT_TYPE_LOCATION -> {
                     LocationBubble(message = message, isFromMe = isFromMe)
-                contentType.startsWith(IMAGE_MIME_PREFIX) ->
+                }
+
+                contentType.startsWith(IMAGE_MIME_PREFIX) -> {
                     MediaBubble(message = message, isFromMe = isFromMe, onImageClick = onImageClick)
-                contentType.startsWith(VIDEO_MIME_PREFIX) ->
+                }
+
+                contentType.startsWith(VIDEO_MIME_PREFIX) -> {
                     MediaBubble(message = message, isFromMe = isFromMe)
-                message.mediaId != null ->
+                }
+
+                message.mediaId != null -> {
                     FileBubble(message = message, isFromMe = isFromMe)
-                else -> TextMessageBubble(message = message, isFromMe = isFromMe)
+                }
+
+                else -> {
+                    TextMessageBubble(message = message, isFromMe = isFromMe)
+                }
             }
         }
     }
@@ -191,7 +211,6 @@ private fun TextMessageBubble(message: ChatMessage, isFromMe: Boolean) {
     }
 }
 
-
 private fun formatMessageTime(epochMillis: Long): String =
     SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(epochMillis))
 
@@ -208,10 +227,11 @@ private fun QuotedReplyBlock(
 
     Row {
         Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(36.dp)
-                .background(barColor),
+            modifier =
+                Modifier
+                    .width(3.dp)
+                    .height(36.dp)
+                    .background(barColor),
         )
         Column(modifier = Modifier.padding(start = 8.dp)) {
             BasicText(

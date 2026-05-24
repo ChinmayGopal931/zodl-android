@@ -15,7 +15,9 @@ import java.util.Locale
  * A 32-byte EVM transaction hash. Stored as lowercase `0x...` hex.
  */
 @Serializable(with = TxHash.TxHashSerializer::class)
-class TxHash(bytes: ByteArray) {
+class TxHash(
+    bytes: ByteArray
+) {
     val bytes: ByteArray = bytes.copyOf()
 
     init {
@@ -25,8 +27,10 @@ class TxHash(bytes: ByteArray) {
     val hex: String get() = PREFIX + bytes.toHex()
 
     override fun toString(): String = hex
+
     override fun equals(other: Any?): Boolean =
         this === other || (other is TxHash && bytes.contentEquals(other.bytes))
+
     override fun hashCode(): Int = bytes.contentHashCode()
 
     companion object {
@@ -44,6 +48,7 @@ class TxHash(bytes: ByteArray) {
             PrimitiveSerialDescriptor("xyz.justzappit.evm.types.TxHash", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): TxHash = fromHex(decoder.decodeString())
+
         override fun serialize(encoder: Encoder, value: TxHash) = encoder.encodeString(value.hex)
     }
 }

@@ -37,7 +37,6 @@ class SupportChatVM(
     private val sdk: ZappMessagingSDK,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
-
     private val conversationId = MutableStateFlow(args.conversationId.takeIf { it.isNotEmpty() })
     private val messages = MutableStateFlow<List<SupportUiMessage>>(emptyList())
     private val input = MutableStateFlow("")
@@ -66,15 +65,16 @@ class SupportChatVM(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = buildState(
-                conversationId = conversationId.value,
-                messages = emptyList(),
-                input = "",
-                isLoading = true,
-                isSubmittingCategory = false,
-                showLeaveDialog = false,
-                showMediaSheet = false,
-            ),
+            initialValue =
+                buildState(
+                    conversationId = conversationId.value,
+                    messages = emptyList(),
+                    input = "",
+                    isLoading = true,
+                    isSubmittingCategory = false,
+                    showLeaveDialog = false,
+                    showMediaSheet = false,
+                ),
         )
 
     private fun buildState(
@@ -86,11 +86,12 @@ class SupportChatVM(
         showLeaveDialog: Boolean,
         showMediaSheet: Boolean,
     ): SupportChatScreenState {
-        val uiState = when {
-            isLoading -> SupportChatUiState.Loading
-            conversationId == null -> SupportChatUiState.SelectCategory(isSubmitting = isSubmittingCategory)
-            else -> SupportChatUiState.Chat(messages = messages, input = input)
-        }
+        val uiState =
+            when {
+                isLoading -> SupportChatUiState.Loading
+                conversationId == null -> SupportChatUiState.SelectCategory(isSubmitting = isSubmittingCategory)
+                else -> SupportChatUiState.Chat(messages = messages, input = input)
+            }
         return SupportChatScreenState(
             uiState = uiState,
             onCategorySelected = ::onCategorySelected,
@@ -99,21 +100,23 @@ class SupportChatVM(
             onAttach = ::onAttachClick,
             onLeave = ::onLeaveClick,
             onBack = ::onBack,
-            leaveDialog = if (showLeaveDialog) {
-                SupportLeaveDialogState(onConfirm = ::onLeaveConfirm, onDismiss = ::onLeaveDismiss)
-            } else {
-                null
-            },
-            mediaSheet = if (showMediaSheet) {
-                SupportMediaSheetState(
-                    onChooseMedia = ::onChooseMediaClick,
-                    onAttachFile = ::onAttachFileClick,
-                    onTakePhoto = ::onTakePhotoClick,
-                    onDismiss = ::onDismissMediaSheet,
-                )
-            } else {
-                null
-            },
+            leaveDialog =
+                if (showLeaveDialog) {
+                    SupportLeaveDialogState(onConfirm = ::onLeaveConfirm, onDismiss = ::onLeaveDismiss)
+                } else {
+                    null
+                },
+            mediaSheet =
+                if (showMediaSheet) {
+                    SupportMediaSheetState(
+                        onChooseMedia = ::onChooseMediaClick,
+                        onAttachFile = ::onAttachFileClick,
+                        onTakePhoto = ::onTakePhotoClick,
+                        onDismiss = ::onDismissMediaSheet,
+                    )
+                } else {
+                    null
+                },
         )
     }
 
@@ -125,9 +128,11 @@ class SupportChatVM(
     private suspend fun loadMessages() {
         val convId = conversationId.value ?: return
         runChatCall("SupportChatVM: loadMessages failed") {
-            messages.value = sdk.getMessages(convId)
-                .map(ChatMessage::from)
-                .mapNotNull { it.toSupportUiMessageOrNull() }
+            messages.value =
+                sdk
+                    .getMessages(convId)
+                    .map(ChatMessage::from)
+                    .mapNotNull { it.toSupportUiMessageOrNull() }
         }
     }
 
@@ -148,11 +153,12 @@ class SupportChatVM(
         isSubmittingCategory.value = true
         viewModelScope.launch {
             runChatCall("SupportChatVM: create ticket failed") {
-                val conv = sdk.createConversation(
-                    type = SdkConversationType.GROUP,
-                    participants = listOf(SupportChatConstants.SUPPORT_PUBLIC_KEY),
-                    displayName = "${SupportChatConstants.DISPLAY_NAME_PREFIX}${category.protocolKey}",
-                )
+                val conv =
+                    sdk.createConversation(
+                        type = SdkConversationType.GROUP,
+                        participants = listOf(SupportChatConstants.SUPPORT_PUBLIC_KEY),
+                        displayName = "${SupportChatConstants.DISPLAY_NAME_PREFIX}${category.protocolKey}",
+                    )
                 conversationId.value = conv.id
                 sdk.sendMessage(conv.id, SupportChatConstants.categoryMarker(category))
                 val greeting = application.getString(category.greetingRes)
@@ -227,18 +233,23 @@ class SupportChatVM(
                 val thumbnail = thumbnailFor(uri, mimeType)
                 when {
                     mimeType == MimeTypes.GIF -> {
-                        val cached = FileUtils.copyUriToCache(application, uri)
-                            ?: error("Failed to cache GIF")
+                        val cached =
+                            FileUtils.copyUriToCache(application, uri)
+                                ?: error("Failed to cache GIF")
                         sendMediaMessage(convId, cached.absolutePath, MimeTypes.GIF, thumbnail)
                     }
+
                     mimeType.startsWith(MimeTypes.IMAGE_PREFIX) -> {
-                        val compressed = ImageProcessor.compressImage(application, uri)
-                            ?: error("Image compression failed")
+                        val compressed =
+                            ImageProcessor.compressImage(application, uri)
+                                ?: error("Image compression failed")
                         sendMediaMessage(convId, compressed.absolutePath, MimeTypes.IMAGE_JPEG, thumbnail)
                     }
+
                     else -> {
-                        val cached = FileUtils.copyUriToCache(application, uri)
-                            ?: error("Failed to cache media")
+                        val cached =
+                            FileUtils.copyUriToCache(application, uri)
+                                ?: error("Failed to cache media")
                         sendMediaMessage(convId, cached.absolutePath, mimeType, thumbnail)
                     }
                 }
@@ -250,8 +261,9 @@ class SupportChatVM(
         val convId = conversationId.value ?: return
         runChatCall("SupportChatVM: sendFile failed") {
             withContext(Dispatchers.IO) {
-                val cached = FileUtils.copyUriToCache(application, uri)
-                    ?: error("Failed to cache file")
+                val cached =
+                    FileUtils.copyUriToCache(application, uri)
+                        ?: error("Failed to cache file")
                 val mimeType = FileUtils.getMimeType(application, uri)
                 val thumbnail = thumbnailFor(uri, mimeType)
                 sendMediaMessage(convId, cached.absolutePath, mimeType, thumbnail)
@@ -264,8 +276,9 @@ class SupportChatVM(
         runChatCall("SupportChatVM: sendCameraCapture failed") {
             withContext(Dispatchers.IO) {
                 val thumbnail = ImageProcessor.generateThumbnail(application, uri)
-                val compressed = ImageProcessor.compressImage(application, uri)
-                    ?: error("Image compression failed")
+                val compressed =
+                    ImageProcessor.compressImage(application, uri)
+                        ?: error("Image compression failed")
                 sendMediaMessage(convId, compressed.absolutePath, MimeTypes.IMAGE_JPEG, thumbnail)
             }
         }
@@ -331,11 +344,12 @@ class SupportChatVM(
 private fun ChatMessage.toSupportUiMessageOrNull(): SupportUiMessage? {
     if (content.startsWith(SupportChatConstants.CATEGORY_MARKER_PREFIX)) return null
     val isBotPrefixed = content.startsWith(SupportChatConstants.BOT_PREFIX)
-    val origin = when {
-        isBotPrefixed -> SupportMessageOrigin.BOT
-        isFromMe -> SupportMessageOrigin.USER
-        else -> SupportMessageOrigin.AGENT
-    }
+    val origin =
+        when {
+            isBotPrefixed -> SupportMessageOrigin.BOT
+            isFromMe -> SupportMessageOrigin.USER
+            else -> SupportMessageOrigin.AGENT
+        }
     val displayContent = if (isBotPrefixed) content.removePrefix(SupportChatConstants.BOT_PREFIX) else content
     return SupportUiMessage(
         id = id,

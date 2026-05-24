@@ -25,7 +25,12 @@ internal object P2pTransactionsFormat {
 
     fun decodeCurrency(currencyHex: String): String =
         runCatching {
-            currencyHex.hexToBytes().takeWhile { it != ZERO_BYTE }.toByteArray().decodeToString().ifBlank { "INR" }
+            currencyHex
+                .hexToBytes()
+                .takeWhile { it != ZERO_BYTE }
+                .toByteArray()
+                .decodeToString()
+                .ifBlank { "INR" }
         }.getOrDefault("INR")
 
     fun timestamp(epochSeconds: Long): String =
@@ -48,69 +53,82 @@ internal object P2pTransactionsFormat {
 
 internal fun P2pOrderHistoryItem.toRow(network: P2pNetworkConfig): P2pTransactionRow {
     val currency = P2pTransactionsFormat.decodeCurrency(currencyHex)
-    val tone = when (status) {
-        OrderStatus.COMPLETED -> P2pTransactionRow.StatusTone.Success
-        OrderStatus.CANCELLED -> P2pTransactionRow.StatusTone.Cancelled
-        OrderStatus.PLACED, OrderStatus.ACCEPTED, OrderStatus.PAID -> P2pTransactionRow.StatusTone.Pending
-    }
+    val tone =
+        when (status) {
+            OrderStatus.COMPLETED -> P2pTransactionRow.StatusTone.Success
+            OrderStatus.CANCELLED -> P2pTransactionRow.StatusTone.Cancelled
+            OrderStatus.PLACED, OrderStatus.ACCEPTED, OrderStatus.PAID -> P2pTransactionRow.StatusTone.Pending
+        }
     return P2pTransactionRow(
         orderId = orderId.toString(),
         typeLabel = stringRes(typeLabelRes(orderType)),
         statusLabel = stringRes(statusLabelRes(status)),
         statusTone = tone,
         amountUsdc = stringRes(R.string.p2p_transactions_row_amount_usdc, usdcAmount.toDisplayString(stripTrailingZeros = true)),
-        amountFiat = stringRes(
-            R.string.p2p_transactions_row_amount_fiat,
-            fiatAmount.toDisplayString(stripTrailingZeros = true),
-            currency,
-        ),
+        amountFiat =
+            stringRes(
+                R.string.p2p_transactions_row_amount_fiat,
+                fiatAmount.toDisplayString(stripTrailingZeros = true),
+                currency,
+            ),
         fromLabel = fromForType(orderType)?.let(::extractUpiVpa)?.let { stringRes(R.string.p2p_transactions_row_from, it) },
         toLabel = toForType(orderType)?.let(::extractUpiVpa)?.let { stringRes(R.string.p2p_transactions_row_to, it) },
-        timestamp = (completedAtEpochSeconds ?: cancelledAtEpochSeconds ?: placedAtEpochSeconds)
-            ?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
+        timestamp =
+            (completedAtEpochSeconds ?: cancelledAtEpochSeconds ?: placedAtEpochSeconds)
+                ?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
         explorerUrl = null,
-        detail = TransactionDetail(
-            recipientUpiPlain = recipientUpiPlain?.let(::extractUpiVpa),
-            merchantUpiPlain = merchantUpiPlain?.let(::extractUpiVpa),
-            merchantAddressShort = acceptedMerchantAddress?.checksumHex
-                ?.ellipsizeMiddle(prefix = ADDRESS_ELLIPSIS_PREFIX, suffix = ADDRESS_ELLIPSIS_SUFFIX),
-            merchantExplorerUrl = acceptedMerchantAddress?.let { network.addressUrl(it.checksumHex) },
-            placedAt = placedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
-            completedAt = completedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
-            cancelledAt = cancelledAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
-            duration = P2pTransactionsFormat.duration(
-                fromEpochSec = placedAtEpochSeconds,
-                toEpochSec = completedAtEpochSeconds ?: cancelledAtEpochSeconds,
-            )?.let(::stringRes),
-        ),
+        detail =
+            TransactionDetail(
+                recipientUpiPlain = recipientUpiPlain?.let(::extractUpiVpa),
+                merchantUpiPlain = merchantUpiPlain?.let(::extractUpiVpa),
+                merchantAddressShort =
+                    acceptedMerchantAddress
+                        ?.checksumHex
+                        ?.ellipsizeMiddle(prefix = ADDRESS_ELLIPSIS_PREFIX, suffix = ADDRESS_ELLIPSIS_SUFFIX),
+                merchantExplorerUrl = acceptedMerchantAddress?.let { network.addressUrl(it.checksumHex) },
+                placedAt = placedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
+                completedAt = completedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
+                cancelledAt = cancelledAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
+                duration =
+                    P2pTransactionsFormat
+                        .duration(
+                            fromEpochSec = placedAtEpochSeconds,
+                            toEpochSec = completedAtEpochSeconds ?: cancelledAtEpochSeconds,
+                        )?.let(::stringRes),
+            ),
     )
 }
 
 private const val ADDRESS_ELLIPSIS_PREFIX = 8
 private const val ADDRESS_ELLIPSIS_SUFFIX = 4
 
-private fun P2pOrderHistoryItem.fromForType(type: OrderType): String? = when (type) {
-    // BUY: user receives fiat; "from" = merchant's pay-to VPA (encrypted in encUpi at acceptOrder).
-    OrderType.BUY -> recipientUpiPlain
-    // PAY/SELL: user pays fiat out; "from" = merchant's UPI (encrypted in encMerchantUpi on completion).
-    OrderType.PAY, OrderType.SELL -> merchantUpiPlain
-}
+private fun P2pOrderHistoryItem.fromForType(type: OrderType): String? =
+    when (type) {
+        // BUY: user receives fiat; "from" = merchant's pay-to VPA (encrypted in encUpi at acceptOrder).
+        OrderType.BUY -> recipientUpiPlain
 
-private fun P2pOrderHistoryItem.toForType(type: OrderType): String? = when (type) {
-    OrderType.BUY -> null
-    OrderType.PAY, OrderType.SELL -> recipientUpiPlain
-}
+        // PAY/SELL: user pays fiat out; "from" = merchant's UPI (encrypted in encMerchantUpi on completion).
+        OrderType.PAY, OrderType.SELL -> merchantUpiPlain
+    }
 
-private fun typeLabelRes(orderType: OrderType): Int = when (orderType) {
-    OrderType.BUY -> R.string.p2p_transactions_type_buy
-    OrderType.SELL -> R.string.p2p_transactions_type_sell
-    OrderType.PAY -> R.string.p2p_transactions_type_pay
-}
+private fun P2pOrderHistoryItem.toForType(type: OrderType): String? =
+    when (type) {
+        OrderType.BUY -> null
+        OrderType.PAY, OrderType.SELL -> recipientUpiPlain
+    }
 
-private fun statusLabelRes(status: OrderStatus): Int = when (status) {
-    OrderStatus.PLACED -> R.string.p2p_transactions_status_placed
-    OrderStatus.ACCEPTED -> R.string.p2p_transactions_status_accepted
-    OrderStatus.PAID -> R.string.p2p_transactions_status_paid
-    OrderStatus.COMPLETED -> R.string.p2p_transactions_status_completed
-    OrderStatus.CANCELLED -> R.string.p2p_transactions_status_cancelled
-}
+private fun typeLabelRes(orderType: OrderType): Int =
+    when (orderType) {
+        OrderType.BUY -> R.string.p2p_transactions_type_buy
+        OrderType.SELL -> R.string.p2p_transactions_type_sell
+        OrderType.PAY -> R.string.p2p_transactions_type_pay
+    }
+
+private fun statusLabelRes(status: OrderStatus): Int =
+    when (status) {
+        OrderStatus.PLACED -> R.string.p2p_transactions_status_placed
+        OrderStatus.ACCEPTED -> R.string.p2p_transactions_status_accepted
+        OrderStatus.PAID -> R.string.p2p_transactions_status_paid
+        OrderStatus.COMPLETED -> R.string.p2p_transactions_status_completed
+        OrderStatus.CANCELLED -> R.string.p2p_transactions_status_cancelled
+    }

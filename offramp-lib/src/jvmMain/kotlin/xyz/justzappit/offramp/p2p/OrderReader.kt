@@ -5,7 +5,9 @@ import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
-enum class OrderStatus(val onChain: Int) {
+enum class OrderStatus(
+    val onChain: Int
+) {
     PLACED(0),
     ACCEPTED(1),
     PAID(2),
@@ -26,13 +28,13 @@ data class OrderRead(
 )
 
 object OrderReader {
-
     fun decodeOrderSnapshot(returnData: ByteArray, orderId: BigInteger): OrderSnapshot {
         val tuple = tupleDecoder(returnData, ORDER_TUPLE_MIN_HEAD_FULL)
 
         val orderTypeByte = tuple.uint8(FIELD_ORDER_TYPE)
-        val orderType = OrderType.entries.firstOrNull { it.onChain == orderTypeByte }
-            ?: error("Unknown OrderType from chain: $orderTypeByte")
+        val orderType =
+            OrderType.entries.firstOrNull { it.onChain == orderTypeByte }
+                ?: error("Unknown OrderType from chain: $orderTypeByte")
 
         return OrderSnapshot(
             orderId = orderId,

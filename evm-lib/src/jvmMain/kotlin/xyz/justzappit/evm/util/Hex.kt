@@ -15,10 +15,11 @@ fun String.hexToBytes(): ByteArray {
     return out
 }
 
-fun ByteArray.toHex(): String = buildString(size * 2) {
-    for (b in this@toHex) {
-        val v = b.toInt() and 0xff
-        append(Character.forDigit(v ushr 4, 16))
-        append(Character.forDigit(v and 0x0f, 16))
+fun ByteArray.toHex(): String =
+    buildString(size * 2) {
+        for (b in this@toHex) {
+            val v = b.toInt() and 0xff
+            append(Character.forDigit(v ushr 4, 16))
+            append(Character.forDigit(v and 0x0f, 16))
+        }
     }
-}

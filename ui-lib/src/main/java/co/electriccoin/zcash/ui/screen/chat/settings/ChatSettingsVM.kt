@@ -215,7 +215,10 @@ class ChatSettingsVM(
         copyResetJob?.cancel()
     }
 
-    private data class ChatSettingsIdentity(val displayName: String, val publicKey: String)
+    private data class ChatSettingsIdentity(
+        val displayName: String,
+        val publicKey: String
+    )
 
     companion object {
         private const val COPY_FEEDBACK_MS = 2_000L

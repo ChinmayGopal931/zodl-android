@@ -11,8 +11,11 @@ import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
  */
 interface OfframpCheckpointStorageProvider {
     suspend fun get(): OfframpCheckpoint?
+
     suspend fun store(checkpoint: OfframpCheckpoint)
+
     suspend fun clear()
+
     fun observe(): Flow<OfframpCheckpoint?>
 }
 
@@ -22,8 +25,11 @@ internal class OfframpCheckpointStorageProviderImpl(
     private val store = EncryptedJsonStore(encryptedPreferenceProvider, PREF_KEY, OfframpCheckpoint.serializer())
 
     override suspend fun get(): OfframpCheckpoint? = store.get()
+
     override suspend fun store(checkpoint: OfframpCheckpoint) = store.set(checkpoint)
+
     override suspend fun clear() = store.clear()
+
     override fun observe(): Flow<OfframpCheckpoint?> = store.observe()
 
     companion object {

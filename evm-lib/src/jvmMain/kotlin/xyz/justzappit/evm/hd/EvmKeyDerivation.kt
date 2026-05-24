@@ -46,13 +46,14 @@ object EvmKeyDerivation {
         require(accountIndex >= 0) { "accountIndex must be non-negative" }
         val seed = mnemonicToSeed(mnemonic, passphrase)
         val master = masterFromSeed(seed)
-        val derived = listOf(
-            44 or HARDENED_BIT,
-            60 or HARDENED_BIT,
-            0 or HARDENED_BIT,
-            0,
-            accountIndex,
-        ).fold(master) { parent, index -> ckdPrivWithRetry(parent, index) }
+        val derived =
+            listOf(
+                44 or HARDENED_BIT,
+                60 or HARDENED_BIT,
+                0 or HARDENED_BIT,
+                0,
+                accountIndex,
+            ).fold(master) { parent, index -> ckdPrivWithRetry(parent, index) }
         return fromPrivateKey(derived.priv)
     }
 
@@ -69,17 +70,21 @@ object EvmKeyDerivation {
         )
     }
 
-    private data class ExtKey(val priv: ByteArray, val chainCode: ByteArray)
+    private data class ExtKey(
+        val priv: ByteArray,
+        val chainCode: ByteArray
+    )
 
     private fun mnemonicToSeed(mnemonic: String, passphrase: String): ByteArray {
         val normMnemonic = Normalizer.normalize(mnemonic.trim(), Normalizer.Form.NFKD)
         val normPass = Normalizer.normalize("mnemonic$passphrase", Normalizer.Form.NFKD)
-        val spec = PBEKeySpec(
-            normMnemonic.toCharArray(),
-            normPass.toByteArray(Charsets.UTF_8),
-            PBKDF2_ITERATIONS,
-            SEED_BITS,
-        )
+        val spec =
+            PBEKeySpec(
+                normMnemonic.toCharArray(),
+                normPass.toByteArray(Charsets.UTF_8),
+                PBKDF2_ITERATIONS,
+                SEED_BITS,
+            )
         return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512").generateSecret(spec).encoded
     }
 
@@ -110,11 +115,12 @@ object EvmKeyDerivation {
 
     private fun ckdPrivOnce(parent: ExtKey, index: Int): ExtKey? {
         val hardened = (index.toLong() and 0xffff_ffffL) >= 0x8000_0000L
-        val data = if (hardened) {
-            byteArrayOf(0x00) + parent.priv + intToBytes(index)
-        } else {
-            compressedPub(parent.priv) + intToBytes(index)
-        }
+        val data =
+            if (hardened) {
+                byteArrayOf(0x00) + parent.priv + intToBytes(index)
+            } else {
+                compressedPub(parent.priv) + intToBytes(index)
+            }
         val i = hmacSha512(parent.chainCode, data)
         val il = i.copyOfRange(0, FIELD_BYTES)
         val ir = i.copyOfRange(FIELD_BYTES, i.size)
@@ -127,7 +133,10 @@ object EvmKeyDerivation {
     }
 
     private fun compressedPub(privBytes: ByteArray): ByteArray =
-        curve.g.multiply(BigInteger(1, privBytes)).normalize().getEncoded(true)
+        curve.g
+            .multiply(BigInteger(1, privBytes))
+            .normalize()
+            .getEncoded(true)
 
     private fun addressFromPub(pubXY: ByteArray): Address {
         val hash = keccak256(pubXY)
@@ -137,11 +146,11 @@ object EvmKeyDerivation {
     private fun hmacSha512(key: ByteArray, data: ByteArray): ByteArray =
         Mac.getInstance("HmacSHA512").apply { init(SecretKeySpec(key, "HmacSHA512")) }.doFinal(data)
 
-    private fun intToBytes(i: Int): ByteArray = byteArrayOf(
-        (i ushr 24 and 0xff).toByte(),
-        (i ushr 16 and 0xff).toByte(),
-        (i ushr 8 and 0xff).toByte(),
-        (i and 0xff).toByte(),
-    )
-
+    private fun intToBytes(i: Int): ByteArray =
+        byteArrayOf(
+            (i ushr 24 and 0xff).toByte(),
+            (i ushr 16 and 0xff).toByte(),
+            (i ushr 8 and 0xff).toByte(),
+            (i and 0xff).toByte(),
+        )
 }

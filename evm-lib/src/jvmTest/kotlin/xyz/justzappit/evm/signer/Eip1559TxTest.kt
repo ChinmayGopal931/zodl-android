@@ -16,7 +16,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class Eip1559TxTest {
-
     @Test
     fun `signed tx ecrecovers to the signer address`() {
         val key = EvmKeyDerivation.derive(MNEMONIC, accountIndex = 0)
@@ -28,12 +27,13 @@ class Eip1559TxTest {
 
         assertEquals(0x02.toByte(), signed[0])
 
-        val recovered = EcdsaSigner.recoverPublicKey(
-            sig.yParity.toInt(),
-            sig.r,
-            sig.s,
-            tx.signingHash(),
-        )
+        val recovered =
+            EcdsaSigner.recoverPublicKey(
+                sig.yParity.toInt(),
+                sig.r,
+                sig.s,
+                tx.signingHash(),
+            )
         assertNotNull(recovered)
         val pubXY = recovered.affineXCoord.encoded + recovered.affineYCoord.encoded
         val recoveredAddress = "0x" + keccak256(pubXY).copyOfRange(12, 32).toHex()
@@ -53,24 +53,26 @@ class Eip1559TxTest {
         //   nonce=2, maxPriorityFee=1_000_000_000 (0x3b9aca00),
         //   maxFee=2_000_000_000 (0x77359400), gasLimit=21000 (0x5208),
         //   to=0x000000000000000000000000000000000000dEaD, value=0, data=empty, accessList=[]
-        val tx = Eip1559Tx(
-            chainId = ChainId.BASE_SEPOLIA,
-            nonce = Nonce(BigInteger.valueOf(2)),
-            maxPriorityFeePerGas = Wei.ofLong(1_000_000_000L),
-            maxFeePerGas = Wei.ofLong(2_000_000_000L),
-            gasLimit = Gas(BigInteger.valueOf(21_000L)),
-            to = Address.parse("0x000000000000000000000000000000000000dEaD"),
-            value = Wei.ZERO,
-            data = byteArrayOf(),
-        )
-        val handBuiltPayload = handRollEip1559SigningPayload(
-            chainIdHex = "014a34",
-            nonceHex = "02",
-            tipHex = "3b9aca00",
-            maxFeeHex = "77359400",
-            gasLimitHex = "5208",
-            toHex = "000000000000000000000000000000000000dead",
-        )
+        val tx =
+            Eip1559Tx(
+                chainId = ChainId.BASE_SEPOLIA,
+                nonce = Nonce(BigInteger.valueOf(2)),
+                maxPriorityFeePerGas = Wei.ofLong(1_000_000_000L),
+                maxFeePerGas = Wei.ofLong(2_000_000_000L),
+                gasLimit = Gas(BigInteger.valueOf(21_000L)),
+                to = Address.parse("0x000000000000000000000000000000000000dEaD"),
+                value = Wei.ZERO,
+                data = byteArrayOf(),
+            )
+        val handBuiltPayload =
+            handRollEip1559SigningPayload(
+                chainIdHex = "014a34",
+                nonceHex = "02",
+                tipHex = "3b9aca00",
+                maxFeeHex = "77359400",
+                gasLimitHex = "5208",
+                toHex = "000000000000000000000000000000000000dead",
+            )
         assertEquals(handBuiltPayload.toHex(), tx.signingPayload().toHex())
     }
 
@@ -95,22 +97,26 @@ class Eip1559TxTest {
             val byteLen = trimmed.length / 2
             return if (byteLen == 1 && trimmed.toInt(16) < 0x80) trimmed else (0x80 + byteLen).toString(16) + trimmed
         }
+
         fun rlpAddress(hex20: String) = "94" + hex20 // 0x80 + 20 = 0x94
+
         fun rlpEmpty() = "80"
+
         fun rlpEmptyList() = "c0"
 
         val payload = (
             rlpInt(chainIdHex) + rlpInt(nonceHex) + rlpInt(tipHex) + rlpInt(maxFeeHex) +
                 rlpInt(gasLimitHex) + rlpAddress(toHex) + rlpEmpty() + rlpEmpty() + rlpEmptyList()
-            )
+        )
         val payloadLen = payload.length / 2
-        val outer = if (payloadLen <= 0x37) {
-            (0xc0 + payloadLen).toString(16) + payload
-        } else {
-            val lenHex = payloadLen.toString(16).let { if (it.length % 2 == 1) "0$it" else it }
-            val lenOfLen = lenHex.length / 2
-            (0xf7 + lenOfLen).toString(16) + lenHex + payload
-        }
+        val outer =
+            if (payloadLen <= 0x37) {
+                (0xc0 + payloadLen).toString(16) + payload
+            } else {
+                val lenHex = payloadLen.toString(16).let { if (it.length % 2 == 1) "0$it" else it }
+                val lenOfLen = lenHex.length / 2
+                (0xf7 + lenOfLen).toString(16) + lenHex + payload
+            }
         return ("02" + outer).hexToBytes()
     }
 

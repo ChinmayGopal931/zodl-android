@@ -1,5 +1,7 @@
 package co.electriccoin.zcash.di
 
+import co.electriccoin.zcash.ui.common.provider.OrderRecipientUpiStorageProvider
+import co.electriccoin.zcash.ui.common.provider.RelayIdentityStorageProvider
 import co.electriccoin.zcash.ui.common.repository.ApplicationStateRepository
 import co.electriccoin.zcash.ui.common.repository.ApplicationStateRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.BiometricRepository
@@ -14,8 +16,6 @@ import co.electriccoin.zcash.ui.common.repository.FlexaRepository
 import co.electriccoin.zcash.ui.common.repository.FlexaRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.HomeMessageCacheRepository
 import co.electriccoin.zcash.ui.common.repository.HomeMessageCacheRepositoryImpl
-import co.electriccoin.zcash.ui.common.provider.OrderRecipientUpiStorageProvider
-import co.electriccoin.zcash.ui.common.provider.RelayIdentityStorageProvider
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepository
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.SwapRepository

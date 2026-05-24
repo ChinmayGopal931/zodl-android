@@ -8,12 +8,15 @@ import kotlinx.serialization.Serializable
  */
 @JvmInline
 @Serializable
-value class ChainId(val value: Long) {
+value class ChainId(
+    val value: Long
+) {
     init {
         require(value > 0) { "ChainId must be positive, got $value" }
     }
 
     val hex: String get() = "0x" + value.toString(HEX_BASE)
+
     override fun toString(): String = value.toString()
 
     companion object {

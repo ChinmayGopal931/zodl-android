@@ -50,11 +50,13 @@ internal fun LazyListScope.activitySection(state: ActivityWidgetState) {
             }
         }
 
-        is ActivityWidgetState.Empty ->
+        is ActivityWidgetState.Empty -> {
             item { ActivityEmpty() }
+        }
 
-        ActivityWidgetState.Loading ->
+        ActivityWidgetState.Loading -> {
             item { ActivityLoading() }
+        }
     }
 }
 
@@ -62,17 +64,19 @@ internal fun LazyListScope.activitySection(state: ActivityWidgetState) {
 private fun ActivityRow(state: ActivityState) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = state.onClick)
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = state.onClick)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(40.dp)
-                .background(c.surfaceAlt, RectangleShape),
+            modifier =
+                Modifier
+                    .size(40.dp)
+                    .background(c.surfaceAlt, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             Image(
@@ -118,35 +122,39 @@ private fun ActivityEmpty() {
     // Swiss-style: left-aligned, no centered illustration, sharp top rule that
     // matches the divider rhythm an actual transaction list would have.
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(BorderStroke(0.dp, c.border), RectangleShape)
-            .padding(horizontal = 18.dp, vertical = 18.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(BorderStroke(0.dp, c.border), RectangleShape)
+                .padding(horizontal = 18.dp, vertical = 18.dp),
     ) {
         Box(
-            modifier = Modifier
-                .width(3.dp)
-                .height(20.dp)
-                .background(c.accent, RectangleShape),
+            modifier =
+                Modifier
+                    .width(3.dp)
+                    .height(20.dp)
+                    .background(c.accent, RectangleShape),
         )
         Spacer(Modifier.height(10.dp))
         BasicText(
             text = "No transactions yet.",
-            style = ZappTheme.typography.rowTitle.copy(
-                color = c.text,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-0.3).sp,
-            ),
+            style =
+                ZappTheme.typography.rowTitle.copy(
+                    color = c.text,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-0.3).sp,
+                ),
         )
         Spacer(Modifier.height(4.dp))
         BasicText(
             text = "Your sends and receives will appear here.",
-            style = ZappTheme.typography.rowSubtitle.copy(
-                color = c.textMuted,
-                fontSize = 12.sp,
-                lineHeight = 18.sp,
-            ),
+            style =
+                ZappTheme.typography.rowSubtitle.copy(
+                    color = c.textMuted,
+                    fontSize = 12.sp,
+                    lineHeight = 18.sp,
+                ),
         )
     }
 }
@@ -155,9 +163,10 @@ private fun ActivityEmpty() {
 private fun ActivityLoading() {
     val c = ZappTheme.colors
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 24.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 24.dp),
         contentAlignment = Alignment.Center,
     ) {
         CircularProgressIndicator(color = c.accent)

@@ -5,20 +5,30 @@ import java.math.BigInteger
 
 sealed interface RlpItem {
     @JvmInline
-    value class Bytes(val value: ByteArray) : RlpItem
+    value class Bytes(
+        val value: ByteArray
+    ) : RlpItem
+
     @JvmInline
-    value class L(val items: List<RlpItem>) : RlpItem
+    value class L(
+        val items: List<RlpItem>
+    ) : RlpItem
 }
 
 fun rlpBytes(b: ByteArray): RlpItem = RlpItem.Bytes(b)
+
 fun rlpEmpty(): RlpItem = RlpItem.Bytes(ByteArray(0))
+
 fun rlpInt(v: BigInteger): RlpItem {
     if (v.signum() == 0) return rlpEmpty()
     require(v.signum() > 0) { "RLP integers must be non-negative" }
     return RlpItem.Bytes(stripLeadingZeros(v.toByteArray()))
 }
+
 fun rlpInt(v: Long): RlpItem = rlpInt(BigInteger.valueOf(v))
+
 fun rlpList(vararg items: RlpItem): RlpItem = RlpItem.L(items.toList())
+
 fun rlpList(items: List<RlpItem>): RlpItem = RlpItem.L(items)
 
 object Rlp {
@@ -45,9 +55,11 @@ object Rlp {
     }
 
     private fun writeList(out: ByteArrayOutputStream, items: List<RlpItem>) {
-        val inner = ByteArrayOutputStream().apply {
-            items.forEach { writeItem(this, it) }
-        }.toByteArray()
+        val inner =
+            ByteArrayOutputStream()
+                .apply {
+                    items.forEach { writeItem(this, it) }
+                }.toByteArray()
         writeLength(out, inner.size, 0xc0)
         out.write(inner)
     }

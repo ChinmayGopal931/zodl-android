@@ -7,7 +7,9 @@ import java.math.BigInteger
  * and [Gas] unit-counts so the three can't be transposed in transaction assembly.
  */
 @JvmInline
-value class Nonce(val value: BigInteger) {
+value class Nonce(
+    val value: BigInteger
+) {
     init {
         require(value.signum() >= 0) { "Nonce must be non-negative, got $value" }
     }

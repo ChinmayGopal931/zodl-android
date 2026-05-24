@@ -7,11 +7,14 @@ import java.math.BigInteger
  * [Nonce] so fee math can't accidentally treat a gas count as a wei amount.
  */
 @JvmInline
-value class Gas(val value: BigInteger) {
+value class Gas(
+    val value: BigInteger
+) {
     init {
         require(value.signum() >= 0) { "Gas must be non-negative, got $value" }
     }
 
     operator fun times(scalar: BigInteger): Gas = Gas(value * scalar)
+
     operator fun div(scalar: BigInteger): Gas = Gas(value / scalar)
 }

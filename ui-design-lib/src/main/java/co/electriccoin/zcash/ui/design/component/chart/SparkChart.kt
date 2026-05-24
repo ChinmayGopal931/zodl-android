@@ -26,7 +26,10 @@ import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 data class SparkChartData(
     val points: List<Point>
 ) {
-    data class Point(val x: Double, val y: Double)
+    data class Point(
+        val x: Double,
+        val y: Double
+    )
 
     val isRenderable: Boolean get() = points.size >= 2
 }
@@ -47,7 +50,11 @@ fun SparkChart(
 ) {
     if (!data.isRenderable) return
 
-    val strokeBrush = remember(lineColor) { androidx.compose.ui.graphics.SolidColor(lineColor) }
+    val strokeBrush =
+        remember(lineColor) {
+            androidx.compose.ui.graphics
+                .SolidColor(lineColor)
+        }
     val fillBrush =
         remember(fillColor) {
             Brush.verticalGradient(
@@ -113,19 +120,19 @@ private fun SparkChartPreview() =
     ZcashTheme {
         ProvideZappTheme {
             SparkChart(
-            data =
-                SparkChartData(
-                    points =
-                        listOf(
-                            SparkChartData.Point(0.0, 10.0),
-                            SparkChartData.Point(1.0, 14.0),
-                            SparkChartData.Point(2.0, 12.0),
-                            SparkChartData.Point(3.0, 22.0),
-                            SparkChartData.Point(4.0, 34.0),
-                            SparkChartData.Point(5.0, 12.0),
-                            SparkChartData.Point(6.0, 18.0),
-                        )
-                ),
+                data =
+                    SparkChartData(
+                        points =
+                            listOf(
+                                SparkChartData.Point(0.0, 10.0),
+                                SparkChartData.Point(1.0, 14.0),
+                                SparkChartData.Point(2.0, 12.0),
+                                SparkChartData.Point(3.0, 22.0),
+                                SparkChartData.Point(4.0, 34.0),
+                                SparkChartData.Point(5.0, 12.0),
+                                SparkChartData.Point(6.0, 18.0),
+                            )
+                    ),
                 modifier = Modifier.fillMaxWidth()
             )
         }

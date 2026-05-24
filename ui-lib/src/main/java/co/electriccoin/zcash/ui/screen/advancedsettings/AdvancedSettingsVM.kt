@@ -44,7 +44,6 @@ class AdvancedSettingsVM(
     private val navigateToExportPrivateData: NavigateToExportPrivateDataUseCase,
     private val navigateToTaxExport: NavigateToTaxExportUseCase,
 ) : ViewModel() {
-
     val state: StateFlow<AdvancedSettingsState> =
         combine(
             getWalletRestoringState.observe(),

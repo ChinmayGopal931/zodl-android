@@ -66,10 +66,11 @@ fun WalletChoiceScreen(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         // Progress bar
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
@@ -77,10 +78,11 @@ fun WalletChoiceScreen(
         }
         // Body — hero at top, action card pinned to bottom (thumb zone)
         Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             GhostNum(n = 2, modifier = Modifier.align(Alignment.TopEnd))
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
@@ -91,25 +93,27 @@ fun WalletChoiceScreen(
                 OnbSub("Your wallet seed also creates your messaging identity. One backup for everything.")
             }
             OnbActionListCard(
-                actions = listOf(
-                    OnbAction(
-                        icon = "✦",
-                        label = "Create new wallet",
-                        sub = "New wallet + fresh messaging identity",
-                        onClick = onCreate,
-                        highlight = true,
+                actions =
+                    listOf(
+                        OnbAction(
+                            icon = "✦",
+                            label = "Create new wallet",
+                            sub = "New wallet + fresh messaging identity",
+                            onClick = onCreate,
+                            highlight = true,
+                        ),
+                        OnbAction(
+                            icon = "⚿",
+                            label = "Restore from phrase",
+                            sub = "Restores wallet and derives your messaging ID from it",
+                            onClick = onRestore,
+                        ),
                     ),
-                    OnbAction(
-                        icon = "⚿",
-                        label = "Restore from phrase",
-                        sub = "Restores wallet and derives your messaging ID from it",
-                        onClick = onRestore,
-                    ),
-                ),
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
             )
         }
         // Bottom dock — back button only (bottom-left, per SKILL.md Pattern A)
@@ -142,4 +146,3 @@ fun WalletSeedPhraseScreen(
         onContinue = onContinue,
     )
 }
-

@@ -21,7 +21,11 @@ internal class EncryptedJsonStore<T>(
     private val serializer: KSerializer<T>,
 ) {
     private val key = PreferenceKey(prefKey)
-    private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+        }
 
     suspend fun get(): T? = encryptedPreferenceProvider().getString(key)?.let(::decode)
 
@@ -33,16 +37,18 @@ internal class EncryptedJsonStore<T>(
         encryptedPreferenceProvider().putString(key, null)
     }
 
-    fun observe(): Flow<T?> = flow {
-        emitAll(encryptedPreferenceProvider().observe(key).map { raw -> raw?.let(::decode) })
-    }
+    fun observe(): Flow<T?> =
+        flow {
+            emitAll(encryptedPreferenceProvider().observe(key).map { raw -> raw?.let(::decode) })
+        }
 
     // Schema drift between fork versions: drop the stale value rather than crashing. Any other
     // failure (e.g. IllegalArgumentException from invariant violations) is a real bug and must
     // surface — do NOT swallow it here.
-    private fun decode(raw: String): T? = try {
-        json.decodeFromString(serializer, raw)
-    } catch (_: SerializationException) {
-        null
-    }
+    private fun decode(raw: String): T? =
+        try {
+            json.decodeFromString(serializer, raw)
+        } catch (_: SerializationException) {
+            null
+        }
 }

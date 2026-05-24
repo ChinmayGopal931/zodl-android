@@ -136,17 +136,23 @@ internal fun WalletAddressTabContent(state: ChatProfileState) {
         }
     val addressLabel =
         when (state.walletSubTab) {
-            ChatProfileWalletSubTab.SHIELDED ->
+            ChatProfileWalletSubTab.SHIELDED -> {
                 stringResource(R.string.chat_profile_address_shielded_label)
-            ChatProfileWalletSubTab.TRANSPARENT ->
+            }
+
+            ChatProfileWalletSubTab.TRANSPARENT -> {
                 stringResource(R.string.chat_profile_address_transparent_label)
+            }
         }
     val caption =
         when (state.walletSubTab) {
-            ChatProfileWalletSubTab.SHIELDED ->
+            ChatProfileWalletSubTab.SHIELDED -> {
                 stringResource(R.string.chat_profile_address_shielded_caption)
-            ChatProfileWalletSubTab.TRANSPARENT ->
+            }
+
+            ChatProfileWalletSubTab.TRANSPARENT -> {
                 stringResource(R.string.chat_profile_address_transparent_caption)
+            }
         }
 
     if (address.isNotEmpty()) {

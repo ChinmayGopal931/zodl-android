@@ -124,9 +124,10 @@ private fun Content(
         )
         Spacer(8.dp)
         Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
             text = state.attribution.getValue(),
             color = ZappTheme.colors.textSubtle,
             style = ZappTheme.typography.caption,
@@ -157,7 +158,9 @@ private fun Preview() =
                         onAmountChange = {},
                         onContinue = {},
                         isContinueEnabled = true,
-                        attribution = co.electriccoin.zcash.ui.design.util.stringRes("Powered by peer.xyz"),
+                        attribution =
+                            co.electriccoin.zcash.ui.design.util
+                                .stringRes("Powered by peer.xyz"),
                     )
             )
         }

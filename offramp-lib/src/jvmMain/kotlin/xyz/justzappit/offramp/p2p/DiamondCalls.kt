@@ -11,7 +11,9 @@ import xyz.justzappit.evm.abi.AbiUintArray
 import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 
-enum class OrderType(val onChain: Int) {
+enum class OrderType(
+    val onChain: Int
+) {
     BUY(0),
     SELL(1),
     PAY(2),
@@ -34,18 +36,19 @@ object DiamondCalls {
         val pubKey = if (isBuy) "" else args.relayPubKeyEthCrypto
         val userPubKey = if (isBuy) args.relayPubKeyEthCrypto else ""
 
-        val abiArgs = listOf<AbiArg>(
-            AbiString(pubKey),
-            AbiUint(args.usdcAmount.micros),
-            AbiAddress(args.recipientAddress),
-            AbiUint8(args.orderType.onChain),
-            AbiString(""),
-            AbiString(userPubKey),
-            AbiEncoder.bytes32String(args.currency.code),
-            AbiUint(args.preferredPaymentChannelConfigId),
-            AbiUint(args.circleId),
-            AbiUint(args.fiatAmountLimit.micros),
-        )
+        val abiArgs =
+            listOf<AbiArg>(
+                AbiString(pubKey),
+                AbiUint(args.usdcAmount.micros),
+                AbiAddress(args.recipientAddress),
+                AbiUint8(args.orderType.onChain),
+                AbiString(""),
+                AbiString(userPubKey),
+                AbiEncoder.bytes32String(args.currency.code),
+                AbiUint(args.preferredPaymentChannelConfigId),
+                AbiUint(args.circleId),
+                AbiUint(args.fiatAmountLimit.micros),
+            )
         return AbiEncoder.encodeFunctionCall(
             "placeOrder(string,uint256,address,uint8,string,string,bytes32,uint256,uint256,uint256)",
             abiArgs,
@@ -56,14 +59,15 @@ object DiamondCalls {
         orderId: BigInteger,
         encryptedUpiHex: String,
         updatedAmount: BigInteger = BigInteger.ZERO,
-    ): ByteArray = AbiEncoder.encodeFunctionCall(
-        "setSellOrderUpi(uint256,string,uint256)",
-        listOf(
-            AbiUint(orderId),
-            AbiString(encryptedUpiHex),
-            AbiUint(updatedAmount),
-        ),
-    )
+    ): ByteArray =
+        AbiEncoder.encodeFunctionCall(
+            "setSellOrderUpi(uint256,string,uint256)",
+            listOf(
+                AbiUint(orderId),
+                AbiString(encryptedUpiHex),
+                AbiUint(updatedAmount),
+            ),
+        )
 
     fun cancelOrderCalldata(orderId: BigInteger): ByteArray =
         AbiEncoder.encodeFunctionCall("cancelOrder(uint256)", listOf(AbiUint(orderId)))
@@ -110,17 +114,18 @@ object DiamondCalls {
         fiatAmount: Usdc6,
         orderType: OrderType,
         preferredPCConfigId: BigInteger = BigInteger.ZERO,
-    ): ByteArray = AbiEncoder.encodeFunctionCall(
-        "getAssignableMerchantsFromCircle(uint256,uint256,bytes32,address,uint256,uint256,int256,uint256)",
-        listOf(
-            AbiUint(circleId),
-            AbiUint(assignUpTo),
-            AbiEncoder.bytes32String(currency.code),
-            AbiAddress(user),
-            AbiUint(usdtAmount.micros),
-            AbiUint(fiatAmount.micros),
-            AbiInt(BigInteger.valueOf(orderType.onChain.toLong())),
-            AbiUint(preferredPCConfigId),
-        ),
-    )
+    ): ByteArray =
+        AbiEncoder.encodeFunctionCall(
+            "getAssignableMerchantsFromCircle(uint256,uint256,bytes32,address,uint256,uint256,int256,uint256)",
+            listOf(
+                AbiUint(circleId),
+                AbiUint(assignUpTo),
+                AbiEncoder.bytes32String(currency.code),
+                AbiAddress(user),
+                AbiUint(usdtAmount.micros),
+                AbiUint(fiatAmount.micros),
+                AbiInt(BigInteger.valueOf(orderType.onChain.toLong())),
+                AbiUint(preferredPCConfigId),
+            ),
+        )
 }

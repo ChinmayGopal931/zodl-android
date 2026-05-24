@@ -33,12 +33,13 @@ class RlpTest {
 
     @Test
     fun `cat-dog list encodes per yellow paper`() {
-        val encoded = Rlp.encode(
-            rlpList(
-                rlpBytes("cat".toByteArray()),
-                rlpBytes("dog".toByteArray()),
-            ),
-        )
+        val encoded =
+            Rlp.encode(
+                rlpList(
+                    rlpBytes("cat".toByteArray()),
+                    rlpBytes("dog".toByteArray()),
+                ),
+            )
         assertEquals("c88363617483646f67", encoded.toHex())
     }
 
@@ -50,11 +51,12 @@ class RlpTest {
     @Test
     fun `nested lists encode per yellow paper`() {
         val inner = rlpList(rlpList(emptyList()))
-        val tree = rlpList(
-            rlpList(emptyList()),
-            inner,
-            rlpList(rlpList(emptyList()), inner),
-        )
+        val tree =
+            rlpList(
+                rlpList(emptyList()),
+                inner,
+                rlpList(rlpList(emptyList()), inner),
+            )
         assertEquals("c7c0c1c0c3c0c1c0", Rlp.encode(tree).toHex())
     }
 

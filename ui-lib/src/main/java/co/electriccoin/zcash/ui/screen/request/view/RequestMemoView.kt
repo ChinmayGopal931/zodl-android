@@ -53,10 +53,11 @@ internal fun RequestMemoView(
     val c = ZappTheme.colors
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 28.dp),
     ) {
         Spacer(Modifier.height(20.dp))
 
@@ -70,12 +71,13 @@ internal fun RequestMemoView(
 
         BasicText(
             text = stringResource(id = R.string.request_memo_payment_request_subtitle).uppercase(),
-            style = ZappTheme.typography.eyebrow.copy(
-                color = c.textSubtle,
-                fontSize = 10.sp,
-                letterSpacing = 1.8.sp,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.eyebrow.copy(
+                    color = c.textSubtle,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.8.sp,
+                    fontWeight = FontWeight.Black,
+                ),
         )
 
         Spacer(Modifier.height(14.dp))
@@ -96,25 +98,27 @@ private fun RequestMemoZecAmountView(
     modifier: Modifier = Modifier
 ) {
     val c = ZappTheme.colors
-    val zecText = buildAnnotatedString {
-        withStyle(style = SpanStyle(color = c.text)) {
-            append(state.request.memoState.zecAmount)
+    val zecText =
+        buildAnnotatedString {
+            withStyle(style = SpanStyle(color = c.text)) {
+                append(state.request.memoState.zecAmount)
+            }
+            append("\u2009")
+            withStyle(style = SpanStyle(color = c.textMuted)) {
+                append(CURRENCY_TICKER)
+            }
         }
-        append("\u2009")
-        withStyle(style = SpanStyle(color = c.textMuted)) {
-            append(CURRENCY_TICKER)
-        }
-    }
 
     AutoSizingText(
         text = zecText,
-        style = ZappTheme.typography.display.copy(
-            color = c.text,
-            fontSize = 44.sp,
-            lineHeight = 48.sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = (-1.8).sp,
-        ),
+        style =
+            ZappTheme.typography.display.copy(
+                color = c.text,
+                fontSize = 44.sp,
+                lineHeight = 48.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = (-1.8).sp,
+            ),
         modifier = modifier.fillMaxWidth(),
     )
 }
@@ -131,10 +135,11 @@ private fun RequestMemoTextField(
     val c = ZappTheme.colors
 
     Column(
-        modifier = modifier
-            .animateContentSize()
-            .bringIntoViewRequester(bringIntoViewRequester)
-            .focusRequester(focusRequester),
+        modifier =
+            modifier
+                .animateContentSize()
+                .bringIntoViewRequester(bringIntoViewRequester)
+                .focusRequester(focusRequester),
     ) {
         ZashiTextField(
             minLines = 3,
@@ -143,47 +148,52 @@ private fun RequestMemoTextField(
             onValueChange = {
                 state.onMemo(MemoState.new(it, memoState.zecAmount))
             },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Default,
-                capitalization = KeyboardCapitalization.Sentences,
-            ),
+            keyboardOptions =
+                KeyboardOptions(
+                    keyboardType = KeyboardType.Text,
+                    imeAction = ImeAction.Default,
+                    capitalization = KeyboardCapitalization.Sentences,
+                ),
             placeholder = {
                 Text(
                     text = stringResource(id = R.string.request_memo_text_field_hint),
                     color = c.textSubtle,
                 )
             },
-            colors = if (memoState.isValid()) {
-                ZashiTextFieldDefaults.defaultColors()
-            } else {
-                ZashiTextFieldDefaults.defaultColors(
-                    disabledTextColor = c.textMuted,
-                    disabledHintColor = c.textSubtle,
-                    disabledBorderColor = Color.Unspecified,
-                    disabledContainerColor = c.surfaceAlt,
-                    disabledPlaceholderColor = c.textSubtle,
-                )
-            },
+            colors =
+                if (memoState.isValid()) {
+                    ZashiTextFieldDefaults.defaultColors()
+                } else {
+                    ZashiTextFieldDefaults.defaultColors(
+                        disabledTextColor = c.textMuted,
+                        disabledHintColor = c.textSubtle,
+                        disabledBorderColor = Color.Unspecified,
+                        disabledContainerColor = c.surfaceAlt,
+                        disabledPlaceholderColor = c.textSubtle,
+                    )
+                },
             modifier = Modifier.fillMaxWidth(),
         )
 
         BasicText(
-            text = stringResource(
-                id = R.string.request_memo_bytes_counter,
-                Memo.MAX_MEMO_LENGTH_BYTES - memoState.byteSize,
-                Memo.MAX_MEMO_LENGTH_BYTES,
-            ),
-            style = ZappTheme.typography.body.copy(
-                color = if (memoState.isValid()) c.textSubtle else c.danger,
-                fontSize = 11.sp,
-                textAlign = TextAlign.End,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.4.sp,
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
+            text =
+                stringResource(
+                    id = R.string.request_memo_bytes_counter,
+                    Memo.MAX_MEMO_LENGTH_BYTES - memoState.byteSize,
+                    Memo.MAX_MEMO_LENGTH_BYTES,
+                ),
+            style =
+                ZappTheme.typography.body.copy(
+                    color = if (memoState.isValid()) c.textSubtle else c.danger,
+                    fontSize = 11.sp,
+                    textAlign = TextAlign.End,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = 0.4.sp,
+                ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
         )
 
         LaunchedEffect(Unit) {

@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -37,14 +38,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cash.z.ecc.android.sdk.model.WalletAddress
 import co.electriccoin.zcash.ui.R
-import co.electriccoin.zcash.ui.design.component.ZashiQr
 import co.electriccoin.zcash.ui.design.component.QrCodeDefaults
+import co.electriccoin.zcash.ui.design.component.ZashiQr
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.request.model.RequestState
 import co.electriccoin.zcash.ui.util.CURRENCY_TICKER
 import kotlin.math.roundToInt
-import androidx.compose.ui.platform.LocalDensity
 
 @Composable
 internal fun RequestQrCodeView(
@@ -54,10 +54,11 @@ internal fun RequestQrCodeView(
     val c = ZappTheme.colors
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
     ) {
         Spacer(Modifier.height(16.dp))
 
@@ -66,16 +67,18 @@ internal fun RequestQrCodeView(
         Spacer(Modifier.height(20.dp))
 
         Box(
-            modifier = Modifier
-                .background(c.bg, RectangleShape)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .padding(12.dp),
+            modifier =
+                Modifier
+                    .background(c.bg, RectangleShape)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .padding(12.dp),
         ) {
             ZashiQr(
-                state = state.toQrState(
-                    contentDescription = stringRes(R.string.request_qr_code_content_description),
-                    centerImage = state.icon,
-                ),
+                state =
+                    state.toQrState(
+                        contentDescription = stringRes(R.string.request_qr_code_content_description),
+                        centerImage = state.icon,
+                    ),
                 modifier = Modifier.fillMaxWidth(0.92f),
             )
         }
@@ -100,25 +103,28 @@ private fun AmountPill(
     val c = ZappTheme.colors
     val ticker = CURRENCY_TICKER
     Row(
-        modifier = modifier
-            .background(c.accentSoft, RectangleShape)
-            .padding(horizontal = 14.dp, vertical = 6.dp),
+        modifier =
+            modifier
+                .background(c.accentSoft, RectangleShape)
+                .padding(horizontal = 14.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         BasicText(
             text = state.request.qrCodeState.zecAmount,
-            style = ZappTheme.typography.button.copy(
-                color = c.text,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.button.copy(
+                    color = c.text,
+                    fontWeight = FontWeight.Black,
+                ),
         )
         BasicText(
             text = ticker,
-            style = ZappTheme.typography.button.copy(
-                color = c.accent,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.button.copy(
+                    color = c.accent,
+                    fontWeight = FontWeight.Black,
+                ),
         )
     }
 }
@@ -132,10 +138,11 @@ private fun SaveQrTextButton(
     val colors = QrCodeDefaults.colors()
     val sizePixels = with(LocalDensity.current) { DEFAULT_QR_CODE_SIZE.toPx() }.roundToInt()
     Row(
-        modifier = modifier
-            .clickable { state.onQrCodeShare(colors, sizePixels, state.request.qrCodeState.requestUri) }
-            .semantics { role = Role.Button }
-            .padding(vertical = 4.dp),
+        modifier =
+            modifier
+                .clickable { state.onQrCodeShare(colors, sizePixels, state.request.qrCodeState.requestUri) }
+                .semantics { role = Role.Button }
+                .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -147,10 +154,11 @@ private fun SaveQrTextButton(
         )
         BasicText(
             text = "Save QR to Photos",
-            style = ZappTheme.typography.caption.copy(
-                color = c.textMuted,
-                textDecoration = TextDecoration.Underline,
-            ),
+            style =
+                ZappTheme.typography.caption.copy(
+                    color = c.textMuted,
+                    textDecoration = TextDecoration.Underline,
+                ),
         )
     }
 }
@@ -164,21 +172,23 @@ private fun AddressSection(
     val isShielded = state.walletAddress !is WalletAddress.Transparent
     val addressLabel = if (isShielded) "Your Shielded Address" else "Your Transparent Address"
     val address = state.walletAddress.address
-    val truncated = if (address.length > 16) {
-        address.take(10) + "…" + address.takeLast(6)
-    } else {
-        address
-    }
+    val truncated =
+        if (address.length > 16) {
+            address.take(10) + "…" + address.takeLast(6)
+        } else {
+            address
+        }
 
     Column(modifier = modifier.fillMaxWidth()) {
         BasicText(
             text = addressLabel.uppercase(),
-            style = ZappTheme.typography.eyebrow.copy(
-                color = c.textSubtle,
-                fontSize = 10.sp,
-                letterSpacing = 1.8.sp,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.eyebrow.copy(
+                    color = c.textSubtle,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.8.sp,
+                    fontWeight = FontWeight.Black,
+                ),
         )
         Spacer(Modifier.height(8.dp))
         Row(
@@ -187,19 +197,21 @@ private fun AddressSection(
         ) {
             BasicText(
                 text = truncated,
-                style = ZappTheme.typography.mono.copy(
-                    color = c.textMuted,
-                    fontSize = 12.sp,
-                ),
+                style =
+                    ZappTheme.typography.mono.copy(
+                        color = c.textMuted,
+                        fontSize = 12.sp,
+                    ),
                 modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.width(8.dp))
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable { /* address copy handled by QrCode state — no direct copy callback here */ }
-                    .semantics { role = Role.Button },
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape)
+                        .clickable { /* address copy handled by QrCode state — no direct copy callback here */ }
+                        .semantics { role = Role.Button },
                 contentAlignment = Alignment.Center,
             ) {
                 Image(
@@ -211,32 +223,37 @@ private fun AddressSection(
             }
         }
 
-        if (state.request.qrCodeState.memo.isNotBlank()) {
+        if (state.request.qrCodeState.memo
+                .isNotBlank()
+        ) {
             Spacer(Modifier.height(12.dp))
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .border(BorderStroke(1.dp, c.border), RectangleShape)
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
             ) {
                 Column {
                     BasicText(
                         text = "NOTE",
-                        style = ZappTheme.typography.eyebrow.copy(
-                            color = c.textSubtle,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.8.sp,
-                            fontWeight = FontWeight.Black,
-                        ),
+                        style =
+                            ZappTheme.typography.eyebrow.copy(
+                                color = c.textSubtle,
+                                fontSize = 10.sp,
+                                letterSpacing = 1.8.sp,
+                                fontWeight = FontWeight.Black,
+                            ),
                     )
                     Spacer(Modifier.height(4.dp))
                     BasicText(
                         text = state.request.qrCodeState.memo,
-                        style = ZappTheme.typography.body.copy(
-                            color = c.textMuted,
-                            fontSize = 13.sp,
-                            lineHeight = 19.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.body.copy(
+                                color = c.textMuted,
+                                fontSize = 13.sp,
+                                lineHeight = 19.sp,
+                            ),
                     )
                 }
             }

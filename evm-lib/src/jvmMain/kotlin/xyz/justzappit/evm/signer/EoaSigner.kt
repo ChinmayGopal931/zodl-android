@@ -28,23 +28,27 @@ class EoaSigner(
         val nonce = rpc.ethGetTransactionCount(account.address, blockTag = "pending")
         val tip: Wei = rpc.ethMaxPriorityFeePerGas()
         val block = rpc.ethGetBlockByNumber(blockTag = "latest")
-        val baseFee: Wei = block.baseFee
-            ?: error("baseFeePerGas missing in latest block — chain may be pre-EIP-1559")
+        val baseFee: Wei =
+            block.baseFee
+                ?: error("baseFeePerGas missing in latest block — chain may be pre-EIP-1559")
         val maxFee: Wei = baseFee * baseFeeMultiplier + tip
-        val gasLimit = rpc.ethEstimateGas(account.address, to, value, data)
-            .times(BigInteger.valueOf(100L + gasLimitBufferPercent))
-            .div(BigInteger.valueOf(100L))
+        val gasLimit =
+            rpc
+                .ethEstimateGas(account.address, to, value, data)
+                .times(BigInteger.valueOf(100L + gasLimitBufferPercent))
+                .div(BigInteger.valueOf(100L))
 
-        val tx = Eip1559Tx(
-            chainId = chainId,
-            nonce = nonce,
-            maxPriorityFeePerGas = tip,
-            maxFeePerGas = maxFee,
-            gasLimit = gasLimit,
-            to = to,
-            value = value,
-            data = data,
-        )
+        val tx =
+            Eip1559Tx(
+                chainId = chainId,
+                nonce = nonce,
+                maxPriorityFeePerGas = tip,
+                maxFeePerGas = maxFee,
+                gasLimit = gasLimit,
+                to = to,
+                value = value,
+                data = data,
+            )
         val sig = EcdsaSigner.sign(tx.signingHash(), BigInteger(1, account.privateKey))
         return rpc.ethSendRawTransaction("0x" + tx.encodeSigned(sig).toHex())
     }

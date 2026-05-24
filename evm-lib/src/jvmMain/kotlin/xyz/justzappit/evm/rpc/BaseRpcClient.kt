@@ -41,7 +41,11 @@ class BaseRpcClient(
     private val rpcUrl: String,
 ) {
     private val nextId = AtomicLong(1)
-    private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+        }
 
     suspend fun ethChainId(): ChainId =
         ChainId(hexToBigInteger(rpcCall("eth_chainId", emptyJsonArray).jsonPrimitive.content).toLong())
@@ -82,21 +86,22 @@ class BaseRpcClient(
         to: Address,
         value: Wei = Wei.ZERO,
         data: ByteArray = byteArrayOf(),
-    ): Gas = Gas(
-        hexToBigInteger(
-            rpcCall(
-                "eth_estimateGas",
-                buildJsonArray {
-                    addJsonObject {
-                        put("from", from.checksumHex)
-                        put("to", to.checksumHex)
-                        put("value", "0x" + value.value.toString(HEX_BASE))
-                        put("data", "0x" + data.toHex())
-                    }
-                },
-            ).jsonPrimitive.content,
-        ),
-    )
+    ): Gas =
+        Gas(
+            hexToBigInteger(
+                rpcCall(
+                    "eth_estimateGas",
+                    buildJsonArray {
+                        addJsonObject {
+                            put("from", from.checksumHex)
+                            put("to", to.checksumHex)
+                            put("value", "0x" + value.value.toString(HEX_BASE))
+                            put("data", "0x" + data.toHex())
+                        }
+                    },
+                ).jsonPrimitive.content,
+            ),
+        )
 
     suspend fun ethSendRawTransaction(rawTxHex: String): TxHash =
         TxHash.fromHex(
@@ -123,32 +128,35 @@ class BaseRpcClient(
     }
 
     suspend fun ethGetBlockByNumber(blockTag: String = "latest"): BlockHeader {
-        val result = rpcCall(
-            "eth_getBlockByNumber",
-            buildJsonArray {
-                add(blockTag)
-                add(false)
-            },
-        )
+        val result =
+            rpcCall(
+                "eth_getBlockByNumber",
+                buildJsonArray {
+                    add(blockTag)
+                    add(false)
+                },
+            )
         return json.decodeFromJsonElement(BlockHeader.serializer(), result)
     }
 
     private suspend fun rpcCall(method: String, params: JsonArray): JsonElement {
-        val payload = buildJsonObject {
-            put("jsonrpc", "2.0")
-            put("id", nextId.getAndIncrement())
-            put("method", method)
-            put("params", params)
-        }
-        val response = try {
-            httpClient.post(rpcUrl) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
+        val payload =
+            buildJsonObject {
+                put("jsonrpc", "2.0")
+                put("id", nextId.getAndIncrement())
+                put("method", method)
+                put("params", params)
             }
-        } catch (e: IOException) {
-            // Timeouts and socket failures (post ktor-retry exhaustion) surface as IOException.
-            throw RpcException.TransportError(method, e)
-        }
+        val response =
+            try {
+                httpClient.post(rpcUrl) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            } catch (e: IOException) {
+                // Timeouts and socket failures (post ktor-retry exhaustion) surface as IOException.
+                throw RpcException.TransportError(method, e)
+            }
         if (response.status == HttpStatusCode.TooManyRequests) {
             throw RpcException.RateLimited(method, response.retryAfterMillis())
         }
@@ -168,11 +176,15 @@ class BaseRpcClient(
 
         // Execution reverted: geth uses code=3; some vendors use -32000 + "execution reverted" in
         // the message. If we see either, parse selector/Error(string) from the data field.
-        val looksLikeRevert = code == EXECUTION_REVERTED_CODE ||
-            (message != null && message.contains("execution reverted", ignoreCase = true))
+        val looksLikeRevert =
+            code == EXECUTION_REVERTED_CODE ||
+                (message != null && message.contains("execution reverted", ignoreCase = true))
         if (looksLikeRevert) {
-            val revertBytes = dataHex?.takeIf { it.length >= MIN_HEX_LEN_FOR_BYTES }
-                ?.runCatching { hexToBytes() }?.getOrNull()
+            val revertBytes =
+                dataHex
+                    ?.takeIf { it.length >= MIN_HEX_LEN_FOR_BYTES }
+                    ?.runCatching { hexToBytes() }
+                    ?.getOrNull()
             return RpcException.ExecutionReverted(
                 method = method,
                 selector = revertBytes?.let(Selector4::fromBytesPrefix),

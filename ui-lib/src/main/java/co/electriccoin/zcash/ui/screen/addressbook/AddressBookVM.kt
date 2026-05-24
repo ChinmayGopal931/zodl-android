@@ -34,7 +34,6 @@ class AddressBookVM(
     private val addressBookRepository: AddressBookRepository,
     private val sdk: ZappMessagingSDK,
 ) : ViewModel() {
-
     private val scannedAddress = MutableStateFlow<String?>(null)
     private val scannedMessagingKey = MutableStateFlow<String?>(null)
     private val editingContact = MutableStateFlow<EnhancedABContact?>(null)
@@ -52,17 +51,17 @@ class AddressBookVM(
                 scannedMessagingKey = scannedKey,
                 editingContact = editing,
             )
-        }
-            .flowOn(Dispatchers.Default)
+        }.flowOn(Dispatchers.Default)
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-                initialValue = createState(
-                    contacts = null,
-                    scannedAddress = null,
-                    scannedMessagingKey = null,
-                    editingContact = null,
-                )
+                initialValue =
+                    createState(
+                        contacts = null,
+                        scannedAddress = null,
+                        scannedMessagingKey = null,
+                        editingContact = null,
+                    )
             )
 
     private fun createState(
@@ -107,14 +106,15 @@ class AddressBookVM(
             onScanQr = ::onScanQr,
             scannedAddress = scannedAddress,
             onConsumeScannedAddress = ::onConsumeScannedAddress,
-            editingContact = editingContact?.let {
-                EditContactData(
-                    originalName = it.name,
-                    originalAddress = it.address,
-                    messagingKey = null,
-                    walletAddresses = it.walletAddresses,
-                )
-            },
+            editingContact =
+                editingContact?.let {
+                    EditContactData(
+                        originalName = it.name,
+                        originalAddress = it.address,
+                        messagingKey = null,
+                        walletAddresses = it.walletAddresses,
+                    )
+                },
             onUpdateContact = ::onUpdateContact,
             onDeleteContact = ::onDeleteContact,
             onDismissEdit = ::onDismissEdit,

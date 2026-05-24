@@ -51,11 +51,12 @@ internal fun MediaAttachmentSheet(
         scrimColor = c.overlay,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 24.dp)
-                .padding(bottom = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 24.dp),
         ) {
             BasicText(
                 text = stringResource(R.string.chat_media_sheet_title),

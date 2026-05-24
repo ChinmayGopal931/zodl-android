@@ -6,11 +6,11 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
 import co.electriccoin.zcash.ui.common.datasource.SendTransactionProposal
-import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.datasource.SwapTransactionProposal
 import co.electriccoin.zcash.ui.common.datasource.TransactionProposal
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
 import co.electriccoin.zcash.ui.common.model.ZashiAccount
+import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.repository.BiometricRepository
 import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
@@ -121,7 +121,11 @@ class SubmitProposalUseCase(
 
     private suspend fun notifyChatPeer(conversationId: String, proposal: SendTransactionProposal) {
         try {
-            val zecAmount = proposal.amount.convertZatoshiToZec().stripTrailingZeros().toPlainString()
+            val zecAmount =
+                proposal.amount
+                    .convertZatoshiToZec()
+                    .stripTrailingZeros()
+                    .toPlainString()
             messagingSDK.sendMessage(conversationId, "Sent $zecAmount ZEC \uD83D\uDCB8")
         } catch (e: Exception) {
             Twig.warn(e) { "Failed to send chat payment notification" }

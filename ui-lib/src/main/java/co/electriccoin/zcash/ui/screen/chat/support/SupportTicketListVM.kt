@@ -28,7 +28,6 @@ class SupportTicketListVM(
     private val sdk: ZappMessagingSDK,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
-
     private val tickets = MutableStateFlow<List<TicketSnapshot>?>(null)
     private val closeTarget = MutableStateFlow<TicketSnapshot?>(null)
     private val categoryCache = mutableMapOf<String, SupportCategory?>()
@@ -46,23 +45,25 @@ class SupportTicketListVM(
                 isLoading = list == null,
                 onNewTicket = ::onNewTicket,
                 onBack = ::onBack,
-                closeDialog = target?.let { t ->
-                    SupportLeaveDialogState(
-                        onConfirm = { onCloseConfirm(t) },
-                        onDismiss = ::onCloseDismiss,
-                    )
-                },
+                closeDialog =
+                    target?.let { t ->
+                        SupportLeaveDialogState(
+                            onConfirm = { onCloseConfirm(t) },
+                            onDismiss = ::onCloseDismiss,
+                        )
+                    },
             )
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = SupportTicketListState(
-                tickets = emptyList(),
-                isLoading = true,
-                onNewTicket = ::onNewTicket,
-                onBack = ::onBack,
-                closeDialog = null,
-            ),
+            initialValue =
+                SupportTicketListState(
+                    tickets = emptyList(),
+                    isLoading = true,
+                    onNewTicket = ::onNewTicket,
+                    onBack = ::onBack,
+                    closeDialog = null,
+                ),
         )
 
     fun refresh() {
@@ -99,27 +100,28 @@ class SupportTicketListVM(
     private suspend fun rebuild() {
         runChatCall("SupportTicketListVM: rebuild failed") {
             val localPublicKey = sdk.identity.value?.publicKey
-            val supportConvs = sdk.conversations.value
-                .map(ChatConversation::from)
-                .filter {
-                    SupportChatConstants.isSupportConversation(
-                        displayName = it.displayName,
-                        participantIds = it.participantIds,
-                        localPublicKey = localPublicKey,
+            val supportConvs =
+                sdk.conversations.value
+                    .map(ChatConversation::from)
+                    .filter {
+                        SupportChatConstants.isSupportConversation(
+                            displayName = it.displayName,
+                            participantIds = it.participantIds,
+                            localPublicKey = localPublicKey,
+                        )
+                    }.sortedByDescending { it.lastMessageTimestamp ?: 0L }
+
+            val snapshots =
+                supportConvs.map { conv ->
+                    val category = categoryCache.getOrPut(conv.id) { fetchCategory(conv.id) }
+                    TicketSnapshot(
+                        conversationId = conv.id,
+                        category = category,
+                        lastMessage = stripBotPrefix(conv.lastMessage),
+                        lastMessageTimestamp = conv.lastMessageTimestamp,
+                        unreadCount = conv.unreadCount,
                     )
                 }
-                .sortedByDescending { it.lastMessageTimestamp ?: 0L }
-
-            val snapshots = supportConvs.map { conv ->
-                val category = categoryCache.getOrPut(conv.id) { fetchCategory(conv.id) }
-                TicketSnapshot(
-                    conversationId = conv.id,
-                    category = category,
-                    lastMessage = stripBotPrefix(conv.lastMessage),
-                    lastMessageTimestamp = conv.lastMessageTimestamp,
-                    unreadCount = conv.unreadCount,
-                )
-            }
             tickets.value = snapshots
         }
         if (tickets.value == null) tickets.value = emptyList()
@@ -128,9 +130,11 @@ class SupportTicketListVM(
     private suspend fun fetchCategory(conversationId: String): SupportCategory? {
         var result: SupportCategory? = null
         runChatCall("SupportTicketListVM: fetchCategory failed for $conversationId") {
-            result = sdk.getMessages(conversationId)
-                .map(ChatMessage::from)
-                .firstNotNullOfOrNull { SupportChatConstants.parseCategoryMarker(it.content) }
+            result =
+                sdk
+                    .getMessages(conversationId)
+                    .map(ChatMessage::from)
+                    .firstNotNullOfOrNull { SupportChatConstants.parseCategoryMarker(it.content) }
         }
         return result
     }
@@ -180,7 +184,8 @@ class SupportTicketListVM(
 
     private fun TicketSnapshot.toItem(): SupportTicketItem {
         val categoryLabel: StringResource =
-            category?.displayNameRes
+            category
+                ?.displayNameRes
                 ?.let { stringRes(it) }
                 ?: stringRes(R.string.support_ticket_default_label)
         return SupportTicketItem(

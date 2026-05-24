@@ -192,14 +192,21 @@ class NavigatorImpl(
     private fun forward(command: NavigationCommand.Forward) {
         command.routes.forEach { route ->
             when (route) {
-                co.electriccoin.zcash.ui.screen.flexa.Flexa -> createFlexaFlow(flexaViewModel)
-                is ExternalUrl ->
+                co.electriccoin.zcash.ui.screen.flexa.Flexa -> {
+                    createFlexaFlow(flexaViewModel)
+                }
+
+                is ExternalUrl -> {
                     if (route.branded) {
                         WebBrowserUtil.openBrandedUrl(activity, route.url)
                     } else {
                         WebBrowserUtil.startActivity(activity, route.url)
                     }
-                else -> navController.executeNavigation(route = route)
+                }
+
+                else -> {
+                    navController.executeNavigation(route = route)
+                }
             }
         }
 

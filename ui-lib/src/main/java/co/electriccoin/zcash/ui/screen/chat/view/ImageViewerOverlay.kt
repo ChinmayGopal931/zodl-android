@@ -40,10 +40,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.spackle.Twig
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import java.io.File
 import java.io.FileInputStream
 
@@ -58,70 +58,82 @@ internal fun ImageViewerOverlay(
     var offsetX by remember { mutableFloatStateOf(0f) }
     var offsetY by remember { mutableFloatStateOf(0f) }
 
-    val imageModel = remember(message.mediaLocalPath, message.thumbnailData) {
-        when {
-            message.mediaLocalPath != null && File(message.mediaLocalPath).exists() ->
-                ImageRequest.Builder(context)
-                    .data(File(message.mediaLocalPath))
-                    .build()
-            message.thumbnailData != null -> try {
-                val bytes = Base64.decode(message.thumbnailData, Base64.DEFAULT)
-                BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-            } catch (e: IllegalArgumentException) {
-                Twig.warn(e) { "ImageViewerOverlay: thumbnail base64 decode failed" }
-                null
+    val imageModel =
+        remember(message.mediaLocalPath, message.thumbnailData) {
+            when {
+                message.mediaLocalPath != null && File(message.mediaLocalPath).exists() -> {
+                    ImageRequest
+                        .Builder(context)
+                        .data(File(message.mediaLocalPath))
+                        .build()
+                }
+
+                message.thumbnailData != null -> {
+                    try {
+                        val bytes = Base64.decode(message.thumbnailData, Base64.DEFAULT)
+                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    } catch (e: IllegalArgumentException) {
+                        Twig.warn(e) { "ImageViewerOverlay: thumbnail base64 decode failed" }
+                        null
+                    }
+                }
+
+                else -> {
+                    null
+                }
             }
-            else -> null
         }
-    }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.95f))
-            .pointerInput(Unit) {
-                detectTapGestures { onDismiss() }
-            }
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.95f))
+                .pointerInput(Unit) {
+                    detectTapGestures { onDismiss() }
+                }
     ) {
         if (imageModel != null) {
             AsyncImage(
                 model = imageModel,
                 contentDescription = stringResource(R.string.chat_room_image_viewer_content_description),
                 contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) {
-                        detectTransformGestures { _, pan, zoom, _ ->
-                            scale = (scale * zoom).coerceIn(1f, 5f)
-                            if (scale > 1f) {
-                                offsetX += pan.x
-                                offsetY += pan.y
-                            } else {
-                                offsetX = 0f
-                                offsetY = 0f
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                scale = (scale * zoom).coerceIn(1f, 5f)
+                                if (scale > 1f) {
+                                    offsetX += pan.x
+                                    offsetY += pan.y
+                                } else {
+                                    offsetX = 0f
+                                    offsetY = 0f
+                                }
                             }
-                        }
-                    }
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offsetX,
-                        translationY = offsetY
-                    )
+                        }.graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offsetX,
+                            translationY = offsetY
+                        )
             )
         }
 
         Row(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
         ) {
             if (message.mediaLocalPath != null && File(message.mediaLocalPath).exists()) {
                 IconButton(
                     onClick = { saveImageToGallery(context, message) },
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .background(Color.Black.copy(alpha = 0.5f), CircleShape)
                 ) {
                     Icon(
                         Icons.Default.SaveAlt,
@@ -135,9 +147,10 @@ internal fun ImageViewerOverlay(
 
             IconButton(
                 onClick = onDismiss,
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(Color.Black.copy(alpha = 0.5f), CircleShape)
+                modifier =
+                    Modifier
+                        .size(44.dp)
+                        .background(Color.Black.copy(alpha = 0.5f), CircleShape)
             ) {
                 Icon(
                     Icons.Default.Close,
@@ -157,26 +170,29 @@ private fun saveImageToGallery(context: Context, message: ChatMessage) {
 
     try {
         val mimeType = message.contentType ?: "image/jpeg"
-        val extension = when {
-            mimeType.contains("png") -> "png"
-            mimeType.contains("gif") -> "gif"
-            mimeType.contains("webp") -> "webp"
-            else -> "jpg"
-        }
+        val extension =
+            when {
+                mimeType.contains("png") -> "png"
+                mimeType.contains("gif") -> "gif"
+                mimeType.contains("webp") -> "webp"
+                else -> "jpg"
+            }
         val fileName = "Zapp_${System.currentTimeMillis()}.$extension"
 
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
-            put(MediaStore.Images.Media.MIME_TYPE, mimeType)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Zapp")
-                put(MediaStore.Images.Media.IS_PENDING, 1)
+        val values =
+            ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, fileName)
+                put(MediaStore.Images.Media.MIME_TYPE, mimeType)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Zapp")
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
             }
-        }
 
         val resolver = context.contentResolver
-        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-            ?: return
+        val uri =
+            resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+                ?: return
 
         resolver.openOutputStream(uri)?.use { out ->
             FileInputStream(sourceFile).use { it.copyTo(out) }

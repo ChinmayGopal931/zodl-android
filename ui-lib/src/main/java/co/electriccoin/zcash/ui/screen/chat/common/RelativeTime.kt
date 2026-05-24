@@ -13,14 +13,25 @@ import java.util.Locale
 internal fun formatRelativeTime(epochMillis: Long): StringResource {
     val diff = System.currentTimeMillis() - epochMillis
     return when {
-        diff < ONE_MINUTE_MS -> stringRes(R.string.chat_list_time_now)
-        diff < ONE_HOUR_MS ->
+        diff < ONE_MINUTE_MS -> {
+            stringRes(R.string.chat_list_time_now)
+        }
+
+        diff < ONE_HOUR_MS -> {
             stringRes(R.string.chat_list_time_minutes_short, (diff / ONE_MINUTE_MS).toInt())
-        diff < ONE_DAY_MS ->
+        }
+
+        diff < ONE_DAY_MS -> {
             stringRes(SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(epochMillis)))
-        diff < ONE_WEEK_MS ->
+        }
+
+        diff < ONE_WEEK_MS -> {
             stringRes(SimpleDateFormat("EEE", Locale.getDefault()).format(Date(epochMillis)))
-        else -> stringRes(SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(epochMillis)))
+        }
+
+        else -> {
+            stringRes(SimpleDateFormat("MMM d", Locale.getDefault()).format(Date(epochMillis)))
+        }
     }
 }
 

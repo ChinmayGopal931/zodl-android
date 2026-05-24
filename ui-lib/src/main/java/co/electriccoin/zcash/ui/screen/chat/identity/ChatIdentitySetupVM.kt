@@ -88,7 +88,7 @@ class ChatIdentitySetupVM(
                 ),
             form =
                 when (tab) {
-                    ChatIdentitySetupTab.CREATE ->
+                    ChatIdentitySetupTab.CREATE -> {
                         ChatIdentitySetupFormState.Create(
                             displayName = createName,
                             displayNamePlaceholder = stringRes(R.string.chat_identity_setup_display_name_placeholder),
@@ -97,8 +97,9 @@ class ChatIdentitySetupVM(
                             onDisplayNameChange = ::onCreateNameChange,
                             onSubmit = ::onCreateClick,
                         )
+                    }
 
-                    ChatIdentitySetupTab.RESTORE ->
+                    ChatIdentitySetupTab.RESTORE -> {
                         ChatIdentitySetupFormState.Restore(
                             displayName = restoreName,
                             displayNamePlaceholder = stringRes(R.string.chat_identity_setup_display_name_placeholder),
@@ -110,6 +111,7 @@ class ChatIdentitySetupVM(
                             onSeedPhraseChange = ::onSeedPhraseChange,
                             onSubmit = ::onRestoreClick,
                         )
+                    }
                 },
             error = error,
             seedBackup =
@@ -159,9 +161,11 @@ class ChatIdentitySetupVM(
             name.isBlank() -> {
                 error.value = stringRes(R.string.chat_identity_setup_error_name_required)
             }
+
             words.size != SEED_WORD_COUNT -> {
                 error.value = stringRes(R.string.chat_identity_setup_error_seed_word_count)
             }
+
             else -> {
                 error.value = null
                 viewModelScope.launch { restoreIdentity(seed, name) }

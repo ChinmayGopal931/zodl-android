@@ -4,7 +4,6 @@ import kotlin.test.Test
 import kotlin.test.assertFailsWith
 
 class P2pConfigProviderTest {
-
     // Only ship-safety guard worth a dedicated test: mainnet without explicit overrides must fail
     // closed, never quietly fall through to a default RPC. Everything else here was provider-
     // returns-its-constructor-args fluff; trimmed by the audit.

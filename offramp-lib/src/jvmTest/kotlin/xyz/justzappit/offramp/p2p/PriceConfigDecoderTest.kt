@@ -11,12 +11,13 @@ class PriceConfigDecoderTest {
     fun `decodes sellPrice from the live Sepolia getPriceConfig(INR) response`() {
         // Captured 2026-05-21 from eth_call to 0xce868398...532aE2 on sepolia.base.org.
         // Wire format is four packed uint256s with sellPrice at slot 1.
-        val raw = (
-            "00000000000000000000000000000000000000000000000000000000056c8cc0" +
-                "00000000000000000000000000000000000000000000000000000000054e0840" +
-                "0000000000000000000000000000000000000000000000000000000000000000" +
-                "000000000000000000000000000000000000000000000000000000000016e360"
-        ).hexToBytes()
+        val raw =
+            (
+                "00000000000000000000000000000000000000000000000000000000056c8cc0" +
+                    "00000000000000000000000000000000000000000000000000000000054e0840" +
+                    "0000000000000000000000000000000000000000000000000000000000000000" +
+                    "000000000000000000000000000000000000000000000000000000000016e360"
+            ).hexToBytes()
 
         val cfg = PriceConfigDecoder.decode(raw)
         assertEquals(Usdc6.ofMicros(89_000_000L), cfg.sellPrice)

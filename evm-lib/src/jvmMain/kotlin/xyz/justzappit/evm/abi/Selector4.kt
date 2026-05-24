@@ -3,7 +3,9 @@ package xyz.justzappit.evm.abi
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.toHex
 
-class Selector4(bytes: ByteArray) {
+class Selector4(
+    bytes: ByteArray
+) {
     val bytes: ByteArray = bytes.copyOf()
 
     init {
@@ -26,9 +28,10 @@ class Selector4(bytes: ByteArray) {
 
         fun fromHex(hex: String): Selector4 = Selector4(hex.hexToBytes())
 
-        fun fromCanonicalSignature(signature: String): Selector4 = Selector4(
-            keccak256(signature.toByteArray(Charsets.US_ASCII)).copyOf(LEN),
-        )
+        fun fromCanonicalSignature(signature: String): Selector4 =
+            Selector4(
+                keccak256(signature.toByteArray(Charsets.US_ASCII)).copyOf(LEN),
+            )
 
         fun fromBytesPrefix(bytes: ByteArray): Selector4? =
             if (bytes.size >= LEN) Selector4(bytes.copyOfRange(0, LEN)) else null

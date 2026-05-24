@@ -22,11 +22,12 @@ class CameraCaptureState(
     fun launch() {
         val dir = File(context.cacheDir, "camera").apply { mkdirs() }
         val file = File(dir, "photo_${System.currentTimeMillis()}.jpg")
-        val uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.provider",
-            file
-        )
+        val uri =
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.provider",
+                file
+            )
         pendingUri = uri
         launcher?.invoke(uri)
     }
@@ -44,11 +45,12 @@ fun rememberCameraCaptureState(
 ): CameraCaptureState {
     val state = remember { CameraCaptureState(context, onPhotoCaptured) }
 
-    val takePictureLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { success ->
-        state.onResult(success)
-    }
+    val takePictureLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.TakePicture()
+        ) { success ->
+            state.onResult(success)
+        }
 
     LaunchedEffect(Unit) {
         state.launcher = { uri -> takePictureLauncher.launch(uri) }

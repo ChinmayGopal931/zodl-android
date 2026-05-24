@@ -16,12 +16,15 @@ import java.math.BigInteger
  */
 @Serializable(with = Wei.WeiSerializer::class)
 @JvmInline
-value class Wei(val value: BigInteger) {
+value class Wei(
+    val value: BigInteger
+) {
     init {
         require(value.signum() >= 0) { "Wei must be non-negative, got $value" }
     }
 
     operator fun plus(other: Wei): Wei = Wei(value + other.value)
+
     operator fun times(scalar: Int): Wei = Wei(value * BigInteger.valueOf(scalar.toLong()))
 
     override fun toString(): String = "${value}wei"
@@ -37,6 +40,7 @@ value class Wei(val value: BigInteger) {
             PrimitiveSerialDescriptor("xyz.justzappit.evm.types.Wei", PrimitiveKind.STRING)
 
         override fun deserialize(decoder: Decoder): Wei = Wei(BigInteger(decoder.decodeString()))
+
         override fun serialize(encoder: Encoder, value: Wei) = encoder.encodeString(value.value.toString())
     }
 }

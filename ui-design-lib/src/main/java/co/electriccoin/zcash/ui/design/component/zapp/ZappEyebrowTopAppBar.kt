@@ -45,35 +45,37 @@ fun ZappEyebrowTopAppBar(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(start = 28.dp, end = 14.dp, top = 16.dp, bottom = 16.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .padding(start = 28.dp, end = 14.dp, top = 16.dp, bottom = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         BasicText(
             text = eyebrow.uppercase(),
-            style = ZappTheme.typography.eyebrow.copy(
-                color = c.accent,
-                fontSize = 10.sp,
-                letterSpacing = 2.5.sp,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.eyebrow.copy(
+                    color = c.accent,
+                    fontSize = 10.sp,
+                    letterSpacing = 2.5.sp,
+                    fontWeight = FontWeight.Black,
+                ),
             modifier = Modifier.weight(1f),
         )
         Box(
-            modifier = Modifier
-                .size(40.dp)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(bounded = true, color = c.text),
-                    onClick = onClose,
-                )
-                .semantics {
-                    contentDescription = closeContentDescription
-                    role = Role.Button
-                },
+            modifier =
+                Modifier
+                    .size(40.dp)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(bounded = true, color = c.text),
+                        onClick = onClose,
+                    ).semantics {
+                        contentDescription = closeContentDescription
+                        role = Role.Button
+                    },
             contentAlignment = Alignment.Center,
         ) {
             Icon(

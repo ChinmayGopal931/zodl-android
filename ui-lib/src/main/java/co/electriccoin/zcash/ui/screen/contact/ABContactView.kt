@@ -90,10 +90,11 @@ private fun ContactViewInternal(
     ) {
         BasicText(
             text = stringResource(id = R.string.contact_address_label),
-            style = ZappTheme.typography.groupLabel.copy(
-                color = c.textMuted,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.groupLabel.copy(
+                    color = c.textMuted,
+                    fontWeight = FontWeight.Black,
+                ),
         )
         Spacer(6.dp)
         ZashiAddressTextField(
@@ -116,10 +117,11 @@ private fun ContactViewInternal(
         Spacer(20.dp)
         BasicText(
             text = stringResource(id = R.string.contact_name_label),
-            style = ZappTheme.typography.groupLabel.copy(
-                color = c.textMuted,
-                fontWeight = FontWeight.Black,
-            ),
+            style =
+                ZappTheme.typography.groupLabel.copy(
+                    color = c.textMuted,
+                    fontWeight = FontWeight.Black,
+                ),
         )
         Spacer(6.dp)
         ZashiTextField(
@@ -145,10 +147,11 @@ private fun ContactViewInternal(
             Spacer(20.dp)
             BasicText(
                 text = stringResource(R.string.contact_select_chain),
-                style = ZappTheme.typography.groupLabel.copy(
-                    color = c.textMuted,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.groupLabel.copy(
+                        color = c.textMuted,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
             Spacer(6.dp)
             ZashiPicker(state = state.chain)
@@ -181,9 +184,10 @@ private fun ContactTopAppBar(
 ) {
     ZappScreenHeader(
         title = state.title.getValue(),
-        modifier = Modifier
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .testTag(ABContactTag.TOP_APP_BAR),
+        modifier =
+            Modifier
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .testTag(ABContactTag.TOP_APP_BAR),
     )
 }
 

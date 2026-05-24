@@ -99,22 +99,25 @@ internal fun EditContactSheet(
         }
     }
 
-    fun collectWalletAddresses(): Map<String, String> = buildMap {
-        if (transparentAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.text.trim())
-        if (evmAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.text.trim())
-        if (solanaAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.text.trim())
-    }
+    fun collectWalletAddresses(): Map<String, String> =
+        buildMap {
+            if (transparentAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_TRANSPARENT, transparentAddr.text.trim())
+            if (evmAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_EVM, evmAddr.text.trim())
+            if (solanaAddr.text.isNotBlank()) put(AddressBookContact.ADDR_TYPE_SOLANA, solanaAddr.text.trim())
+        }
 
     val hasAddrChanges =
         transparentAddr.text.trim() != editData.walletAddresses[AddressBookContact.ADDR_TYPE_TRANSPARENT].orEmpty() ||
-        evmAddr.text.trim() != editData.walletAddresses[AddressBookContact.ADDR_TYPE_EVM].orEmpty() ||
-        solanaAddr.text.trim() != editData.walletAddresses[AddressBookContact.ADDR_TYPE_SOLANA].orEmpty()
+            evmAddr.text.trim() != editData.walletAddresses[AddressBookContact.ADDR_TYPE_EVM].orEmpty() ||
+            solanaAddr.text.trim() != editData.walletAddresses[AddressBookContact.ADDR_TYPE_SOLANA].orEmpty()
 
-    val hasChanges = nameInput.text.trim() != editData.originalName ||
-        walletAddressInput.text.trim() != editData.originalAddress ||
-        hasAddrChanges
-    val isValid = nameInput.text.isNotBlank() &&
-        (walletAddressInput.text.isNotBlank() || editData.originalAddress.isBlank())
+    val hasChanges =
+        nameInput.text.trim() != editData.originalName ||
+            walletAddressInput.text.trim() != editData.originalAddress ||
+            hasAddrChanges
+    val isValid =
+        nameInput.text.isNotBlank() &&
+            (walletAddressInput.text.isNotBlank() || editData.originalAddress.isBlank())
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -123,19 +126,21 @@ internal fun EditContactSheet(
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .imePadding()
-                .verticalScroll(rememberScrollState())
-                .padding(bottom = 28.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .imePadding()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 28.dp),
         ) {
             BasicText(
                 text = stringResource(R.string.address_book_edit_contact_title),
-                style = ZappTheme.typography.screenTitle.copy(
-                    color = c.text,
-                    fontWeight = FontWeight.Black,
-                ),
+                style =
+                    ZappTheme.typography.screenTitle.copy(
+                        color = c.text,
+                        fontWeight = FontWeight.Black,
+                    ),
             )
 
             Spacer(Modifier.height(20.dp))
@@ -143,7 +148,10 @@ internal fun EditContactSheet(
             // Name field
             ZappInputField(
                 value = nameInput,
-                onValueChange = { nameInput = it; error = null },
+                onValueChange = {
+                    nameInput = it
+                    error = null
+                },
                 placeholder = stringResource(R.string.contact_name_hint),
                 leadingIcon = {
                     Icon(
@@ -160,7 +168,10 @@ internal fun EditContactSheet(
             // Primary Wallet Address field
             ZappInputField(
                 value = walletAddressInput,
-                onValueChange = { walletAddressInput = it; error = null },
+                onValueChange = {
+                    walletAddressInput = it
+                    error = null
+                },
                 placeholder = stringResource(R.string.contact_address_hint),
                 leadingIcon = {
                     Icon(
@@ -201,19 +212,21 @@ internal fun EditContactSheet(
             // Delete confirmation inline
             if (showDeleteConfirm) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(c.dangerSoft, RectangleShape)
-                        .border(BorderStroke(1.dp, c.danger), RectangleShape)
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .background(c.dangerSoft, RectangleShape)
+                            .border(BorderStroke(1.dp, c.danger), RectangleShape)
+                            .padding(horizontal = 16.dp, vertical = 14.dp),
                 ) {
                     Column {
                         BasicText(
                             text = stringResource(R.string.address_book_edit_delete_confirm_title),
-                            style = ZappTheme.typography.rowTitle.copy(
-                                color = c.danger,
-                                fontWeight = FontWeight.Black,
-                            ),
+                            style =
+                                ZappTheme.typography.rowTitle.copy(
+                                    color = c.danger,
+                                    fontWeight = FontWeight.Black,
+                                ),
                         )
                         Spacer(Modifier.height(4.dp))
                         BasicText(
@@ -227,46 +240,50 @@ internal fun EditContactSheet(
                         ) {
                             // Cancel
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                                    .clickable(onClick = { showDeleteConfirm = false })
-                                    .semantics {
-                                        contentDescription = "Cancel delete"
-                                        role = Role.Button
-                                    },
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .height(48.dp)
+                                        .border(BorderStroke(1.dp, c.border), RectangleShape)
+                                        .clickable(onClick = { showDeleteConfirm = false })
+                                        .semantics {
+                                            contentDescription = "Cancel delete"
+                                            role = Role.Button
+                                        },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 BasicText(
                                     text = stringResource(R.string.address_book_edit_delete_confirm_no).uppercase(),
-                                    style = ZappTheme.typography.button.copy(
-                                        color = c.text,
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 0.6.sp,
-                                    ),
+                                    style =
+                                        ZappTheme.typography.button.copy(
+                                            color = c.text,
+                                            fontWeight = FontWeight.Black,
+                                            letterSpacing = 0.6.sp,
+                                        ),
                                 )
                             }
                             // Confirm delete
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(48.dp)
-                                    .background(c.danger, RectangleShape)
-                                    .clickable(onClick = onDelete)
-                                    .semantics {
-                                        contentDescription = "Confirm delete contact"
-                                        role = Role.Button
-                                    },
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .height(48.dp)
+                                        .background(c.danger, RectangleShape)
+                                        .clickable(onClick = onDelete)
+                                        .semantics {
+                                            contentDescription = "Confirm delete contact"
+                                            role = Role.Button
+                                        },
                                 contentAlignment = Alignment.Center,
                             ) {
                                 BasicText(
                                     text = stringResource(R.string.address_book_edit_delete_confirm_yes).uppercase(),
-                                    style = ZappTheme.typography.button.copy(
-                                        color = c.onAccent,
-                                        fontWeight = FontWeight.Black,
-                                        letterSpacing = 0.6.sp,
-                                    ),
+                                    style =
+                                        ZappTheme.typography.button.copy(
+                                            color = c.onAccent,
+                                            fontWeight = FontWeight.Black,
+                                            letterSpacing = 0.6.sp,
+                                        ),
                                 )
                             }
                         }
@@ -280,44 +297,47 @@ internal fun EditContactSheet(
                 val keyboard = LocalSoftwareKeyboardController.current
                 val saveEnabled = hasChanges && isValid
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .background(
-                            if (saveEnabled) c.accent else c.surfaceAlt,
-                            RectangleShape,
-                        )
-                        .then(
-                            if (saveEnabled) {
-                                Modifier.clickable(onClick = {
-                                    val name = nameInput.text.trim()
-                                    val wallet = walletAddressInput.text.trim()
-                                    when {
-                                        name.isEmpty() -> error = "Name is required"
-                                        else -> {
-                                            keyboard?.hide()
-                                            onSave(name, wallet, collectWalletAddresses())
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .background(
+                                if (saveEnabled) c.accent else c.surfaceAlt,
+                                RectangleShape,
+                            ).then(
+                                if (saveEnabled) {
+                                    Modifier.clickable(onClick = {
+                                        val name = nameInput.text.trim()
+                                        val wallet = walletAddressInput.text.trim()
+                                        when {
+                                            name.isEmpty() -> {
+                                                error = "Name is required"
+                                            }
+
+                                            else -> {
+                                                keyboard?.hide()
+                                                onSave(name, wallet, collectWalletAddresses())
+                                            }
                                         }
-                                    }
-                                })
-                            } else {
-                                Modifier
-                            }
-                        )
-                        .semantics {
-                            contentDescription = "Save changes"
-                            role = Role.Button
-                            if (!saveEnabled) disabled()
-                        },
+                                    })
+                                } else {
+                                    Modifier
+                                }
+                            ).semantics {
+                                contentDescription = "Save changes"
+                                role = Role.Button
+                                if (!saveEnabled) disabled()
+                            },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = stringResource(R.string.address_book_edit_save_btn).uppercase(),
-                        style = ZappTheme.typography.button.copy(
-                            color = if (saveEnabled) c.onAccent else c.textSubtle,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.6.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.button.copy(
+                                color = if (saveEnabled) c.onAccent else c.textSubtle,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.6.sp,
+                            ),
                     )
                 }
 
@@ -325,24 +345,26 @@ internal fun EditContactSheet(
 
                 // DELETE CONTACT button
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(52.dp)
-                        .background(c.dangerSoft, RectangleShape)
-                        .clickable(onClick = { showDeleteConfirm = true })
-                        .semantics {
-                            contentDescription = "Delete contact"
-                            role = Role.Button
-                        },
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(52.dp)
+                            .background(c.dangerSoft, RectangleShape)
+                            .clickable(onClick = { showDeleteConfirm = true })
+                            .semantics {
+                                contentDescription = "Delete contact"
+                                role = Role.Button
+                            },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
                         text = stringResource(R.string.address_book_edit_delete_btn).uppercase(),
-                        style = ZappTheme.typography.button.copy(
-                            color = c.danger,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = 0.6.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.button.copy(
+                                color = c.danger,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = 0.6.sp,
+                            ),
                     )
                 }
             }

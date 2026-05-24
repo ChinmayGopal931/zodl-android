@@ -71,9 +71,10 @@ object SupportChatConstants {
         if (!message.startsWith(CATEGORY_MARKER_PREFIX) || !message.endsWith(CATEGORY_MARKER_SUFFIX)) {
             return null
         }
-        val key = message
-            .removePrefix(CATEGORY_MARKER_PREFIX)
-            .removeSuffix(CATEGORY_MARKER_SUFFIX)
+        val key =
+            message
+                .removePrefix(CATEGORY_MARKER_PREFIX)
+                .removeSuffix(CATEGORY_MARKER_SUFFIX)
         return SupportCategory.fromProtocolKey(key)
     }
 

@@ -55,7 +55,9 @@ fun ChatTermsDialog(
                         appendLine()
                         appendLine("1. Not send spam, unsolicited messages, or engage in harassment.")
                         appendLine()
-                        appendLine("2. Not share illegal content, including but not limited to child exploitation material, illegal substances, or stolen financial information.")
+                        appendLine(
+                            "2. Not share illegal content, including but not limited to child exploitation material, illegal substances, or stolen financial information."
+                        )
                         appendLine()
                         appendLine("3. Not impersonate others or use the messaging feature for scams or fraud.")
                         appendLine()
@@ -63,9 +65,13 @@ fun ChatTermsDialog(
                         appendLine()
                         appendLine("5. Respect other users' privacy and not share their information without consent.")
                         appendLine()
-                        appendLine("Users who violate these guidelines may be blocked by other users. You can block or report any user from the conversation settings menu.")
+                        appendLine(
+                            "Users who violate these guidelines may be blocked by other users. You can block or report any user from the conversation settings menu."
+                        )
                         appendLine()
-                        appendLine("Messages are sent peer-to-peer and are end-to-end encrypted. Zapp does not store or have access to your message content.")
+                        appendLine(
+                            "Messages are sent peer-to-peer and are end-to-end encrypted. Zapp does not store or have access to your message content."
+                        )
                     },
                     style = ZappTheme.typography.caption,
                     color = c.textMuted,

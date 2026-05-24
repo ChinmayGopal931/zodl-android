@@ -48,34 +48,56 @@ fun ConnectionPill(
     val errorColor = ZappTheme.colors.danger
     val okColor = ZappTheme.colors.success
     val warnColor = ZappTheme.colors.accent
-    val statusColor = when (connectionStatus) {
-        ChatListConnectionStatus.CONNECTED -> when {
-            dhtHealth == ChatListDhtHealth.CRITICAL -> errorColor
-            peerCount > 0 -> okColor
-            dhtHealth == ChatListDhtHealth.DEGRADED -> warnColor
-            else -> okColor
+    val statusColor =
+        when (connectionStatus) {
+            ChatListConnectionStatus.CONNECTED -> {
+                when {
+                    dhtHealth == ChatListDhtHealth.CRITICAL -> errorColor
+                    peerCount > 0 -> okColor
+                    dhtHealth == ChatListDhtHealth.DEGRADED -> warnColor
+                    else -> okColor
+                }
+            }
+
+            ChatListConnectionStatus.CONNECTING -> {
+                warnColor
+            }
+
+            else -> {
+                errorColor
+            }
         }
-        ChatListConnectionStatus.CONNECTING -> warnColor
-        else -> errorColor
-    }
-    val label = when (connectionStatus) {
-        ChatListConnectionStatus.CONNECTED -> when {
-            dhtHealth == ChatListDhtHealth.CRITICAL -> "DHT unreachable"
-            peerCount > 0 -> if (peerCount == 1) "1 peer" else "$peerCount peers"
-            dhtHealth == ChatListDhtHealth.DEGRADED -> "DHT degraded"
-            else -> "Online"
+    val label =
+        when (connectionStatus) {
+            ChatListConnectionStatus.CONNECTED -> {
+                when {
+                    dhtHealth == ChatListDhtHealth.CRITICAL -> "DHT unreachable"
+                    peerCount > 0 -> if (peerCount == 1) "1 peer" else "$peerCount peers"
+                    dhtHealth == ChatListDhtHealth.DEGRADED -> "DHT degraded"
+                    else -> "Online"
+                }
+            }
+
+            ChatListConnectionStatus.CONNECTING -> {
+                "Connecting"
+            }
+
+            ChatListConnectionStatus.DISCONNECTED -> {
+                "Offline"
+            }
+
+            ChatListConnectionStatus.ERROR -> {
+                "Error"
+            }
         }
-        ChatListConnectionStatus.CONNECTING -> "Connecting"
-        ChatListConnectionStatus.DISCONNECTED -> "Offline"
-        ChatListConnectionStatus.ERROR -> "Error"
-    }
 
     Surface(
         shape = RectangleShape,
         color = statusColor.copy(alpha = 0.12f),
-        modifier = Modifier
-            .height(26.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+        modifier =
+            Modifier
+                .height(26.dp)
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = 8.dp),
@@ -115,11 +137,12 @@ fun NetworkDetailsSheet(
         containerColor = ZappTheme.colors.bg
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .navigationBarsPadding()
-                .padding(horizontal = 20.dp)
-                .padding(bottom = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
@@ -132,32 +155,36 @@ fun NetworkDetailsSheet(
             NetworkDetailRow(
                 icon = Icons.Default.Wifi,
                 label = "Connection",
-                value = when (connectionStatus) {
-                    ChatListConnectionStatus.CONNECTED -> "Connected"
-                    ChatListConnectionStatus.CONNECTING -> "Connecting"
-                    ChatListConnectionStatus.DISCONNECTED -> "Disconnected"
-                    ChatListConnectionStatus.ERROR -> "Error"
-                },
-                valueColor = when (connectionStatus) {
-                    ChatListConnectionStatus.CONNECTED -> okColor
-                    ChatListConnectionStatus.CONNECTING -> warnColor
-                    else -> errorColor
-                }
+                value =
+                    when (connectionStatus) {
+                        ChatListConnectionStatus.CONNECTED -> "Connected"
+                        ChatListConnectionStatus.CONNECTING -> "Connecting"
+                        ChatListConnectionStatus.DISCONNECTED -> "Disconnected"
+                        ChatListConnectionStatus.ERROR -> "Error"
+                    },
+                valueColor =
+                    when (connectionStatus) {
+                        ChatListConnectionStatus.CONNECTED -> okColor
+                        ChatListConnectionStatus.CONNECTING -> warnColor
+                        else -> errorColor
+                    }
             )
 
             NetworkDetailRow(
                 icon = Icons.Default.Hub,
                 label = "DHT",
-                value = when (dhtHealth) {
-                    ChatListDhtHealth.HEALTHY -> "Healthy"
-                    ChatListDhtHealth.DEGRADED -> "Degraded"
-                    ChatListDhtHealth.CRITICAL -> "Critical"
-                },
-                valueColor = when (dhtHealth) {
-                    ChatListDhtHealth.HEALTHY -> okColor
-                    ChatListDhtHealth.DEGRADED -> warnColor
-                    ChatListDhtHealth.CRITICAL -> errorColor
-                }
+                value =
+                    when (dhtHealth) {
+                        ChatListDhtHealth.HEALTHY -> "Healthy"
+                        ChatListDhtHealth.DEGRADED -> "Degraded"
+                        ChatListDhtHealth.CRITICAL -> "Critical"
+                    },
+                valueColor =
+                    when (dhtHealth) {
+                        ChatListDhtHealth.HEALTHY -> okColor
+                        ChatListDhtHealth.DEGRADED -> warnColor
+                        ChatListDhtHealth.CRITICAL -> errorColor
+                    }
             )
 
             NetworkDetailRow(
@@ -185,9 +212,12 @@ fun NetworkDetailsSheet(
                 NetworkDetailRow(
                     icon = Icons.Default.Schedule,
                     label = "Pending",
-                    value = if (details.pendingMessageCount > 0)
-                        "${details.pendingMessageCount} msgs in ${details.pendingQueues} queues"
-                    else "None",
+                    value =
+                        if (details.pendingMessageCount > 0) {
+                            "${details.pendingMessageCount} msgs in ${details.pendingQueues} queues"
+                        } else {
+                            "None"
+                        },
                     valueColor = if (details.pendingMessageCount > 0) warnColor else okColor
                 )
 
@@ -216,9 +246,12 @@ private fun NetworkDetailRow(
     value: String,
     valueColor: Color = Color.Unspecified
 ) {
-    val effectiveValueColor = if (valueColor == Color.Unspecified) {
-        ZappTheme.colors.text
-    } else valueColor
+    val effectiveValueColor =
+        if (valueColor == Color.Unspecified) {
+            ZappTheme.colors.text
+        } else {
+            valueColor
+        }
 
     Row(
         modifier = Modifier.fillMaxWidth(),

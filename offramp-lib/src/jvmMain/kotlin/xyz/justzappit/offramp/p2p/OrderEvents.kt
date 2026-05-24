@@ -10,9 +10,11 @@ import xyz.justzappit.evm.util.toHex
 import java.math.BigInteger
 
 object OrderEvents {
-    val ORDER_PLACED_TOPIC: String = "0x" + keccak256(
-        ORDER_PLACED_CANONICAL_SIGNATURE.toByteArray(Charsets.US_ASCII),
-    ).toHex()
+    val ORDER_PLACED_TOPIC: String =
+        "0x" +
+            keccak256(
+                ORDER_PLACED_CANONICAL_SIGNATURE.toByteArray(Charsets.US_ASCII),
+            ).toHex()
 
     fun parseOrderIdFromReceipt(
         receipt: TransactionReceipt,
@@ -21,16 +23,17 @@ object OrderEvents {
     ): BigInteger? {
         val userTopic = padAddressTopic(userAddress)
         val diamondHex = diamondAddress.lowercaseHex
-        val candidate = receipt.logs.firstOrNull { log ->
-            log.address.equals(diamondHex, ignoreCase = true) &&
-                log.topics.size >= REQUIRED_TOPICS &&
-                log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true) &&
-                log.topics[2].equals(userTopic, ignoreCase = true)
-        } ?: receipt.logs.firstOrNull { log ->
-            log.address.equals(diamondHex, ignoreCase = true) &&
-                log.topics.size >= REQUIRED_TOPICS &&
-                log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true)
-        }
+        val candidate =
+            receipt.logs.firstOrNull { log ->
+                log.address.equals(diamondHex, ignoreCase = true) &&
+                    log.topics.size >= REQUIRED_TOPICS &&
+                    log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true) &&
+                    log.topics[2].equals(userTopic, ignoreCase = true)
+            } ?: receipt.logs.firstOrNull { log ->
+                log.address.equals(diamondHex, ignoreCase = true) &&
+                    log.topics.size >= REQUIRED_TOPICS &&
+                    log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true)
+            }
         return candidate?.let { topicToBigInteger(it.topics[1]) }
     }
 

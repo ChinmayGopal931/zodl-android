@@ -5,21 +5,21 @@ import cash.z.ecc.android.sdk.model.WalletAddress
 import cash.z.ecc.android.sdk.model.Zatoshi
 import cash.z.ecc.android.sdk.model.ZecSend
 import cash.z.ecc.android.sdk.type.AddressType
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.datasource.AFFILIATE_ADDRESS
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
 import co.electriccoin.zcash.ui.common.datasource.SwapDataSource
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
+import co.electriccoin.zcash.ui.common.model.SubmitResult
 import co.electriccoin.zcash.ui.common.model.SwapAsset
 import co.electriccoin.zcash.ui.common.model.SwapMode
 import co.electriccoin.zcash.ui.common.model.SwapQuote
 import co.electriccoin.zcash.ui.common.model.SwapStatus
-import co.electriccoin.zcash.ui.common.model.SubmitResult
 import co.electriccoin.zcash.ui.common.model.ZashiAccount
 import co.electriccoin.zcash.ui.common.model.ZecSwapAsset
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepository
 import co.electriccoin.zcash.ui.common.repository.SubmitProposalState
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepository
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.usecase.SubmitProposalUseCase
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -76,24 +76,27 @@ class RealOfframpBridgeWallet(
     override suspend fun zcashAddress(): String = accountDataSource.requestNextShieldedAddress().address
 
     override suspend fun sendZecDeposit(quote: SwapQuote): String {
-        val send = ZecSend(
-            destination = walletAddress(quote.depositAddress.address),
-            amount = Zatoshi(quote.amountIn.toLong()),
-            memo = Memo(""),
-            proposal = null,
-        )
+        val send =
+            ZecSend(
+                destination = walletAddress(quote.depositAddress.address),
+                amount = Zatoshi(quote.amountIn.toLong()),
+                memo = Memo(""),
+                proposal = null,
+            )
         // Build the proposal the same way the swap flow does, per account type.
-        val submitState: Flow<SubmitProposalState?> = when (accountDataSource.getSelectedAccount()) {
-            is KeystoneAccount -> {
-                keystoneProposalRepository.createExactOutputSwapProposal(send, quote)
-                keystoneProposalRepository.createPCZTFromProposal()
-                keystoneProposalRepository.submitState
+        val submitState: Flow<SubmitProposalState?> =
+            when (accountDataSource.getSelectedAccount()) {
+                is KeystoneAccount -> {
+                    keystoneProposalRepository.createExactOutputSwapProposal(send, quote)
+                    keystoneProposalRepository.createPCZTFromProposal()
+                    keystoneProposalRepository.submitState
+                }
+
+                is ZashiAccount -> {
+                    zashiProposalRepository.createExactOutputSwapProposal(send, quote)
+                    zashiProposalRepository.submitState
+                }
             }
-            is ZashiAccount -> {
-                zashiProposalRepository.createExactOutputSwapProposal(send, quote)
-                zashiProposalRepository.submitState
-            }
-        }
         // Keep the user on the offramp progress screen. `navigateAfter = false` suppresses the
         // default replace(TransactionProgressArgs) the standard send/swap UX relies on — see
         // SubmitProposalUseCase.invoke kdoc. The Zashi submit still runs on a background coroutine
@@ -101,9 +104,14 @@ class RealOfframpBridgeWallet(
         submitProposal(navigateAfter = false)
         val result = submitState.filterIsInstance<SubmitProposalState.Result>().first().submitResult
         return when (result) {
-            is SubmitResult.Success -> result.txIds.firstOrNull()
-                ?: error("ZEC bridge deposit submitted but returned no transaction id")
-            else -> error("ZEC bridge deposit did not succeed: $result")
+            is SubmitResult.Success -> {
+                result.txIds.firstOrNull()
+                    ?: error("ZEC bridge deposit submitted but returned no transaction id")
+            }
+
+            else -> {
+                error("ZEC bridge deposit did not succeed: $result")
+            }
         }
     }
 
@@ -146,13 +154,14 @@ class NearBridgeOfframpFunding(
         }
 
         val tokens = swapDataSource.getSupportedTokens()
-        val depositAddress = if (resumeHandle != null) {
-            // Re-emit so the UI's BridgingFunds row repaints with the persisted address on resume.
-            onBridgeStarted(resumeHandle)
-            resumeHandle
-        } else {
-            openBridge(account, request, tokens, onBridgeStarted)
-        }
+        val depositAddress =
+            if (resumeHandle != null) {
+                // Re-emit so the UI's BridgingFunds row repaints with the persisted address on resume.
+                onBridgeStarted(resumeHandle)
+                resumeHandle
+            } else {
+                openBridge(account, request, tokens, onBridgeStarted)
+            }
 
         pollUntilSettled(depositAddress, tokens)
         check(rpc.getUsdcBalance(usdc, account) >= request.usdcAmount) {
@@ -167,17 +176,18 @@ class NearBridgeOfframpFunding(
         tokens: List<SwapAsset>,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
     ): String {
-        val quote = swapDataSource.requestQuote(
-            swapMode = SwapMode.EXACT_OUTPUT,
-            flexInput = false,
-            amount = request.usdcAmount.whole,
-            refundAddress = wallet.zcashAddress(),
-            originAsset = zecAsset(tokens),
-            destinationAddress = account.checksumHex,
-            destinationAsset = usdcAsset(tokens),
-            slippage = slippageTolerancePercent,
-            affiliateAddress = AFFILIATE_ADDRESS,
-        )
+        val quote =
+            swapDataSource.requestQuote(
+                swapMode = SwapMode.EXACT_OUTPUT,
+                flexInput = false,
+                amount = request.usdcAmount.whole,
+                refundAddress = wallet.zcashAddress(),
+                originAsset = zecAsset(tokens),
+                destinationAddress = account.checksumHex,
+                destinationAsset = usdcAsset(tokens),
+                slippage = slippageTolerancePercent,
+                affiliateAddress = AFFILIATE_ADDRESS,
+            )
         val depositAddress = quote.depositAddress.address
         // Persist the 1-Click handle BEFORE any ZEC moves; a crash between send and persist would
         // otherwise let resume open a second bridge and double-send the user's ZEC.
@@ -196,23 +206,31 @@ class NearBridgeOfframpFunding(
     @Suppress("TooGenericExceptionCaught")
     private suspend fun pollUntilSettled(depositAddress: String, tokens: List<SwapAsset>) {
         while (true) {
-            val status = try {
-                swapDataSource.checkSwapStatus(depositAddress, tokens).status
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Throwable) {
-                Twig.warn(e) {
-                    "NearBridgeOfframpFunding.pollUntilSettled: transient checkSwapStatus failure " +
-                        "for $depositAddress — retrying in ${pollIntervalMs}ms"
+            val status =
+                try {
+                    swapDataSource.checkSwapStatus(depositAddress, tokens).status
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Throwable) {
+                    Twig.warn(e) {
+                        "NearBridgeOfframpFunding.pollUntilSettled: transient checkSwapStatus failure " +
+                            "for $depositAddress — retrying in ${pollIntervalMs}ms"
+                    }
+                    delay(pollIntervalMs)
+                    continue
                 }
-                delay(pollIntervalMs)
-                continue
-            }
             when (status) {
-                SwapStatus.SUCCESS -> return
-                SwapStatus.REFUNDED, SwapStatus.FAILED, SwapStatus.EXPIRED, SwapStatus.INCOMPLETE_DEPOSIT ->
+                SwapStatus.SUCCESS -> {
+                    return
+                }
+
+                SwapStatus.REFUNDED, SwapStatus.FAILED, SwapStatus.EXPIRED, SwapStatus.INCOMPLETE_DEPOSIT -> {
                     error("NEAR bridge did not deliver USDC for $depositAddress — the user's ZEC was refunded.")
-                else -> delay(pollIntervalMs)
+                }
+
+                else -> {
+                    delay(pollIntervalMs)
+                }
             }
         }
     }
@@ -246,19 +264,22 @@ class NearPullbackOfframpRefund(
 ) : OfframpRefund {
     override suspend fun pullbackTarget(account: Address, amount: Usdc6): Address {
         val tokens = swapDataSource.getSupportedTokens()
-        val quote = swapDataSource.requestQuote(
-            swapMode = SwapMode.EXACT_INPUT,
-            flexInput = false,
-            amount = amount.whole,
-            refundAddress = account.checksumHex,
-            originAsset = tokens.firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
-                ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list"),
-            destinationAddress = wallet.zcashAddress(),
-            destinationAsset = tokens.filterIsInstance<ZecSwapAsset>().firstOrNull()
-                ?: error("ZEC is not in the 1-Click supported-token list"),
-            slippage = slippageTolerancePercent,
-            affiliateAddress = AFFILIATE_ADDRESS,
-        )
+        val quote =
+            swapDataSource.requestQuote(
+                swapMode = SwapMode.EXACT_INPUT,
+                flexInput = false,
+                amount = amount.whole,
+                refundAddress = account.checksumHex,
+                originAsset =
+                    tokens.firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
+                        ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list"),
+                destinationAddress = wallet.zcashAddress(),
+                destinationAsset =
+                    tokens.filterIsInstance<ZecSwapAsset>().firstOrNull()
+                        ?: error("ZEC is not in the 1-Click supported-token list"),
+                slippage = slippageTolerancePercent,
+                affiliateAddress = AFFILIATE_ADDRESS,
+            )
         return Address.parse(quote.depositAddress.address)
     }
 }

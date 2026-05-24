@@ -116,7 +116,7 @@ class AuthenticationViewModel(
      * [PinAuthGate.MAX_ATTEMPTS_BEFORE_LOCKOUT] consecutive wrong PINs.
      */
     private val _pinLockoutSecondsRemaining: MutableStateFlow<Int> = MutableStateFlow(0)
-    internal val pinLockoutSecondsRemaining: StateFlow<Int> = _pinLockoutSecondsRemaining.asStateFlow()
+    val pinLockoutSecondsRemaining: StateFlow<Int> = _pinLockoutSecondsRemaining.asStateFlow()
     private var lockoutTickerJob: Job? = null
 
     init {
@@ -130,15 +130,16 @@ class AuthenticationViewModel(
 
     private fun startLockoutTicker(initialMs: Long) {
         lockoutTickerJob?.cancel()
-        lockoutTickerJob = viewModelScope.launch {
-            var remaining = initialMs
-            while (remaining > 0) {
-                _pinLockoutSecondsRemaining.value = ((remaining + 999) / 1000).toInt()
-                delay(1_000)
-                remaining -= 1_000
+        lockoutTickerJob =
+            viewModelScope.launch {
+                var remaining = initialMs
+                while (remaining > 0) {
+                    _pinLockoutSecondsRemaining.value = ((remaining + 999) / 1000).toInt()
+                    delay(1_000)
+                    remaining -= 1_000
+                }
+                _pinLockoutSecondsRemaining.value = 0
             }
-            _pinLockoutSecondsRemaining.value = 0
-        }
     }
 
     /**
@@ -200,17 +201,22 @@ class AuthenticationViewModel(
                 when {
                     // Fresh install / never persisted — treat as expired so the gate fires.
                     storedRealtime == 0L && storedWalltime == 0L -> true
+
                     // elapsedRealtime went backward → device rebooted since last persist.
                     nowRealtime < storedRealtime -> true
+
                     // Wall-clock went backward → clock manipulation, treat as expired.
                     nowWalltime < storedWalltime -> true
+
                     else -> (nowRealtime - storedRealtime) > AUTHENTICATE_TIMEOUT
                 }
 
             if (expired) resetEntireAuthenticationState()
         }
 
-    fun persistGoToBackgroundTime(@Suppress("UNUSED_PARAMETER") millis: Long = 0L) =
+    fun persistGoToBackgroundTime(
+        @Suppress("UNUSED_PARAMETER") millis: Long = 0L
+    ) =
         viewModelScope.launch {
             val standard = standardPreferenceProvider()
             StandardPreferenceKeys.LATEST_APP_BACKGROUND_TIME_MILLIS
@@ -425,11 +431,14 @@ class AuthenticationViewModel(
      */
     fun submitPin(pin: String) {
         viewModelScope.launch {
-            when (val result = PinAuthGate.tryVerify(
-                pin,
-                encryptedPreferenceProvider,
-                standardPreferenceProvider,
-            )) {
+            when (
+                val result =
+                    PinAuthGate.tryVerify(
+                        pin,
+                        encryptedPreferenceProvider,
+                        standardPreferenceProvider,
+                    )
+            ) {
                 PinAuthGate.Result.Success -> {
                     showPinEntry.value = false
                     pinEntryError.value = false

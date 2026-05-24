@@ -10,7 +10,6 @@ import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
-import java.math.BigInteger
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.InMemoryOrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.InMemoryRelayIdentityStore
@@ -18,6 +17,7 @@ import xyz.justzappit.offramp.p2p.OrderReadSource
 import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.RelayIdentityStore
 import xyz.justzappit.offramp.p2p.SubgraphClient
+import java.math.BigInteger
 
 /**
  * Production [OfframpDriver] for the ERC-4337 path. The smart-account address needs an async
@@ -38,29 +38,33 @@ class AaOfframpDriver(
     private val relayIdentityStore: RelayIdentityStore = InMemoryRelayIdentityStore(),
     private val orderRecipientUpiCache: OrderRecipientUpiCache = InMemoryOrderRecipientUpiCache(),
 ) : OfframpDriver {
-    override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
-        emitAll(buildOrchestrator().run(request))
-    }
+    override fun run(request: OfframpRequest): Flow<OfframpStatus> =
+        flow {
+            emitAll(buildOrchestrator().run(request))
+        }
 
-    override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> = flow {
-        emitAll(buildOrchestrator().resume(checkpoint))
-    }
+    override fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus> =
+        flow {
+            emitAll(buildOrchestrator().resume(checkpoint))
+        }
 
-    override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> = flow {
-        emitAll(buildOrchestrator().bridgeFundsBackToZec(orderId))
-    }
+    override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> =
+        flow {
+            emitAll(buildOrchestrator().bridgeFundsBackToZec(orderId))
+        }
 
     private suspend fun buildOrchestrator(): OfframpOrchestrator {
         val account = accountProvider.resolve()
-        val submitter = Erc4337Submitter(
-            rpc = rpc,
-            bundler = bundler,
-            entryPoint = network.entryPointAddress,
-            accountFactory = network.accountFactoryAddress,
-            owner = account.owner,
-            smartAccount = account.address,
-            chainId = network.chainId,
-        )
+        val submitter =
+            Erc4337Submitter(
+                rpc = rpc,
+                bundler = bundler,
+                entryPoint = network.entryPointAddress,
+                accountFactory = network.accountFactoryAddress,
+                owner = account.owner,
+                smartAccount = account.address,
+                chainId = network.chainId,
+            )
         return OfframpOrchestrator(
             rpc = rpc,
             submitter = submitter,

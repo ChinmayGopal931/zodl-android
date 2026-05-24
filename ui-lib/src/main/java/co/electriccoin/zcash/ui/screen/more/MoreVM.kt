@@ -6,12 +6,12 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.provider.GetVersionInfoProvider
 import co.electriccoin.zcash.ui.common.usecase.NavigateToAddressBookUseCase
+import co.electriccoin.zcash.ui.common.util.PeerXyzUtil
 import co.electriccoin.zcash.ui.design.component.listitem.ListItemState
 import co.electriccoin.zcash.ui.design.util.imageRes
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.advancedsettings.AdvancedSettingsArgs
 import co.electriccoin.zcash.ui.screen.exchangerate.settings.ExchangeRateSettingsArgs
-import co.electriccoin.zcash.ui.common.util.PeerXyzUtil
 import co.electriccoin.zcash.ui.screen.hotfix.enhancement.EnhancementHotfixArgs
 import co.electriccoin.zcash.ui.screen.hotfix.ephemeral.EphemeralHotfixArgs
 import co.electriccoin.zcash.ui.screen.offramp.OfframpArgs
@@ -69,7 +69,6 @@ class MoreVM(
     private fun onBack() = navigationRouter.back()
 
     private fun onAdvancedSettingsClick() = navigationRouter.forward(AdvancedSettingsArgs)
-
 
     private fun onAddressBookClick() = viewModelScope.launch { navigateToAddressBook() }
 }

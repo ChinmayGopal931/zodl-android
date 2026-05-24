@@ -11,7 +11,10 @@ import xyz.justzappit.evm.types.Address
  * smart account is the on-chain identity — the `msg.sender` the Diamond sees, the recipient of
  * placed orders, and the bridge-in target (it can hold USDC while still counterfactual).
  */
-data class OfframpSmartAccount(val owner: EvmKey, val address: Address)
+data class OfframpSmartAccount(
+    val owner: EvmKey,
+    val address: Address
+)
 
 /**
  * Resolves the smart account by deriving the owner key and asking the factory for the
@@ -25,10 +28,11 @@ class SmartOfframpAccountProvider(
 ) {
     suspend fun resolve(): OfframpSmartAccount {
         val owner = accountProvider.nextOfframpAccount()
-        val returned = rpc.ethCall(
-            to = accountFactory,
-            data = ThirdwebSmartAccount.getAddressCalldata(owner.address),
-        )
+        val returned =
+            rpc.ethCall(
+                to = accountFactory,
+                data = ThirdwebSmartAccount.getAddressCalldata(owner.address),
+            )
         require(returned.size >= Address.LEN_BYTES) {
             "factory getAddress returned ${returned.size} bytes, expected an address word"
         }

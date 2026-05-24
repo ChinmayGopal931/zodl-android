@@ -50,15 +50,18 @@ class WalletBackupViewModel(
     private val standardPreferenceProvider: StandardPreferenceProvider,
     private val encryptedPreferenceProvider: EncryptedPreferenceProvider,
 ) : ViewModel() {
-
     /** Drives the PIN entry overlay shown over the seed screen when auth method is PIN. */
     sealed class PinVerifyState {
         object Idle : PinVerifyState()
+
         object Required : PinVerifyState()
+
         object Error : PinVerifyState()
 
         /** Lockout in effect — input must be disabled and a countdown shown. */
-        data class Locked(val secondsRemaining: Int) : PinVerifyState()
+        data class Locked(
+            val secondsRemaining: Int
+        ) : PinVerifyState()
     }
 
     private val _pinVerifyState = MutableStateFlow<PinVerifyState>(PinVerifyState.Idle)
@@ -67,15 +70,16 @@ class WalletBackupViewModel(
 
     private fun startPinLockoutTicker(initialMs: Long) {
         pinLockoutTickerJob?.cancel()
-        pinLockoutTickerJob = viewModelScope.launch {
-            var remaining = initialMs
-            while (remaining > 0) {
-                _pinVerifyState.value = PinVerifyState.Locked(((remaining + 999) / 1000).toInt())
-                delay(1_000)
-                remaining -= 1_000
+        pinLockoutTickerJob =
+            viewModelScope.launch {
+                var remaining = initialMs
+                while (remaining > 0) {
+                    _pinVerifyState.value = PinVerifyState.Locked(((remaining + 999) / 1000).toInt())
+                    delay(1_000)
+                    remaining -= 1_000
+                }
+                _pinVerifyState.value = PinVerifyState.Required
             }
-            _pinVerifyState.value = PinVerifyState.Required
-        }
     }
 
     private val lockoutDuration =
@@ -211,9 +215,11 @@ class WalletBackupViewModel(
                             // User cancelled — stay hidden
                         }
                     }
+
                     "pin" -> {
                         _pinVerifyState.value = PinVerifyState.Required
                     }
+
                     else -> {
                         // No auth configured — reveal directly
                         isRevealed.update { !it }
@@ -231,11 +237,14 @@ class WalletBackupViewModel(
      */
     fun onPinSubmitted(pin: String) {
         viewModelScope.launch {
-            when (val result = PinAuthGate.tryVerify(
-                pin,
-                encryptedPreferenceProvider,
-                standardPreferenceProvider,
-            )) {
+            when (
+                val result =
+                    PinAuthGate.tryVerify(
+                        pin,
+                        encryptedPreferenceProvider,
+                        standardPreferenceProvider,
+                    )
+            ) {
                 PinAuthGate.Result.Success -> {
                     isRevealed.value = true
                     _pinVerifyState.value = PinVerifyState.Idle

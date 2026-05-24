@@ -10,7 +10,11 @@ import org.bouncycastle.math.ec.ECPoint
 import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
 
-data class EcdsaSignature(val r: BigInteger, val s: BigInteger, val yParity: Byte)
+data class EcdsaSignature(
+    val r: BigInteger,
+    val s: BigInteger,
+    val yParity: Byte
+)
 
 object EcdsaSigner {
     private val curve = ECNamedCurveTable.getParameterSpec("secp256k1")
@@ -47,17 +51,22 @@ object EcdsaSigner {
 
         val xBytes = r.toByteArray().padLeftToWord()
         val compressed = byteArrayOf((0x02 + recId).toByte()) + xBytes
-        val rPoint = try {
-            curve.curve.decodePoint(compressed)
-        } catch (_: IllegalArgumentException) {
-            return null
-        }
+        val rPoint =
+            try {
+                curve.curve.decodePoint(compressed)
+            } catch (_: IllegalArgumentException) {
+                return null
+            }
         val e = BigInteger(1, messageHash)
         val rInv = r.modInverse(curve.n)
         val negE = curve.n.subtract(e.mod(curve.n))
-        val q = rPoint.multiply(s).add(curve.g.multiply(negE)).multiply(rInv).normalize()
+        val q =
+            rPoint
+                .multiply(s)
+                .add(curve.g.multiply(negE))
+                .multiply(rInv)
+                .normalize()
         if (q.isInfinity) return null
         return q
     }
-
 }

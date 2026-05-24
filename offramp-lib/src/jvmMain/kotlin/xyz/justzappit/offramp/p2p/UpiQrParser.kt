@@ -48,11 +48,12 @@ object UpiQrParser {
             return UpiQrParseResult.Failure(UpiQrError.EmptyQr)
         }
 
-        val paramString = when {
-            trimmed.startsWith(UPI_URI_PREFIX, ignoreCase = true) -> trimmed.substring(UPI_URI_PREFIX.length)
-            trimmed.contains('?') -> trimmed.substringAfter('?')
-            else -> trimmed
-        }
+        val paramString =
+            when {
+                trimmed.startsWith(UPI_URI_PREFIX, ignoreCase = true) -> trimmed.substring(UPI_URI_PREFIX.length)
+                trimmed.contains('?') -> trimmed.substringAfter('?')
+                else -> trimmed
+            }
 
         val params = parseQueryParams(paramString)
         val paymentAddress = params[PARAM_PAYMENT_ADDRESS] ?: return UpiQrParseResult.Failure(UpiQrError.MissingPaymentAddress)
@@ -61,13 +62,14 @@ object UpiQrParser {
             return UpiQrParseResult.Failure(UpiQrError.InvalidUpiId(paymentAddress))
         }
 
-        val amount = params[PARAM_AMOUNT]?.let { amountStr ->
-            val parsed = runCatching { BigDecimal(amountStr.trim()) }.getOrNull()
-            if (parsed == null || parsed.signum() <= 0) {
-                return UpiQrParseResult.Failure(UpiQrError.InvalidAmount(amountStr))
+        val amount =
+            params[PARAM_AMOUNT]?.let { amountStr ->
+                val parsed = runCatching { BigDecimal(amountStr.trim()) }.getOrNull()
+                if (parsed == null || parsed.signum() <= 0) {
+                    return UpiQrParseResult.Failure(UpiQrError.InvalidAmount(amountStr))
+                }
+                parsed
             }
-            parsed
-        }
 
         return UpiQrParseResult.Success(
             ParsedUpiQr(paymentAddress = paymentAddress, fiatAmount = amount),
@@ -99,20 +101,32 @@ object UpiQrParser {
         var i = 0
         while (i < s.length) {
             when (val c = s[i]) {
-                '+' -> { out.append(' '); i++ }
-                '%' -> if (i + 2 < s.length) {
-                    val hi = Character.digit(s[i + 1], HEX_BASE)
-                    val lo = Character.digit(s[i + 2], HEX_BASE)
-                    if (hi >= 0 && lo >= 0) {
-                        out.append(((hi shl HEX_NIBBLE) + lo).toChar())
-                        i += PERCENT_ESCAPE_LEN
-                    } else {
-                        out.append(c); i++
-                    }
-                } else {
-                    out.append(c); i++
+                '+' -> {
+                    out.append(' ')
+                    i++
                 }
-                else -> { out.append(c); i++ }
+
+                '%' -> {
+                    if (i + 2 < s.length) {
+                        val hi = Character.digit(s[i + 1], HEX_BASE)
+                        val lo = Character.digit(s[i + 2], HEX_BASE)
+                        if (hi >= 0 && lo >= 0) {
+                            out.append(((hi shl HEX_NIBBLE) + lo).toChar())
+                            i += PERCENT_ESCAPE_LEN
+                        } else {
+                            out.append(c)
+                            i++
+                        }
+                    } else {
+                        out.append(c)
+                        i++
+                    }
+                }
+
+                else -> {
+                    out.append(c)
+                    i++
+                }
             }
         }
         return out.toString()
@@ -125,11 +139,12 @@ object UpiQrParser {
      */
     fun extractPa(payload: String): String {
         val trimmed = payload.trim()
-        val paramString = when {
-            trimmed.startsWith(UPI_URI_PREFIX, ignoreCase = true) -> trimmed.substring(UPI_URI_PREFIX.length)
-            trimmed.contains('?') -> trimmed.substringAfter('?')
-            else -> return trimmed
-        }
+        val paramString =
+            when {
+                trimmed.startsWith(UPI_URI_PREFIX, ignoreCase = true) -> trimmed.substring(UPI_URI_PREFIX.length)
+                trimmed.contains('?') -> trimmed.substringAfter('?')
+                else -> return trimmed
+            }
         return parseQueryParams(paramString)[PARAM_PAYMENT_ADDRESS] ?: trimmed
     }
 
@@ -148,12 +163,24 @@ data class ParsedUpiQr(
 
 sealed class UpiQrError {
     object EmptyQr : UpiQrError()
+
     object MissingPaymentAddress : UpiQrError()
-    data class InvalidUpiId(val raw: String) : UpiQrError()
-    data class InvalidAmount(val raw: String) : UpiQrError()
+
+    data class InvalidUpiId(
+        val raw: String
+    ) : UpiQrError()
+
+    data class InvalidAmount(
+        val raw: String
+    ) : UpiQrError()
 }
 
 sealed class UpiQrParseResult {
-    data class Success(val parsed: ParsedUpiQr) : UpiQrParseResult()
-    data class Failure(val error: UpiQrError) : UpiQrParseResult()
+    data class Success(
+        val parsed: ParsedUpiQr
+    ) : UpiQrParseResult()
+
+    data class Failure(
+        val error: UpiQrError
+    ) : UpiQrParseResult()
 }

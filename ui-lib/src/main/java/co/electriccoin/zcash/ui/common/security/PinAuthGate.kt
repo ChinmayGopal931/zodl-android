@@ -30,8 +30,12 @@ object PinAuthGate {
 
     sealed class Result {
         object Success : Result()
+
         object Wrong : Result()
-        data class Locked(val msUntilUnlock: Long) : Result()
+
+        data class Locked(
+            val msUntilUnlock: Long
+        ) : Result()
     }
 
     /**
@@ -40,8 +44,9 @@ object PinAuthGate {
      * actually attempting a verify.
      */
     suspend fun msUntilUnlock(standardPreferenceProvider: StandardPreferenceProvider): Long {
-        val end = StandardPreferenceKeys.PIN_LOCKOUT_END_WALLTIME_MS
-            .getValue(standardPreferenceProvider())
+        val end =
+            StandardPreferenceKeys.PIN_LOCKOUT_END_WALLTIME_MS
+                .getValue(standardPreferenceProvider())
         return (end - System.currentTimeMillis()).coerceAtLeast(0)
     }
 

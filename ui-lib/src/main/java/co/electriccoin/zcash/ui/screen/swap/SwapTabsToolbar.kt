@@ -32,10 +32,11 @@ internal fun SwapTabsToolbar(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.bg)
-            .padding(horizontal = TOOLBAR_HORIZONTAL_PADDING.dp, vertical = TOOLBAR_VERTICAL_PADDING.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.bg)
+                .padding(horizontal = TOOLBAR_HORIZONTAL_PADDING.dp, vertical = TOOLBAR_VERTICAL_PADDING.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ZappBackButton(onClick = onBack)
@@ -57,8 +58,9 @@ private fun SegmentedRow(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = Modifier
-            .background(c.surfaceAlt),
+        modifier =
+            Modifier
+                .background(c.surfaceAlt),
         horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
         SegmentCell(
@@ -83,22 +85,23 @@ private fun SegmentCell(
     val c = ZappTheme.colors
     val t = ZappTheme.typography
     Box(
-        modifier = Modifier
-            .background(if (isSelected) c.surface else c.surfaceAlt)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = c.text),
-                onClick = onClick,
-            )
-            .padding(horizontal = CELL_HORIZONTAL_PADDING.dp, vertical = CELL_VERTICAL_PADDING.dp),
+        modifier =
+            Modifier
+                .background(if (isSelected) c.surface else c.surfaceAlt)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(color = c.text),
+                    onClick = onClick,
+                ).padding(horizontal = CELL_HORIZONTAL_PADDING.dp, vertical = CELL_VERTICAL_PADDING.dp),
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
             text = label,
-            style = t.button.copy(
-                color = if (isSelected) c.text else c.textMuted,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-            ),
+            style =
+                t.button.copy(
+                    color = if (isSelected) c.text else c.textMuted,
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                ),
         )
     }
 }

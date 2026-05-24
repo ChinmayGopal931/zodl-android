@@ -23,15 +23,16 @@ class SubgraphClientTest {
     private var nextResponse: String = ""
     private val sentBodies = mutableListOf<JsonObject>()
 
-    private val client = HttpClient(
-        MockEngine { request ->
-            val bytes = (request.body as io.ktor.http.content.OutgoingContent.ByteArrayContent).bytes()
-            sentBodies += Json.parseToJsonElement(bytes.decodeToString()) as JsonObject
-            respond(nextResponse, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
-        },
-    ) {
-        install(ContentNegotiation) { json() }
-    }
+    private val client =
+        HttpClient(
+            MockEngine { request ->
+                val bytes = (request.body as io.ktor.http.content.OutgoingContent.ByteArrayContent).bytes()
+                sentBodies += Json.parseToJsonElement(bytes.decodeToString()) as JsonObject
+                respond(nextResponse, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            },
+        ) {
+            install(ContentNegotiation) { json() }
+        }
 
     private val subgraph = SubgraphClient(client, "http://mock/subgraph")
 
@@ -41,45 +42,51 @@ class SubgraphClientTest {
     }
 
     @Test
-    fun `parses circles and drops zero-active-merchant entries`() = runTest {
-        nextResponse = """
-          {"data":{"circles":[
-            {"circleId":"1","currency":"0x494e520000000000000000000000000000000000000000000000000000000000",
-              "metrics":{"circleScore":"12.5","circleStatus":"active",
-                "scoreState":{"activeMerchantsCount":"4"}}},
-            {"circleId":"2","currency":"0x494e520000000000000000000000000000000000000000000000000000000000",
-              "metrics":{"circleScore":"3.0","circleStatus":"bootstrap",
-                "scoreState":{"activeMerchantsCount":"0"}}}
-          ]}}
-        """.trimIndent()
-        val circles = subgraph.circlesForRouting(
-            "0x494e520000000000000000000000000000000000000000000000000000000000",
-        )
-        assertEquals(1, circles.size)
-        assertEquals("1", circles[0].circleId)
-        assertEquals("active", circles[0].metrics.circleStatus)
-    }
-
-    @Test
-    fun `sends query and variables in POST body`() = runTest {
-        nextResponse = """{"data":{"circles":[]}}"""
-        subgraph.circlesForRouting("0xabcd")
-        val body = sentBodies.last()
-        assertTrue(body["query"]!!.jsonPrimitive.content.contains("CirclesForRouting"))
-        assertEquals("0xabcd", body["variables"]!!.jsonObject["currency"]!!.jsonPrimitive.content)
-    }
-
-    @Test
-    fun `surfaces graphql errors`() = runTest {
-        nextResponse = """{"errors":[{"message":"boom"}]}"""
-        assertFailsWith<IllegalStateException> {
-            subgraph.circlesForRouting("0xabcd")
+    fun `parses circles and drops zero-active-merchant entries`() =
+        runTest {
+            nextResponse =
+                """
+                {"data":{"circles":[
+                  {"circleId":"1","currency":"0x494e520000000000000000000000000000000000000000000000000000000000",
+                    "metrics":{"circleScore":"12.5","circleStatus":"active",
+                      "scoreState":{"activeMerchantsCount":"4"}}},
+                  {"circleId":"2","currency":"0x494e520000000000000000000000000000000000000000000000000000000000",
+                    "metrics":{"circleScore":"3.0","circleStatus":"bootstrap",
+                      "scoreState":{"activeMerchantsCount":"0"}}}
+                ]}}
+                """.trimIndent()
+            val circles =
+                subgraph.circlesForRouting(
+                    "0x494e520000000000000000000000000000000000000000000000000000000000",
+                )
+            assertEquals(1, circles.size)
+            assertEquals("1", circles[0].circleId)
+            assertEquals("active", circles[0].metrics.circleStatus)
         }
-    }
 
     @Test
-    fun `empty circles array returns empty list`() = runTest {
-        nextResponse = """{"data":{"circles":[]}}"""
-        assertEquals(0, subgraph.circlesForRouting("0xabcd").size)
-    }
+    fun `sends query and variables in POST body`() =
+        runTest {
+            nextResponse = """{"data":{"circles":[]}}"""
+            subgraph.circlesForRouting("0xabcd")
+            val body = sentBodies.last()
+            assertTrue(body["query"]!!.jsonPrimitive.content.contains("CirclesForRouting"))
+            assertEquals("0xabcd", body["variables"]!!.jsonObject["currency"]!!.jsonPrimitive.content)
+        }
+
+    @Test
+    fun `surfaces graphql errors`() =
+        runTest {
+            nextResponse = """{"errors":[{"message":"boom"}]}"""
+            assertFailsWith<IllegalStateException> {
+                subgraph.circlesForRouting("0xabcd")
+            }
+        }
+
+    @Test
+    fun `empty circles array returns empty list`() =
+        runTest {
+            nextResponse = """{"data":{"circles":[]}}"""
+            assertEquals(0, subgraph.circlesForRouting("0xabcd").size)
+        }
 }

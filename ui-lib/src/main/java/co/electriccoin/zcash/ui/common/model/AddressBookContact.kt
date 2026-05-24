@@ -15,11 +15,12 @@ data class AddressBookContact(
         const val ADDR_TYPE_EVM = "evm"
         const val ADDR_TYPE_SOLANA = "solana"
 
-        val SUPPORTED_ADDR_TYPES = listOf(
-            ADDR_TYPE_UNIFIED,
-            ADDR_TYPE_TRANSPARENT,
-            ADDR_TYPE_EVM,
-            ADDR_TYPE_SOLANA,
-        )
+        val SUPPORTED_ADDR_TYPES =
+            listOf(
+                ADDR_TYPE_UNIFIED,
+                ADDR_TYPE_TRANSPARENT,
+                ADDR_TYPE_EVM,
+                ADDR_TYPE_SOLANA,
+            )
     }
 }

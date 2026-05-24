@@ -48,43 +48,48 @@ fun WalletBackupView(state: WalletBackupState) {
     val c = ZappTheme.colors
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         ZappScreenHeader(
             title = "Recovery Phrase",
-            left = state.onBack?.let { back ->
-                { ZappBackButton(onClick = back) }
-            },
+            left =
+                state.onBack?.let { back ->
+                    { ZappBackButton(onClick = back) }
+                },
         )
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 18.dp, vertical = 8.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 18.dp, vertical = 8.dp),
         ) {
             BasicText(
                 text = "Secret Recovery Phrase",
-                style = ZappTheme.typography.display.copy(
-                    color = c.text,
-                    fontSize = 28.sp,
-                    lineHeight = 32.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = (-0.8).sp,
-                ),
+                style =
+                    ZappTheme.typography.display.copy(
+                        color = c.text,
+                        fontSize = 28.sp,
+                        lineHeight = 32.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = (-0.8).sp,
+                    ),
             )
             Spacer(Modifier.height(8.dp))
             BasicText(
                 text = "These words are the only way to recover your funds. Keep them somewhere safe.",
-                style = ZappTheme.typography.body.copy(
-                    color = c.textMuted,
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp,
-                ),
+                style =
+                    ZappTheme.typography.body.copy(
+                        color = c.textMuted,
+                        fontSize = 13.sp,
+                        lineHeight = 19.sp,
+                    ),
                 modifier = Modifier.fillMaxWidth(0.95f),
             )
 
@@ -103,9 +108,10 @@ fun WalletBackupView(state: WalletBackupState) {
         }
 
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 14.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 14.dp),
         ) {
             state.secondaryButton?.let { sb ->
                 val ctx = LocalContext.current
@@ -138,10 +144,11 @@ private fun SeedRevealBlock(seed: String, isRevealed: Boolean) {
     Box(modifier = Modifier.fillMaxWidth()) {
         SeedGrid(
             words = words,
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, c.border, RectangleShape)
-                .blur(if (isRevealed) 0.dp else 14.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, c.border, RectangleShape)
+                    .blur(if (isRevealed) 0.dp else 14.dp),
         )
         if (!isRevealed) {
             Column(
@@ -150,9 +157,10 @@ private fun SeedRevealBlock(seed: String, isRevealed: Boolean) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Box(
-                    modifier = Modifier
-                        .size(44.dp)
-                        .background(c.text, RectangleShape),
+                    modifier =
+                        Modifier
+                            .size(44.dp)
+                            .background(c.text, RectangleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
@@ -163,12 +171,13 @@ private fun SeedRevealBlock(seed: String, isRevealed: Boolean) {
                 Spacer(Modifier.height(8.dp))
                 BasicText(
                     text = "Tap reveal below",
-                    style = ZappTheme.typography.button.copy(
-                        color = c.text,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Black,
-                        letterSpacing = 0.2.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.button.copy(
+                            color = c.text,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = 0.2.sp,
+                        ),
                 )
             }
         }
@@ -186,29 +195,32 @@ private fun SeedGrid(words: List<String>, modifier: Modifier = Modifier) {
                     val idx = ri * 3 + wi
                     val cellBg = if (ri % 2 == 0) c.bg else c.surfaceAlt
                     Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .background(cellBg, RectangleShape)
-                            .padding(horizontal = 10.dp, vertical = 11.dp),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .background(cellBg, RectangleShape)
+                                .padding(horizontal = 10.dp, vertical = 11.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         BasicText(
                             text = String.format("%02d", idx + 1),
-                            style = ZappTheme.typography.mono.copy(
-                                color = c.textSubtle,
-                                fontSize = 9.sp,
-                            ),
+                            style =
+                                ZappTheme.typography.mono.copy(
+                                    color = c.textSubtle,
+                                    fontSize = 9.sp,
+                                ),
                             modifier = Modifier.width(16.dp),
                         )
                         Spacer(Modifier.width(6.dp))
                         BasicText(
                             text = w,
-                            style = ZappTheme.typography.rowTitle.copy(
-                                color = c.text,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = (-0.1).sp,
-                            ),
+                            style =
+                                ZappTheme.typography.rowTitle.copy(
+                                    color = c.text,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = (-0.1).sp,
+                                ),
                         )
                     }
                 }
@@ -227,20 +239,22 @@ private fun BirthdayBlock(state: SeedSecretState) {
         ZappSectionLabel(text = state.title.getString(LocalContext.current))
         Spacer(Modifier.height(8.dp))
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(c.surfaceAlt, RectangleShape)
-                .border(1.dp, c.border, RectangleShape)
-                .blur(if (state.isRevealed) 0.dp else 12.dp)
-                .padding(horizontal = 14.dp, vertical = 14.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(c.surfaceAlt, RectangleShape)
+                    .border(1.dp, c.border, RectangleShape)
+                    .blur(if (state.isRevealed) 0.dp else 12.dp)
+                    .padding(horizontal = 14.dp, vertical = 14.dp),
         ) {
             BasicText(
                 text = state.text.getString(LocalContext.current),
-                style = ZappTheme.typography.mono.copy(
-                    color = c.text,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                ),
+                style =
+                    ZappTheme.typography.mono.copy(
+                        color = c.text,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                    ),
             )
         }
     }

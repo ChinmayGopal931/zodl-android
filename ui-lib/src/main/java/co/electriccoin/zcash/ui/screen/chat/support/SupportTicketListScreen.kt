@@ -69,23 +69,25 @@ private fun SupportTicketListView(state: SupportTicketListState) {
     val c = ZappTheme.colors
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             ZappScreenHeader(
                 title = stringRes(R.string.support_chat_title).getValue(),
                 left = {
                     Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clickable(
-                                interactionSource = remember { MutableInteractionSource() },
-                                indication = ripple(bounded = false),
-                                onClick = state.onBack,
-                            ),
+                        modifier =
+                            Modifier
+                                .size(36.dp)
+                                .clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = ripple(bounded = false),
+                                    onClick = state.onBack,
+                                ),
                         contentAlignment = Alignment.Center,
                     ) {
                         Icon(
@@ -118,10 +120,11 @@ private fun SupportTicketListView(state: SupportTicketListState) {
                         WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
                     LazyColumn(
                         modifier = Modifier.weight(1f).fillMaxWidth(),
-                        contentPadding = PaddingValues(
-                            top = 4.dp,
-                            bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
-                        ),
+                        contentPadding =
+                            PaddingValues(
+                                top = 4.dp,
+                                bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
+                            ),
                     ) {
                         items(items = state.tickets, key = { it.conversationId }) { ticket ->
                             SwipeToRevealActionRow(
@@ -142,13 +145,14 @@ private fun SupportTicketListView(state: SupportTicketListState) {
             icon = Icons.Default.Add,
             contentDescription = stringRes(R.string.support_ticket_list_new_content_description).getValue(),
             onClick = state.onNewTicket,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(
-                    end = 20.dp,
-                    bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
-                ),
+            modifier =
+                Modifier
+                    .align(Alignment.BottomEnd)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(
+                        end = 20.dp,
+                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                    ),
         )
 
         state.closeDialog?.let { dialog ->
@@ -163,16 +167,18 @@ private fun TicketRow(ticket: SupportTicketItem) {
     val categoryLabelText = ticket.categoryLabel.getValue()
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = ticket.onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clickable(onClick = ticket.onClick)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            modifier = Modifier
-                .size(44.dp)
-                .background(c.accent, RectangleShape),
+            modifier =
+                Modifier
+                    .size(44.dp)
+                    .background(c.accent, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
@@ -202,8 +208,9 @@ private fun TicketRow(ticket: SupportTicketItem) {
             }
             Spacer(Modifier.height(2.dp))
             BasicText(
-                text = ticket.lastMessage?.getValue()
-                    ?: stringRes(R.string.chat_list_no_messages).getValue(),
+                text =
+                    ticket.lastMessage?.getValue()
+                        ?: stringRes(R.string.chat_list_no_messages).getValue(),
                 style = ZappTheme.typography.rowSubtitle.copy(color = c.textMuted),
                 maxLines = 1,
             )
@@ -211,10 +218,11 @@ private fun TicketRow(ticket: SupportTicketItem) {
 
         if (ticket.unreadCount > 0) {
             Box(
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .background(c.accent, RectangleShape)
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                modifier =
+                    Modifier
+                        .padding(start = 8.dp)
+                        .background(c.accent, RectangleShape)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
             ) {
                 BasicText(
                     text = "${ticket.unreadCount}",

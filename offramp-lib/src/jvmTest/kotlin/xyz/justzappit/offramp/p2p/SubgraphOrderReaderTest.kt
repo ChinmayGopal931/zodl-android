@@ -19,15 +19,17 @@ import kotlin.test.assertTrue
 
 class SubgraphOrderReaderTest {
     private var nextResponse: String = ""
-    private val client = HttpClient(
-        MockEngine {
-            respond(nextResponse, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
-        },
-    ) { install(ContentNegotiation) { json() } }
+    private val client =
+        HttpClient(
+            MockEngine {
+                respond(nextResponse, HttpStatusCode.OK, headersOf(HttpHeaders.ContentType, "application/json"))
+            },
+        ) { install(ContentNegotiation) { json() } }
 
-    private val reader = SubgraphOrderReader(
-        subgraph = SubgraphClient(client, "http://mock/graph"),
-    )
+    private val reader =
+        SubgraphOrderReader(
+            subgraph = SubgraphClient(client, "http://mock/graph"),
+        )
 
     @AfterTest
     fun tearDown() {
@@ -35,68 +37,74 @@ class SubgraphOrderReaderTest {
     }
 
     @Test
-    fun `parses a fresh PAY order with no merchant yet`() = runTest {
-        nextResponse = ORDER_61_FRESH
-        val snapshot = reader.fetchOrder(BigInteger.valueOf(61))!!
-        assertEquals(BigInteger.valueOf(61), snapshot.orderId)
-        assertEquals(OrderType.PAY, snapshot.orderType)
-        assertEquals(OrderStatus.PLACED, snapshot.status)
-        assertEquals(BigInteger.ONE, snapshot.circleId)
-        assertEquals(Usdc6.ofMicros(10_000_000), snapshot.usdcAmount)
-        assertEquals(Usdc6.ofMicros(890_000_000), snapshot.fiatAmount)
-        // "0x00000000" returned by subgraph means zero-address — should normalize to null.
-        assertNull(snapshot.acceptedMerchantAddress)
-        assertEquals("", snapshot.merchantPubKey)
-        assertEquals(1_779_350_162L, snapshot.placedAtEpochSeconds)
-        assertNull(snapshot.acceptedAtEpochSeconds)
-        assertNull(snapshot.paidAtEpochSeconds)
-        assertNull(snapshot.completedAtEpochSeconds)
-        assertNull(snapshot.cancelledAtEpochSeconds)
-        assertEquals(Usdc6.ofMicros(10_125_000), snapshot.actualUsdcAmount)
-        assertEquals(Usdc6.ofMicros(890_000_000), snapshot.actualFiatAmount)
-        assertEquals(
-            xyz.justzappit.evm.types.TxHash.fromHex("0xee7f94f3e2b719f79dc22fae7fef4ee95694996307c31f9643d0bcb79eb5eb71"),
-            snapshot.placedTxHash,
-        )
-        assertEquals(OrderSnapshot.Source.Subgraph, snapshot.source)
-        assertTrue(!snapshot.isAccepted)
-    }
-
-    @Test
-    fun `parses an accepted order with merchant pubkey set`() = runTest {
-        nextResponse = ORDER_99_ACCEPTED
-        val snapshot = reader.fetchOrder(BigInteger.valueOf(99))!!
-        assertEquals(OrderStatus.ACCEPTED, snapshot.status)
-        assertEquals(Address.parse("0x0000000000000000000000000000000000abcdef"), snapshot.acceptedMerchantAddress)
-        assertEquals(MERCHANT_PUBKEY, snapshot.merchantPubKey)
-        assertTrue(snapshot.isAccepted)
-        assertEquals(1_779_400_000L, snapshot.acceptedAtEpochSeconds)
-    }
-
-    @Test
-    fun `returns null when the subgraph has not indexed the order yet`() = runTest {
-        nextResponse = """{"data":{"orders_collection":[]}}"""
-        assertNull(reader.fetchOrder(BigInteger.valueOf(9999)))
-    }
-
-    @Test
-    fun `propagates GraphQL errors as exceptions`() = runTest {
-        nextResponse = """{"errors":[{"message":"deployment unavailable"}]}"""
-        try {
-            reader.fetchOrder(BigInteger.valueOf(1))
-            error("expected the GraphQL error to propagate")
-        } catch (e: IllegalStateException) {
-            assertTrue(e.message!!.contains("deployment unavailable"))
+    fun `parses a fresh PAY order with no merchant yet`() =
+        runTest {
+            nextResponse = ORDER_61_FRESH
+            val snapshot = reader.fetchOrder(BigInteger.valueOf(61))!!
+            assertEquals(BigInteger.valueOf(61), snapshot.orderId)
+            assertEquals(OrderType.PAY, snapshot.orderType)
+            assertEquals(OrderStatus.PLACED, snapshot.status)
+            assertEquals(BigInteger.ONE, snapshot.circleId)
+            assertEquals(Usdc6.ofMicros(10_000_000), snapshot.usdcAmount)
+            assertEquals(Usdc6.ofMicros(890_000_000), snapshot.fiatAmount)
+            // "0x00000000" returned by subgraph means zero-address — should normalize to null.
+            assertNull(snapshot.acceptedMerchantAddress)
+            assertEquals("", snapshot.merchantPubKey)
+            assertEquals(1_779_350_162L, snapshot.placedAtEpochSeconds)
+            assertNull(snapshot.acceptedAtEpochSeconds)
+            assertNull(snapshot.paidAtEpochSeconds)
+            assertNull(snapshot.completedAtEpochSeconds)
+            assertNull(snapshot.cancelledAtEpochSeconds)
+            assertEquals(Usdc6.ofMicros(10_125_000), snapshot.actualUsdcAmount)
+            assertEquals(Usdc6.ofMicros(890_000_000), snapshot.actualFiatAmount)
+            assertEquals(
+                xyz.justzappit.evm.types.TxHash
+                    .fromHex("0xee7f94f3e2b719f79dc22fae7fef4ee95694996307c31f9643d0bcb79eb5eb71"),
+                snapshot.placedTxHash,
+            )
+            assertEquals(OrderSnapshot.Source.Subgraph, snapshot.source)
+            assertTrue(!snapshot.isAccepted)
         }
-    }
 
     @Test
-    fun `parses a cancelled order`() = runTest {
-        nextResponse = ORDER_42_CANCELLED
-        val snapshot = reader.fetchOrder(BigInteger.valueOf(42))!!
-        assertEquals(OrderStatus.CANCELLED, snapshot.status)
-        assertEquals(1_779_500_000L, snapshot.cancelledAtEpochSeconds)
-    }
+    fun `parses an accepted order with merchant pubkey set`() =
+        runTest {
+            nextResponse = ORDER_99_ACCEPTED
+            val snapshot = reader.fetchOrder(BigInteger.valueOf(99))!!
+            assertEquals(OrderStatus.ACCEPTED, snapshot.status)
+            assertEquals(Address.parse("0x0000000000000000000000000000000000abcdef"), snapshot.acceptedMerchantAddress)
+            assertEquals(MERCHANT_PUBKEY, snapshot.merchantPubKey)
+            assertTrue(snapshot.isAccepted)
+            assertEquals(1_779_400_000L, snapshot.acceptedAtEpochSeconds)
+        }
+
+    @Test
+    fun `returns null when the subgraph has not indexed the order yet`() =
+        runTest {
+            nextResponse = """{"data":{"orders_collection":[]}}"""
+            assertNull(reader.fetchOrder(BigInteger.valueOf(9999)))
+        }
+
+    @Test
+    fun `propagates GraphQL errors as exceptions`() =
+        runTest {
+            nextResponse = """{"errors":[{"message":"deployment unavailable"}]}"""
+            try {
+                reader.fetchOrder(BigInteger.valueOf(1))
+                error("expected the GraphQL error to propagate")
+            } catch (e: IllegalStateException) {
+                assertTrue(e.message!!.contains("deployment unavailable"))
+            }
+        }
+
+    @Test
+    fun `parses a cancelled order`() =
+        runTest {
+            nextResponse = ORDER_42_CANCELLED
+            val snapshot = reader.fetchOrder(BigInteger.valueOf(42))!!
+            assertEquals(OrderStatus.CANCELLED, snapshot.status)
+            assertEquals(1_779_500_000L, snapshot.cancelledAtEpochSeconds)
+        }
 
     companion object {
         // Captured from the live Sepolia subgraph on 2026-05-21 (order #61).

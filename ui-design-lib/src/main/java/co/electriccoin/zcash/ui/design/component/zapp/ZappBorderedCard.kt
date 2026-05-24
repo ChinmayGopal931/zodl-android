@@ -33,11 +33,12 @@ fun ZappBorderedCard(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, borderColor))
-            .padding(padding),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .border(BorderStroke(1.dp, borderColor))
+                .padding(padding),
         verticalArrangement = verticalArrangement,
         content = content,
     )

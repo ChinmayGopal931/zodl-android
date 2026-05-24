@@ -10,7 +10,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class KnownRevertsTest {
-
     // -- Curated KnownRevertReason mappings --------------------------------------------------
 
     @Test
@@ -96,12 +95,24 @@ class KnownRevertsTest {
     fun `KnownContractErrors covers every curated selector`() {
         // Every curated selector must also exist in the wholesale SDK table. If this fails, the
         // curated map drifted from the SDK and a re-run of generate-revert-selectors.ts is overdue.
-        val curatedSelectors = listOf(
-            "0x91da284f", "0x412dd2b1", "0xf42e41a1", "0xbba2edf9",
-            "0x02a6fdd2", "0xebb6f34b", "0x4bbac5de", "0x5d04ff4c", "0xc56873ba",
-            "0xc1654697", "0xaa60ec26", "0x6b1b90b4",
-            "0x149f9fca", "0x47bfece5", "0x279bbc0c",
-        )
+        val curatedSelectors =
+            listOf(
+                "0x91da284f",
+                "0x412dd2b1",
+                "0xf42e41a1",
+                "0xbba2edf9",
+                "0x02a6fdd2",
+                "0xebb6f34b",
+                "0x4bbac5de",
+                "0x5d04ff4c",
+                "0xc56873ba",
+                "0xc1654697",
+                "0xaa60ec26",
+                "0x6b1b90b4",
+                "0x149f9fca",
+                "0x47bfece5",
+                "0x279bbc0c",
+            )
         for (s in curatedSelectors) {
             assertNotNull(
                 KnownContractErrors.nameFor(Selector4.fromHex(s)),
@@ -169,11 +180,12 @@ class KnownRevertsTest {
     @Test
     fun `SolidityErrors decodes an Error(string) payload`() {
         // 0x08c379a0 || offset(0x20) || length(0x05) || "hello" || padding
-        val payload = (
-            "0x08c379a0" +
-                "0000000000000000000000000000000000000000000000000000000000000020" +
-                "0000000000000000000000000000000000000000000000000000000000000005" +
-                "68656c6c6f000000000000000000000000000000000000000000000000000000"
+        val payload =
+            (
+                "0x08c379a0" +
+                    "0000000000000000000000000000000000000000000000000000000000000020" +
+                    "0000000000000000000000000000000000000000000000000000000000000005" +
+                    "68656c6c6f000000000000000000000000000000000000000000000000000000"
             ).hexToBytes()
         assertEquals("hello", SolidityErrors.decodeErrorString(payload))
     }

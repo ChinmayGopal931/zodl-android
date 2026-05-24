@@ -1,12 +1,14 @@
 package co.electriccoin.zcash.di
 
+import co.electriccoin.zcash.spackle.Twig
+import co.electriccoin.zcash.ui.BuildConfig
 import co.electriccoin.zcash.ui.common.provider.ApplicationStateProvider
 import co.electriccoin.zcash.ui.common.provider.ApplicationStateProviderImpl
 import co.electriccoin.zcash.ui.common.provider.BlockchainProvider
 import co.electriccoin.zcash.ui.common.provider.BlockchainProviderImpl
-import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.provider.CMCApiProvider
 import co.electriccoin.zcash.ui.common.provider.CMCApiProviderImpl
+import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.provider.CrashReportingStorageProvider
 import co.electriccoin.zcash.ui.common.provider.CrashReportingStorageProviderImpl
 import co.electriccoin.zcash.ui.common.provider.EphemeralAddressStorageProvider
@@ -19,8 +21,6 @@ import co.electriccoin.zcash.ui.common.provider.IsExchangeRateEnabledStorageProv
 import co.electriccoin.zcash.ui.common.provider.IsExchangeRateEnabledStorageProviderImpl
 import co.electriccoin.zcash.ui.common.provider.IsKeepScreenOnDuringRestoreProvider
 import co.electriccoin.zcash.ui.common.provider.IsKeepScreenOnDuringRestoreProviderImpl
-import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
-import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProviderImpl
 import co.electriccoin.zcash.ui.common.provider.IsTorEnabledStorageProvider
 import co.electriccoin.zcash.ui.common.provider.IsTorEnabledStorageProviderImpl
 import co.electriccoin.zcash.ui.common.provider.KeystoneSDKProvider
@@ -28,8 +28,14 @@ import co.electriccoin.zcash.ui.common.provider.KeystoneSDKProviderImpl
 import co.electriccoin.zcash.ui.common.provider.KtorNearApiProvider
 import co.electriccoin.zcash.ui.common.provider.LightWalletEndpointProvider
 import co.electriccoin.zcash.ui.common.provider.NearApiProvider
+import co.electriccoin.zcash.ui.common.provider.NearBridgeOfframpFunding
+import co.electriccoin.zcash.ui.common.provider.NearPullbackOfframpRefund
+import co.electriccoin.zcash.ui.common.provider.OfframpBridgeWallet
+import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
+import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProviderImpl
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProvider
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProviderImpl
+import co.electriccoin.zcash.ui.common.provider.RealOfframpBridgeWallet
 import co.electriccoin.zcash.ui.common.provider.RestoreTimestampStorageProvider
 import co.electriccoin.zcash.ui.common.provider.RestoreTimestampStorageProviderImpl
 import co.electriccoin.zcash.ui.common.provider.SelectedAccountUUIDProvider
@@ -56,8 +62,7 @@ import co.electriccoin.zcash.ui.common.provider.WalletBackupRemindMeTimestampSto
 import co.electriccoin.zcash.ui.common.provider.WalletBackupRemindMeTimestampStorageProviderImpl
 import co.electriccoin.zcash.ui.common.provider.WalletRestoringStateProvider
 import co.electriccoin.zcash.ui.common.provider.WalletRestoringStateProviderImpl
-import co.electriccoin.zcash.ui.BuildConfig
-import co.electriccoin.zcash.spackle.Twig
+import co.electriccoin.zcash.ui.common.provider.WalletSeedPhraseSource
 import io.ktor.client.HttpClient
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
@@ -67,22 +72,17 @@ import org.koin.dsl.module
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.BundlerClient
 import xyz.justzappit.evm.rpc.RpcHttpClient
-import co.electriccoin.zcash.ui.common.provider.WalletSeedPhraseSource
 import xyz.justzappit.offramp.account.DevOfframpAccountProvider
 import xyz.justzappit.offramp.account.OfframpAccountProvider
 import xyz.justzappit.offramp.account.SeedPhraseSource
 import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
-import co.electriccoin.zcash.ui.common.provider.NearBridgeOfframpFunding
-import co.electriccoin.zcash.ui.common.provider.NearPullbackOfframpRefund
-import co.electriccoin.zcash.ui.common.provider.OfframpBridgeWallet
-import co.electriccoin.zcash.ui.common.provider.RealOfframpBridgeWallet
+import xyz.justzappit.offramp.config.P2pNetworkConfig
+import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.funding.NoRouteOfframpRefund
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.funding.PreFundedOfframpFunding
-import xyz.justzappit.offramp.config.P2pNetworkConfig
-import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.p2p.SubgraphClient
 import java.util.Locale
 
@@ -130,16 +130,18 @@ val providerModule =
             // failures (ConnectException, SSL handshake, etc.) emit no logcat trace and the only
             // signal is the orchestrator's Failed status emission — which gets rotated out of
             // the buffer before we can grab it.
-            val twigLogger = object : io.ktor.client.plugins.logging.Logger {
-                override fun log(message: String) {
-                    Twig.debug { "OfframpHttp $message" }
+            val twigLogger =
+                object : io.ktor.client.plugins.logging.Logger {
+                    override fun log(message: String) {
+                        Twig.debug { "OfframpHttp $message" }
+                    }
                 }
-            }
             RpcHttpClient.create(
-                config = RpcHttpClient.Config(
-                    logger = twigLogger,
-                    logLevel = io.ktor.client.plugins.logging.LogLevel.INFO,
-                ),
+                config =
+                    RpcHttpClient.Config(
+                        logger = twigLogger,
+                        logLevel = io.ktor.client.plugins.logging.LogLevel.INFO,
+                    ),
             )
         }
         single<P2pConfigProvider> {
@@ -147,22 +149,32 @@ val providerModule =
             // for CI / side-by-side installs. A typo like "mainet" must not silently boot the
             // testnet build into the wrong network — fail closed instead.
             when (val net = BuildConfig.P2P_NETWORK.lowercase(Locale.ROOT)) {
-                P2pNetworks.MAINNET_NAME -> P2pConfigProvider(
-                    networkName = P2pNetworks.MAINNET_NAME,
-                    rpcUrlOverride = BuildConfig.P2P_RPC_URL_BASE_MAINNET.takeIf { it.isNotBlank() },
-                    subgraphUrlOverride = BuildConfig.P2P_SUBGRAPH_URL_MAINNET.takeIf { it.isNotBlank() },
-                )
-                P2pNetworks.SEPOLIA_NAME, "" -> P2pConfigProvider(
-                    networkName = P2pNetworks.SEPOLIA_NAME,
-                    rpcUrlOverride = BuildConfig.P2P_RPC_URL_BASE_SEPOLIA.takeIf { it.isNotBlank() }
-                        ?: P2pNetworks.SEPOLIA.rpcUrl,
-                    subgraphUrlOverride = BuildConfig.P2P_SUBGRAPH_URL_SEPOLIA.takeIf { it.isNotBlank() }
-                        ?: P2pNetworks.SEPOLIA.subgraphUrl,
-                )
-                else -> error(
-                    "Unknown P2P_NETWORK build flag value '$net' — expected '${P2pNetworks.SEPOLIA_NAME}', " +
-                        "'${P2pNetworks.MAINNET_NAME}', or blank for the default.",
-                )
+                P2pNetworks.MAINNET_NAME -> {
+                    P2pConfigProvider(
+                        networkName = P2pNetworks.MAINNET_NAME,
+                        rpcUrlOverride = BuildConfig.P2P_RPC_URL_BASE_MAINNET.takeIf { it.isNotBlank() },
+                        subgraphUrlOverride = BuildConfig.P2P_SUBGRAPH_URL_MAINNET.takeIf { it.isNotBlank() },
+                    )
+                }
+
+                P2pNetworks.SEPOLIA_NAME, "" -> {
+                    P2pConfigProvider(
+                        networkName = P2pNetworks.SEPOLIA_NAME,
+                        rpcUrlOverride =
+                            BuildConfig.P2P_RPC_URL_BASE_SEPOLIA.takeIf { it.isNotBlank() }
+                                ?: P2pNetworks.SEPOLIA.rpcUrl,
+                        subgraphUrlOverride =
+                            BuildConfig.P2P_SUBGRAPH_URL_SEPOLIA.takeIf { it.isNotBlank() }
+                                ?: P2pNetworks.SEPOLIA.subgraphUrl,
+                    )
+                }
+
+                else -> {
+                    error(
+                        "Unknown P2P_NETWORK build flag value '$net' — expected '${P2pNetworks.SEPOLIA_NAME}', " +
+                            "'${P2pNetworks.MAINNET_NAME}', or blank for the default.",
+                    )
+                }
             }
         }
         single<P2pNetworkConfig> { get<P2pConfigProvider>().current() }

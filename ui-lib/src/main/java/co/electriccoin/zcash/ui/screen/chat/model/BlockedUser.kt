@@ -12,7 +12,9 @@ data class BlockedUser(
 /**
  * Report categories for UGC compliance.
  */
-enum class ReportCategory(val displayLabel: String) {
+enum class ReportCategory(
+    val displayLabel: String
+) {
     SPAM("Spam or unwanted messages"),
     HARASSMENT("Harassment or bullying"),
     ILLEGAL_CONTENT("Illegal content"),
@@ -25,7 +27,10 @@ enum class ReportCategory(val displayLabel: String) {
  * A user-submitted content report stored locally.
  */
 data class ContentReport(
-    val id: String = java.util.UUID.randomUUID().toString(),
+    val id: String =
+        java.util.UUID
+            .randomUUID()
+            .toString(),
     val reportedPublicKey: String,
     val reportedDisplayName: String?,
     val category: ReportCategory,

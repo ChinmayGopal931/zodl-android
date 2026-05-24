@@ -22,11 +22,16 @@ class NavigateToScanUpiUseCase(
         navigationRouter.forward(args)
         val result = pipeline.first { it.args.requestId == args.requestId }
         return when (result) {
-            is ScanUpiPipelineResult.Cancelled -> null
-            is ScanUpiPipelineResult.Scanned -> ScanUpiResult(
-                paymentAddress = result.paymentAddress,
-                fiatAmount = result.fiatAmount,
-            )
+            is ScanUpiPipelineResult.Cancelled -> {
+                null
+            }
+
+            is ScanUpiPipelineResult.Scanned -> {
+                ScanUpiResult(
+                    paymentAddress = result.paymentAddress,
+                    fiatAmount = result.fiatAmount,
+                )
+            }
         }
     }
 
@@ -48,7 +53,9 @@ class NavigateToScanUpiUseCase(
 private sealed interface ScanUpiPipelineResult {
     val args: ScanUpiArgs
 
-    data class Cancelled(override val args: ScanUpiArgs) : ScanUpiPipelineResult
+    data class Cancelled(
+        override val args: ScanUpiArgs
+    ) : ScanUpiPipelineResult
 
     data class Scanned(
         val paymentAddress: String,

@@ -82,11 +82,12 @@ class AddressBookSerializer : BaseSerializer() {
                                     address = inputStream.readString(),
                                     name = inputStream.readString(),
                                     chain = inputStream.readString().takeIf { it.isNotEmpty() },
-                                    walletAddresses = inputStream.readInt().let { mapSize ->
-                                        (0 until mapSize).associate { _ ->
-                                            inputStream.readString() to inputStream.readString()
-                                        }
-                                    },
+                                    walletAddresses =
+                                        inputStream.readInt().let { mapSize ->
+                                            (0 until mapSize).associate { _ ->
+                                                inputStream.readString() to inputStream.readString()
+                                            }
+                                        },
                                 )
                             }
                         }

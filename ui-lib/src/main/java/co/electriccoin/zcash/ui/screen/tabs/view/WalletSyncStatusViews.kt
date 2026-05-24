@@ -27,14 +27,15 @@ import co.electriccoin.zcash.ui.screen.tabs.viewmodel.WalletSyncStatus
 
 @Composable
 internal fun SyncProgressRow(state: WalletSyncChipState) {
-    val label = when (state.status) {
-        WalletSyncStatus.SYNCING -> stringResource(R.string.home_sync_progress_syncing)
-        WalletSyncStatus.RESTORING -> stringResource(R.string.home_sync_progress_restoring)
-        WalletSyncStatus.INITIALIZING -> stringResource(R.string.home_sync_progress_connecting)
-        WalletSyncStatus.DISCONNECTED -> stringResource(R.string.home_sync_progress_offline)
-        WalletSyncStatus.ERROR -> stringResource(R.string.home_sync_progress_error)
-        WalletSyncStatus.SYNCED -> return
-    }
+    val label =
+        when (state.status) {
+            WalletSyncStatus.SYNCING -> stringResource(R.string.home_sync_progress_syncing)
+            WalletSyncStatus.RESTORING -> stringResource(R.string.home_sync_progress_restoring)
+            WalletSyncStatus.INITIALIZING -> stringResource(R.string.home_sync_progress_connecting)
+            WalletSyncStatus.DISCONNECTED -> stringResource(R.string.home_sync_progress_offline)
+            WalletSyncStatus.ERROR -> stringResource(R.string.home_sync_progress_error)
+            WalletSyncStatus.SYNCED -> return
+        }
     val c = ZappTheme.colors
     val isError = state.status == WalletSyncStatus.DISCONNECTED || state.status == WalletSyncStatus.ERROR
     val fillColor = if (isError) c.danger else c.accent
@@ -49,44 +50,49 @@ internal fun SyncProgressRow(state: WalletSyncChipState) {
         ) {
             BasicText(
                 text = label,
-                style = ZappTheme.typography.rowSubtitle.copy(
-                    color = if (isError) c.danger else c.textMuted,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 0.5.sp,
-                ),
+                style =
+                    ZappTheme.typography.rowSubtitle.copy(
+                        color = if (isError) c.danger else c.textMuted,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 0.5.sp,
+                    ),
             )
             if (showPercent) {
                 BasicText(
                     text = "${state.progressPercent}%",
-                    style = ZappTheme.typography.rowSubtitle.copy(
-                        color = c.text,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                    ),
+                    style =
+                        ZappTheme.typography.rowSubtitle.copy(
+                            color = c.text,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                        ),
                 )
             }
         }
         Spacer(Modifier.height(6.dp))
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(c.surfaceAlt, RectangleShape),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(c.surfaceAlt, RectangleShape),
         ) {
             if (showPercent) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth(fraction.coerceAtLeast(0.02f))
-                        .height(3.dp)
-                        .background(fillColor, RectangleShape),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth(fraction.coerceAtLeast(0.02f))
+                            .height(3.dp)
+                            .background(fillColor, RectangleShape),
                 )
             } else if (isError) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .background(fillColor, RectangleShape),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .background(fillColor, RectangleShape),
                 )
             }
         }
@@ -97,41 +103,52 @@ internal fun SyncProgressRow(state: WalletSyncChipState) {
 internal fun SyncStatusChip(state: WalletSyncChipState) {
     val c = ZappTheme.colors
     when (state.status) {
-        WalletSyncStatus.SYNCED ->
+        WalletSyncStatus.SYNCED -> {
             ZappStatusChip(
                 stringResource(R.string.home_sync_chip_synced),
                 variant = ZappChipVariant.Success,
                 dotColor = c.success,
             )
-        WalletSyncStatus.SYNCING ->
+        }
+
+        WalletSyncStatus.SYNCING -> {
             ZappStatusChip(
                 stringResource(R.string.home_sync_chip_syncing_fmt, state.progressPercent),
                 variant = ZappChipVariant.Accent,
                 dotColor = c.accent,
             )
-        WalletSyncStatus.RESTORING ->
+        }
+
+        WalletSyncStatus.RESTORING -> {
             ZappStatusChip(
                 stringResource(R.string.home_sync_chip_restoring_fmt, state.progressPercent),
                 variant = ZappChipVariant.Accent,
                 dotColor = c.accent,
             )
-        WalletSyncStatus.DISCONNECTED ->
+        }
+
+        WalletSyncStatus.DISCONNECTED -> {
             ZappStatusChip(
                 stringResource(R.string.home_sync_chip_offline),
                 variant = ZappChipVariant.Danger,
                 dotColor = c.danger,
             )
-        WalletSyncStatus.ERROR ->
+        }
+
+        WalletSyncStatus.ERROR -> {
             ZappStatusChip(
                 stringResource(R.string.home_sync_progress_error),
                 variant = ZappChipVariant.Danger,
                 dotColor = c.danger,
             )
-        WalletSyncStatus.INITIALIZING ->
+        }
+
+        WalletSyncStatus.INITIALIZING -> {
             ZappStatusChip(
                 stringResource(R.string.home_sync_progress_connecting),
                 variant = ZappChipVariant.Muted,
                 dotColor = c.textSubtle,
             )
+        }
     }
 }

@@ -113,7 +113,9 @@ tasks {
 
             "ZCASH_FLEXA_KEY" to "",
             "ZCASH_CMC_KEY" to "",
-            "SDK_INCLUDED_BUILD_PATH" to "",
+            // Fork-time deviation: the Zapp fork pins an unreleased SDK SHA and builds it
+            // via included-build at this sibling path (see CLAUDE.md → "Upstream coupling").
+            "SDK_INCLUDED_BUILD_PATH" to "../zcash-android-wallet-sdk",
             "BIP_39_INCLUDED_BUILD_PATH" to ""
         )
 

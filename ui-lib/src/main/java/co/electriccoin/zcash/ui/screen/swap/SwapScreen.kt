@@ -32,10 +32,11 @@ fun SwapScreen() {
     var selectedTab by rememberSaveable { mutableStateOf(SwapTab.SWAP) }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(ZappTheme.colors.bg)
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(ZappTheme.colors.bg)
+                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
     ) {
         SwapTabsToolbar(
             selected = selectedTab,

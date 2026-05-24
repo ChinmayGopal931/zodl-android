@@ -16,11 +16,13 @@ data class P2pTransactionsState(
 
 sealed interface BalanceState {
     data object Loading : BalanceState
+
     data class Loaded(
         val balanceUsdc: StringResource,
         val accountAddressShort: String,
         val accountExplorerUrl: String?,
     ) : BalanceState
+
     data object Unavailable : BalanceState
 }
 
@@ -30,9 +32,17 @@ sealed interface BalanceState {
  */
 sealed interface RefundUiState {
     data object Hidden : RefundUiState
-    data class Available(val onClick: () -> Unit) : RefundUiState
+
+    data class Available(
+        val onClick: () -> Unit
+    ) : RefundUiState
+
     data object InProgress : RefundUiState
-    data class FailedRetry(val message: StringResource, val onRetry: () -> Unit) : RefundUiState
+
+    data class FailedRetry(
+        val message: StringResource,
+        val onRetry: () -> Unit
+    ) : RefundUiState
 }
 
 data class ConfirmRefundDialog(

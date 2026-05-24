@@ -41,7 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
-enum class ZappTab(val title: String) {
+enum class ZappTab(
+    val title: String
+) {
     WALLET("Wallet"),
     CHATS("Chats"),
     CONTACTS("Contacts"),
@@ -58,19 +60,21 @@ fun FloatingPillNavBar(
     val c = ZappTheme.colors
 
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 14.dp, vertical = 12.dp),
         contentAlignment = Alignment.BottomCenter,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .shadow(elevation = 4.dp, shape = RectangleShape, clip = false)
-                .background(c.navPill, RectangleShape)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .padding(horizontal = 6.dp, vertical = 6.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .shadow(elevation = 4.dp, shape = RectangleShape, clip = false)
+                    .background(c.navPill, RectangleShape)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .padding(horizontal = 6.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -80,21 +84,22 @@ fun FloatingPillNavBar(
                 val showBadge = tab == ZappTab.CHATS && chatUnreadCount > 0
 
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = 44.dp)
-                        .background(
-                            color = if (selected) c.accent else Color.Transparent,
-                            shape = RectangleShape,
-                        )
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(
-                                color = if (selected) c.onAccent else c.accent,
-                                bounded = true,
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .defaultMinSize(minHeight = 44.dp)
+                            .background(
+                                color = if (selected) c.accent else Color.Transparent,
+                                shape = RectangleShape,
+                            ).clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication =
+                                    ripple(
+                                        color = if (selected) c.onAccent else c.accent,
+                                        bounded = true,
+                                    ),
+                                onClick = { onTabSelected(tab) },
                             ),
-                            onClick = { onTabSelected(tab) },
-                        ),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -107,21 +112,23 @@ fun FloatingPillNavBar(
                     if (showBadge) {
                         val badgeText = if (chatUnreadCount > 99) "99+" else chatUnreadCount.toString()
                         Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = (-6).dp, y = 4.dp)
-                                .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp)
-                                .background(c.danger, RectangleShape)
-                                .padding(horizontal = 4.dp, vertical = 1.dp),
+                            modifier =
+                                Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = (-6).dp, y = 4.dp)
+                                    .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp)
+                                    .background(c.danger, RectangleShape)
+                                    .padding(horizontal = 4.dp, vertical = 1.dp),
                             contentAlignment = Alignment.Center,
                         ) {
                             BasicText(
                                 text = badgeText,
-                                style = ZappTheme.typography.chip.copy(
-                                    color = c.onAccent,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                ),
+                                style =
+                                    ZappTheme.typography.chip.copy(
+                                        color = c.onAccent,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                    ),
                             )
                         }
                     }

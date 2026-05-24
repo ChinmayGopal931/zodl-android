@@ -42,7 +42,11 @@ class BundlerClient(
     private val chainId: ChainId,
 ) {
     private val nextId = AtomicLong(1)
-    private val json = Json { ignoreUnknownKeys = true; explicitNulls = false }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            explicitNulls = false
+        }
 
     /**
      * Pimlico returns three priority tiers (`slow`/`standard`/`fast`). We pick `standard` as the
@@ -130,19 +134,20 @@ class BundlerClient(
         return json.decodeFromJsonElement(TransactionReceipt.serializer(), receipt)
     }
 
-    private fun userOpJson(op: UserOperationV06): JsonObject = buildJsonObject {
-        put("sender", op.sender.checksumHex)
-        putHex("nonce", op.nonce)
-        putBytes("initCode", op.initCode)
-        putBytes("callData", op.callData)
-        putHex("callGasLimit", op.callGasLimit)
-        putHex("verificationGasLimit", op.verificationGasLimit)
-        putHex("preVerificationGas", op.preVerificationGas)
-        putHex("maxFeePerGas", op.maxFeePerGas)
-        putHex("maxPriorityFeePerGas", op.maxPriorityFeePerGas)
-        putBytes("paymasterAndData", op.paymasterAndData)
-        putBytes("signature", op.signature)
-    }
+    private fun userOpJson(op: UserOperationV06): JsonObject =
+        buildJsonObject {
+            put("sender", op.sender.checksumHex)
+            putHex("nonce", op.nonce)
+            putBytes("initCode", op.initCode)
+            putBytes("callData", op.callData)
+            putHex("callGasLimit", op.callGasLimit)
+            putHex("verificationGasLimit", op.verificationGasLimit)
+            putHex("preVerificationGas", op.preVerificationGas)
+            putHex("maxFeePerGas", op.maxFeePerGas)
+            putHex("maxPriorityFeePerGas", op.maxPriorityFeePerGas)
+            putBytes("paymasterAndData", op.paymasterAndData)
+            putBytes("signature", op.signature)
+        }
 
     private fun JsonObjectBuilder.putHex(key: String, value: BigInteger) =
         put(key, "0x" + value.toString(HEX_BASE))
@@ -174,20 +179,22 @@ class BundlerClient(
     }
 
     private suspend fun rpcCall(method: String, params: JsonArray): JsonElement {
-        val payload = buildJsonObject {
-            put("jsonrpc", "2.0")
-            put("id", nextId.getAndIncrement())
-            put("method", method)
-            put("params", params)
-        }
-        val response = try {
-            httpClient.post(bundlerUrl) {
-                contentType(ContentType.Application.Json)
-                setBody(payload)
+        val payload =
+            buildJsonObject {
+                put("jsonrpc", "2.0")
+                put("id", nextId.getAndIncrement())
+                put("method", method)
+                put("params", params)
             }
-        } catch (e: IOException) {
-            throw RpcException.TransportError(method, e)
-        }
+        val response =
+            try {
+                httpClient.post(bundlerUrl) {
+                    contentType(ContentType.Application.Json)
+                    setBody(payload)
+                }
+            } catch (e: IOException) {
+                throw RpcException.TransportError(method, e)
+            }
         if (response.status == HttpStatusCode.TooManyRequests) {
             throw RpcException.RateLimited(method, retryAfterMillis = null)
         }

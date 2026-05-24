@@ -2,8 +2,10 @@ package xyz.justzappit.evm.rpc
 
 import xyz.justzappit.evm.abi.Selector4
 
-sealed class RpcException(message: String, cause: Throwable? = null) : RuntimeException(message, cause) {
-
+sealed class RpcException(
+    message: String,
+    cause: Throwable? = null
+) : RuntimeException(message, cause) {
     abstract val method: String
 
     /** The JSON-RPC server returned `error.code == 3` (or vendor variant) with revert data. */
@@ -14,26 +16,34 @@ sealed class RpcException(message: String, cause: Throwable? = null) : RuntimeEx
         val solidityErrorString: String?,
         rawMessage: String,
     ) : RpcException(
-        buildString {
-            append("RPC ").append(method).append(" execution reverted")
-            solidityErrorString?.let { append(": ").append(it) }
-                ?: selector?.let { append(" with selector ").append(it.hex) }
-                ?: rawMessage.takeIf { it.isNotBlank() }?.let { append(": ").append(it) }
-        },
-    )
+            buildString {
+                append("RPC ").append(method).append(" execution reverted")
+                solidityErrorString?.let { append(": ").append(it) }
+                    ?: selector?.let { append(" with selector ").append(it.hex) }
+                    ?: rawMessage.takeIf { it.isNotBlank() }?.let { append(": ").append(it) }
+            },
+        )
 
-    class MethodNotFound(override val method: String) :
-        RpcException("RPC method not found: $method")
+    class MethodNotFound(
+        override val method: String
+    ) : RpcException("RPC method not found: $method")
 
-    class InvalidParams(override val method: String, val reason: String) :
-        RpcException("RPC invalid params for $method: $reason")
+    class InvalidParams(
+        override val method: String,
+        val reason: String
+    ) : RpcException("RPC invalid params for $method: $reason")
 
     /** HTTP 429 surfaced into the typed layer; cause carries the original ktor exception. */
-    class RateLimited(override val method: String, val retryAfterMillis: Long?, cause: Throwable? = null) :
-        RpcException("RPC $method rate limited (retry after ${retryAfterMillis ?: "?"} ms)", cause)
+    class RateLimited(
+        override val method: String,
+        val retryAfterMillis: Long?,
+        cause: Throwable? = null
+    ) : RpcException("RPC $method rate limited (retry after ${retryAfterMillis ?: "?"} ms)", cause)
 
-    class TransportError(override val method: String, cause: Throwable) :
-        RpcException("RPC $method transport error: ${cause.message}", cause)
+    class TransportError(
+        override val method: String,
+        cause: Throwable
+    ) : RpcException("RPC $method transport error: ${cause.message}", cause)
 
     /** Any JSON-RPC error code we do not specifically classify. */
     class Unknown(
@@ -42,10 +52,10 @@ sealed class RpcException(message: String, cause: Throwable? = null) : RuntimeEx
         val raw: String,
         val errorMessage: String?,
     ) : RpcException(
-        buildString {
-            append("RPC ").append(method)
-            if (code != null) append(" failed with code=").append(code)
-            if (!errorMessage.isNullOrBlank()) append(": ").append(errorMessage)
-        },
-    )
+            buildString {
+                append("RPC ").append(method)
+                if (code != null) append(" failed with code=").append(code)
+                if (!errorMessage.isNullOrBlank()) append(": ").append(errorMessage)
+            },
+        )
 }

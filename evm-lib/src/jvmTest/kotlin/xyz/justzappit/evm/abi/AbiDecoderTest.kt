@@ -9,7 +9,6 @@ import kotlin.test.assertFails
 import kotlin.test.assertNull
 
 class AbiDecoderTest {
-
     @Test
     fun `uint reads a word as an unsigned big-endian integer`() {
         val d = AbiDecoder(uintWord(0) + uintWord(258))

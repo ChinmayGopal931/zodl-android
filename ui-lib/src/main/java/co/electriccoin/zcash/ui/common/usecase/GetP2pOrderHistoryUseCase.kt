@@ -13,10 +13,11 @@ internal class GetP2pOrderHistoryUseCase(
     private val accountProvider: SmartOfframpAccountProvider,
     private val source: P2pOrderHistorySource,
 ) {
-    suspend operator fun invoke(): List<P2pOrderHistoryItem>? = runCatching {
-        val address = accountProvider.resolve().address
-        source.fetchAll(userAddress = address)
-    }.onFailure {
-        Twig.warn(it) { "GetP2pOrderHistoryUseCase failed" }
-    }.getOrNull()
+    suspend operator fun invoke(): List<P2pOrderHistoryItem>? =
+        runCatching {
+            val address = accountProvider.resolve().address
+            source.fetchAll(userAddress = address)
+        }.onFailure {
+            Twig.warn(it) { "GetP2pOrderHistoryUseCase failed" }
+        }.getOrNull()
 }

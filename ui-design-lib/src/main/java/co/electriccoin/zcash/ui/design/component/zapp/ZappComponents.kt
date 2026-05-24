@@ -73,29 +73,33 @@ fun ZappScreenHeader(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            // Respect horizontal display cutouts (camera punch-holes) so the right-side chip
-            // is never obscured behind the camera or a system overlay.
-            .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
-            .padding(horizontal = 18.dp, vertical = 10.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                // Respect horizontal display cutouts (camera punch-holes) so the right-side chip
+                // is never obscured behind the camera or a system overlay.
+                .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+                .padding(horizontal = 18.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (left != null) left()
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .then(
-                    if (onTitleClick != null) {
-                        Modifier.clickable(
-                            indication = ripple(bounded = true),
-                            interactionSource = remember { MutableInteractionSource() },
-                            onClick = onTitleClick,
-                        )
-                    } else Modifier,
-                ),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .then(
+                        if (onTitleClick != null) {
+                            Modifier.clickable(
+                                indication = ripple(bounded = true),
+                                interactionSource = remember { MutableInteractionSource() },
+                                onClick = onTitleClick,
+                            )
+                        } else {
+                            Modifier
+                        },
+                    ),
         ) {
             BasicText(
                 text = title,
@@ -207,9 +211,10 @@ fun ZappRow(
     ) {
         if (icon != null) {
             Box(
-                modifier = Modifier
-                    .size(36.dp)
-                    .background(iconBackground ?: c.surfaceAlt, RectangleShape),
+                modifier =
+                    Modifier
+                        .size(36.dp)
+                        .background(iconBackground ?: c.surfaceAlt, RectangleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -260,11 +265,12 @@ fun ZappRowDivider(
     inset: Boolean = false,
 ) {
     Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(start = if (inset) 68.dp else 18.dp, end = 18.dp)
-            .height(1.dp)
-            .background(ZappTheme.colors.border),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(start = if (inset) 68.dp else 18.dp, end = 18.dp)
+                .height(1.dp)
+                .background(ZappTheme.colors.border),
     )
 }
 
@@ -284,40 +290,43 @@ fun ZappButton(
     // Other variants dim with alpha when disabled.
     val (bg, fg, borderCol) =
         when {
-            variant == ZappButtonVariant.Primary && !enabled -> Triple(c.surfaceAlt, c.textSubtle, null)
-            else -> when (variant) {
-                ZappButtonVariant.Primary -> Triple(c.accent, c.onAccent, null)
-                ZappButtonVariant.Secondary -> Triple(c.surfaceAlt, c.text, null)
-                ZappButtonVariant.Ghost -> Triple(Color.Transparent, c.text, c.border)
-                ZappButtonVariant.Danger -> Triple(c.dangerSoft, c.danger, null)
-                ZappButtonVariant.AccentGhost -> Triple(Color.Transparent, c.accent, c.accent)
+            variant == ZappButtonVariant.Primary && !enabled -> {
+                Triple(c.surfaceAlt, c.textSubtle, null)
+            }
+
+            else -> {
+                when (variant) {
+                    ZappButtonVariant.Primary -> Triple(c.accent, c.onAccent, null)
+                    ZappButtonVariant.Secondary -> Triple(c.surfaceAlt, c.text, null)
+                    ZappButtonVariant.Ghost -> Triple(Color.Transparent, c.text, c.border)
+                    ZappButtonVariant.Danger -> Triple(c.dangerSoft, c.danger, null)
+                    ZappButtonVariant.AccentGhost -> Triple(Color.Transparent, c.accent, c.accent)
+                }
             }
         }
 
     Box(
-        modifier = modifier
-            .defaultMinSize(minHeight = 52.dp)
-            .background(bg, RectangleShape)
-            .then(
-                if (borderCol != null) {
-                    Modifier.border(BorderStroke(1.dp, borderCol), RectangleShape)
-                } else {
-                    Modifier
-                },
-            )
-            .alpha(if (enabled || variant == ZappButtonVariant.Primary) 1f else 0.45f)
-            .clickable(
-                enabled = enabled,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = fg),
-                onClick = onClick,
-            )
-            .semantics(mergeDescendants = true) {
-                this.contentDescription = text
-                this.role = Role.Button
-                if (!enabled) disabled()
-            }
-            .padding(horizontal = 18.dp, vertical = 14.dp),
+        modifier =
+            modifier
+                .defaultMinSize(minHeight = 52.dp)
+                .background(bg, RectangleShape)
+                .then(
+                    if (borderCol != null) {
+                        Modifier.border(BorderStroke(1.dp, borderCol), RectangleShape)
+                    } else {
+                        Modifier
+                    },
+                ).alpha(if (enabled || variant == ZappButtonVariant.Primary) 1f else 0.45f)
+                .clickable(
+                    enabled = enabled,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(color = fg),
+                    onClick = onClick,
+                ).semantics(mergeDescendants = true) {
+                    this.contentDescription = text
+                    this.role = Role.Button
+                    if (!enabled) disabled()
+                }.padding(horizontal = 18.dp, vertical = 14.dp),
         contentAlignment = Alignment.Center,
     ) {
         Row(
@@ -345,20 +354,22 @@ fun ZappToggle(
 ) {
     val c = ZappTheme.colors
     Box(
-        modifier = modifier
-            .size(width = 42.dp, height = 24.dp)
-            .background(if (checked) c.accent else c.borderStrong, RectangleShape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onClick,
-            ),
+        modifier =
+            modifier
+                .size(width = 42.dp, height = 24.dp)
+                .background(if (checked) c.accent else c.borderStrong, RectangleShape)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onClick,
+                ),
     ) {
         Box(
-            modifier = Modifier
-                .padding(start = if (checked) 20.dp else 2.dp, top = 2.dp)
-                .size(20.dp)
-                .background(Color.White, RectangleShape),
+            modifier =
+                Modifier
+                    .padding(start = if (checked) 20.dp else 2.dp, top = 2.dp)
+                    .size(20.dp)
+                    .background(Color.White, RectangleShape),
         )
     }
 }
@@ -386,17 +397,17 @@ fun ZappFab(
 ) {
     val c = ZappTheme.colors
     Box(
-        modifier = modifier
-            .size(size.dp)
-            .shadow(elevation = 4.dp, shape = RectangleShape, clip = false)
-            .background(c.accent, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = c.onAccent, bounded = true),
-                onClick = onClick,
-            )
-            .semantics(mergeDescendants = true) { role = Role.Button },
+        modifier =
+            modifier
+                .size(size.dp)
+                .shadow(elevation = 4.dp, shape = RectangleShape, clip = false)
+                .background(c.accent, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(color = c.onAccent, bounded = true),
+                    onClick = onClick,
+                ).semantics(mergeDescendants = true) { role = Role.Button },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -425,12 +436,13 @@ fun ZappBottomActionBar(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.surface)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 18.dp, vertical = 12.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.surface)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -447,17 +459,17 @@ fun ZappBackButton(
 ) {
     val c = ZappTheme.colors
     Box(
-        modifier = modifier
-            .size(48.dp)
-            .clickable(
-                onClick = onClick,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(bounded = true, color = c.text),
-            )
-            .semantics {
-                contentDescription = "Go back"
-                role = Role.Button
-            },
+        modifier =
+            modifier
+                .size(48.dp)
+                .clickable(
+                    onClick = onClick,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(bounded = true, color = c.text),
+                ).semantics {
+                    contentDescription = "Go back"
+                    role = Role.Button
+                },
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -483,25 +495,26 @@ fun ZappActionTile(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = modifier
-            .defaultMinSize(minHeight = 96.dp)
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .alpha(if (enabled) 1f else 0.45f)
-            .clickable(
-                enabled = enabled,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = c.accent),
-                onClick = onClick,
-            )
-            .padding(vertical = 14.dp),
+        modifier =
+            modifier
+                .defaultMinSize(minHeight = 96.dp)
+                .background(c.surface, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .alpha(if (enabled) 1f else 0.45f)
+                .clickable(
+                    enabled = enabled,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(color = c.accent),
+                    onClick = onClick,
+                ).padding(vertical = 14.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
         Box(
-            modifier = Modifier
-                .size(36.dp)
-                .background(c.accentSoft, RectangleShape),
+            modifier =
+                Modifier
+                    .size(36.dp)
+                    .background(c.accentSoft, RectangleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -529,32 +542,35 @@ fun ZappSegmentedSelector(
 ) {
     val c = ZappTheme.colors
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(c.surface, RectangleShape)
-            .border(BorderStroke(1.dp, c.border), RectangleShape)
-            .padding(3.dp),
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .background(c.surface, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
         options.forEachIndexed { index, option ->
             val isSelected = index == selectedIndex
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 30.dp)
-                    .background(if (isSelected) c.bg else Color.Transparent, RectangleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = c.accent),
-                        onClick = { onSelect(index) },
-                    ),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = 30.dp)
+                        .background(if (isSelected) c.bg else Color.Transparent, RectangleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(color = c.accent),
+                            onClick = { onSelect(index) },
+                        ),
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
                     text = option,
-                    style = ZappTheme.typography.caption.copy(
-                        color = if (isSelected) c.text else c.textMuted,
-                    ),
+                    style =
+                        ZappTheme.typography.caption.copy(
+                            color = if (isSelected) c.text else c.textMuted,
+                        ),
                 )
             }
         }

@@ -370,6 +370,7 @@ private fun SwapBottomBar(state: SwapState) {
                         onClick = state.topUpButton.onClick,
                     )
                 }
+
                 state.primaryButton != null -> {
                     ZappButton(
                         text = state.primaryButton.text.getValue(),

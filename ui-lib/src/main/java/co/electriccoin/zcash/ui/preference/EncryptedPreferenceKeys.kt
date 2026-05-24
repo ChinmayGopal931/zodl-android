@@ -20,10 +20,11 @@ object EncryptedPreferenceKeys {
      * installs may still hold a bare 64-char SHA-256 hex digest, which is upgraded
      * to v2 in-place on first successful verify (see [verifyAndUpgradePin]).
      */
-    val APP_PIN_HASH = StringPreferenceDefault(
-        key = PreferenceKey("app_pin_hash"),
-        defaultValue = ""
-    )
+    val APP_PIN_HASH =
+        StringPreferenceDefault(
+            key = PreferenceKey("app_pin_hash"),
+            defaultValue = ""
+        )
 
     private const val PBKDF2_ALGORITHM = "PBKDF2WithHmacSHA256"
     private const val PBKDF2_ITERATIONS = 100_000
@@ -60,11 +61,12 @@ object EncryptedPreferenceKeys {
         val stored = APP_PIN_HASH.getValue(provider)
         if (stored.isEmpty()) return false
 
-        val matches = if (stored.startsWith(V2_PREFIX)) {
-            verifyV2(pin, stored)
-        } else {
-            verifyLegacySha256(pin, stored)
-        }
+        val matches =
+            if (stored.startsWith(V2_PREFIX)) {
+                verifyV2(pin, stored)
+            } else {
+                verifyLegacySha256(pin, stored)
+            }
 
         if (matches && !stored.startsWith(V2_PREFIX)) {
             APP_PIN_HASH.putValue(provider, hashPinV2(pin))
@@ -85,8 +87,11 @@ object EncryptedPreferenceKeys {
     }
 
     private fun verifyLegacySha256(pin: String, stored: String): Boolean {
-        val computed = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
+        val computed =
+            MessageDigest
+                .getInstance("SHA-256")
+                .digest(pin.toByteArray(Charsets.UTF_8))
+                .joinToString("") { "%02x".format(it) }
         return MessageDigest.isEqual(computed.toByteArray(Charsets.UTF_8), stored.toByteArray(Charsets.UTF_8))
     }
 

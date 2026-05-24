@@ -98,108 +98,155 @@ private fun computeStepStatus(
  * surfaced as separate UI rows).
  */
 private fun uiIndexFor(step: OfframpStep, order: List<OfframpStep>): Int {
-    val displayed = when (step) {
-        OfframpStep.INITIALIZATION -> OfframpStep.SELECTING_CIRCLE
-        OfframpStep.ENCRYPTING_UPI -> OfframpStep.SENDING_UPI
-        else -> step
-    }
+    val displayed =
+        when (step) {
+            OfframpStep.INITIALIZATION -> OfframpStep.SELECTING_CIRCLE
+            OfframpStep.ENCRYPTING_UPI -> OfframpStep.SENDING_UPI
+            else -> step
+        }
     return order.indexOf(displayed).coerceAtLeast(0)
 }
 
-internal fun stepLabelRes(step: OfframpStep): Int = when (step) {
-    OfframpStep.INITIALIZATION -> R.string.upi_offramp_step_init
-    OfframpStep.SELECTING_CIRCLE -> R.string.upi_offramp_step_selecting_circle
-    OfframpStep.FUNDING -> R.string.upi_offramp_step_funding
-    OfframpStep.APPROVING_USDC -> R.string.upi_offramp_step_approve
-    OfframpStep.PLACING_ORDER -> R.string.upi_offramp_step_place_order
-    OfframpStep.WAITING_FOR_ACCEPTANCE -> R.string.upi_offramp_step_wait_acceptance
-    OfframpStep.ENCRYPTING_UPI -> R.string.upi_offramp_step_encrypting_upi
-    OfframpStep.SENDING_UPI -> R.string.upi_offramp_step_send_upi
-    OfframpStep.WAITING_FOR_COMPLETION -> R.string.upi_offramp_step_wait_completion
-}
+internal fun stepLabelRes(step: OfframpStep): Int =
+    when (step) {
+        OfframpStep.INITIALIZATION -> R.string.upi_offramp_step_init
+        OfframpStep.SELECTING_CIRCLE -> R.string.upi_offramp_step_selecting_circle
+        OfframpStep.FUNDING -> R.string.upi_offramp_step_funding
+        OfframpStep.APPROVING_USDC -> R.string.upi_offramp_step_approve
+        OfframpStep.PLACING_ORDER -> R.string.upi_offramp_step_place_order
+        OfframpStep.WAITING_FOR_ACCEPTANCE -> R.string.upi_offramp_step_wait_acceptance
+        OfframpStep.ENCRYPTING_UPI -> R.string.upi_offramp_step_encrypting_upi
+        OfframpStep.SENDING_UPI -> R.string.upi_offramp_step_send_upi
+        OfframpStep.WAITING_FOR_COMPLETION -> R.string.upi_offramp_step_wait_completion
+    }
 
-private fun txHashFor(status: OfframpStatus, step: OfframpStep): TxHash? = when (step) {
-    OfframpStep.APPROVING_USDC -> (status as? OfframpStatus.ApprovingUsdc)?.txHash
-    OfframpStep.PLACING_ORDER -> (status as? OfframpStatus.PlacingOrder)?.txHash
-    OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
-    else -> null
-}
+private fun txHashFor(status: OfframpStatus, step: OfframpStep): TxHash? =
+    when (step) {
+        OfframpStep.APPROVING_USDC -> (status as? OfframpStatus.ApprovingUsdc)?.txHash
+        OfframpStep.PLACING_ORDER -> (status as? OfframpStatus.PlacingOrder)?.txHash
+        OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.txHash
+        else -> null
+    }
 
-private fun stepDetail(status: OfframpStatus, step: OfframpStep): List<StringResource> = when (step) {
-    OfframpStep.SELECTING_CIRCLE -> (status as? OfframpStatus.SelectingCircle)?.let {
-        buildList {
-            add(stringRes(R.string.upi_offramp_detail_candidates, it.candidateCount))
-            it.selectedCircleId?.let { circle ->
-                add(stringRes(R.string.upi_offramp_detail_selected_circle, circle.toString()))
-            }
+private fun stepDetail(status: OfframpStatus, step: OfframpStep): List<StringResource> =
+    when (step) {
+        OfframpStep.SELECTING_CIRCLE -> {
+            (status as? OfframpStatus.SelectingCircle)
+                ?.let {
+                    buildList {
+                        add(stringRes(R.string.upi_offramp_detail_candidates, it.candidateCount))
+                        it.selectedCircleId?.let { circle ->
+                            add(stringRes(R.string.upi_offramp_detail_selected_circle, circle.toString()))
+                        }
+                    }
+                }.orEmpty()
         }
-    }.orEmpty()
-    OfframpStep.FUNDING -> (status as? OfframpStatus.BridgingFunds)?.let {
-        buildList {
-            add(stringRes(R.string.upi_offramp_detail_bridging_amount, it.amount.toDisplayString()))
-            it.depositAddress?.let { addr ->
-                add(stringRes(R.string.upi_offramp_detail_deposit_addr, addr.ellipsizeMiddle(DEPOSIT_ELLIPSIS_PREFIX, DEPOSIT_ELLIPSIS_SUFFIX)))
-            }
+
+        OfframpStep.FUNDING -> {
+            (status as? OfframpStatus.BridgingFunds)
+                ?.let {
+                    buildList {
+                        add(stringRes(R.string.upi_offramp_detail_bridging_amount, it.amount.toDisplayString()))
+                        it.depositAddress?.let { addr ->
+                            add(
+                                stringRes(
+                                    R.string.upi_offramp_detail_deposit_addr,
+                                    addr.ellipsizeMiddle(DEPOSIT_ELLIPSIS_PREFIX, DEPOSIT_ELLIPSIS_SUFFIX)
+                                )
+                            )
+                        }
+                    }
+                }.orEmpty()
         }
-    }.orEmpty()
-    OfframpStep.APPROVING_USDC -> (status as? OfframpStatus.ApprovingUsdc)?.let {
-        listOf(stringRes(R.string.upi_offramp_detail_amount, it.amount.toDisplayString()))
-    }.orEmpty()
-    OfframpStep.PLACING_ORDER -> (status as? OfframpStatus.PlacingOrder)?.let {
-        listOf(
-            stringRes(R.string.upi_offramp_detail_circle_id, it.circleId.toString()),
-            stringRes(R.string.upi_offramp_detail_amount, it.amount.toDisplayString()),
-        )
-    }.orEmpty()
-    OfframpStep.WAITING_FOR_ACCEPTANCE -> buildAcceptanceDetails(status)
-    OfframpStep.SENDING_UPI -> (status as? OfframpStatus.SendingEncryptedUpi)?.let {
-        buildList {
-            add(stringRes(R.string.upi_offramp_detail_merchant, it.merchantAddress.checksumHex))
-            it.acceptedAtEpochSeconds?.let { ts ->
-                add(stringRes(R.string.upi_offramp_detail_accepted_at, formatClockTime(ts)))
-            }
+
+        OfframpStep.APPROVING_USDC -> {
+            (status as? OfframpStatus.ApprovingUsdc)
+                ?.let {
+                    listOf(stringRes(R.string.upi_offramp_detail_amount, it.amount.toDisplayString()))
+                }.orEmpty()
         }
-    }.orEmpty()
-    OfframpStep.WAITING_FOR_COMPLETION -> buildCompletionDetails(status)
-    else -> emptyList()
-}
+
+        OfframpStep.PLACING_ORDER -> {
+            (status as? OfframpStatus.PlacingOrder)
+                ?.let {
+                    listOf(
+                        stringRes(R.string.upi_offramp_detail_circle_id, it.circleId.toString()),
+                        stringRes(R.string.upi_offramp_detail_amount, it.amount.toDisplayString()),
+                    )
+                }.orEmpty()
+        }
+
+        OfframpStep.WAITING_FOR_ACCEPTANCE -> {
+            buildAcceptanceDetails(status)
+        }
+
+        OfframpStep.SENDING_UPI -> {
+            (status as? OfframpStatus.SendingEncryptedUpi)
+                ?.let {
+                    buildList {
+                        add(stringRes(R.string.upi_offramp_detail_merchant, it.merchantAddress.checksumHex))
+                        it.acceptedAtEpochSeconds?.let { ts ->
+                            add(stringRes(R.string.upi_offramp_detail_accepted_at, formatClockTime(ts)))
+                        }
+                    }
+                }.orEmpty()
+        }
+
+        OfframpStep.WAITING_FOR_COMPLETION -> {
+            buildCompletionDetails(status)
+        }
+
+        else -> {
+            emptyList()
+        }
+    }
 
 private fun buildAcceptanceDetails(status: OfframpStatus): List<StringResource> =
-    (status as? OfframpStatus.WaitingForMerchantAcceptance)?.let {
-        buildList {
-            add(stringRes(R.string.upi_offramp_detail_polling_attempts, it.pollAttempts))
-            it.lastObservedStatus?.let { last ->
-                add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
+    (status as? OfframpStatus.WaitingForMerchantAcceptance)
+        ?.let {
+            buildList {
+                add(stringRes(R.string.upi_offramp_detail_polling_attempts, it.pollAttempts))
+                it.lastObservedStatus?.let { last ->
+                    add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
+                }
+                if (it.stalled || it.expired) add(stringRes(R.string.upi_offramp_detail_stalled))
             }
-            if (it.stalled || it.expired) add(stringRes(R.string.upi_offramp_detail_stalled))
-        }
-    }.orEmpty()
+        }.orEmpty()
 
-private fun buildCompletionDetails(status: OfframpStatus): List<StringResource> = when (status) {
-    is OfframpStatus.WaitingForCompletion -> buildList {
-        add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
-        status.lastObservedStatus?.let { last ->
-            add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
+private fun buildCompletionDetails(status: OfframpStatus): List<StringResource> =
+    when (status) {
+        is OfframpStatus.WaitingForCompletion -> {
+            buildList {
+                add(stringRes(R.string.upi_offramp_detail_polling_attempts, status.pollAttempts))
+                status.lastObservedStatus?.let { last ->
+                    add(stringRes(R.string.upi_offramp_detail_last_status, last.name))
+                }
+                status.acceptedAtEpochSeconds?.let { ts ->
+                    add(stringRes(R.string.upi_offramp_detail_accepted_at, formatClockTime(ts)))
+                }
+                status.paidAtEpochSeconds?.let { ts ->
+                    add(stringRes(R.string.upi_offramp_detail_paid_at, formatClockTime(ts)))
+                }
+                if (status.stalled || status.expired) add(stringRes(R.string.upi_offramp_detail_stalled))
+            }
         }
-        status.acceptedAtEpochSeconds?.let { ts ->
-            add(stringRes(R.string.upi_offramp_detail_accepted_at, formatClockTime(ts)))
+
+        is OfframpStatus.Completed -> {
+            buildList {
+                add(stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant.checksumHex))
+                status.paidAtEpochSeconds?.let { ts ->
+                    add(stringRes(R.string.upi_offramp_detail_paid_at, formatClockTime(ts)))
+                }
+                status.completedAtEpochSeconds?.let { ts ->
+                    add(stringRes(R.string.upi_offramp_detail_completed_at, formatClockTime(ts)))
+                }
+            }
         }
-        status.paidAtEpochSeconds?.let { ts ->
-            add(stringRes(R.string.upi_offramp_detail_paid_at, formatClockTime(ts)))
+
+        else -> {
+            emptyList()
         }
-        if (status.stalled || status.expired) add(stringRes(R.string.upi_offramp_detail_stalled))
     }
-    is OfframpStatus.Completed -> buildList {
-        add(stringRes(R.string.upi_offramp_detail_merchant, status.acceptedMerchant.checksumHex))
-        status.paidAtEpochSeconds?.let { ts ->
-            add(stringRes(R.string.upi_offramp_detail_paid_at, formatClockTime(ts)))
-        }
-        status.completedAtEpochSeconds?.let { ts ->
-            add(stringRes(R.string.upi_offramp_detail_completed_at, formatClockTime(ts)))
-        }
-    }
-    else -> emptyList()
-}
 
 private fun formatClockTime(epochSeconds: Long): String =
     clockFormat.format(Date(epochSeconds * MILLIS_PER_SECOND))

@@ -56,17 +56,19 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
     ) {
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = HORIZONTAL_PADDING.dp, vertical = VERTICAL_PADDING.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = HORIZONTAL_PADDING.dp, vertical = VERTICAL_PADDING.dp),
         ) {
             BasicText(
                 text = state.title.getValue(),
@@ -108,16 +110,17 @@ internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
         }
         ZappBottomActionBar(
             onBack = state.onBack,
-            primaryAction = state.primaryButton?.let { btn ->
-                {
-                    ZappButton(
-                        text = btn.text.getValue(),
-                        enabled = btn.isEnabled,
-                        variant = ZappButtonVariant.Primary,
-                        onClick = btn.onClick,
-                    )
-                }
-            },
+            primaryAction =
+                state.primaryButton?.let { btn ->
+                    {
+                        ZappButton(
+                            text = btn.text.getValue(),
+                            enabled = btn.isEnabled,
+                            variant = ZappButtonVariant.Primary,
+                            onClick = btn.onClick,
+                        )
+                    }
+                },
         )
     }
 }
@@ -277,13 +280,14 @@ private fun SummaryLinkRow(label: String, value: String, url: String, uriHandler
         BasicText(
             text = value.ellipsizeMiddle(ADDRESS_ELLIPSIS_PREFIX, ADDRESS_ELLIPSIS_SUFFIX),
             style = t.mono.copy(color = c.accent, textDecoration = TextDecoration.Underline),
-            modifier = Modifier
-                .padding(start = GAP_MD.dp)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(color = c.accent),
-                    onClick = { uriHandler.openUri(url) },
-                ),
+            modifier =
+                Modifier
+                    .padding(start = GAP_MD.dp)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = ripple(color = c.accent),
+                        onClick = { uriHandler.openUri(url) },
+                    ),
         )
     }
 }
@@ -302,11 +306,12 @@ private fun ExplorerLink(
     BasicText(
         text = value.ellipsizeMiddle(prefix, suffix),
         style = t.mono.copy(color = c.accent, textDecoration = TextDecoration.Underline),
-        modifier = Modifier.clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = ripple(color = c.accent),
-            onClick = { uriHandler.openUri(url) },
-        ),
+        modifier =
+            Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = ripple(color = c.accent),
+                onClick = { uriHandler.openUri(url) },
+            ),
     )
 }
 
@@ -366,17 +371,20 @@ private fun StepRow(step: UpiOfframpStep) {
         Column(modifier = Modifier.weight(1f)) {
             BasicText(
                 text = step.label.getValue(),
-                style = t.body.copy(
-                    color = when (step.status) {
-                        UpiOfframpStepStatus.Failed -> c.danger
-                        UpiOfframpStepStatus.Pending -> c.textMuted
-                        else -> c.text
-                    },
-                    fontWeight = when (step.status) {
-                        UpiOfframpStepStatus.InProgress -> FontWeight.SemiBold
-                        else -> FontWeight.Normal
-                    },
-                ),
+                style =
+                    t.body.copy(
+                        color =
+                            when (step.status) {
+                                UpiOfframpStepStatus.Failed -> c.danger
+                                UpiOfframpStepStatus.Pending -> c.textMuted
+                                else -> c.text
+                            },
+                        fontWeight =
+                            when (step.status) {
+                                UpiOfframpStepStatus.InProgress -> FontWeight.SemiBold
+                                else -> FontWeight.Normal
+                            },
+                    ),
             )
             step.detailLines.forEach { detail ->
                 Spacer(modifier = Modifier.height(2.dp))
@@ -402,17 +410,19 @@ private fun StepRow(step: UpiOfframpStep) {
 @Composable
 private fun StepIndicator(status: UpiOfframpStepStatus) {
     val c = ZappTheme.colors
-    val color = when (status) {
-        UpiOfframpStepStatus.Pending -> c.border
-        UpiOfframpStepStatus.InProgress -> c.accent
-        UpiOfframpStepStatus.Completed -> c.accent
-        UpiOfframpStepStatus.Failed -> c.danger
-    }
+    val color =
+        when (status) {
+            UpiOfframpStepStatus.Pending -> c.border
+            UpiOfframpStepStatus.InProgress -> c.accent
+            UpiOfframpStepStatus.Completed -> c.accent
+            UpiOfframpStepStatus.Failed -> c.danger
+        }
     Box(
-        modifier = Modifier
-            .padding(top = STEP_INDICATOR_TOP_OFFSET.dp)
-            .size(STEP_INDICATOR_SIZE.dp)
-            .background(color),
+        modifier =
+            Modifier
+                .padding(top = STEP_INDICATOR_TOP_OFFSET.dp)
+                .size(STEP_INDICATOR_SIZE.dp)
+                .background(color),
     )
 }
 
@@ -429,14 +439,15 @@ private const val ADDRESS_ELLIPSIS_SUFFIX = 6
 private const val TX_HASH_ELLIPSIS_PREFIX = 12
 private const val TX_HASH_ELLIPSIS_SUFFIX = 8
 
-private val previewSummary = UpiOfframpOrderSummary(
-    amountUsdcDisplay = stringRes("5.00"),
-    recipient = "merchant@upi",
-    orderId = "12345",
-    networkName = "Sepolia",
-    signerAddress = "0x1234567890abcdef1234567890abcdef12345678",
-    signerExplorerUrl = "https://sepolia.basescan.org/address/0x1234567890abcdef1234567890abcdef12345678",
-)
+private val previewSummary =
+    UpiOfframpOrderSummary(
+        amountUsdcDisplay = stringRes("5.00"),
+        recipient = "merchant@upi",
+        orderId = "12345",
+        networkName = "Sepolia",
+        signerAddress = "0x1234567890abcdef1234567890abcdef12345678",
+        signerExplorerUrl = "https://sepolia.basescan.org/address/0x1234567890abcdef1234567890abcdef12345678",
+    )
 
 private fun previewSteps(
     funding: UpiOfframpStepStatus = UpiOfframpStepStatus.Completed,
@@ -447,37 +458,40 @@ private fun previewSteps(
     waitingCompletion: UpiOfframpStepStatus = UpiOfframpStepStatus.Completed,
     fundingDetails: List<StringResource> = emptyList(),
     waitingDetails: List<StringResource> = emptyList(),
-): List<UpiOfframpStep> = listOf(
-    UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
-    UpiOfframpStep(stringRes("Bridging funds"), funding, detailLines = fundingDetails),
-    UpiOfframpStep(stringRes("Approving USDC"), approving),
-    UpiOfframpStep(stringRes("Placing the order"), placing),
-    UpiOfframpStep(stringRes("Waiting for merchant to accept"), waitingAcceptance, detailLines = waitingDetails),
-    UpiOfframpStep(stringRes("Sending encrypted UPI"), sendingUpi),
-    UpiOfframpStep(stringRes("Waiting for merchant payment"), waitingCompletion),
-)
+): List<UpiOfframpStep> =
+    listOf(
+        UpiOfframpStep(stringRes("Picking a merchant pool"), UpiOfframpStepStatus.Completed),
+        UpiOfframpStep(stringRes("Bridging funds"), funding, detailLines = fundingDetails),
+        UpiOfframpStep(stringRes("Approving USDC"), approving),
+        UpiOfframpStep(stringRes("Placing the order"), placing),
+        UpiOfframpStep(stringRes("Waiting for merchant to accept"), waitingAcceptance, detailLines = waitingDetails),
+        UpiOfframpStep(stringRes("Sending encrypted UPI"), sendingUpi),
+        UpiOfframpStep(stringRes("Waiting for merchant payment"), waitingCompletion),
+    )
 
 @PreviewScreens
 @Composable
 private fun PreviewInProgress() {
     ZcashTheme {
         UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Sending to merchant"),
-                subtitle = stringRes("Recipient: merchant@upi"),
-                summary = previewSummary,
-                feeBreakdown = null,
-                cancelled = null,
-                steps = previewSteps(
-                    placing = UpiOfframpStepStatus.InProgress,
-                    waitingAcceptance = UpiOfframpStepStatus.Pending,
-                    sendingUpi = UpiOfframpStepStatus.Pending,
-                    waitingCompletion = UpiOfframpStepStatus.Pending,
+            state =
+                UpiOfframpProgressState(
+                    title = stringRes("Sending to merchant"),
+                    subtitle = stringRes("Recipient: merchant@upi"),
+                    summary = previewSummary,
+                    feeBreakdown = null,
+                    cancelled = null,
+                    steps =
+                        previewSteps(
+                            placing = UpiOfframpStepStatus.InProgress,
+                            waitingAcceptance = UpiOfframpStepStatus.Pending,
+                            sendingUpi = UpiOfframpStepStatus.Pending,
+                            waitingCompletion = UpiOfframpStepStatus.Pending,
+                        ),
+                    failure = null,
+                    primaryButton = null,
+                    onBack = {},
                 ),
-                failure = null,
-                primaryButton = null,
-                onBack = {},
-            ),
         )
     }
 }
@@ -487,28 +501,31 @@ private fun PreviewInProgress() {
 private fun PreviewFunding() {
     ZcashTheme {
         UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Sending to merchant"),
-                subtitle = stringRes("Recipient: merchant@upi"),
-                summary = previewSummary,
-                feeBreakdown = null,
-                cancelled = null,
-                steps = previewSteps(
-                    funding = UpiOfframpStepStatus.InProgress,
-                    approving = UpiOfframpStepStatus.Pending,
-                    placing = UpiOfframpStepStatus.Pending,
-                    waitingAcceptance = UpiOfframpStepStatus.Pending,
-                    sendingUpi = UpiOfframpStepStatus.Pending,
-                    waitingCompletion = UpiOfframpStepStatus.Pending,
-                    fundingDetails = listOf(
-                        stringRes("Bridging 5.00 USDC from ZEC via NEAR Intents"),
-                        stringRes("Deposit 0x833589fC…02913"),
-                    ),
+            state =
+                UpiOfframpProgressState(
+                    title = stringRes("Sending to merchant"),
+                    subtitle = stringRes("Recipient: merchant@upi"),
+                    summary = previewSummary,
+                    feeBreakdown = null,
+                    cancelled = null,
+                    steps =
+                        previewSteps(
+                            funding = UpiOfframpStepStatus.InProgress,
+                            approving = UpiOfframpStepStatus.Pending,
+                            placing = UpiOfframpStepStatus.Pending,
+                            waitingAcceptance = UpiOfframpStepStatus.Pending,
+                            sendingUpi = UpiOfframpStepStatus.Pending,
+                            waitingCompletion = UpiOfframpStepStatus.Pending,
+                            fundingDetails =
+                                listOf(
+                                    stringRes("Bridging 5.00 USDC from ZEC via NEAR Intents"),
+                                    stringRes("Deposit 0x833589fC…02913"),
+                                ),
+                        ),
+                    failure = null,
+                    primaryButton = null,
+                    onBack = {},
                 ),
-                failure = null,
-                primaryButton = null,
-                onBack = {},
-            ),
         )
     }
 }
@@ -520,26 +537,31 @@ private fun PreviewWaitingStalled() {
     // contract auto-cancels on its own timer and our refund button only surfaces post-Cancelled.
     ZcashTheme {
         UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Sending to merchant"),
-                subtitle = stringRes("Recipient: merchant@upi"),
-                summary = previewSummary,
-                feeBreakdown = null,
-                cancelled = null,
-                steps = previewSteps(
-                    waitingAcceptance = UpiOfframpStepStatus.InProgress,
-                    sendingUpi = UpiOfframpStepStatus.Pending,
-                    waitingCompletion = UpiOfframpStepStatus.Pending,
-                    waitingDetails = listOf(
-                        stringRes("Polling… attempt 612"),
-                        stringRes("Last on-chain status: PLACED"),
-                        stringRes("Still connecting you to a merchant. Your USDC stays in your account; if no merchant accepts, the order auto-cancels on chain."),
-                    ),
+            state =
+                UpiOfframpProgressState(
+                    title = stringRes("Sending to merchant"),
+                    subtitle = stringRes("Recipient: merchant@upi"),
+                    summary = previewSummary,
+                    feeBreakdown = null,
+                    cancelled = null,
+                    steps =
+                        previewSteps(
+                            waitingAcceptance = UpiOfframpStepStatus.InProgress,
+                            sendingUpi = UpiOfframpStepStatus.Pending,
+                            waitingCompletion = UpiOfframpStepStatus.Pending,
+                            waitingDetails =
+                                listOf(
+                                    stringRes("Polling… attempt 612"),
+                                    stringRes("Last on-chain status: PLACED"),
+                                    stringRes(
+                                        "Still connecting you to a merchant. Your USDC stays in your account; if no merchant accepts, the order auto-cancels on chain."
+                                    ),
+                                ),
+                        ),
+                    failure = null,
+                    primaryButton = null,
+                    onBack = {},
                 ),
-                failure = null,
-                primaryButton = null,
-                onBack = {},
-            ),
         )
     }
 }
@@ -549,26 +571,29 @@ private fun PreviewWaitingStalled() {
 private fun PreviewCompleted() {
     ZcashTheme {
         UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Payment sent"),
-                subtitle = stringRes("The merchant has confirmed the UPI transfer."),
-                summary = previewSummary.copy(
-                    completionDuration = stringRes("1m 32s"),
-                    terminalTimestamp = stringRes("22 May 2026, 02:43 AM"),
-                    merchantAddress = "0x1111111111111111111111111111111111111111",
-                    merchantExplorerUrl = "https://sepolia.basescan.org/address/0x1111",
+            state =
+                UpiOfframpProgressState(
+                    title = stringRes("Payment sent"),
+                    subtitle = stringRes("The merchant has confirmed the UPI transfer."),
+                    summary =
+                        previewSummary.copy(
+                            completionDuration = stringRes("1m 32s"),
+                            terminalTimestamp = stringRes("22 May 2026, 02:43 AM"),
+                            merchantAddress = "0x1111111111111111111111111111111111111111",
+                            merchantExplorerUrl = "https://sepolia.basescan.org/address/0x1111",
+                        ),
+                    feeBreakdown =
+                        UpiOfframpFeeBreakdown(
+                            youSend = stringRes("5.000 USDC"),
+                            fee = stringRes("0.050 USDC"),
+                            youReceive = stringRes("₹445.00"),
+                        ),
+                    cancelled = null,
+                    steps = previewSteps(),
+                    failure = null,
+                    primaryButton = ButtonState(text = stringRes("Done"), onClick = {}),
+                    onBack = {},
                 ),
-                feeBreakdown = UpiOfframpFeeBreakdown(
-                    youSend = stringRes("5.000 USDC"),
-                    fee = stringRes("0.050 USDC"),
-                    youReceive = stringRes("₹445.00"),
-                ),
-                cancelled = null,
-                steps = previewSteps(),
-                failure = null,
-                primaryButton = ButtonState(text = stringRes("Done"), onClick = {}),
-                onBack = {},
-            ),
         )
     }
 }
@@ -578,27 +603,31 @@ private fun PreviewCompleted() {
 private fun PreviewCancelled() {
     ZcashTheme {
         UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Order cancelled"),
-                subtitle = stringRes("No merchant completed this order in time. Your USDC has been refunded on-chain."),
-                summary = previewSummary.copy(
-                    terminalTimestamp = stringRes("22 May 2026, 03:51 AM"),
+            state =
+                UpiOfframpProgressState(
+                    title = stringRes("Order cancelled"),
+                    subtitle = stringRes("No merchant completed this order in time. Your USDC has been refunded on-chain."),
+                    summary =
+                        previewSummary.copy(
+                            terminalTimestamp = stringRes("22 May 2026, 03:51 AM"),
+                        ),
+                    feeBreakdown = null,
+                    cancelled =
+                        UpiOfframpCancelledCard(
+                            refundedAmount = stringRes("5.00 USDC refunded to your offramp account"),
+                            cancelledAt = stringRes("Cancelled at 22 May 2026, 03:51 AM"),
+                            tip = stringRes("Tip: ask the merchant to generate the UPI QR only after this screen opens."),
+                        ),
+                    steps =
+                        previewSteps(
+                            waitingAcceptance = UpiOfframpStepStatus.Completed,
+                            sendingUpi = UpiOfframpStepStatus.Completed,
+                            waitingCompletion = UpiOfframpStepStatus.Failed,
+                        ),
+                    failure = null,
+                    primaryButton = ButtonState(text = stringRes("Close"), onClick = {}),
+                    onBack = {},
                 ),
-                feeBreakdown = null,
-                cancelled = UpiOfframpCancelledCard(
-                    refundedAmount = stringRes("5.00 USDC refunded to your offramp account"),
-                    cancelledAt = stringRes("Cancelled at 22 May 2026, 03:51 AM"),
-                    tip = stringRes("Tip: ask the merchant to generate the UPI QR only after this screen opens."),
-                ),
-                steps = previewSteps(
-                    waitingAcceptance = UpiOfframpStepStatus.Completed,
-                    sendingUpi = UpiOfframpStepStatus.Completed,
-                    waitingCompletion = UpiOfframpStepStatus.Failed,
-                ),
-                failure = null,
-                primaryButton = ButtonState(text = stringRes("Close"), onClick = {}),
-                onBack = {},
-            ),
         )
     }
 }
@@ -608,31 +637,34 @@ private fun PreviewCancelled() {
 private fun PreviewFailed() {
     ZcashTheme {
         UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Something went wrong"),
-                subtitle = null,
-                summary = previewSummary,
-                feeBreakdown = null,
-                cancelled = null,
-                steps = previewSteps(
-                    funding = UpiOfframpStepStatus.Completed,
-                    approving = UpiOfframpStepStatus.Failed,
-                    placing = UpiOfframpStepStatus.Pending,
-                    waitingAcceptance = UpiOfframpStepStatus.Pending,
-                    sendingUpi = UpiOfframpStepStatus.Pending,
-                    waitingCompletion = UpiOfframpStepStatus.Pending,
+            state =
+                UpiOfframpProgressState(
+                    title = stringRes("Something went wrong"),
+                    subtitle = null,
+                    summary = previewSummary,
+                    feeBreakdown = null,
+                    cancelled = null,
+                    steps =
+                        previewSteps(
+                            funding = UpiOfframpStepStatus.Completed,
+                            approving = UpiOfframpStepStatus.Failed,
+                            placing = UpiOfframpStepStatus.Pending,
+                            waitingAcceptance = UpiOfframpStepStatus.Pending,
+                            sendingUpi = UpiOfframpStepStatus.Pending,
+                            waitingCompletion = UpiOfframpStepStatus.Pending,
+                        ),
+                    failure =
+                        UpiOfframpFailureCard(
+                            stepLabel = stringRes("Approving USDC"),
+                            decodedReason = stringRes("Insufficient USDC balance for approval."),
+                            rawSelector = "0x91da284f",
+                            rawMessage = "execution reverted: ERC20: transfer amount exceeds balance",
+                            txHash = "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                            txExplorerUrl = "https://sepolia.basescan.org/tx/0xabcdef",
+                        ),
+                    primaryButton = ButtonState(text = stringRes("Close"), onClick = {}),
+                    onBack = {},
                 ),
-                failure = UpiOfframpFailureCard(
-                    stepLabel = stringRes("Approving USDC"),
-                    decodedReason = stringRes("Insufficient USDC balance for approval."),
-                    rawSelector = "0x91da284f",
-                    rawMessage = "execution reverted: ERC20: transfer amount exceeds balance",
-                    txHash = "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                    txExplorerUrl = "https://sepolia.basescan.org/tx/0xabcdef",
-                ),
-                primaryButton = ButtonState(text = stringRes("Close"), onClick = {}),
-                onBack = {},
-            ),
         )
     }
 }
@@ -642,31 +674,34 @@ private fun PreviewFailed() {
 private fun PreviewFailedRecoverable() {
     ZcashTheme {
         UpiOfframpProgressView(
-            state = UpiOfframpProgressState(
-                title = stringRes("Something went wrong"),
-                subtitle = null,
-                summary = previewSummary,
-                feeBreakdown = null,
-                cancelled = null,
-                steps = previewSteps(
-                    funding = UpiOfframpStepStatus.Completed,
-                    approving = UpiOfframpStepStatus.Completed,
-                    placing = UpiOfframpStepStatus.Failed,
-                    waitingAcceptance = UpiOfframpStepStatus.Pending,
-                    sendingUpi = UpiOfframpStepStatus.Pending,
-                    waitingCompletion = UpiOfframpStepStatus.Pending,
+            state =
+                UpiOfframpProgressState(
+                    title = stringRes("Something went wrong"),
+                    subtitle = null,
+                    summary = previewSummary,
+                    feeBreakdown = null,
+                    cancelled = null,
+                    steps =
+                        previewSteps(
+                            funding = UpiOfframpStepStatus.Completed,
+                            approving = UpiOfframpStepStatus.Completed,
+                            placing = UpiOfframpStepStatus.Failed,
+                            waitingAcceptance = UpiOfframpStepStatus.Pending,
+                            sendingUpi = UpiOfframpStepStatus.Pending,
+                            waitingCompletion = UpiOfframpStepStatus.Pending,
+                        ),
+                    failure =
+                        UpiOfframpFailureCard(
+                            stepLabel = stringRes("Placing the order"),
+                            decodedReason = stringRes("No merchant has fiat liquidity for this order right now."),
+                            rawSelector = "0xea8e4eb5",
+                            rawMessage = "execution reverted",
+                            txHash = "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+                            txExplorerUrl = "https://sepolia.basescan.org/tx/0xabcdef",
+                        ),
+                    primaryButton = ButtonState(text = stringRes("Bridge USDC back to ZEC"), onClick = {}),
+                    onBack = {},
                 ),
-                failure = UpiOfframpFailureCard(
-                    stepLabel = stringRes("Placing the order"),
-                    decodedReason = stringRes("No merchant has fiat liquidity for this order right now."),
-                    rawSelector = "0xea8e4eb5",
-                    rawMessage = "execution reverted",
-                    txHash = "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-                    txExplorerUrl = "https://sepolia.basescan.org/tx/0xabcdef",
-                ),
-                primaryButton = ButtonState(text = stringRes("Bridge USDC back to ZEC"), onClick = {}),
-                onBack = {},
-            ),
         )
     }
 }

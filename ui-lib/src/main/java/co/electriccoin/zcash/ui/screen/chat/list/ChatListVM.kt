@@ -13,7 +13,6 @@ import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
 import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
-import co.electriccoin.zcash.ui.screen.chat.support.SupportChatConstants
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.common.formatRelativeTime
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
@@ -21,6 +20,7 @@ import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
+import co.electriccoin.zcash.ui.screen.chat.support.SupportChatConstants
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -63,10 +63,11 @@ class ChatListVM(
 
     private fun buildSupportRow(supportConvs: List<ChatConversation>): ChatListSupportRowState? {
         if (supportConvs.isEmpty()) return null
-        val latestSupportMsg = supportConvs
-            .maxByOrNull { it.lastMessageTimestamp ?: 0L }
-            ?.lastMessage
-            ?.removePrefix(SupportChatConstants.BOT_PREFIX)
+        val latestSupportMsg =
+            supportConvs
+                .maxByOrNull { it.lastMessageTimestamp ?: 0L }
+                ?.lastMessage
+                ?.removePrefix(SupportChatConstants.BOT_PREFIX)
         return ChatListSupportRowState(
             ticketCount = supportConvs.size,
             lastMessage = latestSupportMsg?.let { stringRes(it) },
@@ -116,7 +117,6 @@ class ChatListVM(
                 ),
         )
 
-
     private fun createState(
         conversations: List<ChatConversation>?,
         blockedKeys: Set<String>,
@@ -133,13 +133,15 @@ class ChatListVM(
         // [isSupportConversation] handles the side-asymmetry: user device requires the
         // support agent's key in participantIds; the support agent's device falls back
         // to the displayName prefix because its own key is excluded from the participant list.
-        val supportConvs = conversations?.filter { conv ->
-            SupportChatConstants.isSupportConversation(
-                displayName = conv.displayName,
-                participantIds = conv.participantIds,
-                localPublicKey = localPublicKey,
-            )
-        }.orEmpty()
+        val supportConvs =
+            conversations
+                ?.filter { conv ->
+                    SupportChatConstants.isSupportConversation(
+                        displayName = conv.displayName,
+                        participantIds = conv.participantIds,
+                        localPublicKey = localPublicKey,
+                    )
+                }.orEmpty()
 
         val visibleConversations =
             conversations

@@ -12,7 +12,6 @@ class FallbackOrderReader(
     private val fallback: OrderReadSource,
     private val logger: OrderReadLogger? = null,
 ) : OrderReadSource {
-
     override suspend fun fetchOrder(orderId: BigInteger): OrderSnapshot? {
         val primaryResult = runSafely(orderId, "Primary", primary)
         if (primaryResult != null) return primaryResult
@@ -29,12 +28,13 @@ class FallbackOrderReader(
         orderId: BigInteger,
         label: String,
         source: OrderReadSource,
-    ): OrderSnapshot? = try {
-        source.fetchOrder(orderId)
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Throwable) {
-        logger?.warn("$label order source failed for orderId=$orderId; continuing", e)
-        null
-    }
+    ): OrderSnapshot? =
+        try {
+            source.fetchOrder(orderId)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            logger?.warn("$label order source failed for orderId=$orderId; continuing", e)
+            null
+        }
 }

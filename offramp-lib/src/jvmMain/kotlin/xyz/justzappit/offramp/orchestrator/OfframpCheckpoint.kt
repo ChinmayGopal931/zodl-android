@@ -60,11 +60,12 @@ data class OfframpCheckpoint(
     val usdcAmount: Usdc6 get() = Usdc6(BigInteger(usdcAmountMicroDecimal))
     val fiatAmount: Usdc6? get() = fiatAmountMicroDecimal?.let { Usdc6(BigInteger(it)) }
 
-    fun toRequest(fallbackFiatAmount: Usdc6): OfframpRequest = OfframpRequest(
-        recipientUpi = recipientUpi,
-        usdcAmount = usdcAmount,
-        fiatAmount = fiatAmount ?: fallbackFiatAmount,
-        payeeName = payeeName,
-        currency = currency,
-    )
+    fun toRequest(fallbackFiatAmount: Usdc6): OfframpRequest =
+        OfframpRequest(
+            recipientUpi = recipientUpi,
+            usdcAmount = usdcAmount,
+            fiatAmount = fiatAmount ?: fallbackFiatAmount,
+            payeeName = payeeName,
+            currency = currency,
+        )
 }

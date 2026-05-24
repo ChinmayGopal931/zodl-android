@@ -16,10 +16,10 @@ import co.electriccoin.zcash.ui.screen.chat.media.rememberMediaPickHandlers
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * Bridges [ChatRoomVM]'s `effects` flow to Android platform launchers. The media-picker /
@@ -31,37 +31,48 @@ internal fun ChatRoomEffectsHandler(viewModel: ChatRoomVM) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val mediaHandlers = rememberMediaPickHandlers(
-        onMediaPicked = viewModel::onMediaPicked,
-        onFilePicked = viewModel::onFilePicked,
-        onCameraCaptured = viewModel::onCameraCaptured,
-    )
+    val mediaHandlers =
+        rememberMediaPickHandlers(
+            onMediaPicked = viewModel::onMediaPicked,
+            onFilePicked = viewModel::onFilePicked,
+            onCameraCaptured = viewModel::onCameraCaptured,
+        )
 
     val locationPermissionLauncher =
-        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-                permissions ->
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             if (permissions.values.any { it }) {
                 scope.launch { shareLocation(context, viewModel) }
             } else {
-                Toast.makeText(
-                    context,
-                    context.getString(R.string.chat_room_toast_location_permission_required),
-                    Toast.LENGTH_SHORT,
-                ).show()
+                Toast
+                    .makeText(
+                        context,
+                        context.getString(R.string.chat_room_toast_location_permission_required),
+                        Toast.LENGTH_SHORT,
+                    ).show()
             }
         }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
-                ChatRoomEffect.PickMedia -> mediaHandlers.pickMedia()
-                ChatRoomEffect.PickFile -> mediaHandlers.pickFile()
-                ChatRoomEffect.TakePhoto -> mediaHandlers.takePhoto()
+                ChatRoomEffect.PickMedia -> {
+                    mediaHandlers.pickMedia()
+                }
+
+                ChatRoomEffect.PickFile -> {
+                    mediaHandlers.pickFile()
+                }
+
+                ChatRoomEffect.TakePhoto -> {
+                    mediaHandlers.takePhoto()
+                }
+
                 ChatRoomEffect.ShareLocation -> {
-                    val granted = ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                    ) == PackageManager.PERMISSION_GRANTED
+                    val granted =
+                        ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                        ) == PackageManager.PERMISSION_GRANTED
                     if (granted) {
                         scope.launch { shareLocation(context, viewModel) }
                     } else {
@@ -97,17 +108,19 @@ private suspend fun shareLocation(
         if (location != null) {
             viewModel.onLocationObtained(location.latitude, location.longitude, location.accuracy)
         } else {
-            Toast.makeText(
-                context,
-                context.getString(R.string.chat_room_toast_location_unavailable),
-                Toast.LENGTH_SHORT,
-            ).show()
+            Toast
+                .makeText(
+                    context,
+                    context.getString(R.string.chat_room_toast_location_unavailable),
+                    Toast.LENGTH_SHORT,
+                ).show()
         }
     } catch (e: Exception) {
-        Toast.makeText(
-            context,
-            context.getString(R.string.chat_room_toast_location_error_fmt, e.message.orEmpty()),
-            Toast.LENGTH_SHORT,
-        ).show()
+        Toast
+            .makeText(
+                context,
+                context.getString(R.string.chat_room_toast_location_error_fmt, e.message.orEmpty()),
+                Toast.LENGTH_SHORT,
+            ).show()
     }
 }

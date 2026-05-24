@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -90,16 +90,18 @@ private fun ChatRestoreContent(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .padding(start = 28.dp, end = 28.dp, top = 24.dp),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
             OnbHero(text = "Restore your\nchat identity")
             Spacer(Modifier.height(12.dp))
@@ -124,10 +126,11 @@ private fun ChatRestoreContent(
                 Spacer(Modifier.height(12.dp))
                 BasicText(
                     text = displayError,
-                    style = ZappTheme.typography.body.copy(
-                        color = c.danger,
-                        fontSize = 12.sp,
-                    ),
+                    style =
+                        ZappTheme.typography.body.copy(
+                            color = c.danger,
+                            fontSize = 12.sp,
+                        ),
                 )
             }
         }
@@ -162,12 +165,13 @@ private fun FieldLabel(text: String) {
     val c = ZappTheme.colors
     BasicText(
         text = text.uppercase(),
-        style = ZappTheme.typography.eyebrow.copy(
-            color = c.textSubtle,
-            fontSize = 10.sp,
-            letterSpacing = 1.8.sp,
-            fontWeight = FontWeight.Black,
-        ),
+        style =
+            ZappTheme.typography.eyebrow.copy(
+                color = c.textSubtle,
+                fontSize = 10.sp,
+                letterSpacing = 1.8.sp,
+                fontWeight = FontWeight.Black,
+            ),
     )
 }
 
@@ -179,32 +183,35 @@ private fun DisplayNameField(
     val c = ZappTheme.colors
     val borderColor = if (value.isNotEmpty()) c.text else c.border
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(width = 2.dp, color = borderColor, shape = RectangleShape)
-            .padding(horizontal = 12.dp, vertical = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(width = 2.dp, color = borderColor, shape = RectangleShape)
+                .padding(horizontal = 12.dp, vertical = 14.dp),
     ) {
         BasicTextField(
             value = value,
             onValueChange = onChange,
             singleLine = true,
             cursorBrush = SolidColor(c.accent),
-            textStyle = ZappTheme.typography.display.copy(
-                color = c.text,
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = (-0.4).sp,
-            ),
+            textStyle =
+                ZappTheme.typography.display.copy(
+                    color = c.text,
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Black,
+                    letterSpacing = (-0.4).sp,
+                ),
             decorationBox = { inner ->
                 if (value.isEmpty()) {
                     BasicText(
                         text = "your_handle",
-                        style = ZappTheme.typography.display.copy(
-                            color = c.textSubtle,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Black,
-                            letterSpacing = (-0.4).sp,
-                        ),
+                        style =
+                            ZappTheme.typography.display.copy(
+                                color = c.textSubtle,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Black,
+                                letterSpacing = (-0.4).sp,
+                            ),
                     )
                 }
                 inner()
@@ -222,33 +229,37 @@ private fun PhraseField(
     val c = ZappTheme.colors
     val borderColor = if (value.isNotEmpty()) c.text else c.border
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(width = 2.dp, color = borderColor, shape = RectangleShape)
-            .padding(horizontal = 12.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .border(width = 2.dp, color = borderColor, shape = RectangleShape)
+                .padding(horizontal = 12.dp, vertical = 12.dp),
     ) {
         BasicTextField(
             value = value,
             onValueChange = { onChange(it.lowercase()) },
             cursorBrush = SolidColor(c.accent),
-            textStyle = ZappTheme.typography.body.copy(
-                color = c.text,
-                fontSize = 14.sp,
-                lineHeight = 22.sp,
-                fontFamily = FontFamily.Monospace,
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(110.dp),
+            textStyle =
+                ZappTheme.typography.body.copy(
+                    color = c.text,
+                    fontSize = 14.sp,
+                    lineHeight = 22.sp,
+                    fontFamily = FontFamily.Monospace,
+                ),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(110.dp),
             decorationBox = { inner ->
                 if (value.isEmpty()) {
                     BasicText(
                         text = "Paste or type your $EXPECTED_WORDS words, separated by spaces.",
-                        style = ZappTheme.typography.body.copy(
-                            color = c.textSubtle,
-                            fontSize = 13.sp,
-                            lineHeight = 22.sp,
-                        ),
+                        style =
+                            ZappTheme.typography.body.copy(
+                                color = c.textSubtle,
+                                fontSize = 13.sp,
+                                lineHeight = 22.sp,
+                            ),
                     )
                 }
                 inner()
@@ -261,12 +272,13 @@ private fun PhraseField(
         ) {
             BasicText(
                 text = "$wordCount / $EXPECTED_WORDS words",
-                style = ZappTheme.typography.body.copy(
-                    color = if (wordCount == EXPECTED_WORDS) c.success else c.textSubtle,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.2.sp,
-                ),
+                style =
+                    ZappTheme.typography.body.copy(
+                        color = if (wordCount == EXPECTED_WORDS) c.success else c.textSubtle,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Black,
+                        letterSpacing = 0.2.sp,
+                    ),
             )
         }
     }

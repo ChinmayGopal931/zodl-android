@@ -31,6 +31,7 @@ data class OrderSnapshot(
 
     // Pubkey deliberately not gated here — verifiedMerchantPubKey re-reads it on-chain before
     // encryption. Requiring it from subgraph would wedge polling whenever the indexer drops the column.
-    val isAccepted: Boolean get() = status.onChain >= OrderStatus.ACCEPTED.onChain &&
-        acceptedMerchantAddress != null
+    val isAccepted: Boolean get() =
+        status.onChain >= OrderStatus.ACCEPTED.onChain &&
+            acceptedMerchantAddress != null
 }

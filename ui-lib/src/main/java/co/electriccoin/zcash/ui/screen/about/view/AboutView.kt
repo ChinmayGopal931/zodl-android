@@ -18,9 +18,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -60,12 +60,13 @@ fun About(
 ) {
     val c = ZappTheme.colors
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(
-                WindowInsets.statusBars.union(WindowInsets.displayCutout)
-            ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(c.bg)
+                .windowInsetsPadding(
+                    WindowInsets.statusBars.union(WindowInsets.displayCutout)
+                ),
     ) {
         ZappScreenHeader(
             title = stringResource(id = R.string.about_title),
@@ -77,9 +78,10 @@ fun About(
         )
 
         Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
+            modifier =
+                Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
         ) {
             Spacer(Modifier.height(8.dp))
 
@@ -100,11 +102,12 @@ fun About(
             Spacer(Modifier.height(32.dp))
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 14.dp)
-                    .background(c.surface, RectangleShape)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp)
+                        .background(c.surface, RectangleShape)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape),
             ) {
                 ZappRow(
                     title = stringResource(R.string.about_button_privacy_policy),
@@ -123,14 +126,16 @@ fun About(
             Spacer(Modifier.height(20.dp))
 
             BasicText(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 18.dp),
                 text = stringResource(R.string.settings_version, versionInfo.versionName),
-                style = ZappTheme.typography.rowSubtitle.copy(
-                    color = c.textSubtle,
-                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                ),
+                style =
+                    ZappTheme.typography.rowSubtitle.copy(
+                        color = c.textSubtle,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    ),
             )
 
             Spacer(Modifier.height(20.dp))

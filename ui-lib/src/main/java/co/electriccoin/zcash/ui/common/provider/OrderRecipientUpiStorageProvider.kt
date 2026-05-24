@@ -19,11 +19,12 @@ import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
 class OrderRecipientUpiStorageProvider(
     encryptedPreferenceProvider: EncryptedPreferenceProvider,
 ) : OrderRecipientUpiCache {
-    private val store = EncryptedJsonStore(
-        encryptedPreferenceProvider = encryptedPreferenceProvider,
-        prefKey = PREF_KEY,
-        serializer = MapSerializer(String.serializer(), String.serializer()),
-    )
+    private val store =
+        EncryptedJsonStore(
+            encryptedPreferenceProvider = encryptedPreferenceProvider,
+            prefKey = PREF_KEY,
+            serializer = MapSerializer(String.serializer(), String.serializer()),
+        )
 
     override suspend fun put(orderId: String, recipientUpi: String) {
         val current = store.get() ?: emptyMap()
