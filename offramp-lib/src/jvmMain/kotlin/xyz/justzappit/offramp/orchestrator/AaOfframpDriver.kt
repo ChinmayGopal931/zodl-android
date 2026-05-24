@@ -12,8 +12,10 @@ import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
 import java.math.BigInteger
 import xyz.justzappit.offramp.p2p.CircleRouter
+import xyz.justzappit.offramp.p2p.InMemoryOrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.InMemoryRelayIdentityStore
 import xyz.justzappit.offramp.p2p.OrderReadSource
+import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.RelayIdentityStore
 import xyz.justzappit.offramp.p2p.SubgraphClient
 
@@ -34,6 +36,7 @@ class AaOfframpDriver(
     private val refund: OfframpRefund,
     private val router: CircleRouter = CircleRouter(),
     private val relayIdentityStore: RelayIdentityStore = InMemoryRelayIdentityStore(),
+    private val orderRecipientUpiCache: OrderRecipientUpiCache = InMemoryOrderRecipientUpiCache(),
 ) : OfframpDriver {
     override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
         emitAll(buildOrchestrator().run(request))
@@ -69,6 +72,7 @@ class AaOfframpDriver(
             refund = refund,
             router = router,
             relayIdentityStore = relayIdentityStore,
+            orderRecipientUpiCache = orderRecipientUpiCache,
         )
     }
 }

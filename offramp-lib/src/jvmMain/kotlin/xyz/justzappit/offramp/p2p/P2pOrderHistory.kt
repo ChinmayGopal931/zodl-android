@@ -8,14 +8,15 @@ import xyz.justzappit.evm.types.Address
 import java.math.BigInteger
 
 /**
- * Display-ready row for the P2P transactions screen. Fields all derive from the subgraph snapshot
- * + ECIES decryption against the persisted relay identity; no contract reads are required for the
- * list view (the subgraph already indexes `actualUsdc/FiatAmount` and the encrypted UPIs).
+ * Display-ready row for the P2P transactions screen.
  *
- *  - [recipientUpiPlain]: decrypted `encUpi`. For PAY/SELL this is the user-supplied destination
- *    (full URI for PAY, bare VPA for SELL); for BUY it's the merchant's pay-to VPA.
+ *  - [recipientUpiPlain]: the destination VPA the user typed at placement. Sourced primarily
+ *    from [OrderRecipientUpiCache] (written by the orchestrator on placeOrder success) because
+ *    on-chain `encUpi` is encrypted to the **merchant's** public key for PAY/SELL and the user
+ *    cannot recover it from the chain. Falls back to decrypting `encUpi` with the relay key
+ *    only for BUY (where the merchant seals their own pay-to VPA to the user's relay pubkey).
  *  - [merchantUpiPlain]: decrypted `encMerchantUpi`. Populated only after the merchant calls
- *    completeOrder on SELL/PAY (empty for BUY and for orders that haven't completed).
+ *    completeOrder with a non-empty `encMerchantUpi` (empty in practice for many merchants).
  */
 data class P2pOrderHistoryItem(
     val orderId: BigInteger,
@@ -43,12 +44,21 @@ data class P2pOrderHistoryItem(
 class P2pOrderHistorySource(
     private val subgraph: SubgraphClient,
     private val relayIdentityStore: RelayIdentityStore,
+    private val orderRecipientUpiCache: OrderRecipientUpiCache = InMemoryOrderRecipientUpiCache(),
 ) {
     suspend fun fetchAll(userAddress: Address, maxOrders: Int = MAX_ORDERS): List<P2pOrderHistoryItem> {
         val relay = relayIdentityStore.get()
         val snapshots = paginateUserOrders(userAddress, maxOrders)
         return coroutineScope {
-            snapshots.map { snapshot -> async { decryptItem(snapshot, relay) } }.awaitAll()
+            snapshots.map { snapshot ->
+                async {
+                    decryptItem(
+                        snapshot = snapshot,
+                        relay = relay,
+                        cachedRecipientUpi = orderRecipientUpiCache.get(snapshot.orderId.toString()),
+                    )
+                }
+            }.awaitAll()
         }
     }
 
@@ -66,8 +76,15 @@ class P2pOrderHistorySource(
         return out
     }
 
-    private fun decryptItem(snapshot: OrderSnapshot, relay: RelayIdentity?): P2pOrderHistoryItem {
-        val recipientUpi = decryptUpi(snapshot.encryptedUserUpi, relay)
+    private fun decryptItem(
+        snapshot: OrderSnapshot,
+        relay: RelayIdentity?,
+        cachedRecipientUpi: String?,
+    ): P2pOrderHistoryItem {
+        // For PAY/SELL, encUpi is encrypted to the merchant; the user can never decrypt it. The
+        // local cache (written at placeOrder) is the only path. For BUY, encUpi is sealed to the
+        // user's relay key and CAN be decrypted — keep that branch as a fallback.
+        val recipientUpi = cachedRecipientUpi ?: decryptUpi(snapshot.encryptedUserUpi, relay)
         val merchantUpi = decryptUpi(snapshot.encryptedMerchantUpi, relay)
         // The subgraph leaves actualUsdcAmount/actualFiatAmount null until the merchant completes
         // the order; pre-completion the placed amounts are still the right thing to show.

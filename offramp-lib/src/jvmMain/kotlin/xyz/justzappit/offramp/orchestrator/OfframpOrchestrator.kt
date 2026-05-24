@@ -30,7 +30,9 @@ import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.DiamondCalls
 import xyz.justzappit.offramp.p2p.Erc20Calls
+import xyz.justzappit.offramp.p2p.InMemoryOrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.InMemoryRelayIdentityStore
+import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.getUsdcBalance
 import xyz.justzappit.offramp.p2p.OrderEvents
 import xyz.justzappit.offramp.p2p.OnChainOrderReader
@@ -90,6 +92,10 @@ class OfframpOrchestrator(
     private val onChainOrderReader: OrderReadSource = OnChainOrderReader(rpc, network),
     // In-memory default for tests; Android injects an encrypted-prefs store.
     private val relayIdentityStore: RelayIdentityStore = InMemoryRelayIdentityStore(),
+    // Locally caches each placed order's recipient UPI so the P2P transactions screen can show
+    // it later — encUpi on-chain is encrypted to the merchant, so the user cannot recover the
+    // VPA from the chain alone. In-memory default for tests; Android injects encrypted prefs.
+    private val orderRecipientUpiCache: OrderRecipientUpiCache = InMemoryOrderRecipientUpiCache(),
 ) : OfframpDriver {
     override fun run(request: OfframpRequest): Flow<OfframpStatus> = flow {
         emit(OfframpStatus.Idle)
@@ -185,6 +191,11 @@ class OfframpOrchestrator(
                 diamondAddress = network.diamondAddress,
                 userAddress = accountAddress,
             ) ?: error("placeOrder receipt did not contain an OrderPlaced log")
+
+            // Cache the user-typed VPA against the on-chain orderId BEFORE awaiting completion:
+            // `encUpi` is encrypted to the merchant's key, so the only way to recover "you paid to X"
+            // for the history list is to remember it locally at placement.
+            orderRecipientUpiCache.put(orderId.toString(), request.recipientUpi)
 
             awaitMerchantAndComplete(
                 orderId = orderId,

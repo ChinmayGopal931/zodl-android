@@ -14,6 +14,7 @@ import co.electriccoin.zcash.ui.common.repository.FlexaRepository
 import co.electriccoin.zcash.ui.common.repository.FlexaRepositoryImpl
 import co.electriccoin.zcash.ui.common.repository.HomeMessageCacheRepository
 import co.electriccoin.zcash.ui.common.repository.HomeMessageCacheRepositoryImpl
+import co.electriccoin.zcash.ui.common.provider.OrderRecipientUpiStorageProvider
 import co.electriccoin.zcash.ui.common.provider.RelayIdentityStorageProvider
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepository
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepositoryImpl
@@ -39,6 +40,7 @@ import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.FallbackOrderReader
 import xyz.justzappit.offramp.p2p.OnChainOrderReader
 import xyz.justzappit.offramp.p2p.OrderReadSource
+import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.P2pOrderHistorySource
 import xyz.justzappit.offramp.p2p.RelayIdentityStore
 import xyz.justzappit.offramp.p2p.SubgraphOrderReader
@@ -75,7 +77,16 @@ val repositoryModule =
             )
         }
         single<RelayIdentityStore> { RelayIdentityStorageProvider(encryptedPreferenceProvider = get()) }
-        single { P2pOrderHistorySource(subgraph = get(), relayIdentityStore = get()) }
+        single<OrderRecipientUpiCache> {
+            OrderRecipientUpiStorageProvider(encryptedPreferenceProvider = get())
+        }
+        single {
+            P2pOrderHistorySource(
+                subgraph = get(),
+                relayIdentityStore = get(),
+                orderRecipientUpiCache = get(),
+            )
+        }
         factory<OfframpDriver> {
             AaOfframpDriver(
                 rpc = get(),
@@ -88,6 +99,7 @@ val repositoryModule =
                 refund = get(),
                 router = get(),
                 relayIdentityStore = get(),
+                orderRecipientUpiCache = get(),
             )
         }
     }
