@@ -1,5 +1,6 @@
 package co.electriccoin.zcash.ui.screen.swap.upi.progress
 
+import co.electriccoin.zcash.ui.common.provider.BridgeTerminallyFailedException
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
@@ -63,13 +64,21 @@ internal class OfframpCheckpointPersister(
             }
 
             is OfframpStatus.Failed -> {
-                // Failed during FUNDING with a bridge already in flight means the user's ZEC may
-                // be mid-bridge on 1-Click; keep the checkpoint so the user can re-enter the
-                // progress screen and re-poll the persisted deposit address. Other failures
-                // (approve / placeOrder / setUpi) happen after the bridge has settled — clearing
-                // is safe because the USDC is in the smart account and a fresh attempt will
-                // [FundedFromBase] short-circuit.
-                if (status.step == OfframpStep.FUNDING && lastBridgeDepositAddress != null) {
+                // Three-way decision:
+                //  1. Bridge in-flight, transient failure → keep checkpoint so user can resume.
+                //  2. Bridge terminally dead (REFUNDED/FAILED/EXPIRED/INCOMPLETE_DEPOSIT) → clear,
+                //     because re-polling the same 1-Click handle just yields the same terminal
+                //     status indefinitely and would loop the user with no UX exit. The structural
+                //     signal is the typed BridgeTerminallyFailedException carried in Failed.cause.
+                //  3. Failure after funding settled (approve / placeOrder / setUpi) → clear,
+                //     because the USDC is in the smart account and a fresh attempt will
+                //     short-circuit via FundedFromBase.
+                val bridgeTerminallyDead = status.cause is BridgeTerminallyFailedException
+                val transientFundingFailure =
+                    !bridgeTerminallyDead &&
+                        status.step == OfframpStep.FUNDING &&
+                        lastBridgeDepositAddress != null
+                if (transientFundingFailure) {
                     persistCheckpoint(orderId = null, status = status)
                 } else {
                     storage.clear()

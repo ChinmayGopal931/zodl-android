@@ -201,7 +201,10 @@ class NearBridgeOfframpFunding(
      * HTTP error here (wifi blip, 5xx, transient timeout) must not propagate — bubbling it would
      * make the orchestrator emit Failed(FUNDING), clear the checkpoint, and orphan the user's
      * in-flight ZEC with no resume path. Only a *terminal* [SwapStatus] from 1-Click counts as
-     * the bridge actually dying. Cancellation still escapes for coroutine teardown.
+     * the bridge actually dying — and in that case we throw [BridgeTerminallyFailedException],
+     * which the checkpoint persister recognises to clear the checkpoint (re-polling the same
+     * handle would just yield the same terminal status forever). Cancellation escapes normally
+     * for coroutine teardown.
      */
     @Suppress("TooGenericExceptionCaught")
     private suspend fun pollUntilSettled(depositAddress: String, tokens: List<SwapAsset>) {
@@ -225,7 +228,7 @@ class NearBridgeOfframpFunding(
                 }
 
                 SwapStatus.REFUNDED, SwapStatus.FAILED, SwapStatus.EXPIRED, SwapStatus.INCOMPLETE_DEPOSIT -> {
-                    error("NEAR bridge did not deliver USDC for $depositAddress — the user's ZEC was refunded.")
+                    throw BridgeTerminallyFailedException(terminalStatus = status, depositAddress = depositAddress)
                 }
 
                 else -> {
@@ -250,6 +253,29 @@ class NearBridgeOfframpFunding(
         val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("1")
     }
 }
+
+/**
+ * Thrown by [NearBridgeOfframpFunding.pollUntilSettled] when 1-Click has surfaced a non-recoverable
+ * terminal [SwapStatus] for the bridge: REFUNDED (ZEC returned), FAILED (bridge dead),
+ * EXPIRED (quote expired), or INCOMPLETE_DEPOSIT (user under-sent).
+ *
+ * Why a typed exception rather than just a string: the persister (sibling
+ * `OfframpCheckpointPersister`) keys off the cause type to decide whether to keep the checkpoint
+ * (in-flight bridge, user can resume) or to clear it (bridge is dead, re-polling the same handle
+ * yields the same terminal status indefinitely). Keying off `Failed.message` substrings would be
+ * fragile to copy edits; the type is structural.
+ *
+ * The orchestrator's generic catch (Throwable) captures this as `Failed.cause`; UI rendering still
+ * works off the (English) [message] as a fallback, but the persister's clear-vs-keep decision is
+ * based on `cause is BridgeTerminallyFailedException`.
+ */
+class BridgeTerminallyFailedException(
+    val terminalStatus: SwapStatus,
+    val depositAddress: String,
+) : RuntimeException(
+        "NEAR bridge for $depositAddress reached terminal state $terminalStatus — the bridge cannot be resumed. " +
+            "If your ZEC was refunded by 1-Click it should appear at your wallet's refund address shortly.",
+    )
 
 /**
  * Mainnet pull-back: resolves a NEAR 1-Click deposit address for a USDC → ZEC swap so the orchestrator

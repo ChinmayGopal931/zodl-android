@@ -1,5 +1,7 @@
 package co.electriccoin.zcash.ui.screen.swap.upi.progress
 
+import co.electriccoin.zcash.ui.common.model.SwapStatus
+import co.electriccoin.zcash.ui.common.provider.BridgeTerminallyFailedException
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -137,6 +139,35 @@ class OfframpCheckpointPersisterTest {
             assertNull(saved.orderId)
             assertEquals("near-deposit-abc", saved.bridgeDepositAddress)
             assertEquals(OfframpStep.FUNDING, saved.currentStep)
+        }
+
+    @Test
+    fun `Failed during FUNDING with a terminally-dead bridge clears the checkpoint`() =
+        runBlocking {
+            // 1-Click reported a terminal status (REFUNDED/FAILED/EXPIRED/INCOMPLETE_DEPOSIT) for the
+            // bridge — re-polling the same deposit address would just yield the same terminal status
+            // forever and loop the user with no UX exit. The structural signal is the typed
+            // BridgeTerminallyFailedException as Failed.cause. Without this, the persister would
+            // keep the checkpoint (since lastBridgeDepositAddress != null) and the user would be
+            // stuck on a dead resume forever.
+            val repo = InMemoryCheckpointStorage()
+            val persister = OfframpCheckpointPersister(repo, freshRequest())
+
+            persister.onStatus(OfframpStatus.BridgingFunds(amount = AMOUNT, depositAddress = "near-deposit-abc"))
+            persister.onStatus(
+                OfframpStatus.Failed(
+                    message = "bridge refunded",
+                    orderId = null,
+                    step = OfframpStep.FUNDING,
+                    cause =
+                        BridgeTerminallyFailedException(
+                            terminalStatus = SwapStatus.REFUNDED,
+                            depositAddress = "near-deposit-abc",
+                        ),
+                ),
+            )
+
+            assertNull(repo.get())
         }
 
     @Test
