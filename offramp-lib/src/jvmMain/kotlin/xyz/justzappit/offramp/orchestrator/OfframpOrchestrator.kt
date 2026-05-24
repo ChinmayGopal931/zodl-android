@@ -5,7 +5,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import xyz.justzappit.evm.abi.AbiDecoder
 import xyz.justzappit.evm.abi.AbiEncoder
+import xyz.justzappit.evm.abi.keccak256
+import xyz.justzappit.evm.signer.EcdsaSigner
+import xyz.justzappit.evm.util.hexToBytes
+import xyz.justzappit.evm.util.padLeftToWord
 import xyz.justzappit.evm.crypto.Ecies
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.RpcException
@@ -14,6 +22,7 @@ import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.util.toHex
 import xyz.justzappit.offramp.config.P2pNetworkConfig
+import xyz.justzappit.offramp.funding.FundingOutcome
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.p2p.CircleId
@@ -134,10 +143,15 @@ class OfframpOrchestrator(
             // Funding gate, resumable + idempotent: on mainnet bridges ZEC→USDC via NEAR and persists
             // the deposit address (via the emit below) before any ZEC moves; on testnet verifies the
             // account is pre-funded. Runs only after an assignable merchant is confirmed (above) so we
-            // never bridge into a market with no route.
+            // never bridge into a market with no route. AlreadyFunded short-circuits the bridge — common
+            // when a previous cancelled order left USDC refunded into the smart account — and we emit a
+            // distinct status so the UI can render "Using Base balance" instead of "Bridging funds".
             currentStep = OfframpStep.FUNDING
-            funding.ensureFunded(accountAddress, request, resumeHandle = resumeBridgeHandle) { depositAddress ->
+            val outcome = funding.ensureFunded(accountAddress, request, resumeHandle = resumeBridgeHandle) { depositAddress ->
                 emit(OfframpStatus.BridgingFunds(amount = request.usdcAmount, depositAddress = depositAddress))
+            }
+            if (outcome is FundingOutcome.AlreadyFunded) {
+                emit(OfframpStatus.FundedFromBase(amount = request.usdcAmount, baseBalance = outcome.currentBalance))
             }
 
             // Route re-validation: the funding bridge can take minutes, long enough for the merchant the
@@ -148,12 +162,18 @@ class OfframpOrchestrator(
             }
 
             currentStep = OfframpStep.APPROVING_USDC
+            // Cover placed + smallOrderFixedFeePay: the Diamond pulls the fee as a second
+            // transferFrom inside setSellOrderUpi and silent-cancels if allowance is short. See
+            // [readSmallOrderFixedFeePay] for the empirical mainnet trace.
+            val smallOrderFee = runCatching { readSmallOrderFixedFeePay(request.currency) }
+                .getOrDefault(Usdc6.ZERO)
+            val approveAmount = Usdc6(request.usdcAmount.micros + smallOrderFee.micros)
             val approveHash = submitter.sendTransaction(
                 to = network.usdcAddress,
-                data = Erc20Calls.approveCalldata(network.diamondAddress, request.usdcAmount),
+                data = Erc20Calls.approveCalldata(network.diamondAddress, approveAmount),
             )
             lastTxHash = approveHash
-            emit(OfframpStatus.ApprovingUsdc(txHash = approveHash, amount = request.usdcAmount))
+            emit(OfframpStatus.ApprovingUsdc(txHash = approveHash, amount = approveAmount))
             require(submitter.awaitReceipt(approveHash).success) { "USDC approve reverted" }
 
             currentStep = OfframpStep.PLACING_ORDER
@@ -332,7 +352,10 @@ class OfframpOrchestrator(
         onStep: (OfframpStep) -> Unit,
     ): TxHash {
         val merchantPubKey = verifiedMerchantPubKey(orderId, accepted)
-        val inrAmount = request.fiatAmount.whole
+        // Snap to UpiPayUri's am= precision (2dp). Defensive even though the UI already snaps —
+        // resume paths could carry a 3dp checkpoint, and we want the URI's `am=` to be exactly
+        // what we'll feed into `parsedUsdcMicros` so both sides see identical input.
+        val inrAmount = request.fiatAmount.whole.setScale(UpiPayUri.INR_DECIMAL_PLACES, java.math.RoundingMode.FLOOR)
         val qrUri = UpiPayUri.build(
             vpa = request.recipientUpi,
             payeeName = request.payeeName,
@@ -350,19 +373,22 @@ class OfframpOrchestrator(
         val updatedAmount = parsedUsdcMicros.max(placedMicros)
 
         if (updatedAmount > placedMicros) {
-            // Diamond pulls the delta on setSellOrderUpi → top up allowance to that ceiling first.
+            // Diamond pulls (updatedAmount - placed) AND the small-order fixed fee at setUpi.
+            // Top up to cover both — initial approve was `placed + fee`, of which `placed` is
+            // already gone, leaving `fee`. Re-approving to `updatedAmount + fee` overwrites that.
+            val topUpFee = runCatching { readSmallOrderFixedFeePay(request.currency) }
+                .getOrDefault(Usdc6.ZERO)
+            val topUpAmount = Usdc6(updatedAmount + topUpFee.micros)
             val topUpHash = submitter.sendTransaction(
                 to = network.usdcAddress,
-                data = Erc20Calls.approveCalldata(network.diamondAddress, Usdc6(updatedAmount)),
+                data = Erc20Calls.approveCalldata(network.diamondAddress, topUpAmount),
             )
             require(submitter.awaitReceipt(topUpHash).success) {
                 "USDC allowance top-up reverted (updatedAmount=$updatedAmount > placed=$placedMicros)"
             }
         }
 
-        val cipherHex = Ecies.cipherStringify(
-            Ecies.encryptWithPublicKey(merchantPubKey, qrUri),
-        )
+        val cipherHex = encryptUpiEnvelopeForMerchant(qrUri, merchantPubKey)
         onStep(OfframpStep.SENDING_UPI)
         return submitter.sendTransaction(
             to = network.diamondAddress,
@@ -374,12 +400,56 @@ class OfframpOrchestrator(
         )
     }
 
+    /**
+     * Wrap the UPI URI in the SDK's signed `{message, signature}` JSON envelope before ECIES.
+     * Mirrors `@p2pdotme/sdk` `crypto/encryption.ts:encryptPaymentAddress`. Without the envelope
+     * the merchant's parser sees a raw URI, throws on `JSON.parse`, and the strict merchant pool
+     * (e.g. `0x70e45df…`) atomic-cancels inside our own setSellOrderUpi. Verified mainnet 2026-05-24:
+     * 290-char raw-URI encUpi from this orchestrator vs 610-char SDK-wrapped encUpi from the
+     * Node test rig; strict merchant accepts only the wrapped form.
+     *
+     * Signature is ECDSA over `keccak256(utf8(uri))` with the relay identity's private key, encoded
+     * as viem's `serializeSignature`: `r(32) | s(32) | v(1)` where v ∈ {0x1b, 0x1c}.
+     */
+    private suspend fun encryptUpiEnvelopeForMerchant(qrUri: String, merchantPubKey: String): String {
+        val relay = relayIdentityStore.getOrCreate()
+        val privateKey = java.math.BigInteger(1, relay.privateKeyHex.removePrefix("0x").hexToBytes())
+        val messageHash = keccak256(qrUri.toByteArray(Charsets.UTF_8))
+        val sig = EcdsaSigner.sign(messageHash, privateKey)
+        val sigBytes = sig.r.toByteArray().padLeftToWord() +
+            sig.s.toByteArray().padLeftToWord() +
+            byteArrayOf((sig.yParity + SIG_V_OFFSET).toByte())
+        val sigHex = "0x" + sigBytes.toHex()
+        val payload = Json.encodeToString(
+            kotlinx.serialization.json.JsonObject.serializer(),
+            buildJsonObject {
+                put("message", qrUri)
+                put("signature", sigHex)
+            },
+        )
+        return Ecies.cipherStringify(Ecies.encryptWithPublicKey(merchantPubKey, payload))
+    }
+
     private suspend fun readSellPriceInrPerUsdc(currency: CurrencyCode): java.math.BigDecimal {
         val ret = rpc.ethCall(
             to = network.diamondAddress,
             data = DiamondCalls.getPriceConfigCalldata(currency),
         )
         return PriceConfigDecoder.decode(ret).sellPriceAsRate()
+    }
+
+    // The Diamond pulls `smallOrderFixedFeePay` as a separate transferFrom inside setSellOrderUpi
+    // (on top of `placed`). If allowance is short of `placed + fee`, the contract atomic-emits
+    // `CancelledOrders` from inside the user's own setUpi call — visually indistinguishable from
+    // a merchant decline but actually a silent allowance underflow. Verified mainnet 2026-05-24:
+    // 0.99 USDC orders cancelled atomically with allowance == placed; same orders completed once
+    // we approved `placed + fee`. user-app-client sidesteps this by approving `MAX_UINT256` once.
+    private suspend fun readSmallOrderFixedFeePay(currency: CurrencyCode): Usdc6 {
+        val ret = rpc.ethCall(
+            to = network.diamondAddress,
+            data = DiamondCalls.getSmallOrderFixedFeePayCalldata(currency),
+        )
+        return Usdc6(AbiDecoder(ret).also { it.requireWords(1) }.uint(0))
     }
 
     private suspend fun resolveFallbackFiat(checkpoint: OfframpCheckpoint): Usdc6 {
@@ -633,5 +703,7 @@ class OfframpOrchestrator(
         private const val ASSIGN_UP_TO = 3L
         private const val DEFAULT_POLL_INTERVAL_MS = 3_000L
         private const val DEFAULT_STALLED_AFTER_MS = 5L * 60 * 1000
+        // viem `serializeSignature` v offset — adds 27 to recId so v ∈ {0x1b, 0x1c}.
+        private const val SIG_V_OFFSET = 27
     }
 }

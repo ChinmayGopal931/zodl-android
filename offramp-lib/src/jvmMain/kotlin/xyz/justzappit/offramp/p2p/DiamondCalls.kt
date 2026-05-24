@@ -95,6 +95,12 @@ object DiamondCalls {
             listOf(AbiEncoder.bytes32String(currency.code)),
         )
 
+    fun getSmallOrderFixedFeePayCalldata(currency: CurrencyCode): ByteArray =
+        AbiEncoder.encodeFunctionCall(
+            "getSmallOrderFixedFeePay(bytes32)",
+            listOf(AbiEncoder.bytes32String(currency.code)),
+        )
+
     fun getAssignableMerchantsFromCircleCalldata(
         circleId: BigInteger,
         assignUpTo: BigInteger,

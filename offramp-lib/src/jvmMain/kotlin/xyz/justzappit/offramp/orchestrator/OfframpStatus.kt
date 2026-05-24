@@ -25,6 +25,16 @@ sealed class OfframpStatus {
         val depositAddress: String? = null,
     ) : OfframpStatus()
 
+    /**
+     * Funding step short-circuited: the smart account already held [baseBalance] ≥ the order
+     * amount, so no NEAR bridge ran. Distinct from [BridgingFunds] so the UI can render
+     * "Using Base balance" instead of "Bridging funds".
+     */
+    data class FundedFromBase(
+        val amount: Usdc6,
+        val baseBalance: Usdc6,
+    ) : OfframpStatus()
+
     data class ApprovingUsdc(
         val txHash: TxHash,
         val amount: Usdc6,
@@ -162,6 +172,7 @@ val OfframpStatus.orderId: BigInteger? get() = when (this) {
     OfframpStatus.Idle,
     is OfframpStatus.SelectingCircle,
     is OfframpStatus.BridgingFunds,
+    is OfframpStatus.FundedFromBase,
     is OfframpStatus.FundsRecovered,
     is OfframpStatus.ApprovingUsdc,
     is OfframpStatus.PlacingOrder -> null
@@ -172,6 +183,7 @@ val OfframpStatus.step: OfframpStep get() = when (this) {
     OfframpStatus.Idle -> OfframpStep.INITIALIZATION
     is OfframpStatus.SelectingCircle -> OfframpStep.SELECTING_CIRCLE
     is OfframpStatus.BridgingFunds -> OfframpStep.FUNDING
+    is OfframpStatus.FundedFromBase -> OfframpStep.FUNDING
     is OfframpStatus.FundsRecovered -> OfframpStep.FUNDING
     is OfframpStatus.ApprovingUsdc -> OfframpStep.APPROVING_USDC
     is OfframpStatus.PlacingOrder -> OfframpStep.PLACING_ORDER

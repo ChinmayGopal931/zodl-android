@@ -170,31 +170,19 @@ private fun OrderSummaryCard(summary: UpiOfframpOrderSummary) {
         }
         if (summary.merchantAddress != null && summary.merchantExplorerUrl != null) {
             Spacer(modifier = Modifier.height(GAP_SM.dp))
-            BasicText(
-                text = stringResource(R.string.upi_offramp_summary_merchant),
-                style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            ExplorerLink(
+            SummaryLinkRow(
+                label = stringResource(R.string.upi_offramp_summary_merchant),
                 value = summary.merchantAddress,
                 url = summary.merchantExplorerUrl,
-                prefix = ADDRESS_ELLIPSIS_PREFIX,
-                suffix = ADDRESS_ELLIPSIS_SUFFIX,
                 uriHandler = uriHandler,
             )
         }
         if (summary.signerAddress != null && summary.signerExplorerUrl != null) {
             Spacer(modifier = Modifier.height(GAP_SM.dp))
-            BasicText(
-                text = stringResource(R.string.upi_offramp_summary_signer),
-                style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            ExplorerLink(
+            SummaryLinkRow(
+                label = stringResource(R.string.upi_offramp_summary_signer),
                 value = summary.signerAddress,
                 url = summary.signerExplorerUrl,
-                prefix = ADDRESS_ELLIPSIS_PREFIX,
-                suffix = ADDRESS_ELLIPSIS_SUFFIX,
                 uriHandler = uriHandler,
             )
         }
@@ -300,6 +288,37 @@ private fun SummaryRow(label: String, value: String) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = GAP_MD.dp),
+        )
+    }
+}
+
+/**
+ * Label on the left, ellipsized clickable monospace explorer link on the right —
+ * same row shape as [SummaryRow] but with a tappable underlined value.
+ */
+@Composable
+private fun SummaryLinkRow(label: String, value: String, url: String, uriHandler: UriHandler) {
+    val c = ZappTheme.colors
+    val t = ZappTheme.typography
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicText(
+            text = label,
+            style = t.caption.copy(color = c.textMuted, fontWeight = FontWeight.Medium),
+        )
+        BasicText(
+            text = value.ellipsizeMiddle(ADDRESS_ELLIPSIS_PREFIX, ADDRESS_ELLIPSIS_SUFFIX),
+            style = t.mono.copy(color = c.accent, textDecoration = TextDecoration.Underline),
+            modifier = Modifier
+                .padding(start = GAP_MD.dp)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = ripple(color = c.accent),
+                    onClick = { uriHandler.openUri(url) },
+                ),
         )
     }
 }

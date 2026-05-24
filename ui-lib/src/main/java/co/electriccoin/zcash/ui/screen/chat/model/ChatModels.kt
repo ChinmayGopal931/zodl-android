@@ -93,9 +93,8 @@ data class ChatMessage(
             mediaLocalPath = zmMsg.mediaLocalPath,
             mediaTransferState = zmMsg.mediaTransferState?.name?.lowercase(),
             status = if (zmMsg.isFromMe) MessageStatus.SENT else null,
-            replyToId = zmMsg.replyToId,
-            replyToSenderName = zmMsg.replyToSenderName,
-            replyToContent = zmMsg.replyToContent
+            // TODO: restore reply fields once zappMessaging ZMMessage exposes replyTo* (not in
+            // the currently-pinned SHA in .zapp-deps). Defaults are null, so unwired for now.
         )
     }
 }

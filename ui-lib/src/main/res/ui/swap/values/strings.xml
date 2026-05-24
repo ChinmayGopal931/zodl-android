@@ -117,7 +117,12 @@
     <string name="upi_offramp_step_init">Setup</string>
     <string name="upi_offramp_step_selecting_circle">Picking a merchant pool</string>
     <string name="upi_offramp_step_funding">Bridging funds</string>
+    <string name="upi_offramp_step_funding_from_base">Using your Base balance</string>
     <string name="upi_offramp_step_approve">Approving USDC</string>
+    <string name="upi_offramp_base_balance_label">Available on Base: %1$s USDC</string>
+    <string name="upi_offramp_funding_from_base">✓ Using your Base balance — no bridge needed.</string>
+    <string name="upi_offramp_funding_via_near">Will bridge %1$s USDC from your ZEC via NEAR.</string>
+    <string name="upi_offramp_funding_need_manual">Need %1$s USDC on Base — bridge unavailable on this network.</string>
     <string name="upi_offramp_step_place_order">Placing the order</string>
     <string name="upi_offramp_step_wait_acceptance">Waiting for merchant to accept</string>
     <string name="upi_offramp_step_encrypting_upi">Encrypting UPI handle</string>

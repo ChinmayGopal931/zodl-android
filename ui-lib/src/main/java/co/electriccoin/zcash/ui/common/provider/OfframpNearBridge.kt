@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.first
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.types.Address
+import xyz.justzappit.offramp.funding.FundingOutcome
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
@@ -133,8 +134,11 @@ class NearBridgeOfframpFunding(
         request: OfframpRequest,
         resumeHandle: String?,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
-    ) {
-        if (rpc.getUsdcBalance(usdc, account) >= request.usdcAmount) return
+    ): FundingOutcome {
+        val initialBalance = rpc.getUsdcBalance(usdc, account)
+        if (initialBalance >= request.usdcAmount) {
+            return FundingOutcome.AlreadyFunded(currentBalance = initialBalance)
+        }
 
         val tokens = swapDataSource.getSupportedTokens()
         val depositAddress = if (resumeHandle != null) {
@@ -149,6 +153,7 @@ class NearBridgeOfframpFunding(
         check(rpc.getUsdcBalance(usdc, account) >= request.usdcAmount) {
             "NEAR bridge settled but ${account.checksumHex} is still under-funded for the order."
         }
+        return FundingOutcome.Bridged(depositAddress = depositAddress)
     }
 
     private suspend fun openBridge(

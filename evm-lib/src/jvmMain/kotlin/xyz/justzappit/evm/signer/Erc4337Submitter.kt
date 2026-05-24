@@ -19,8 +19,9 @@ import java.math.BigInteger
 
 /**
  * Sends each `{to, value, data}` as a gas-sponsored ERC-4337 v0.6 UserOperation. The owner key
- * signs locally (self-custody); thirdweb's bundler relays and its paymaster pays. The first op for
- * an undeployed account carries the factory initCode (lazy deploy); subsequent ops carry none.
+ * signs locally (self-custody); the bundler (Pimlico) relays and its verifying paymaster pays. The
+ * first op for an undeployed account carries the factory initCode (lazy deploy); subsequent ops
+ * carry none.
  *
  * The returned [TxHash] is the userOpHash; [awaitReceipt] resolves it to the mined transaction
  * receipt via the bundler, whose inner logs are identical to a normal tx — so downstream log
@@ -39,6 +40,15 @@ class Erc4337Submitter(
     private val receiptPollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
 ) : TxSubmitter {
 
+    /**
+     * Local nonce cursor. After a successful `eth_sendUserOperation`, the next sequential nonce is
+     * deterministically `cursor + 1` — no RPC read needed. Sidesteps the cross-RPC race on
+     * fast-block chains where Pimlico's simulator (which validates the nonce at sponsorship time)
+     * has already advanced past what our node RPC reports, causing AA25 on back-to-back UserOps.
+     * Null = uninitialized; populated by the first RPC read and incremented locally thereafter.
+     */
+    private var nonceCursor: BigInteger? = null
+
     override suspend fun sendTransaction(to: Address, value: Wei, data: ByteArray): TxHash {
         val initCode = if (rpc.ethGetCode(smartAccount).isEmpty()) {
             ThirdwebSmartAccount.initCode(accountFactory, owner.address)
@@ -46,10 +56,11 @@ class Erc4337Submitter(
             ByteArray(0)
         }
         val gasPrice = bundler.getUserOperationGasPrice()
+        val nonce = nonceCursor ?: entryPointNonce().also { nonceCursor = it }
 
         val draft = UserOperationV06(
             sender = smartAccount,
-            nonce = entryPointNonce(),
+            nonce = nonce,
             initCode = initCode,
             callData = ThirdwebSmartAccount.executeCalldata(to, value, data),
             callGasLimit = BigInteger.ZERO,
@@ -76,7 +87,13 @@ class Erc4337Submitter(
             paymasterAndData = bundler.sponsorUserOperation(withGas).paymasterAndData.hexToBytes(),
         )
         val signed = sponsored.copy(signature = signOwner(sponsored.userOpHash(entryPoint, chainId)))
-        return bundler.sendUserOperation(signed)
+        val txHash = bundler.sendUserOperation(signed)
+        // Bundler accepted the op for this nonce — advance the cursor now so the next call doesn't
+        // re-read a possibly-lagging node RPC. If the op later reverts on-chain, the cursor is
+        // stale, but the orchestrator stops the flow on revert anyway; a retry builds a fresh
+        // Erc4337Submitter (per-order in AaOfframpDriver.buildOrchestrator) which re-reads.
+        nonceCursor = nonce + BigInteger.ONE
+        return txHash
     }
 
     override suspend fun awaitReceipt(txHash: TxHash): TransactionReceipt {
@@ -92,7 +109,11 @@ class Erc4337Submitter(
         )
     }
 
-    /** EntryPoint.getNonce(sender, key=0): the next sequential nonce; 0 for a counterfactual account. */
+    /**
+     * EntryPoint.getNonce(sender, key=0): the next sequential nonce; 0 for a counterfactual account.
+     * Read once per submitter instance — the cursor takes over after the first UserOp lands. Uses
+     * the node RPC because Pimlico's bundler endpoint does not serve `eth_call`.
+     */
     private suspend fun entryPointNonce(): BigInteger {
         val ret = rpc.ethCall(
             to = entryPoint,
@@ -104,7 +125,7 @@ class Erc4337Submitter(
         return if (ret.isEmpty()) BigInteger.ZERO else BigInteger(1, ret)
     }
 
-    /** thirdweb's Account validates the owner's ECDSA signature over the EIP-191-prefixed userOpHash. */
+    /** thirdweb's prebuilt Account contract validates the owner's ECDSA signature over the EIP-191-prefixed userOpHash. */
     private fun signOwner(userOpHash: ByteArray): ByteArray {
         val ethHash = keccak256(EIP191_PREFIX + userOpHash)
         return encodeSignature(EcdsaSigner.sign(ethHash, BigInteger(1, owner.privateKey)))

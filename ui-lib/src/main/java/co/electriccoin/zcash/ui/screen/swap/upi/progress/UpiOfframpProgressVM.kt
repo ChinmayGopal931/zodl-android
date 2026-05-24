@@ -77,6 +77,11 @@ internal class UpiOfframpProgressVM(
     private val refundStatus = MutableStateFlow<OfframpStatus?>(null)
     private val isRefunding = MutableStateFlow(false)
 
+    // Sticky: once the funding seam short-circuits with FundedFromBase, the FUNDING progress row
+    // keeps that label for the rest of the run. Live status moves on once the next step begins, so
+    // a non-sticky reading would flip the label back to "Bridging funds" by the time the user sees it.
+    private val fundedFromBaseObserved = MutableStateFlow(false)
+
     /**
      * Shared so multiple downstream collectors (state-builder, persister side effect, fee-details
      * fetcher) read a single underlying orchestrator run. `replay = 1` so late subscribers (the
@@ -106,6 +111,7 @@ internal class UpiOfframpProgressVM(
             .onEach { status ->
                 Twig.info { "UpiOfframpProgress status=$status" }
                 persister.onStatus(status)
+                if (status is OfframpStatus.FundedFromBase) fundedFromBaseObserved.update { true }
             }
             .collect { emit(it) }
     }.shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
@@ -137,14 +143,14 @@ internal class UpiOfframpProgressVM(
     private val refundState = combine(refundStatus, isRefunding) { s, f -> RefundState(s, f) }
 
     val state: StateFlow<UpiOfframpProgressState> =
-        combine(statusSource, feeDetails, smartAccountAddress, refundState) {
-                status, fees, addr, refund ->
-            buildState(status, fees, addr, refund)
+        combine(statusSource, feeDetails, smartAccountAddress, refundState, fundedFromBaseObserved) {
+                status, fees, addr, refund, fundedFromBase ->
+            buildState(status, fees, addr, refund, fundedFromBase)
         }
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.Eagerly,
-                initialValue = buildState(OfframpStatus.Idle, null, null, RefundState(null, false)),
+                initialValue = buildState(OfframpStatus.Idle, null, null, RefundState(null, false), false),
             )
 
     private fun buildState(
@@ -152,6 +158,7 @@ internal class UpiOfframpProgressVM(
         fees: OrderFeeDetails?,
         accountAddress: Address?,
         refund: RefundState,
+        fundedFromBase: Boolean,
     ): UpiOfframpProgressState {
         val effective = refund.status ?: liveStatus
         val orderId = effective.orderId
@@ -175,7 +182,7 @@ internal class UpiOfframpProgressVM(
             else -> stringRes(R.string.upi_offramp_progress_subtitle_recipient, args.recipientUpi)
         }
 
-        val steps = buildProgressSteps(effective, network)
+        val steps = buildProgressSteps(effective, network, fundedFromBaseObserved = fundedFromBase)
         val failure = (effective as? OfframpStatus.Failed)?.let(::buildFailureCard)
         val cancelled = (effective as? OfframpStatus.Cancelled)?.let(::buildCancelledCard)
         val recovery = (refund.status as? OfframpStatus.FundsRecovered)?.let(::buildRecoveryCard)

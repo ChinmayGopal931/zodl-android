@@ -206,11 +206,11 @@ androidComponents {
             )
         )
         variant.buildConfigFields?.put(
-            "THIRDWEB_CLIENT_ID",
+            "PIMLICO_API_KEY",
             BuildConfigField(
                 type = "String",
-                value = "\"${project.property("THIRDWEB_CLIENT_ID")?.toString().orEmpty()}\"",
-                comment = "thirdweb publishable Client ID for the offramp ERC-4337 bundler/paymaster"
+                value = "\"${project.property("PIMLICO_API_KEY")?.toString().orEmpty()}\"",
+                comment = "Pimlico API key for the offramp ERC-4337 bundler + verifying paymaster"
             )
         )
     }

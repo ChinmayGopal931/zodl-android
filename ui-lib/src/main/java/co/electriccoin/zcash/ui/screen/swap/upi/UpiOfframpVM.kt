@@ -16,12 +16,16 @@ import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
 import xyz.justzappit.evm.rpc.BaseRpcClient
+import xyz.justzappit.evm.types.Address
+import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
+import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
 import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.UpiQrParser
 import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getPriceConfig
+import xyz.justzappit.offramp.p2p.getUsdcBalance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +43,7 @@ internal class UpiOfframpVM(
     private val navigationRouter: NavigationRouter,
     private val rpc: BaseRpcClient,
     private val network: P2pNetworkConfig,
+    private val accountProvider: SmartOfframpAccountProvider,
     private val checkpointStorage: OfframpCheckpointStorageProvider,
     private val navigateToScanUpi: NavigateToScanUpiUseCase,
 ) : ViewModel() {
@@ -48,6 +53,13 @@ internal class UpiOfframpVM(
     private val upiText = MutableStateFlow("")
     private val rate = MutableStateFlow(FALLBACK_RATE)
     private val inFlight = MutableStateFlow<OfframpCheckpoint?>(null)
+    private val baseBalance = MutableStateFlow<Usdc6?>(null)
+
+    /**
+     * Resolved once on init — the smart account address is deterministic from the owner key and
+     * doesn't change across rebuilds. Null while the first factory.getAddress call is in flight.
+     */
+    private var smartAccountAddress: Address? = null
 
     val state: StateFlow<UpiOfframpState> =
         combine(
@@ -55,7 +67,8 @@ internal class UpiOfframpVM(
             upiText,
             rate,
             inFlight,
-        ) { amounts, upi, currentRate, checkpoint ->
+            baseBalance,
+        ) { amounts, upi, currentRate, checkpoint, balance ->
             buildState(
                 side = amounts.first,
                 usdc = amounts.second,
@@ -63,6 +76,7 @@ internal class UpiOfframpVM(
                 upi = upi,
                 currentRate = currentRate,
                 inFlightCheckpoint = checkpoint,
+                balance = balance,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -74,6 +88,7 @@ internal class UpiOfframpVM(
                 upi = upiText.value,
                 currentRate = rate.value,
                 inFlightCheckpoint = inFlight.value,
+                balance = baseBalance.value,
             ),
         )
 
@@ -88,6 +103,27 @@ internal class UpiOfframpVM(
         viewModelScope.launch {
             checkpointStorage.observe().collect { checkpoint -> inFlight.update { checkpoint } }
         }
+        viewModelScope.launch {
+            // Resolve the smart account once, then poll its USDC balance on the same cadence as the
+            // rate. Surfacing the balance lets the user see when prior cancelled orders left USDC on
+            // Base — those funds reuse without a new NEAR bridge.
+            smartAccountAddress = runCatching { accountProvider.resolve().address }
+                .onFailure { Twig.warn(it) { "UpiOfframpVM: smart account resolve failed" } }
+                .getOrNull()
+            if (smartAccountAddress == null) return@launch
+            while (isActive) {
+                refreshBaseBalance()
+                delay(BALANCE_REFRESH_INTERVAL_MS)
+            }
+        }
+    }
+
+    private suspend fun refreshBaseBalance() {
+        val account = smartAccountAddress ?: return
+        val fetched = runCatching { rpc.getUsdcBalance(network.usdcAddress, account) }
+            .onFailure { Twig.warn(it) { "UpiOfframpVM: getUsdcBalance failed" } }
+            .getOrNull() ?: return
+        baseBalance.update { fetched }
     }
 
     private suspend fun refreshRate() {
@@ -125,6 +161,7 @@ internal class UpiOfframpVM(
         upi: String,
         currentRate: BigDecimal,
         inFlightCheckpoint: OfframpCheckpoint?,
+        balance: Usdc6?,
     ): UpiOfframpState {
         val usdcAmount = usdc.amount
         val validationError = if (inFlightCheckpoint != null) {
@@ -147,6 +184,11 @@ internal class UpiOfframpVM(
                 upi.isNotBlank() &&
                 UpiQrParser.validateUpiId(upi)
         }
+        val amountValid = inFlightCheckpoint == null &&
+            validationError == null &&
+            usdcAmount != null &&
+            usdcAmount > BigDecimal.ZERO
+        val orderAmount: Usdc6? = if (amountValid) Usdc6.ofWhole(usdcAmount) else null
         return UpiOfframpState(
             primary = side,
             usdcInput = NumberTextFieldState(innerState = usdc, onValueChange = ::onUsdcChange),
@@ -154,13 +196,7 @@ internal class UpiOfframpVM(
             onSwapSides = ::onSwapSides,
             rateText = stringRes(R.string.upi_offramp_rate_label, rateDisplay),
             upiField = TextFieldState(stringRes(upi)) { newValue -> onUpiChange(newValue) },
-            infoText = if (inFlightCheckpoint == null &&
-                validationError == null &&
-                usdcAmount != null &&
-                usdcAmount > BigDecimal.ZERO
-            ) {
-                stringRes(R.string.upi_offramp_estimate_disclaimer)
-            } else null,
+            infoText = if (amountValid) stringRes(R.string.upi_offramp_estimate_disclaimer) else null,
             errorText = validationError,
             sendButton = ButtonState(
                 text = sendButtonText,
@@ -168,8 +204,29 @@ internal class UpiOfframpVM(
                 onClick = ::onSendClick,
             ),
             onScanQr = ::onScanQr,
+            baseBalanceText = balance?.let {
+                stringRes(R.string.upi_offramp_base_balance_label, it.toDisplayString(stripTrailingZeros = true))
+            },
+            fundingPlanText = if (orderAmount != null && balance != null) {
+                fundingPlanText(orderAmount = orderAmount, balance = balance)
+            } else null,
             onDiscardInFlight = if (inFlightCheckpoint != null) ::onDiscardInFlight else null,
         )
+    }
+
+    /**
+     * The plain-English funding plan shown below the amount inputs. Honors the existing
+     * "bridge the full order amount when balance is short" behavior (we don't bridge just the delta),
+     * and on testnet replaces the NEAR bridge copy with a manual-fund hint since no bridge runs there.
+     */
+    private fun fundingPlanText(orderAmount: Usdc6, balance: Usdc6): StringResource {
+        if (balance >= orderAmount) return stringRes(R.string.upi_offramp_funding_from_base)
+        val orderDisplay = orderAmount.toDisplayString(stripTrailingZeros = true)
+        return if (network.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+            stringRes(R.string.upi_offramp_funding_via_near, orderDisplay)
+        } else {
+            stringRes(R.string.upi_offramp_funding_need_manual, orderDisplay)
+        }
     }
 
     private fun onDiscardInFlight() {
@@ -254,14 +311,20 @@ internal class UpiOfframpVM(
             )
             return
         }
-        val usdcAmount = usdcState.value.amount ?: return
-        val inrAmount = inrState.value.amount ?: return
-        if (usdcAmount <= BigDecimal.ZERO || usdcAmount > USDC_CAP) return
-        if (inrAmount <= BigDecimal.ZERO) return
+        val rawUsdc = usdcState.value.amount ?: return
+        val rawInr = inrState.value.amount ?: return
+        if (rawUsdc <= BigDecimal.ZERO || rawUsdc > USDC_CAP) return
+        if (rawInr <= BigDecimal.ZERO) return
         val upi = upiText.value
         if (upi.isBlank() || !UpiQrParser.validateUpiId(upi)) return
-        val usdcMicro = Usdc6.ofWhole(usdcAmount).micros
-        val fiatMicro = Usdc6.ofWhole(inrAmount).micros
+        // Snap to URI/Diamond-aligned precisions before placing. The URI's am= field is 2dp; the
+        // Diamond re-derives USDC from am= at setSellOrderUpi and atomically cancels if
+        // updatedAmount ≠ floor(am × 1e6 / sellPrice). Re-deriving USDC here from snapped INR
+        // guarantees that placement, parsedUsdcMicros, and the Diamond's check all agree.
+        val snappedInr = rawInr.setScale(INR_INPUT_SCALE, RoundingMode.FLOOR)
+        val alignedUsdc = snappedInr.divide(rate.value, USDC_INPUT_SCALE, RoundingMode.FLOOR)
+        val usdcMicro = Usdc6.ofWhole(alignedUsdc).micros
+        val fiatMicro = Usdc6.ofWhole(snappedInr).micros
         navigationRouter.forward(
             UpiOfframpProgressArgs(
                 recipientUpi = upi,
@@ -282,8 +345,14 @@ internal class UpiOfframpVM(
         // R.string.upi_offramp_limit_hint and enforced here as a hard input cap.
         private val USDC_CAP: BigDecimal = BigDecimal("100")
 
-        private const val USDC_INPUT_SCALE = 4
+        // 6dp so a 2dp INR amount can be expressed as the EXACT USDC the Diamond derives from am=
+        // (Diamond reads am= as a 2dp-floored string from the URI; updatedAmount must equal
+        // floor(am × 1e6 / sellPrice). Truncating USDC display would mask the alignment).
+        private const val USDC_INPUT_SCALE = 6
+        // 2dp matches UpiPayUri's am= encoding. Anything more precise is silently floored on-chain
+        // and causes setSellOrderUpi to atomically cancel (parsed-from-am ≠ updatedAmount).
         private const val INR_INPUT_SCALE = 2
         private const val RATE_REFRESH_INTERVAL_MS = 30_000L
+        private const val BALANCE_REFRESH_INTERVAL_MS = 30_000L
     }
 }

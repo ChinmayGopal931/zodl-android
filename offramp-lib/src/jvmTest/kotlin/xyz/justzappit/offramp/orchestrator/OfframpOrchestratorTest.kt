@@ -18,6 +18,7 @@ import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.signer.EoaSigner
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.config.P2pNetworks
+import xyz.justzappit.offramp.funding.FundingOutcome
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
 import xyz.justzappit.offramp.p2p.CircleRouter
@@ -104,7 +105,7 @@ class OfframpOrchestratorTest {
         network = network,
         subgraph = subgraph,
         orderReader = orderReader,
-        funding = OfframpFunding { _, _, _, _ -> },
+        funding = OfframpFunding { _, _, _, _ -> FundingOutcome.AlreadyFunded(Usdc6.ZERO) },
         refund = OfframpRefund { _, _ -> null },
         router = CircleRouter(random = Random(0), epsilon = 0.0),
         pollIntervalMs = 0,
@@ -286,7 +287,10 @@ class OfframpOrchestratorTest {
         // re-polls the in-flight bridge) instead of opening a second bridge — the double-send fix.
         val seenResumeHandles = mutableListOf<String?>()
         val orchestrator = orchestratorWith(
-            funding = OfframpFunding { _, _, resumeHandle, _ -> seenResumeHandles += resumeHandle },
+            funding = OfframpFunding { _, _, resumeHandle, _ ->
+                seenResumeHandles += resumeHandle
+                FundingOutcome.Bridged(depositAddress = resumeHandle ?: "near-deposit-abc")
+            },
         )
         orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
         orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
@@ -300,7 +304,10 @@ class OfframpOrchestratorTest {
     @Test
     fun `onBridgeStarted emits BridgingFunds with the deposit address before approving`() = runTest {
         val orchestrator = orchestratorWith(
-            funding = OfframpFunding { _, _, _, onBridgeStarted -> onBridgeStarted("near-deposit-xyz") },
+            funding = OfframpFunding { _, _, _, onBridgeStarted ->
+                onBridgeStarted("near-deposit-xyz")
+                FundingOutcome.Bridged(depositAddress = "near-deposit-xyz")
+            },
         )
         orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
         orderReader.enqueue(snapshot(status = OrderStatus.COMPLETED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
@@ -322,7 +329,10 @@ class OfframpOrchestratorTest {
         // merchant drops out. The post-funding re-check must fail BEFORE approve, so the bridged USDC
         // is never committed to a placeOrder that would revert.
         val orchestrator = orchestratorWith(
-            funding = OfframpFunding { _, _, _, _ -> getAssignableResponse = ENCODED_EMPTY_ADDRESS_ARRAY },
+            funding = OfframpFunding { _, _, _, _ ->
+                getAssignableResponse = ENCODED_EMPTY_ADDRESS_ARRAY
+                FundingOutcome.AlreadyFunded(Usdc6.ZERO)
+            },
         )
 
         val statuses = orchestrator.run(payRequest()).toList()
@@ -337,7 +347,7 @@ class OfframpOrchestratorTest {
         nextUsdcBalance = ENCODED_FIVE_USDC
         val pullback = Address.parse("0x2222222222222222222222222222222222222222")
         val orchestrator = orchestratorWith(
-            funding = OfframpFunding { _, _, _, _ -> },
+            funding = OfframpFunding { _, _, _, _ -> FundingOutcome.AlreadyFunded(Usdc6.ZERO) },
             refund = OfframpRefund { _, _ -> pullback },
         )
 
@@ -353,7 +363,7 @@ class OfframpOrchestratorTest {
     fun `bridgeFundsBackToZec with no route leaves the USDC in the account (testnet)`() = runTest {
         nextUsdcBalance = ENCODED_FIVE_USDC
         val orchestrator = orchestratorWith(
-            funding = OfframpFunding { _, _, _, _ -> },
+            funding = OfframpFunding { _, _, _, _ -> FundingOutcome.AlreadyFunded(Usdc6.ZERO) },
             refund = OfframpRefund { _, _ -> null },
         )
 

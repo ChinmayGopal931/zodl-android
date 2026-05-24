@@ -78,6 +78,7 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
         ) {
             AmountFieldBlock(
                 label = stringResource(R.string.upi_offramp_you_send),
+                trailingLabel = state.baseBalanceText?.getValue(),
                 tokenLabel = stringResource(R.string.upi_offramp_token_usdc),
                 state = state.usdcInput,
                 isActive = state.primary == UpiOfframpAmountSide.USDC,
@@ -148,6 +149,17 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
                 )
             }
 
+            state.fundingPlanText?.let { plan ->
+                Spacer(modifier = Modifier.height(GAP_SM.dp))
+                BasicText(
+                    text = plan.getValue(),
+                    style = ZappTheme.typography.caption.copy(
+                        color = c.text,
+                        fontWeight = FontWeight.Medium,
+                    ),
+                )
+            }
+
             state.onDiscardInFlight?.let { onDiscard ->
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
                 BasicText(
@@ -174,13 +186,26 @@ private fun AmountFieldBlock(
     tokenLabel: String,
     state: NumberTextFieldState,
     isActive: Boolean,
+    trailingLabel: String? = null,
 ) {
     val c = ZappTheme.colors
     val t = ZappTheme.typography
-    BasicText(
-        text = label,
-        style = t.eyebrow.copy(color = c.textMuted),
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        BasicText(
+            text = label,
+            style = t.eyebrow.copy(color = c.textMuted),
+        )
+        trailingLabel?.let {
+            Spacer(modifier = Modifier.weight(1f))
+            BasicText(
+                text = it,
+                style = t.caption.copy(color = c.textMuted),
+            )
+        }
+    }
     Spacer(modifier = Modifier.height(GAP_SM.dp))
     Row(
         modifier = Modifier
@@ -348,6 +373,8 @@ private fun PreviewFilled() {
                 errorText = null,
                 sendButton = ButtonState(stringRes("Send"), isEnabled = true),
                 onScanQr = {},
+                baseBalanceText = stringRes("Available: 0.85 USDC"),
+                fundingPlanText = stringRes("Will bridge 5.88 USDC from your ZEC via NEAR"),
             ),
         )
     }

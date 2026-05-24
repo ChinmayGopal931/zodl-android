@@ -3,7 +3,21 @@ package xyz.justzappit.offramp.funding
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
+import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getUsdcBalance
+
+/**
+ * What the funding seam ended up doing. Lets the orchestrator surface a distinct UI status for the
+ * skipped-bridge path (the smart account already held enough USDC — common after a cancelled order
+ * left USDC refunded into the account) vs. the actually-bridged path.
+ */
+sealed interface FundingOutcome {
+    /** Account already held [currentBalance] ≥ the order amount; no bridge ran. */
+    data class AlreadyFunded(val currentBalance: Usdc6) : FundingOutcome
+
+    /** A bridge was opened at [depositAddress] and settled successfully. */
+    data class Bridged(val depositAddress: String) : FundingOutcome
+}
 
 /**
  * Makes the smart account hold the USDC an order needs. Called by the orchestrator **after** the
@@ -22,7 +36,7 @@ import xyz.justzappit.offramp.p2p.getUsdcBalance
  *    quote, before any ZEC moves) so the orchestrator can persist it first, closing the
  *    crash-during-deposit window.
  *
- * Implementations return normally only once [account] verifiably holds at least
+ * Implementations return a [FundingOutcome] only once [account] verifiably holds at least
  * `request.usdcAmount`; otherwise they throw (fail-closed — the order is never placed unfunded).
  */
 fun interface OfframpFunding {
@@ -31,7 +45,7 @@ fun interface OfframpFunding {
         request: OfframpRequest,
         resumeHandle: String?,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
-    )
+    ): FundingOutcome
 }
 
 /**
@@ -48,11 +62,12 @@ class PreFundedOfframpFunding(
         request: OfframpRequest,
         resumeHandle: String?,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
-    ) {
+    ): FundingOutcome {
         val balance = rpc.getUsdcBalance(usdc, account)
         check(balance >= request.usdcAmount) {
             "Smart account ${account.checksumHex} holds ${balance.micros} USDC (micros), needs " +
                 "${request.usdcAmount.micros}. Fund it directly — no bridge on testnet."
         }
+        return FundingOutcome.AlreadyFunded(currentBalance = balance)
     }
 }

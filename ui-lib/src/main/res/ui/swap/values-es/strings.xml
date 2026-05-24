@@ -109,7 +109,12 @@
     <string name="upi_offramp_step_init">Preparación</string>
     <string name="upi_offramp_step_selecting_circle">Eligiendo grupo de comerciantes</string>
     <string name="upi_offramp_step_funding">Transfiriendo fondos</string>
+    <string name="upi_offramp_step_funding_from_base">Usando tu saldo en Base</string>
     <string name="upi_offramp_step_approve">Aprobando USDC</string>
+    <string name="upi_offramp_base_balance_label">Disponible en Base: %1$s USDC</string>
+    <string name="upi_offramp_funding_from_base">✓ Usando tu saldo en Base — no se necesita puente.</string>
+    <string name="upi_offramp_funding_via_near">Se transferirán %1$s USDC desde tu ZEC vía NEAR.</string>
+    <string name="upi_offramp_funding_need_manual">Necesitas %1$s USDC en Base — el puente no está disponible en esta red.</string>
     <string name="upi_offramp_step_place_order">Creando la orden</string>
     <string name="upi_offramp_step_wait_acceptance">Esperando que el comerciante acepte</string>
     <string name="upi_offramp_step_encrypting_upi">Cifrando UPI</string>

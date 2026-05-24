@@ -630,12 +630,11 @@ class ChatRoomVM(
 
     private suspend fun sendTextMessage(text: String, replyTo: ChatMessage? = null) {
         runChatCall("ChatRoomVM: sendMessage failed") {
+            // TODO: thread replyTo through once zappMessaging sdk.sendMessage accepts replyTo*
+            // params (not in the currently-pinned SHA in .zapp-deps). Local-only echo for now.
             val zmMessage = sdk.sendMessage(
                 conversationId = conversationId,
                 content = text,
-                replyToId = replyTo?.id,
-                replyToSenderName = replyTo?.senderName,
-                replyToContent = replyTo?.content?.take(REPLY_PREVIEW_MAX_LENGTH),
             )
             messages.update { it + ChatMessage.from(zmMessage) }
         }

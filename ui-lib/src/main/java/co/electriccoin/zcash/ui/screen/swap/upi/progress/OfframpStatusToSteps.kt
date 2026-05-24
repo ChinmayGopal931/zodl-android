@@ -21,14 +21,18 @@ import java.util.TimeZone
  * + Dispatchers.Main, and so the VM stays focused on flow plumbing. All inputs are values; the
  * only effect is producing the step list.
  */
-internal fun buildProgressSteps(status: OfframpStatus, network: P2pNetworkConfig): List<UpiOfframpStep> {
+internal fun buildProgressSteps(
+    status: OfframpStatus,
+    network: P2pNetworkConfig,
+    fundedFromBaseObserved: Boolean = false,
+): List<UpiOfframpStep> {
     val order = OfframpStep.UI_PROGRESS
     val currentStep = status.step.takeIf { status !is OfframpStatus.Failed }
     val failedStep = (status as? OfframpStatus.Failed)?.step
     return order.mapIndexed { index, step ->
         val txHashHex = txHashFor(status, step)?.hex
         UpiOfframpStep(
-            label = stringRes(stepLabelRes(step)),
+            label = stringRes(labelResFor(step, status, fundedFromBaseObserved)),
             status = computeStepStatus(index, order, currentStep, failedStep, status),
             txHash = txHashHex,
             txExplorerUrl = txHashHex?.let { network.txUrl(it) },
@@ -36,6 +40,23 @@ internal fun buildProgressSteps(status: OfframpStatus, network: P2pNetworkConfig
         )
     }
 }
+
+/**
+ * Picks the row label for [step]. Same row, different copy when the funding seam short-circuited —
+ * we render "Using Base balance" instead of "Bridging funds". The VM tracks [fundedFromBaseObserved]
+ * across the run (true once any [OfframpStatus.FundedFromBase] is seen) so the label sticks even
+ * after the flow advances to later steps and the live status is no longer the funding one.
+ */
+private fun labelResFor(
+    step: OfframpStep,
+    status: OfframpStatus,
+    fundedFromBaseObserved: Boolean,
+): Int =
+    if (step == OfframpStep.FUNDING && (status is OfframpStatus.FundedFromBase || fundedFromBaseObserved)) {
+        R.string.upi_offramp_step_funding_from_base
+    } else {
+        stepLabelRes(step)
+    }
 
 private fun computeStepStatus(
     index: Int,

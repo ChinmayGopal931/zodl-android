@@ -72,7 +72,6 @@ import xyz.justzappit.offramp.account.DevOfframpAccountProvider
 import xyz.justzappit.offramp.account.OfframpAccountProvider
 import xyz.justzappit.offramp.account.SeedPhraseSource
 import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
-import xyz.justzappit.offramp.account.StaticOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pConfigProvider
 import co.electriccoin.zcash.ui.common.provider.NearBridgeOfframpFunding
 import co.electriccoin.zcash.ui.common.provider.NearPullbackOfframpRefund
@@ -177,22 +176,27 @@ val providerModule =
         }
         single<SeedPhraseSource> { WalletSeedPhraseSource(persistableWalletProvider = get()) }
         single<OfframpAccountProvider> {
-            val cfg = get<P2pNetworkConfig>()
-            // Testnet keeps the committed dev key (its smart account is pre-funded for QA). Mainnet
-            // derives the ERC-4337 owner key from the user's wallet seed, so they sign with their own
-            // self-custodial account — never the shared dev key.
-            if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
-                StaticOfframpAccountProvider(seedPhraseSource = get())
-            } else {
-                DevOfframpAccountProvider
-            }
+            // TEMP(mainnet-qa): mainnet is wired to the committed dev key too — not the
+            // user's wallet seed — so the smart-account address is stable across every
+            // rebuild/reinstall during active mainnet testing, and we don't have to keep
+            // re-funding a fresh account each iteration. The dev key is checked into source
+            // (DevOfframpAccountProvider.kt), so anyone with the repo can drain whatever
+            // sits in this account on mainnet — keep funded amounts small.
+            //
+            // To revert before shipping, restore the per-network selection:
+            //     val cfg = get<P2pNetworkConfig>()
+            //     if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+            //         StaticOfframpAccountProvider(seedPhraseSource = get())
+            //     } else {
+            //         DevOfframpAccountProvider
+            //     }
+            DevOfframpAccountProvider
         }
         single<BundlerClient> {
             val cfg = get<P2pNetworkConfig>()
             BundlerClient(
                 httpClient = get(named(OFFRAMP_HTTP_CLIENT_QUALIFIER)),
-                bundlerUrl = BundlerClient.urlFor(cfg.chainId),
-                clientId = BuildConfig.THIRDWEB_CLIENT_ID,
+                bundlerUrl = BundlerClient.urlFor(cfg.chainId, BuildConfig.PIMLICO_API_KEY),
                 entryPoint = cfg.entryPointAddress,
                 chainId = cfg.chainId,
             )

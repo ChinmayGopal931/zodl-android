@@ -21,6 +21,17 @@ internal data class UpiOfframpState(
     val errorText: StringResource?,
     val sendButton: ButtonState,
     val onScanQr: () -> Unit,
+    /**
+     * Smart account's current USDC balance on Base, shown inline above the USDC input. Null until the
+     * first balance read returns (treated as unknown — UI hides the label).
+     */
+    val baseBalanceText: StringResource? = null,
+    /**
+     * One-line summary of how the entered order amount will be funded — either reused from the Base
+     * balance (no bridge) or bridged from ZEC. Null when there's nothing meaningful to say (no amount
+     * entered, balance still loading).
+     */
+    val fundingPlanText: StringResource? = null,
     /** Local-only escape hatch: forget an in-flight checkpoint without touching the on-chain order. */
     val onDiscardInFlight: (() -> Unit)? = null,
 )

@@ -13,7 +13,13 @@ import java.math.RoundingMode
  *   upi://pay?pa=<vpa>&pn=<payee-name>&am=<inr-amount>&cu=INR
  */
 object UpiPayUri {
-    private const val INR_DECIMAL_PLACES = 2
+    /**
+     * Decimals retained in the URI's `am=` field. Diamond reads `am=` from the merchant-decrypted
+     * URI and re-derives USDC at setSellOrderUpi; if the caller's `updatedAmount` doesn't equal
+     * `floor(am × 1e6 / sellPrice)` the order is atomically cancelled. Surfaced so callers can snap
+     * their INR amount to the same precision before computing `updatedAmount`.
+     */
+    const val INR_DECIMAL_PLACES = 2
 
     fun build(vpa: String, payeeName: String? = null, inrAmount: BigDecimal, currencyCode: String = "INR"): String {
         require(vpa.isNotBlank()) { "vpa must not be blank" }
