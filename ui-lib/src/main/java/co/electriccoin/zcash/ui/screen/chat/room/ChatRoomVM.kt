@@ -8,7 +8,25 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
+import co.electriccoin.zcash.ui.common.usecase.GetChatConnectionDetailsUseCase
+import co.electriccoin.zcash.ui.common.usecase.GetChatMessagesUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetZashiAccountUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatConversationsUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatDhtHealthUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupDeletedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupRenamedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMediaDownloadCompleteUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberAddedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberLeftUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageReceivedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageStatusUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatOnlineStateUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerCountUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerStatusUseCase
+import co.electriccoin.zcash.ui.common.usecase.RefreshChatConversationsUseCase
+import co.electriccoin.zcash.ui.common.usecase.SendChatMediaMessageUseCase
+import co.electriccoin.zcash.ui.common.usecase.SendChatMessageUseCase
+import co.electriccoin.zcash.ui.common.usecase.UpdateChatContactUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
@@ -42,17 +60,33 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 @Suppress("TooManyFunctions")
 class ChatRoomVM(
     args: ChatRoomArgs,
     private val application: Application,
-    private val sdk: ZappMessagingSDK,
     private val moderationRepository: ChatModerationRepository,
     private val getZashiAccount: GetZashiAccountUseCase,
     private val chatSendContext: ChatSendContextProvider,
     private val navigationRouter: NavigationRouter,
+    private val observeChatConversations: ObserveChatConversationsUseCase,
+    private val observeChatOnlineState: ObserveChatOnlineStateUseCase,
+    private val observeChatPeerCount: ObserveChatPeerCountUseCase,
+    private val observeChatDhtHealth: ObserveChatDhtHealthUseCase,
+    private val observeChatMessageReceived: ObserveChatMessageReceivedUseCase,
+    private val observeChatMessageStatus: ObserveChatMessageStatusUseCase,
+    private val observeChatMediaDownloadComplete: ObserveChatMediaDownloadCompleteUseCase,
+    private val observeChatGroupRenamed: ObserveChatGroupRenamedUseCase,
+    private val observeChatMemberLeft: ObserveChatMemberLeftUseCase,
+    private val observeChatMemberAdded: ObserveChatMemberAddedUseCase,
+    private val observeChatGroupDeleted: ObserveChatGroupDeletedUseCase,
+    private val observeChatPeerStatus: ObserveChatPeerStatusUseCase,
+    private val refreshChatConversations: RefreshChatConversationsUseCase,
+    private val getChatMessages: GetChatMessagesUseCase,
+    private val sendChatMessage: SendChatMessageUseCase,
+    private val sendChatMediaMessage: SendChatMediaMessageUseCase,
+    private val getChatConnectionDetails: GetChatConnectionDetailsUseCase,
+    private val updateChatContact: UpdateChatContactUseCase,
 ) : ViewModel() {
     private val conversationId: String = args.conversationId
     private val conversation = MutableStateFlow<ChatConversation?>(null)
@@ -378,23 +412,19 @@ class ChatRoomVM(
     // ── Sources / observers ───────────────────────────────────────────────────
 
     private suspend fun loadConversation() {
-        runChatCall("ChatRoomVM: conversations refresh failed") {
-            if (sdk.conversations.value.isEmpty()) sdk.refreshConversations()
-        }
-        val match = sdk.conversations.value.firstOrNull { it.id == conversationId }
+        if (observeChatConversations().value.isEmpty()) refreshChatConversations()
+        val match = observeChatConversations().value.firstOrNull { it.id == conversationId }
         conversation.value = match?.let(ChatConversation::from)
     }
 
     private suspend fun loadMessages() {
         isLoading.value = true
         try {
-            runChatCall("ChatRoomVM: loadMessages failed") {
-                val list =
-                    sdk
-                        .getMessages(conversationId)
+            getChatMessages(conversationId).onSuccess { zmList ->
+                messages.value =
+                    zmList
                         .map(ChatMessage::from)
                         .filterNot { msg -> moderationRepository.isBlocked(msg.senderName.orEmpty()) }
-                messages.value = list
             }
         } finally {
             isLoading.value = false
@@ -403,7 +433,7 @@ class ChatRoomVM(
 
     private fun observeConnection() {
         viewModelScope.launch {
-            sdk.isOnline.collect { online ->
+            observeChatOnlineState().collect { online ->
                 connectionStatus.value =
                     if (online) {
                         ChatListConnectionStatus.CONNECTED
@@ -412,8 +442,8 @@ class ChatRoomVM(
                     }
             }
         }
-        viewModelScope.launch { sdk.peerCount.collect { peerCount.value = it } }
-        viewModelScope.launch { sdk.dhtHealth.collect { dhtHealth.value = mapDhtHealth(it) } }
+        viewModelScope.launch { observeChatPeerCount().collect { peerCount.value = it } }
+        viewModelScope.launch { observeChatDhtHealth().collect { dhtHealth.value = mapDhtHealth(it) } }
     }
 
     private fun observeMessageEvents() {
@@ -428,7 +458,7 @@ class ChatRoomVM(
 
     private fun observeIncomingMessages() =
         viewModelScope.launch {
-            sdk.messageReceived.collect { (incomingConvId, msg) ->
+            observeChatMessageReceived().collect { (incomingConvId, msg) ->
                 if (incomingConvId != conversationId) return@collect
                 if (moderationRepository.isBlocked(msg.senderId)) return@collect
                 messages.update { it + ChatMessage.from(msg) }
@@ -437,7 +467,7 @@ class ChatRoomVM(
 
     private fun observeMessageStatus() =
         viewModelScope.launch {
-            sdk.messageStatus.collect { (messageId, _, status) ->
+            observeChatMessageStatus().collect { (messageId, _, status) ->
                 val mapped = mapMessageStatus(status) ?: return@collect
                 messages.update { list ->
                     list.map { m -> if (m.id == messageId) m.copy(status = mapped) else m }
@@ -455,7 +485,7 @@ class ChatRoomVM(
 
     private fun observeMediaDownloads() =
         viewModelScope.launch {
-            sdk.mediaDownloadComplete.collect { (mediaId, filePath) ->
+            observeChatMediaDownloadComplete().collect { (mediaId, filePath) ->
                 messages.update { list ->
                     list.map { m ->
                         if (m.mediaId == mediaId && m.mediaLocalPath == null) {
@@ -470,7 +500,7 @@ class ChatRoomVM(
 
     private fun observeGroupRenames() =
         viewModelScope.launch {
-            sdk.groupRenamed.collect { (renamedId, newName) ->
+            observeChatGroupRenamed().collect { (renamedId, newName) ->
                 if (renamedId == conversationId) {
                     conversation.update { it?.copy(displayName = newName) }
                 }
@@ -479,7 +509,7 @@ class ChatRoomVM(
 
     private fun observeMemberLeaves() =
         viewModelScope.launch {
-            sdk.memberLeft.collect { (leftConvId, peer) ->
+            observeChatMemberLeft().collect { (leftConvId, peer) ->
                 if (leftConvId == conversationId) {
                     conversation.update { conv ->
                         conv?.copy(participantIds = conv.participantIds.filter { it != peer })
@@ -490,7 +520,7 @@ class ChatRoomVM(
 
     private fun observeMemberJoins() =
         viewModelScope.launch {
-            sdk.memberAdded.collect { (addedConvId, peer, _) ->
+            observeChatMemberAdded().collect { (addedConvId, peer, _) ->
                 if (addedConvId == conversationId) {
                     conversation.update { conv ->
                         if (conv != null && peer !in conv.participantIds) {
@@ -505,14 +535,14 @@ class ChatRoomVM(
 
     private fun observeGroupDeletion() =
         viewModelScope.launch {
-            sdk.groupDeleted.collect { deletedId ->
+            observeChatGroupDeleted().collect { deletedId ->
                 if (deletedId == conversationId) navigationRouter.back()
             }
         }
 
     private fun observePeerStatus() {
         viewModelScope.launch {
-            sdk.peerStatus.collect { (statusConvId, _, status) ->
+            observeChatPeerStatus().collect { (statusConvId, _, status) ->
                 if (statusConvId == conversationId) {
                     peerOnline.value = status == PEER_STATUS_ONLINE
                 }
@@ -687,14 +717,9 @@ class ChatRoomVM(
     // ── SDK calls ────────────────────────────────────────────────────────────
 
     private suspend fun sendTextMessage(text: String, replyTo: ChatMessage? = null) {
-        runChatCall("ChatRoomVM: sendMessage failed") {
-            // TODO: thread replyTo through once zappMessaging sdk.sendMessage accepts replyTo*
-            // params (not in the currently-pinned SHA in .zapp-deps). Local-only echo for now.
-            val zmMessage =
-                sdk.sendMessage(
-                    conversationId = conversationId,
-                    content = text,
-                )
+        // TODO: thread replyTo through once zappMessaging sdk.sendMessage accepts replyTo*
+        // params (not in the currently-pinned SHA in .zapp-deps). Local-only echo for now.
+        sendChatMessage(conversationId = conversationId, content = text).onSuccess { zmMessage ->
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
@@ -763,43 +788,39 @@ class ChatRoomVM(
         caption: String = "",
         thumbnailData: String? = null,
     ) {
-        runChatCall("ChatRoomVM: sendMediaMessage failed") {
-            val zmMessage = sdk.sendMediaMessage(conversationId, mediaPath, contentType, caption, thumbnailData)
+        sendChatMediaMessage(conversationId, mediaPath, contentType, caption, thumbnailData).onSuccess { zmMessage ->
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
 
     private suspend fun sendLocationMessage(latitude: Double, longitude: Double, accuracy: Float) {
-        runChatCall("ChatRoomVM: sendLocationMessage failed") {
-            val content =
-                JSONObject()
-                    .apply {
-                        put("latitude", latitude)
-                        put("longitude", longitude)
-                        put("accuracy", accuracy.toDouble())
-                    }.toString()
-            val zmMessage = sdk.sendMessage(conversationId, content, MimeTypes.LOCATION)
+        val content =
+            JSONObject()
+                .apply {
+                    put("latitude", latitude)
+                    put("longitude", longitude)
+                    put("accuracy", accuracy.toDouble())
+                }.toString()
+        sendChatMessage(conversationId, content, MimeTypes.LOCATION).onSuccess { zmMessage ->
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
 
     private suspend fun shareWalletAddress() {
-        runChatCall("ChatRoomVM: shareWalletAddress failed") {
-            val address = getZashiAccount().unified.address.address
-            val zmMessage = sdk.sendMessage(conversationId, address, MimeTypes.WALLET_ADDRESS)
+        val address = getZashiAccount().unified.address.address
+        sendChatMessage(conversationId, address, MimeTypes.WALLET_ADDRESS).onSuccess { zmMessage ->
             messages.update { it + ChatMessage.from(zmMessage) }
         }
     }
 
     private suspend fun fetchConnectionDetails() {
-        runChatCall("ChatRoomVM: getConnectionDetails failed") {
-            connectionDetails.value = ConnectionDetailsUi.from(sdk.getConnectionDetails())
+        getChatConnectionDetails().onSuccess { details ->
+            connectionDetails.value = ConnectionDetailsUi.from(details)
         }
     }
 
     private suspend fun updateContact(publicKey: String, newName: String) {
-        runChatCall("ChatRoomVM: updateContact failed") {
-            sdk.updateContact(publicKey, newName)
+        updateChatContact(publicKey, newName).onSuccess {
             conversation.update { it?.copy(displayName = newName) }
         }
     }

@@ -48,7 +48,7 @@ private const val QR_PX = 400
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
+internal fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
     val address =
         remember(message.content) {
             try {

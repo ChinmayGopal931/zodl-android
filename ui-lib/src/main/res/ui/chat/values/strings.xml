@@ -38,9 +38,9 @@
     <string name="chat_identity_setup_restore_button">Restore Identity</string>
     <string name="chat_identity_setup_error_name_required">Display name is required</string>
     <string name="chat_identity_setup_error_seed_word_count">Seed phrase must be exactly 24 words</string>
-    <string name="chat_identity_setup_error_create_failed">Failed to create identity: %1$s</string>
-    <string name="chat_identity_setup_error_restore_failed">Failed to restore identity: %1$s</string>
-    <string name="chat_identity_setup_error_unknown">Unknown error</string>
+    <string name="chat_identity_setup_error_create_failed">Failed to create identity. Please try again.</string>
+    <string name="chat_identity_setup_error_restore_failed">Failed to restore identity. Please check your seed phrase and try again.</string>
+    <string name="chat_identity_setup_error_export_seed_failed">Could not load your seed phrase.</string>
     <string name="chat_identity_setup_backup_title">Back Up Your Seed Phrase</string>
     <string name="chat_identity_setup_backup_subtitle">Write these words down and store them safely. This is the only way to recover your messaging identity.</string>
     <string name="chat_identity_setup_backup_confirm">I\'ve Saved My Seed Phrase</string>
@@ -286,4 +286,41 @@
     <string name="chat_contact_error_messaging_key_required">Messaging key is required</string>
     <string name="chat_contact_error_invalid_messaging_key">Invalid messaging key — must be 64 hex characters</string>
     <string name="chat_contact_error_already_exists">Contact already exists</string>
+
+    <!-- Chat moderation — shared fallback when displayName is blank -->
+    <string name="chat_moderation_fallback_user_name">this user</string>
+
+    <!-- Chat moderation — block dialog -->
+    <string name="chat_block_dialog_title">Block User</string>
+    <string name="chat_block_dialog_message_fmt">Block %1$s?</string>
+    <string name="chat_block_dialog_explanation">You will no longer receive messages from this user. They won\'t be notified that they\'ve been blocked.</string>
+    <string name="chat_block_dialog_confirm">Block</string>
+    <string name="chat_block_dialog_cancel">Cancel</string>
+
+    <!-- Chat moderation — unblock dialog -->
+    <string name="chat_unblock_dialog_title">Unblock User</string>
+    <string name="chat_unblock_dialog_message_fmt">Unblock %1$s? You will be able to receive messages from them again.</string>
+    <string name="chat_unblock_dialog_confirm">Unblock</string>
+    <string name="chat_unblock_dialog_cancel">Cancel</string>
+
+    <!-- Chat moderation — report dialog -->
+    <string name="chat_report_dialog_title">Report User</string>
+    <string name="chat_report_dialog_message_fmt">Why are you reporting %1$s?</string>
+    <string name="chat_report_dialog_details_label">Additional details (optional)</string>
+    <string name="chat_report_dialog_submit">Submit Report</string>
+    <string name="chat_report_dialog_cancel">Cancel</string>
+
+    <!-- Chat moderation — report follow-up dialog (offer to block after reporting) -->
+    <string name="chat_report_followup_title">Report Submitted</string>
+    <string name="chat_report_followup_message_fmt">Your report has been recorded. Would you also like to block %1$s to stop receiving their messages?</string>
+    <string name="chat_report_followup_confirm">Block User</string>
+    <string name="chat_report_followup_dismiss">No Thanks</string>
+
+    <!-- Chat terms — one-time T&amp;Cs acceptance dialog (Google Play UGC policy) -->
+    <string name="chat_terms_dialog_title">Messaging Terms</string>
+    <string name="chat_terms_dialog_intro">Before using Zapp messaging, please review and accept our community guidelines:</string>
+    <string name="chat_terms_dialog_guidelines_heading">Community Guidelines</string>
+    <string name="chat_terms_dialog_body">By using Zapp messaging, you agree to:\n\n1. Not send spam, unsolicited messages, or engage in harassment.\n\n2. Not share illegal content, including but not limited to child exploitation material, illegal substances, or stolen financial information.\n\n3. Not impersonate others or use the messaging feature for scams or fraud.\n\n4. Not use the messaging feature to facilitate illegal activities.\n\n5. Respect other users\' privacy and not share their information without consent.\n\nUsers who violate these guidelines may be blocked by other users. You can block or report any user from the conversation settings menu.\n\nMessages are sent peer-to-peer and are end-to-end encrypted. Zapp does not store or have access to your message content.</string>
+    <string name="chat_terms_dialog_accept">I Accept</string>
+    <string name="chat_terms_dialog_decline">Decline</string>
 </resources>

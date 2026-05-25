@@ -9,7 +9,6 @@ import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.preference.EncryptedPreferenceProvider
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.WalletAccount
@@ -18,10 +17,14 @@ import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
 import co.electriccoin.zcash.ui.common.security.PinAuthGate
+import co.electriccoin.zcash.ui.common.usecase.DeleteChatIdentityUseCase
+import co.electriccoin.zcash.ui.common.usecase.ExportChatSeedPhraseUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
+import co.electriccoin.zcash.ui.common.usecase.UpdateChatDisplayNameUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
-import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
+import co.electriccoin.zcash.ui.screen.chat.common.ChatResult
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,12 +35,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 @Suppress("TooManyFunctions")
 class ChatProfileVM(
     private val application: Application,
-    private val sdk: ZappMessagingSDK,
+    observeChatIdentity: ObserveChatIdentityUseCase,
+    private val updateChatDisplayName: UpdateChatDisplayNameUseCase,
+    private val deleteChatIdentity: DeleteChatIdentityUseCase,
+    private val exportChatSeedPhrase: ExportChatSeedPhraseUseCase,
     observeSelectedWalletAccount: ObserveSelectedWalletAccountUseCase,
     private val biometricRepository: BiometricRepository,
     private val standardPreferenceProvider: StandardPreferenceProvider,
@@ -63,7 +68,7 @@ class ChatProfileVM(
             )
 
     private val identity =
-        sdk.identity
+        observeChatIdentity()
             .map { id -> id?.let { ChatProfileIdentity(displayName = it.displayName, publicKey = it.publicKey) } }
             .stateIn(
                 scope = viewModelScope,
@@ -230,9 +235,7 @@ class ChatProfileVM(
     }
 
     private suspend fun updateDisplayName(name: String) {
-        runChatCall("ChatProfileVM: updateDisplayName failed") {
-            sdk.updateDisplayName(name)
-        }
+        updateChatDisplayName(name)
     }
 
     private fun dismissEditNameDialog() {
@@ -253,9 +256,7 @@ class ChatProfileVM(
     }
 
     private suspend fun performDeleteIdentity() {
-        runChatCall("ChatProfileVM: sdk.shutdown failed") {
-            sdk.shutdown()
-        }
+        deleteChatIdentity()
         navigationRouter.backToRoot()
     }
 
@@ -371,16 +372,9 @@ class ChatProfileVM(
             }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun exportAndEmitSeedPhrase() {
-        val phrase =
-            try {
-                sdk.exportSeedPhrase()
-            } catch (e: Exception) {
-                Twig.warn(e) { "ChatProfileVM: exportSeedPhrase failed" }
-                null
-            }
-        if (phrase != null) pendingSeedPhrase.value = phrase
+        val result = exportChatSeedPhrase()
+        if (result is ChatResult.Success) pendingSeedPhrase.value = result.value
     }
 
     private fun dismissSeedPhraseDialog() {

@@ -29,7 +29,7 @@ import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileTab
 import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileWalletSubTab
 
 @Composable
-fun ChatProfileView(state: ChatProfileState, modifier: Modifier = Modifier) {
+internal fun ChatProfileView(state: ChatProfileState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
 
     Column(

@@ -33,7 +33,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
+internal fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
     val context = LocalContext.current
     val parsed =
         try {

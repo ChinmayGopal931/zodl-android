@@ -3,10 +3,14 @@ package co.electriccoin.zcash.ui.screen.chat.identity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.usecase.CreateChatIdentityUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
+import co.electriccoin.zcash.ui.common.usecase.RestoreChatIdentityUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.chat.common.ChatResult
+import co.electriccoin.zcash.ui.screen.chat.common.toStringResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -14,11 +18,12 @@ import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 @Suppress("TooManyFunctions")
 class ChatIdentitySetupVM(
-    private val sdk: ZappMessagingSDK,
+    observeChatIdentity: ObserveChatIdentityUseCase,
+    private val createChatIdentity: CreateChatIdentityUseCase,
+    private val restoreChatIdentity: RestoreChatIdentityUseCase,
 ) : ViewModel() {
     private val selectedTab = MutableStateFlow(ChatIdentitySetupTab.CREATE)
     private val createName = MutableStateFlow("")
@@ -29,11 +34,11 @@ class ChatIdentitySetupVM(
     private val seedBackup = MutableStateFlow<String?>(null)
 
     val isSetupComplete: StateFlow<Boolean> =
-        combine(sdk.identity, seedBackup) { identity, backup ->
+        combine(observeChatIdentity(), seedBackup) { identity, backup ->
             identity != null && backup == null
         }.stateIn(
             scope = viewModelScope,
-            started = SharingStarted.Eagerly,
+            started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
             initialValue = false,
         )
 
@@ -177,28 +182,25 @@ class ChatIdentitySetupVM(
         seedBackup.value = null
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun createIdentity(name: String) {
         isSubmitting.value = true
         try {
-            sdk.createIdentity(name)
-            seedBackup.value = sdk.exportSeedPhrase()
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatIdentitySetupVM: createIdentity failed" }
-            error.value = stringRes(R.string.chat_identity_setup_error_create_failed, e.message ?: UNKNOWN_FALLBACK)
+            when (val result = createChatIdentity(name)) {
+                is ChatResult.Success -> seedBackup.value = result.value
+                is ChatResult.Failure -> error.value = result.error.toStringResource()
+            }
         } finally {
             isSubmitting.value = false
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun restoreIdentity(seed: String, name: String) {
         isSubmitting.value = true
         try {
-            sdk.restoreFromSeedPhrase(seed, name)
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatIdentitySetupVM: restoreFromSeedPhrase failed" }
-            error.value = stringRes(R.string.chat_identity_setup_error_restore_failed, e.message ?: UNKNOWN_FALLBACK)
+            when (val result = restoreChatIdentity(seed, name)) {
+                is ChatResult.Success -> Unit
+                is ChatResult.Failure -> error.value = result.error.toStringResource()
+            }
         } finally {
             isSubmitting.value = false
         }
@@ -206,6 +208,5 @@ class ChatIdentitySetupVM(
 
     companion object {
         private const val SEED_WORD_COUNT = 24
-        private const val UNKNOWN_FALLBACK = "Unknown error"
     }
 }

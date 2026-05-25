@@ -37,7 +37,7 @@ import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditDeleteDialogS
 import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditState
 
 @Composable
-fun ContactEditView(state: ContactEditState, modifier: Modifier = Modifier) {
+internal fun ContactEditView(state: ContactEditState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
 
     Scaffold(

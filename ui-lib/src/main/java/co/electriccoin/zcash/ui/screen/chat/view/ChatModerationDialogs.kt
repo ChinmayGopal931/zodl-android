@@ -21,27 +21,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ReportCategory
 
-/**
- * Confirmation dialog for blocking a user.
- */
 @Composable
-fun BlockUserDialog(
+internal fun BlockUserDialog(
     displayName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val c = ZappTheme.colors
+    val target = displayName.ifBlank { stringResource(R.string.chat_moderation_fallback_user_name) }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = c.surface,
         title = {
             Text(
-                "Block User",
+                stringResource(R.string.chat_block_dialog_title),
                 style = ZappTheme.typography.sectionTitle,
                 color = c.text,
             )
@@ -49,14 +49,13 @@ fun BlockUserDialog(
         text = {
             Column {
                 Text(
-                    "Block ${displayName.ifBlank { "this user" }}?",
+                    stringResource(R.string.chat_block_dialog_message_fmt, target),
                     style = ZappTheme.typography.body,
                     color = c.text,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    "You will no longer receive messages from this user. " +
-                        "They won't be notified that they've been blocked.",
+                    stringResource(R.string.chat_block_dialog_explanation),
                     style = ZappTheme.typography.caption,
                     color = c.textMuted,
                 )
@@ -64,68 +63,71 @@ fun BlockUserDialog(
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Block", color = ZappTheme.colors.danger, fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(R.string.chat_block_dialog_confirm),
+                    color = ZappTheme.colors.danger,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = c.textMuted)
+                Text(stringResource(R.string.chat_block_dialog_cancel), color = c.textMuted)
             }
         },
     )
 }
 
-/**
- * Confirmation dialog for unblocking a user.
- */
 @Composable
-fun UnblockUserDialog(
+internal fun UnblockUserDialog(
     displayName: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val c = ZappTheme.colors
+    val target = displayName.ifBlank { stringResource(R.string.chat_moderation_fallback_user_name) }
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = c.surface,
         title = {
             Text(
-                "Unblock User",
+                stringResource(R.string.chat_unblock_dialog_title),
                 style = ZappTheme.typography.sectionTitle,
                 color = c.text,
             )
         },
         text = {
             Text(
-                "Unblock ${displayName.ifBlank { "this user" }}? " +
-                    "You will be able to receive messages from them again.",
+                stringResource(R.string.chat_unblock_dialog_message_fmt, target),
                 style = ZappTheme.typography.body,
                 color = c.text,
             )
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Unblock", color = c.accent, fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(R.string.chat_unblock_dialog_confirm),
+                    color = c.accent,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = c.textMuted)
+                Text(stringResource(R.string.chat_unblock_dialog_cancel), color = c.textMuted)
             }
         },
     )
 }
 
-/**
- * Report dialog with category selection and optional details.
- */
 @Composable
-fun ReportUserDialog(
+internal fun ReportUserDialog(
     displayName: String,
     onSubmit: (category: ReportCategory, details: String) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val c = ZappTheme.colors
+    val target = displayName.ifBlank { stringResource(R.string.chat_moderation_fallback_user_name) }
     var selectedCategory by remember { mutableStateOf<ReportCategory?>(null) }
     var details by remember { mutableStateOf("") }
 
@@ -134,7 +136,7 @@ fun ReportUserDialog(
         containerColor = c.surface,
         title = {
             Text(
-                "Report User",
+                stringResource(R.string.chat_report_dialog_title),
                 style = ZappTheme.typography.sectionTitle,
                 color = c.text,
             )
@@ -142,7 +144,7 @@ fun ReportUserDialog(
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
-                    "Why are you reporting ${displayName.ifBlank { "this user" }}?",
+                    stringResource(R.string.chat_report_dialog_message_fmt, target),
                     style = ZappTheme.typography.body,
                     color = c.text,
                 )
@@ -180,7 +182,7 @@ fun ReportUserDialog(
                 OutlinedTextField(
                     value = details,
                     onValueChange = { details = it },
-                    label = { Text("Additional details (optional)") },
+                    label = { Text(stringResource(R.string.chat_report_dialog_details_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
                 )
@@ -194,7 +196,7 @@ fun ReportUserDialog(
                 enabled = selectedCategory != null,
             ) {
                 Text(
-                    "Submit Report",
+                    stringResource(R.string.chat_report_dialog_submit),
                     color = if (selectedCategory != null) c.danger else c.textMuted,
                     fontWeight = FontWeight.Bold,
                 )
@@ -202,24 +204,22 @@ fun ReportUserDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = c.textMuted)
+                Text(stringResource(R.string.chat_report_dialog_cancel), color = c.textMuted)
             }
         },
     )
 }
 
-/**
- * Combined block + report dialog — offers to block after reporting.
- */
 @Composable
-fun ReportAndBlockDialog(
+internal fun ReportAndBlockDialog(
     displayName: String,
     onReport: (category: ReportCategory, details: String) -> Unit,
     onBlock: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val c = ZappTheme.colors
-    var step by remember { mutableStateOf(0) } // 0 = report, 1 = offer block
+    val target = displayName.ifBlank { stringResource(R.string.chat_moderation_fallback_user_name) }
+    var step by remember { mutableStateOf(0) }
 
     if (step == 0) {
         ReportUserDialog(
@@ -236,15 +236,14 @@ fun ReportAndBlockDialog(
             containerColor = c.surface,
             title = {
                 Text(
-                    "Report Submitted",
+                    stringResource(R.string.chat_report_followup_title),
                     style = ZappTheme.typography.sectionTitle,
                     color = c.text,
                 )
             },
             text = {
                 Text(
-                    "Your report has been recorded. Would you also like to block " +
-                        "${displayName.ifBlank { "this user" }} to stop receiving their messages?",
+                    stringResource(R.string.chat_report_followup_message_fmt, target),
                     style = ZappTheme.typography.body,
                     color = c.text,
                 )
@@ -254,12 +253,16 @@ fun ReportAndBlockDialog(
                     onBlock()
                     onDismiss()
                 }) {
-                    Text("Block User", color = c.danger, fontWeight = FontWeight.Bold)
+                    Text(
+                        stringResource(R.string.chat_report_followup_confirm),
+                        color = c.danger,
+                        fontWeight = FontWeight.Bold,
+                    )
                 }
             },
             dismissButton = {
                 TextButton(onClick = onDismiss) {
-                    Text("No Thanks", color = c.textMuted)
+                    Text(stringResource(R.string.chat_report_followup_dismiss), color = c.textMuted)
                 }
             },
         )

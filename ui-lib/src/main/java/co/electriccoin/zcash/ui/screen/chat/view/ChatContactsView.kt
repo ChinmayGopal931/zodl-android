@@ -53,7 +53,7 @@ import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsState
 import co.electriccoin.zcash.ui.screen.chat.model.ChatContact
 
 @Composable
-fun ChatContactsView(
+internal fun ChatContactsView(
     state: ChatContactsState,
     showBackButton: Boolean = true,
     modifier: Modifier = Modifier,

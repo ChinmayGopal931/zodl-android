@@ -42,6 +42,7 @@ import co.electriccoin.zcash.ui.screen.chat.view.bubbles.MediaBubble
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.PaymentRequestBubble
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.TransactionBubble
 import co.electriccoin.zcash.ui.screen.chat.view.bubbles.WalletAddressBubble
+import org.json.JSONException
 import org.json.JSONObject
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -170,13 +171,12 @@ internal fun MessageBubble(
     }
 }
 
-@Suppress("TooGenericExceptionCaught")
 private fun resolveContentType(message: ChatMessage): String {
     val declared = message.contentType
     if (!declared.isNullOrEmpty() && declared != CONTENT_TYPE_TEXT_PLAIN) return declared
     return try {
         JSONObject(message.content).optString("contentType", "").takeIf { it.isNotEmpty() }
-    } catch (_: Exception) {
+    } catch (_: JSONException) {
         null
     } ?: CONTENT_TYPE_TEXT_PLAIN
 }

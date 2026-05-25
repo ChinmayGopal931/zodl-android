@@ -13,17 +13,6 @@ import co.electriccoin.zcash.ui.screen.advancedsettings.debug.DebugVM
 import co.electriccoin.zcash.ui.screen.advancedsettings.debug.db.DebugDBVM
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidgetVM
 import co.electriccoin.zcash.ui.screen.balances.spendable.SpendableBalanceVM
-import co.electriccoin.zcash.ui.screen.chat.contactedit.ContactEditVM
-import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsVM
-import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
-import co.electriccoin.zcash.ui.screen.chat.list.ChatListVM
-import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationVM
-import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileVM
-import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomVM
-import co.electriccoin.zcash.ui.screen.chat.scan.ChatScanPublicKeyVM
-import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsVM
-import co.electriccoin.zcash.ui.screen.chat.support.SupportChatVM
-import co.electriccoin.zcash.ui.screen.chat.support.SupportTicketListVM
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerVM
 import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactVM
 import co.electriccoin.zcash.ui.screen.contact.AddZashiABContactVM
@@ -49,7 +38,6 @@ import co.electriccoin.zcash.ui.screen.hotfix.ephemeral.EphemeralHotfixVM
 import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsVM
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsVM
 import co.electriccoin.zcash.ui.screen.more.MoreVM
-import co.electriccoin.zcash.ui.screen.offramp.OfframpVM
 import co.electriccoin.zcash.ui.screen.onboarding.OnboardingSecurityViewModel
 import co.electriccoin.zcash.ui.screen.qrcode.QrCodeVM
 import co.electriccoin.zcash.ui.screen.receive.ReceiveVM
@@ -86,9 +74,6 @@ import co.electriccoin.zcash.ui.screen.swap.picker.SwapAssetPickerVM
 import co.electriccoin.zcash.ui.screen.swap.picker.SwapBlockchainPickerVM
 import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteVM
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageVM
-import co.electriccoin.zcash.ui.screen.swap.upi.UpiOfframpVM
-import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressVM
-import co.electriccoin.zcash.ui.screen.swap.upi.scan.ScanUpiVM
 import co.electriccoin.zcash.ui.screen.tabs.viewmodel.WalletSyncStateVM
 import co.electriccoin.zcash.ui.screen.taxexport.TaxExportViewModel
 import co.electriccoin.zcash.ui.screen.texunsupported.TEXUnsupportedVM
@@ -110,6 +95,8 @@ import org.koin.dsl.module
 
 val viewModelModule =
     module {
+        includes(chatViewModelModule, offrampViewModelModule)
+
         viewModelOf(::WalletViewModel)
         viewModelOf(::AuthenticationViewModel)
         viewModelOf(::OnboardingSecurityViewModel)
@@ -176,13 +163,9 @@ val viewModelModule =
         viewModelOf(::SwapAssetPickerVM)
         viewModelOf(::SwapSlippageVM)
         viewModelOf(::SwapVM)
-        viewModelOf(::UpiOfframpVM)
-        viewModelOf(::UpiOfframpProgressVM)
-        viewModelOf(::ScanUpiVM)
         viewModelOf(::UnifiedSendViewModel)
         viewModelOf(::SwapQuoteVM)
         viewModelOf(::ScanGenericAddressVM)
-        viewModelOf(::ChatScanPublicKeyVM)
         viewModelOf(::SelectSwapABRecipientVM)
         viewModelOf(::SwapBlockchainPickerVM)
         viewModelOf(::AddZashiABContactVM)
@@ -201,18 +184,7 @@ val viewModelModule =
         viewModelOf(::DebugDBVM)
         viewModelOf(::TEXUnsupportedVM)
         viewModelOf(::InsufficientFundsVM)
-        viewModelOf(::OfframpVM)
         viewModelOf(::RestoreTorVM)
         viewModelOf(::ResetZashiVM)
         viewModelOf(::DisconnectVM)
-        viewModelOf(::ChatListVM)
-        viewModelOf(::ChatIdentitySetupVM)
-        viewModelOf(::ChatProfileVM)
-        viewModelOf(::ChatSettingsVM)
-        viewModelOf(::ChatContactsVM)
-        viewModelOf(::NewConversationVM)
-        viewModelOf(::ContactEditVM)
-        viewModelOf(::ChatRoomVM)
-        viewModelOf(::SupportTicketListVM)
-        viewModelOf(::SupportChatVM)
     }

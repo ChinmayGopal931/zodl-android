@@ -13,13 +13,16 @@ import co.electriccoin.zcash.ui.common.usecase.CreateIncreaseEphemeralGapLimitPr
 import co.electriccoin.zcash.ui.common.usecase.CreateKeystoneAccountUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateKeystoneProposalPCZTEncoderUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateLceErrorConfirmationStateUseCase
+import co.electriccoin.zcash.ui.common.usecase.CreateChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateOrUpdateTransactionNoteUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateProposalUseCase
 import co.electriccoin.zcash.ui.common.usecase.DeleteABContactUseCase
+import co.electriccoin.zcash.ui.common.usecase.DeleteChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.DeleteTransactionNoteUseCase
 import co.electriccoin.zcash.ui.common.usecase.DeriveKeystoneAccountUnifiedAddressUseCase
 import co.electriccoin.zcash.ui.common.usecase.DisconnectUseCase
 import co.electriccoin.zcash.ui.common.usecase.EnsureSwapAssetsLoadedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ExportChatSeedPhraseUseCase
 import co.electriccoin.zcash.ui.common.usecase.ExportTaxUseCase
 import co.electriccoin.zcash.ui.common.usecase.FilterSwapAssetsUseCase
 import co.electriccoin.zcash.ui.common.usecase.FilterSwapBlockchainsUseCase
@@ -27,6 +30,8 @@ import co.electriccoin.zcash.ui.common.usecase.FixEnhancementUseCase
 import co.electriccoin.zcash.ui.common.usecase.FixEphemeralAddressUseCase
 import co.electriccoin.zcash.ui.common.usecase.FlipTransactionBookmarkUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetABContactByIdUseCase
+import co.electriccoin.zcash.ui.common.usecase.GetChatConnectionDetailsUseCase
+import co.electriccoin.zcash.ui.common.usecase.GetChatMessagesUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetABContactsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetABSwapContactsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetActivitiesUseCase
@@ -42,6 +47,10 @@ import co.electriccoin.zcash.ui.common.usecase.GetP2pOrderHistoryUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetPersistableWalletUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetProposalUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetResyncDataFromHeightUseCase
+import co.electriccoin.zcash.ui.common.usecase.RefreshChatConversationsUseCase
+import co.electriccoin.zcash.ui.common.usecase.RestoreChatIdentityUseCase
+import co.electriccoin.zcash.ui.common.usecase.SendChatMediaMessageUseCase
+import co.electriccoin.zcash.ui.common.usecase.SendChatMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSelectedEndpointUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSelectedSwapAssetUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSelectedWalletAccountUseCase
@@ -87,6 +96,19 @@ import co.electriccoin.zcash.ui.common.usecase.ObserveClearSendUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveContactByAddressUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveFastestServersUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveProposalUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatConversationsUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatDhtHealthUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupDeletedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupRenamedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMediaDownloadCompleteUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberAddedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberLeftUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageReceivedUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageStatusUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatOnlineStateUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerCountUseCase
+import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerStatusUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveTransactionSubmitStateUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveZashiAccountUseCase
@@ -127,6 +149,8 @@ import co.electriccoin.zcash.ui.common.usecase.SubmitIncreaseEphemeralGapLimitUs
 import co.electriccoin.zcash.ui.common.usecase.SubmitKSProposalUseCase
 import co.electriccoin.zcash.ui.common.usecase.SubmitProposalUseCase
 import co.electriccoin.zcash.ui.common.usecase.UpdateABContactUseCase
+import co.electriccoin.zcash.ui.common.usecase.UpdateChatContactUseCase
+import co.electriccoin.zcash.ui.common.usecase.UpdateChatDisplayNameUseCase
 import co.electriccoin.zcash.ui.common.usecase.UpdateSwapActivityMetadataUseCase
 import co.electriccoin.zcash.ui.common.usecase.ValidateAddressUseCase
 import co.electriccoin.zcash.ui.common.usecase.ValidateEndpointUseCase
@@ -294,4 +318,30 @@ val useCaseModule =
         // UPI offramp use cases.
         factoryOf(::GetP2pOrderHistoryUseCase)
         singleOf(::NavigateToScanUpiUseCase)
+
+        // Chat use cases.
+        factoryOf(::CreateChatIdentityUseCase)
+        factoryOf(::RestoreChatIdentityUseCase)
+        factoryOf(::ExportChatSeedPhraseUseCase)
+        factoryOf(::ObserveChatIdentityUseCase)
+        factoryOf(::UpdateChatDisplayNameUseCase)
+        factoryOf(::DeleteChatIdentityUseCase)
+        factoryOf(::ObserveChatConversationsUseCase)
+        factoryOf(::ObserveChatOnlineStateUseCase)
+        factoryOf(::ObserveChatPeerCountUseCase)
+        factoryOf(::ObserveChatDhtHealthUseCase)
+        factoryOf(::ObserveChatMessageReceivedUseCase)
+        factoryOf(::ObserveChatMessageStatusUseCase)
+        factoryOf(::ObserveChatMediaDownloadCompleteUseCase)
+        factoryOf(::ObserveChatGroupRenamedUseCase)
+        factoryOf(::ObserveChatMemberLeftUseCase)
+        factoryOf(::ObserveChatMemberAddedUseCase)
+        factoryOf(::ObserveChatGroupDeletedUseCase)
+        factoryOf(::ObserveChatPeerStatusUseCase)
+        factoryOf(::RefreshChatConversationsUseCase)
+        factoryOf(::GetChatMessagesUseCase)
+        factoryOf(::SendChatMessageUseCase)
+        factoryOf(::SendChatMediaMessageUseCase)
+        factoryOf(::GetChatConnectionDetailsUseCase)
+        factoryOf(::UpdateChatContactUseCase)
     }

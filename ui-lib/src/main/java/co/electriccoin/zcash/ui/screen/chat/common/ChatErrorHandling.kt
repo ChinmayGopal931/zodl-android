@@ -14,3 +14,16 @@ internal inline fun runChatCall(message: String, block: () -> Unit) {
         Twig.warn(e) { message }
     }
 }
+
+internal inline fun <T> runChatCallResult(message: String, block: () -> T): Result<T> {
+    return try {
+        Result.success(block())
+    } catch (e: CancellationException) {
+        throw e
+    } catch (
+        @Suppress("TooGenericExceptionCaught") e: Exception
+    ) {
+        Twig.warn(e) { message }
+        Result.failure(e)
+    }
+}

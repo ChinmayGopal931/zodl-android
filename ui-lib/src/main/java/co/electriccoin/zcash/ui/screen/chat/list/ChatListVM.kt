@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
-import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.util.StringResource
@@ -16,6 +15,7 @@ import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.common.formatRelativeTime
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCallResult
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
@@ -310,17 +310,15 @@ class ChatListVM(
         refreshJob = viewModelScope.launch { refreshConversations() }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun refreshConversations() {
-        try {
+        runChatCallResult("ChatListVM: failed to refresh conversations") {
             sdk.refreshConversations()
-            val list =
-                sdk.conversations.value
-                    .map(ChatConversation::from)
-                    .sortedByDescending { it.lastMessageTimestamp ?: 0L }
+            sdk.conversations.value
+                .map(ChatConversation::from)
+                .sortedByDescending { it.lastMessageTimestamp ?: 0L }
+        }.onSuccess { list ->
             conversations.value = list
-        } catch (e: Exception) {
-            Twig.warn(e) { "ChatListVM: failed to refresh conversations" }
+        }.onFailure {
             // Surface an empty list so the View leaves the loading state.
             if (conversations.value == null) conversations.value = emptyList()
         }
