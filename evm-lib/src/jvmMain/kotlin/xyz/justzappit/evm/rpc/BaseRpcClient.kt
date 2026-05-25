@@ -23,6 +23,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import xyz.justzappit.evm.abi.Selector4
+import xyz.justzappit.evm.util.hexToBigInteger
 import xyz.justzappit.evm.abi.SolidityErrors
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
@@ -217,7 +218,3 @@ class BaseRpcClient(
     }
 }
 
-internal fun hexToBigInteger(hex: String): BigInteger {
-    val s = hex.removePrefix("0x")
-    return if (s.isEmpty()) BigInteger.ZERO else BigInteger(s, 16)
-}

@@ -9,7 +9,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-internal fun P2pTransactionsScreen() {
+fun P2pTransactionsScreen() {
     val vm = koinViewModel<P2pTransactionsVM>()
     val state by vm.state.collectAsStateWithLifecycle()
     BackHandler { state.onBack() }

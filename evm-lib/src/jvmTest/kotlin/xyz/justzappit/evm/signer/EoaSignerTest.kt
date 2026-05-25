@@ -12,7 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.bouncycastle.crypto.digests.KeccakDigest
+import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.types.Address
@@ -157,12 +157,6 @@ class EoaSignerTest {
                 data = data,
             )
         return tx.signingPayload()
-    }
-
-    private fun keccak256(data: ByteArray): ByteArray {
-        val d = KeccakDigest(256)
-        d.update(data, 0, data.size)
-        return ByteArray(d.digestSize).also { d.doFinal(it, 0) }
     }
 
     private fun ByteArray.toBigInt(): java.math.BigInteger =

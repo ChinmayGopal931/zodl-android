@@ -182,9 +182,9 @@ class NearBridgeOfframpFunding(
                 flexInput = false,
                 amount = request.usdcAmount.whole,
                 refundAddress = wallet.zcashAddress(),
-                originAsset = zecAsset(tokens),
+                originAsset = tokens.zecAsset(),
                 destinationAddress = account.checksumHex,
-                destinationAsset = usdcAsset(tokens),
+                destinationAsset = tokens.usdcAsset(usdc),
                 slippage = slippageTolerancePercent,
                 affiliateAddress = AFFILIATE_ADDRESS,
             )
@@ -206,7 +206,6 @@ class NearBridgeOfframpFunding(
      * handle would just yield the same terminal status forever). Cancellation escapes normally
      * for coroutine teardown.
      */
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun pollUntilSettled(depositAddress: String, tokens: List<SwapAsset>) {
         while (true) {
             val status =
@@ -214,7 +213,7 @@ class NearBridgeOfframpFunding(
                     swapDataSource.checkSwapStatus(depositAddress, tokens).status
                 } catch (e: CancellationException) {
                     throw e
-                } catch (e: Throwable) {
+                } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
                     Twig.warn(e) {
                         "NearBridgeOfframpFunding.pollUntilSettled: transient checkSwapStatus failure " +
                             "for $depositAddress — retrying in ${pollIntervalMs}ms"
@@ -237,16 +236,6 @@ class NearBridgeOfframpFunding(
             }
         }
     }
-
-    private fun zecAsset(tokens: List<SwapAsset>): SwapAsset =
-        tokens.filterIsInstance<ZecSwapAsset>().firstOrNull()
-            ?: error("ZEC is not in the 1-Click supported-token list")
-
-    // 1-Click asset ids embed the on-chain address (e.g. "nep141:base-0x833589…omft.near"), so match
-    // USDC by the configured contract address rather than hardcoding a NEP asset id per network.
-    private fun usdcAsset(tokens: List<SwapAsset>): SwapAsset =
-        tokens.firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
-            ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list")
 
     private companion object {
         const val DEFAULT_POLL_INTERVAL_MS = 5_000L
@@ -296,16 +285,29 @@ class NearPullbackOfframpRefund(
                 flexInput = false,
                 amount = amount.whole,
                 refundAddress = account.checksumHex,
-                originAsset =
-                    tokens.firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
-                        ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list"),
+                originAsset = tokens.usdcAsset(usdc),
                 destinationAddress = wallet.zcashAddress(),
-                destinationAsset =
-                    tokens.filterIsInstance<ZecSwapAsset>().firstOrNull()
-                        ?: error("ZEC is not in the 1-Click supported-token list"),
+                destinationAsset = tokens.zecAsset(),
                 slippage = slippageTolerancePercent,
                 affiliateAddress = AFFILIATE_ADDRESS,
             )
         return Address.parse(quote.depositAddress.address)
     }
 }
+
+// ---- 1-Click supported-token lookup helpers (shared between funding + refund) ------------------
+
+/** Picks the ZEC entry from the 1-Click supported-token catalog; throws if missing. */
+private fun List<SwapAsset>.zecAsset(): SwapAsset =
+    filterIsInstance<ZecSwapAsset>().firstOrNull()
+        ?: error("ZEC is not in the 1-Click supported-token list")
+
+/**
+ * Picks the USDC entry by matching the configured on-chain address against the 1-Click asset id
+ * (which embeds the contract, e.g. `nep141:base-0x833589…omft.near`). Lookups by raw address keep
+ * the catalog network-agnostic — no hardcoded NEP asset id per network — so adding a new chain to
+ * P2pNetworks doesn't drag a new constant in here.
+ */
+private fun List<SwapAsset>.usdcAsset(usdc: Address): SwapAsset =
+    firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
+        ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list")

@@ -12,17 +12,26 @@ import kotlin.test.assertTrue
 class AbiEncoderTest {
     @Test
     fun `function selector for approve matches the well-known value`() {
-        assertEquals("095ea7b3", FunctionSelector.computeHex("approve(address,uint256)"))
+        assertEquals(
+            Selector4.fromHex("0x095ea7b3"),
+            Selector4.fromCanonicalSignature("approve(address,uint256)"),
+        )
     }
 
     @Test
     fun `function selector for transfer matches the well-known value`() {
-        assertEquals("a9059cbb", FunctionSelector.computeHex("transfer(address,uint256)"))
+        assertEquals(
+            Selector4.fromHex("0xa9059cbb"),
+            Selector4.fromCanonicalSignature("transfer(address,uint256)"),
+        )
     }
 
     @Test
     fun `function selector for balanceOf matches the well-known value`() {
-        assertEquals("70a08231", FunctionSelector.computeHex("balanceOf(address)"))
+        assertEquals(
+            Selector4.fromHex("0x70a08231"),
+            Selector4.fromCanonicalSignature("balanceOf(address)"),
+        )
     }
 
     @Test
@@ -31,8 +40,8 @@ class AbiEncoderTest {
         // signature drifted (function added/removed/renamed/retyped) — re-derive after
         // cross-checking the SDK's order-flow-facet ABI.
         assertEquals(
-            "1dc46885",
-            FunctionSelector.computeHex(
+            Selector4.fromHex("0x1dc46885"),
+            Selector4.fromCanonicalSignature(
                 "placeOrder(string,uint256,address,uint8,string,string,bytes32,uint256,uint256,uint256)",
             ),
         )
@@ -41,8 +50,8 @@ class AbiEncoderTest {
     @Test
     fun `function selector for setSellOrderUpi is byte-stable`() {
         assertEquals(
-            "e8576b23",
-            FunctionSelector.computeHex("setSellOrderUpi(uint256,string,uint256)"),
+            Selector4.fromHex("0xe8576b23"),
+            Selector4.fromCanonicalSignature("setSellOrderUpi(uint256,string,uint256)"),
         )
     }
 
