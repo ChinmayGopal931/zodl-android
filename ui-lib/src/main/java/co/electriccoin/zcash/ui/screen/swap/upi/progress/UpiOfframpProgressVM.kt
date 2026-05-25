@@ -6,19 +6,16 @@ import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
+import co.electriccoin.zcash.ui.common.provider.StoreCorruptedException
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -76,18 +73,26 @@ internal class UpiOfframpProgressVM(
     // a non-sticky reading would flip the label back to "Bridging funds" by the time the user sees it.
     private val fundedFromBaseObserved = MutableStateFlow(false)
 
-    /**
-     * Shared so multiple downstream collectors (state-builder, persister side effect, fee-details
-     * fetcher) read a single underlying orchestrator run. `replay = 1` so late subscribers (the
-     * fee-details fetcher launches from `init {}`) see the current status immediately.
-     */
-    private val statusSource: SharedFlow<OfframpStatus> =
-        flow {
-            val existing = checkpointStorage.get()
-            // Resume whenever there's an order already placed OR a funding bridge in flight: the bridge's
-            // persisted 1-Click deposit address must be re-polled, never re-quoted, or a crash mid-bridge
-            // would open a second bridge and double-send the user's ZEC. Only a checkpoint with neither is
-            // empty noise worth discarding.
+    // Full history so a late subscriber (rotation, dialog dismiss) sees the prefix, not just the
+    // latest step. The orchestrator's cold Flow is collected exactly once in `init`; every
+    // downstream consumer reads from this list.
+    private val statusList = MutableStateFlow<List<OfframpStatus>>(emptyList())
+
+    init {
+        // Drive the orchestrator. Single collector, full history captured, side effects co-located.
+        viewModelScope.launch {
+            val existing =
+                try {
+                    checkpointStorage.get()
+                } catch (e: StoreCorruptedException) {
+                    Twig.warn(e) { "UpiOfframpProgress: corrupted checkpoint blob, discarding" }
+                    checkpointStorage.clear()
+                    null
+                }
+            // Resume whenever there's an order already placed OR a funding bridge in flight: the
+            // bridge's persisted 1-Click deposit address must be re-polled, never re-quoted, or a
+            // crash mid-bridge would open a second bridge and double-send the user's ZEC. Only a
+            // checkpoint with neither is empty noise worth discarding.
             val upstream =
                 if (existing != null && (existing.orderIdBig != null || existing.bridgeDepositAddress != null)) {
                     Twig.info {
@@ -103,28 +108,29 @@ internal class UpiOfframpProgressVM(
                     }
                     orchestrator.run(request)
                 }
-            upstream
-                .onEach { status ->
-                    Twig.info { "UpiOfframpProgress status=$status" }
-                    persister.onStatus(status)
-                    if (status is OfframpStatus.FundedFromBase) fundedFromBaseObserved.update { true }
-                }.collect { emit(it) }
-        }.shareIn(viewModelScope, SharingStarted.Eagerly, replay = 1)
+            upstream.collect { status ->
+                Twig.info { "UpiOfframpProgress status=$status" }
+                persister.onStatus(status)
+                if (status is OfframpStatus.FundedFromBase) fundedFromBaseObserved.update { true }
+                statusList.update { it + status }
+            }
+        }
 
-    init {
         viewModelScope.launch {
             runCatching { accountProvider.resolve().address }
                 .onSuccess { addr -> smartAccountAddress.update { addr } }
                 .onFailure { Twig.warn(it) { "UpiOfframpProgress: failed to resolve smart account address" } }
         }
 
-        // Fee details: refetch whenever orderId or status-class changes. Distinct-until-changed
+        // Fee details: refetch whenever orderId or status-class changes. distinctUntilChanged
         // throttles the WaitingForCompletion poll loop (which emits every 3s) down to one fetch
         // per genuine state transition.
         viewModelScope.launch {
-            statusSource
-                .mapNotNull { status -> status.orderId?.let { it to status::class } }
-                .distinctUntilChanged()
+            statusList
+                .mapNotNull { list ->
+                    val last = list.lastOrNull() ?: return@mapNotNull null
+                    last.orderId?.let { it to last::class }
+                }.distinctUntilChanged()
                 .collect { (orderId, _) ->
                     runCatching { rpc.getAdditionalOrderDetails(network.diamondAddress, orderId) }
                         .onSuccess { details -> feeDetails.update { details } }
@@ -134,8 +140,8 @@ internal class UpiOfframpProgressVM(
     }
 
     val state: StateFlow<UpiOfframpProgressState> =
-        combine(statusSource, feeDetails, smartAccountAddress, fundedFromBaseObserved) { status, fees, addr, fundedFromBase ->
-            buildState(status, fees, addr, fundedFromBase)
+        combine(statusList, feeDetails, smartAccountAddress, fundedFromBaseObserved) { list, fees, addr, fundedFromBase ->
+            buildState(list.lastOrNull() ?: OfframpStatus.Idle, fees, addr, fundedFromBase)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly,

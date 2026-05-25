@@ -1,5 +1,6 @@
 package co.electriccoin.zcash.ui.screen.swap.upi.progress
 
+import co.electriccoin.zcash.ui.common.provider.BridgeTerminallyFailedException
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.offramp.orchestrator.OfframpCheckpoint
@@ -63,13 +64,16 @@ internal class OfframpCheckpointPersister(
             }
 
             is OfframpStatus.Failed -> {
-                // Failed during FUNDING with a bridge already in flight means the user's ZEC may
-                // be mid-bridge on 1-Click; keep the checkpoint so the user can re-enter the
-                // progress screen and re-poll the persisted deposit address. Other failures
-                // (approve / placeOrder / setUpi) happen after the bridge has settled — clearing
-                // is safe because the USDC is in the smart account and a fresh attempt will
-                // [FundedFromBase] short-circuit.
-                if (status.step == OfframpStep.FUNDING && lastBridgeDepositAddress != null) {
+                // Keep only a transient mid-bridge failure so the user can resume the same 1-Click
+                // handle. Terminal bridge failures and post-funding failures both clear — re-polling
+                // a dead bridge loops forever, and post-funding USDC has settled into the smart
+                // account so a retry hits FundedFromBase.
+                val bridgeTerminallyDead = status.cause is BridgeTerminallyFailedException
+                val transientFundingFailure =
+                    !bridgeTerminallyDead &&
+                        status.step == OfframpStep.FUNDING &&
+                        lastBridgeDepositAddress != null
+                if (transientFundingFailure) {
                     persistCheckpoint(orderId = null, status = status)
                 } else {
                     storage.clear()

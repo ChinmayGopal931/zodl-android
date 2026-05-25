@@ -19,6 +19,13 @@ object KnownReverts {
         val sdkMessage: String?,
     )
 
+    /**
+     * The selectors that have a curated [KnownRevertReason]. Exposed so the wholesale-table
+     * coverage test can iterate over the actual source of truth — adding a CURATED entry
+     * automatically extends test coverage, instead of silently bypassing it.
+     */
+    val curatedSelectors: Set<Selector4> get() = CURATED.keys
+
     private val CURATED: Map<Selector4, KnownRevertReason> =
         mapOf(
             Selector4.fromHex("0x91da284f") to KnownRevertReason.BuyOrderAmountExceedsLimit,

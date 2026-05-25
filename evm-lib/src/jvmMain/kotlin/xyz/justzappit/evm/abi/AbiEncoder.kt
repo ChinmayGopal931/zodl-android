@@ -25,7 +25,7 @@ object AbiEncoder {
     }
 
     fun encodeFunctionCall(canonicalSignature: String, args: List<AbiArg>): ByteArray =
-        FunctionSelector.compute(canonicalSignature) + encode(args)
+        Selector4.fromCanonicalSignature(canonicalSignature).bytes + encode(args)
 
     fun bytes32String(s: String): AbiBytes32 {
         val data = s.toByteArray(Charsets.UTF_8)

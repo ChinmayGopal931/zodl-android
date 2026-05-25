@@ -208,46 +208,4 @@
     <string name="upi_offramp_cancelled_returned_zec">%1$s USDC is on its way back to ZEC — it will arrive in your wallet shortly</string>
     <string name="upi_offramp_cancelled_at">Cancelled at %1$s</string>
     <string name="upi_offramp_cancelled_tip">Tip: ask the merchant to generate the UPI QR only after this screen opens, so the order completes before it expires.</string>
-
-    <!-- P2P transactions (settings → wallet) -->
-    <string name="p2p_transactions_title">P2P transactions</string>
-    <string name="p2p_transactions_balance_label">Balance on Base</string>
-    <string name="p2p_transactions_balance_amount">%1$s USDC</string>
-    <string name="p2p_transactions_balance_unavailable">Balance unavailable</string>
-    <string name="p2p_transactions_balance_loading">—</string>
-    <string name="p2p_transactions_refund_button">Refund to ZEC</string>
-    <string name="p2p_transactions_refund_in_progress">Refunding…</string>
-    <string name="p2p_transactions_refund_retry">Retry refund</string>
-    <string name="p2p_transactions_refund_failed">Refund failed — %1$s</string>
-    <string name="p2p_transactions_refund_dialog_title">Refund to ZEC?</string>
-    <string name="p2p_transactions_refund_dialog_message">This bridges %1$s back to your ZEC wallet via NEAR. Funds typically arrive in 5–10 minutes.</string>
-    <string name="p2p_transactions_refund_dialog_confirm">Refund</string>
-    <string name="p2p_transactions_refund_dialog_cancel">Cancel</string>
-    <string name="p2p_transactions_account_label">P2P account</string>
-    <string name="p2p_transactions_empty">No P2P transactions yet.</string>
-    <string name="p2p_transactions_error">Couldn\'t load transactions. Pull to refresh.</string>
-    <string name="p2p_transactions_row_amount_usdc">%1$s USDC</string>
-    <string name="p2p_transactions_row_amount_fiat">%1$s %2$s</string>
-    <string name="p2p_transactions_row_from">From %1$s</string>
-    <string name="p2p_transactions_row_to">To %1$s</string>
-    <string name="p2p_transactions_row_order_id">Order #%1$s</string>
-    <string name="p2p_transactions_type_buy">Buy</string>
-    <string name="p2p_transactions_type_sell">Sell</string>
-    <string name="p2p_transactions_type_pay">Pay</string>
-    <string name="p2p_transactions_status_placed">Placed</string>
-    <string name="p2p_transactions_status_accepted">Accepted</string>
-    <string name="p2p_transactions_status_paid">Paid</string>
-    <string name="p2p_transactions_status_completed">Completed</string>
-    <string name="p2p_transactions_status_cancelled">Cancelled</string>
-
-    <!-- Detail panel (expanded transaction row) -->
-    <string name="p2p_transactions_detail_recipient_upi">Recipient UPI</string>
-    <string name="p2p_transactions_detail_merchant_upi">Merchant UPI</string>
-    <string name="p2p_transactions_detail_merchant_address">Merchant address</string>
-    <string name="p2p_transactions_detail_placed">Placed</string>
-    <string name="p2p_transactions_detail_completed">Completed</string>
-    <string name="p2p_transactions_detail_cancelled">Cancelled</string>
-    <string name="p2p_transactions_detail_duration">Duration</string>
-    <string name="p2p_transactions_detail_expand_content_description">Show details</string>
-    <string name="p2p_transactions_detail_collapse_content_description">Hide details</string>
 </resources>

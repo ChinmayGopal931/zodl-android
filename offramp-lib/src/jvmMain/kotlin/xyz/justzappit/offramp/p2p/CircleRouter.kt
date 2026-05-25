@@ -40,14 +40,15 @@ class CircleRouter(
         orderCurrency: String,
         validateCircle: suspend (CircleId) -> Boolean,
     ): CircleId {
+        // Genuine failures from validateCircle (RPC, revert) propagate; only a `false` return
+        // counts as "circle invalid, try the next one".
         val pool = filterEligible(circles, orderCurrency).toMutableList()
         if (pool.isEmpty()) error("No eligible circles found for currency '$orderCurrency'")
 
         repeat(maxValidationAttempts) {
             if (pool.isEmpty()) error("No eligible circles found")
             val chosen = selectCircle(pool) ?: error("No eligible circles found")
-            val isValid = runCatching { validateCircle(chosen.id) }.getOrElse { false }
-            if (isValid) return chosen.id
+            if (validateCircle(chosen.id)) return chosen.id
             pool.removeAll { it.id == chosen.id }
         }
         error("Exhausted $maxValidationAttempts validation attempts without a valid circle")

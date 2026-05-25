@@ -21,20 +21,17 @@ object OrderEvents {
         diamondAddress: Address,
         userAddress: Address,
     ): BigInteger? {
+        // Match the user-topic strictly: a batched UserOp could emit multiple OrderPlaced logs
+        // in one receipt, and returning someone else's orderId would commit USDC against the
+        // wrong escrow. Caller handles null.
         val userTopic = padAddressTopic(userAddress)
         val diamondHex = diamondAddress.lowercaseHex
-        val candidate =
-            receipt.logs.firstOrNull { log ->
-                log.address.equals(diamondHex, ignoreCase = true) &&
-                    log.topics.size >= REQUIRED_TOPICS &&
-                    log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true) &&
-                    log.topics[2].equals(userTopic, ignoreCase = true)
-            } ?: receipt.logs.firstOrNull { log ->
-                log.address.equals(diamondHex, ignoreCase = true) &&
-                    log.topics.size >= REQUIRED_TOPICS &&
-                    log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true)
-            }
-        return candidate?.let { topicToBigInteger(it.topics[1]) }
+        return receipt.logs.firstOrNull { log ->
+            log.address.equals(diamondHex, ignoreCase = true) &&
+                log.topics.size >= REQUIRED_TOPICS &&
+                log.topics[0].equals(ORDER_PLACED_TOPIC, ignoreCase = true) &&
+                log.topics[2].equals(userTopic, ignoreCase = true)
+        }?.let { topicToBigInteger(it.topics[1]) }
     }
 
     fun parseOrderIdFromLog(log: EvmLog): BigInteger? {

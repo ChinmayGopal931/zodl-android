@@ -13,6 +13,7 @@ import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
 import xyz.justzappit.evm.types.TxHash
 import xyz.justzappit.evm.types.Wei
+import xyz.justzappit.evm.util.hexToBigInteger
 import xyz.justzappit.evm.util.hexToBytes
 import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
@@ -67,8 +68,8 @@ class Erc4337Submitter(
                 callGasLimit = BigInteger.ZERO,
                 verificationGasLimit = BigInteger.ZERO,
                 preVerificationGas = BigInteger.ZERO,
-                maxFeePerGas = hexToBig(gasPrice.maxFeePerGas),
-                maxPriorityFeePerGas = hexToBig(gasPrice.maxPriorityFeePerGas),
+                maxFeePerGas = hexToBigInteger(gasPrice.maxFeePerGas),
+                maxPriorityFeePerGas = hexToBigInteger(gasPrice.maxPriorityFeePerGas),
                 paymasterAndData = ByteArray(0),
                 signature = DUMMY_SIGNATURE,
             )
@@ -80,9 +81,9 @@ class Erc4337Submitter(
         val estimate = bundler.estimateUserOperationGas(stubbed)
         val withGas =
             stubbed.copy(
-                callGasLimit = hexToBig(estimate.callGasLimit).buffered(),
-                verificationGasLimit = hexToBig(estimate.verificationGasLimit).buffered(),
-                preVerificationGas = hexToBig(estimate.preVerificationGas).buffered(),
+                callGasLimit = hexToBigInteger(estimate.callGasLimit).buffered(),
+                verificationGasLimit = hexToBigInteger(estimate.verificationGasLimit).buffered(),
+                preVerificationGas = hexToBigInteger(estimate.preVerificationGas).buffered(),
             )
 
         val sponsored =
@@ -91,10 +92,9 @@ class Erc4337Submitter(
             )
         val signed = sponsored.copy(signature = signOwner(sponsored.userOpHash(entryPoint, chainId)))
         val txHash = bundler.sendUserOperation(signed)
-        // Bundler accepted the op for this nonce — advance the cursor now so the next call doesn't
-        // re-read a possibly-lagging node RPC. If the op later reverts on-chain, the cursor is
-        // stale, but the orchestrator stops the flow on revert anyway; a retry builds a fresh
-        // Erc4337Submitter (per-order in AaOfframpDriver.buildOrchestrator) which re-reads.
+        // Advance optimistically so back-to-back sends don't collide on the same nonce; awaitReceipt
+        // resets the cursor on a non-success / missing receipt so a reused submitter doesn't
+        // AA25-storm against a stale value.
         nonceCursor = nonce + BigInteger.ONE
         return txHash
     }
@@ -102,9 +102,14 @@ class Erc4337Submitter(
     override suspend fun awaitReceipt(txHash: TxHash): TransactionReceipt {
         val deadline = System.currentTimeMillis() + receiptTimeoutMs
         while (System.currentTimeMillis() < deadline) {
-            bundler.getUserOperationReceipt(txHash)?.let { return it }
+            bundler.getUserOperationReceipt(txHash)?.let { receipt ->
+                if (!receipt.success) nonceCursor = null
+                return receipt
+            }
             delay(receiptPollIntervalMs)
         }
+        // No receipt: cursor state is undefined, force a re-read on the next send.
+        nonceCursor = null
         val minutes = receiptTimeoutMs / 60_000
         error(
             "Bundler did not return a receipt for userOp ${txHash.hex} after ${minutes}m. " +
@@ -158,8 +163,5 @@ class Erc4337Submitter(
         private fun encodeSignature(sig: EcdsaSignature): ByteArray =
             sig.r.toByteArray().padLeftToWord() + sig.s.toByteArray().padLeftToWord() +
                 byteArrayOf((sig.yParity + V_OFFSET).toByte())
-
-        private fun hexToBig(hex: String): BigInteger =
-            hex.removePrefix("0x").let { if (it.isEmpty()) BigInteger.ZERO else BigInteger(it, 16) }
     }
 }

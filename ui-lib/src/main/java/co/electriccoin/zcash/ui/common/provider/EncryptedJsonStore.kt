@@ -11,9 +11,10 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 /**
- * Shared encrypted-prefs JSON store. Both [OfframpCheckpointStorageProvider] and
- * [RelayIdentityStorageProvider] delegate to this — they keep distinct interfaces but reuse the
- * same serialize/encrypted-write/decode-tolerant-of-drift plumbing.
+ * Shared encrypted-prefs JSON store. Returns `null` for an absent key, throws
+ * [StoreCorruptedException] for a present-but-undecodable blob: silently treating corrupt as
+ * absent would let `getOrCreate` overwrite still-encrypted data (e.g. the relay key sealing past
+ * orders' merchant UPI). Schema migration: version the key, don't loosen decode.
  */
 internal class EncryptedJsonStore<T>(
     private val encryptedPreferenceProvider: EncryptedPreferenceProvider,
@@ -27,6 +28,7 @@ internal class EncryptedJsonStore<T>(
             explicitNulls = false
         }
 
+    /** Returns null when the key is absent. Throws [StoreCorruptedException] when present-but-undecodable. */
     suspend fun get(): T? = encryptedPreferenceProvider().getString(key)?.let(::decode)
 
     suspend fun set(value: T) {
@@ -37,18 +39,25 @@ internal class EncryptedJsonStore<T>(
         encryptedPreferenceProvider().putString(key, null)
     }
 
+    /** Same absent/corrupt contract as [get]: [StoreCorruptedException] is thrown inside the flow. */
     fun observe(): Flow<T?> =
         flow {
             emitAll(encryptedPreferenceProvider().observe(key).map { raw -> raw?.let(::decode) })
         }
 
-    // Schema drift between fork versions: drop the stale value rather than crashing. Any other
-    // failure (e.g. IllegalArgumentException from invariant violations) is a real bug and must
-    // surface — do NOT swallow it here.
-    private fun decode(raw: String): T? =
+    private fun decode(raw: String): T =
         try {
             json.decodeFromString(serializer, raw)
-        } catch (_: SerializationException) {
-            null
+        } catch (e: SerializationException) {
+            throw StoreCorruptedException(
+                "Encrypted-prefs blob for key ${key.key} failed to decode: ${e.message}",
+                e,
+            )
         }
 }
+
+/** Present-but-undecodable blob from [EncryptedJsonStore]. Distinct from absence (`null`). */
+class StoreCorruptedException(
+    message: String,
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

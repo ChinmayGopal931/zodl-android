@@ -1,6 +1,8 @@
 package co.electriccoin.zcash.ui.common.provider
 
 import co.electriccoin.zcash.preference.EncryptedPreferenceProvider
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
@@ -15,6 +17,12 @@ import xyz.justzappit.offramp.p2p.OrderRecipientUpiCache
  * Map serialization is intentionally simple — single-row UPDATEs read-modify-write the whole map,
  * which scales fine for the hundreds-of-orders range we expect per user. If the row count ever
  * grows substantially we should switch to per-key entries or a small database.
+ *
+ * **Concurrency:** `put` is `get → mutate → set`. Two concurrent `put` calls for different orders
+ * used to clobber each other (read {a:1}, both compute different mutations, second write wins).
+ * A per-instance [Mutex] now serializes the read-modify-write sequence; concurrent calls run
+ * back-to-back rather than in parallel. The orchestrator calls `put` at most once per order, so
+ * contention is negligible.
  */
 class OrderRecipientUpiStorageProvider(
     encryptedPreferenceProvider: EncryptedPreferenceProvider,
@@ -25,11 +33,14 @@ class OrderRecipientUpiStorageProvider(
             prefKey = PREF_KEY,
             serializer = MapSerializer(String.serializer(), String.serializer()),
         )
+    private val writeMutex = Mutex()
 
     override suspend fun put(orderId: String, recipientUpi: String) {
-        val current = store.get() ?: emptyMap()
-        if (current[orderId] == recipientUpi) return
-        store.set(current + (orderId to recipientUpi))
+        writeMutex.withLock {
+            val current = store.get() ?: emptyMap()
+            if (current[orderId] == recipientUpi) return@withLock
+            store.set(current + (orderId to recipientUpi))
+        }
     }
 
     override suspend fun get(orderId: String): String? = store.get()?.get(orderId)

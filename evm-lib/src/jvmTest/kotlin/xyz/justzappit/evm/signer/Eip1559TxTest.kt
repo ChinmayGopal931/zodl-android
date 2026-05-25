@@ -1,6 +1,6 @@
 package xyz.justzappit.evm.signer
 
-import org.bouncycastle.crypto.digests.KeccakDigest
+import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.hd.EvmKeyDerivation
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.ChainId
@@ -141,12 +141,6 @@ class Eip1559TxTest {
         value = Wei.ofLong(123_456_789L),
         data = callData,
     )
-
-    private fun keccak256(data: ByteArray): ByteArray {
-        val d = KeccakDigest(256)
-        d.update(data, 0, data.size)
-        return ByteArray(d.digestSize).also { d.doFinal(it, 0) }
-    }
 
     companion object {
         const val MNEMONIC =

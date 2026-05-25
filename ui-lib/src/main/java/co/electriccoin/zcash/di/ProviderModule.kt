@@ -211,6 +211,12 @@ val providerModule =
                 bundlerUrl = BundlerClient.urlFor(cfg.chainId, BuildConfig.PIMLICO_API_KEY),
                 entryPoint = cfg.entryPointAddress,
                 chainId = cfg.chainId,
+                // Blank gradle property → null → Pimlico falls back to the project's default
+                // sponsorship rules. Configure the policy in the Pimlico dashboard and set
+                // PIMLICO_SPONSORSHIP_POLICY_ID in local.properties (or env var) to scope a
+                // stolen-from-APK key's blast radius to just the Diamond + USDC selectors used
+                // by the offramp flow.
+                sponsorshipPolicyId = BuildConfig.PIMLICO_SPONSORSHIP_POLICY_ID.takeIf { it.isNotBlank() },
             )
         }
         single<OfframpBridgeWallet> {

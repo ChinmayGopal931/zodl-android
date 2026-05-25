@@ -6,6 +6,7 @@ import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
+import java.nio.CharBuffer
 import java.text.Normalizer
 import javax.crypto.Mac
 import javax.crypto.SecretKeyFactory
@@ -33,16 +34,26 @@ data class EvmKey(
     }
 }
 
+@Suppress("TooManyFunctions")
 object EvmKeyDerivation {
     private const val HARDENED_BIT: Int = 0x80000000.toInt()
     private const val PBKDF2_ITERATIONS = 2048
     private const val SEED_BITS = 512
     private const val FIELD_BYTES = 32
     private const val ADDRESS_BYTES = 20
+    private const val WIPE_CHAR: Char = '\u0000'
 
     private val curve: ECParameterSpec = ECNamedCurveTable.getParameterSpec("secp256k1")
 
-    fun derive(mnemonic: String, accountIndex: Int = 0, passphrase: String = ""): EvmKey {
+    /**
+     * Derives the BIP-44 EVM key at m/44'/60'/0'/0/[accountIndex]. Primary entry point.
+     *
+     * [mnemonic] is not zeroed here — caller-owned-wipe contract, so the same array can be reused
+     * across accounts before the caller clears it. PBEKeySpec's internal copy IS cleared via
+     * `clearPassword()`. The transient `String` from `Normalizer.normalize` is unavoidable (JDK
+     * API) but dies with the stack frame.
+     */
+    fun derive(mnemonic: CharArray, accountIndex: Int = 0, passphrase: String = ""): EvmKey {
         require(accountIndex >= 0) { "accountIndex must be non-negative" }
         val seed = mnemonicToSeed(mnemonic, passphrase)
         val master = masterFromSeed(seed)
@@ -56,6 +67,10 @@ object EvmKeyDerivation {
             ).fold(master) { parent, index -> ckdPrivWithRetry(parent, index) }
         return fromPrivateKey(derived.priv)
     }
+
+    /** Convenience overload for test vectors / dev tools. Production callers should use the [CharArray] overload. */
+    fun derive(mnemonic: String, accountIndex: Int = 0, passphrase: String = ""): EvmKey =
+        derive(mnemonic.toCharArray(), accountIndex, passphrase)
 
     fun fromPrivateKey(privBytes: ByteArray): EvmKey {
         require(privBytes.size == FIELD_BYTES) { "private key must be 32 bytes" }
@@ -75,17 +90,27 @@ object EvmKeyDerivation {
         val chainCode: ByteArray
     )
 
-    private fun mnemonicToSeed(mnemonic: String, passphrase: String): ByteArray {
-        val normMnemonic = Normalizer.normalize(mnemonic.trim(), Normalizer.Form.NFKD)
-        val normPass = Normalizer.normalize("mnemonic$passphrase", Normalizer.Form.NFKD)
-        val spec =
-            PBEKeySpec(
-                normMnemonic.toCharArray(),
-                normPass.toByteArray(Charsets.UTF_8),
-                PBKDF2_ITERATIONS,
-                SEED_BITS,
-            )
-        return SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512").generateSecret(spec).encoded
+    private fun mnemonicToSeed(mnemonic: CharArray, passphrase: String): ByteArray {
+        // String.trim() semantics over a CharBuffer view so we don't allocate a copy of the input.
+        var start = 0
+        var endExclusive = mnemonic.size
+        while (start < endExclusive && mnemonic[start].isWhitespace()) start++
+        while (endExclusive > start && mnemonic[endExclusive - 1].isWhitespace()) endExclusive--
+
+        val normalizedMnemonic =
+            Normalizer.normalize(CharBuffer.wrap(mnemonic, start, endExclusive - start), Normalizer.Form.NFKD)
+        val normalizedMnemonicChars = normalizedMnemonic.toCharArray()
+        val normalizedPassBytes =
+            Normalizer.normalize("mnemonic$passphrase", Normalizer.Form.NFKD).toByteArray(Charsets.UTF_8)
+
+        val spec = PBEKeySpec(normalizedMnemonicChars, normalizedPassBytes, PBKDF2_ITERATIONS, SEED_BITS)
+        return try {
+            SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512").generateSecret(spec).encoded
+        } finally {
+            spec.clearPassword()
+            normalizedMnemonicChars.fill(WIPE_CHAR)
+            normalizedPassBytes.fill(0)
+        }
     }
 
     private fun masterFromSeed(seed: ByteArray): ExtKey {

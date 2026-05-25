@@ -5,6 +5,7 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.types.TxHash
+import java.util.Locale
 
 internal object SubgraphOrderParser {
     fun parse(node: JsonObject): OrderSnapshot {
@@ -55,4 +56,28 @@ internal object SubgraphOrderParser {
 
     private fun JsonObject.optionalString(key: String): String? =
         this[key]?.jsonPrimitive?.contentOrNull
+
+    /**
+     * Normalises a hex-encoded address (subgraph `Bytes` scalar) into a typed [Address]. Returns
+     * `null` if the input is blank/zero/non-hex/over-length. The subgraph's `Bytes` scalar omits
+     * leading zeros, so `0x00000000` and `0x000...` (40 zeros) both map to `null`.
+     */
+    private fun parseNullableAddress(hex: String?): Address? {
+        if (hex.isNullOrBlank()) return null
+        val cleaned = hex.removePrefix("0x").lowercase(Locale.ROOT)
+        if (cleaned.isEmpty()) return null
+        if (cleaned.all { it == '0' }) return null
+        if (!cleaned.all { it.isAsciiHexDigit() }) return null
+        if (cleaned.length > Address.HEX_LEN) return null
+        return Address.parseOrNull("0x" + cleaned.padStart(Address.HEX_LEN, '0'))
+    }
+
+    private fun parseEpochSecondsOrNull(value: String?): Long? {
+        if (value.isNullOrBlank()) return null
+        val parsed = value.toLongOrNull() ?: return null
+        return if (parsed == 0L) null else parsed
+    }
+
+    private fun Char.isAsciiHexDigit(): Boolean =
+        this in '0'..'9' || this in 'a'..'f' || this in 'A'..'F'
 }

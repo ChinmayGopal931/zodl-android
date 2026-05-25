@@ -1,5 +1,17 @@
 package xyz.justzappit.evm.util
 
+import java.math.BigInteger
+
+/**
+ * Parses a hex string (with or without `0x` prefix) as an unsigned [BigInteger]. Empty or `"0x"`
+ * → [BigInteger.ZERO]. Used everywhere RPC responses return hex-encoded numeric fields
+ * (eth_chainId, eth_gasPrice, block.baseFeePerGas, UserOp gas limits, …).
+ */
+fun hexToBigInteger(hex: String): BigInteger {
+    val s = hex.removePrefix("0x")
+    return if (s.isEmpty()) BigInteger.ZERO else BigInteger(s, 16)
+}
+
 fun String.hexToBytes(): ByteArray {
     val raw = if (startsWith("0x") || startsWith("0X")) substring(2) else this
     require(raw.length % 2 == 0) { "hex input must have even length, got ${raw.length}: '$this'" }

@@ -66,9 +66,11 @@ class CircleRouterTest {
     }
 
     @Test
-    fun `selectCircleForOrder returns first valid circle id`() =
+    fun `selectCircleForOrder picks the heavily-weighted circle deterministically`() =
         runTest {
-            // epsilon=0 means always exploit (active-only by score).
+            // epsilon=0 means always exploit (active-only by score). With weights [100, 1] and a
+            // fixed RNG seed, the result is fully deterministic — assert the specific circle id so
+            // a regression in the weighted-choice path (e.g. wrong index direction) actually fails.
             val router = CircleRouter(random = Random(0), epsilon = 0.0)
             val circles =
                 listOf(
@@ -76,13 +78,15 @@ class CircleRouterTest {
                     circle("2", 1.0, "active"),
                 )
             val chosen = router.selectCircleForOrder(circles, inrCurrency, validateCircle = { true })
-            // Heavily-weighted #1 should win with seed 0; either way it must be a valid id.
-            assertEquals(true, chosen.value == BigInteger.ONE || chosen.value == BigInteger.valueOf(2))
+            assertEquals(BigInteger.ONE, chosen.value)
         }
 
     @Test
-    fun `selectCircleForOrder retries when validation fails, then succeeds`() =
+    fun `selectCircleForOrder retries when validation fails, picks the other circle`() =
         runTest {
+            // With only 2 circles in the pool, rejecting the first pick forces the second to be
+            // the only remaining id — so retry behaviour is asserted via the specific second id,
+            // not "either of {1, 2}". Track which id was rejected to derive the expected survivor.
             val router = CircleRouter(random = Random(42), epsilon = 0.0)
             val circles =
                 listOf(
@@ -90,14 +94,21 @@ class CircleRouterTest {
                     circle("2", 1.0, "active"),
                 )
             var calls = 0
+            var rejectedId: BigInteger? = null
             val firstId =
                 router.selectCircleForOrder(circles, inrCurrency) { id ->
                     calls++
-                    // Reject the first attempt; accept the second.
-                    calls > 1
+                    if (calls == 1) {
+                        rejectedId = id.value
+                        false
+                    } else {
+                        true
+                    }
                 }
             assertEquals(2, calls)
-            assertEquals(true, firstId.value == BigInteger.ONE || firstId.value == BigInteger.valueOf(2))
+            val expectedSurvivor =
+                if (rejectedId == BigInteger.ONE) BigInteger.valueOf(2) else BigInteger.ONE
+            assertEquals(expectedSurvivor, firstId.value)
         }
 
     @Test
@@ -121,16 +132,42 @@ class CircleRouterTest {
         }
 
     @Test
+    fun `selectCircleForOrder propagates exceptions from validateCircle instead of swallowing them`() =
+        runTest {
+            // Regression for: validateCircle used to be wrapped in
+            // runCatching{...}.getOrElse{false}, so an RPC blip in the orchestrator's on-chain
+            // merchant-availability check looked like "invalid circle". Over the default 3
+            // attempts that swallowed three transport errors and surfaced as "Exhausted N
+            // validation attempts" — masking the real cause. The exception now propagates.
+            val router = CircleRouter(random = Random(0), epsilon = 0.0, maxValidationAttempts = 3)
+            val circles =
+                listOf(
+                    circle("1", 100.0, "active"),
+                    circle("2", 1.0, "active"),
+                )
+            val rpcFailure = RuntimeException("simulated RPC timeout")
+            val thrown =
+                assertFailsWith<RuntimeException> {
+                    router.selectCircleForOrder(circles, inrCurrency) { throw rpcFailure }
+                }
+            assertEquals(rpcFailure, thrown)
+        }
+
+    @Test
     fun `epsilon = 1 explores across all statuses, not only active`() =
         runTest {
+            // Weights after status scaling: paused 50.0 * 0.3 = 15.0; bootstrap min(5, 25) = 5.0.
+            // Ratio 15:5 → ~75% chance circle 1 wins on a single draw; with seed 1 the weighted
+            // random happens to land on circle 2 (a perfectly normal outcome of the 25% tail).
+            // The real assertion: no-active-circles path doesn't throw AND lands on a specific
+            // id, not just "anything goes".
             val router = CircleRouter(random = Random(1), epsilon = 1.0)
             val circles =
                 listOf(
                     circle("1", 50.0, "paused"),
                     circle("2", 5.0, "bootstrap"),
                 )
-            // Should not throw even with no active circles.
             val chosen = router.selectCircleForOrder(circles, inrCurrency) { true }
-            assertEquals(true, chosen.value == BigInteger.ONE || chosen.value == BigInteger.valueOf(2))
+            assertEquals(BigInteger.valueOf(2), chosen.value)
         }
 }

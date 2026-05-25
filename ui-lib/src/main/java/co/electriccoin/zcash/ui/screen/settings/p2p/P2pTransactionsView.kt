@@ -47,8 +47,8 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappBorderedCard
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
-import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
 
@@ -507,7 +507,7 @@ private const val CHEVRON_SIZE = 18
 @PreviewScreens
 @Composable
 private fun PreviewLoaded() =
-    ProvideZappTheme {
+    ZcashTheme {
         P2pTransactionsView(
             state =
                 P2pTransactionsState(

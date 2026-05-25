@@ -182,9 +182,9 @@ class NearBridgeOfframpFunding(
                 flexInput = false,
                 amount = request.usdcAmount.whole,
                 refundAddress = wallet.zcashAddress(),
-                originAsset = zecAsset(tokens),
+                originAsset = tokens.zecAsset(),
                 destinationAddress = account.checksumHex,
-                destinationAsset = usdcAsset(tokens),
+                destinationAsset = tokens.usdcAsset(usdc),
                 slippage = slippageTolerancePercent,
                 affiliateAddress = AFFILIATE_ADDRESS,
             )
@@ -201,9 +201,11 @@ class NearBridgeOfframpFunding(
      * HTTP error here (wifi blip, 5xx, transient timeout) must not propagate — bubbling it would
      * make the orchestrator emit Failed(FUNDING), clear the checkpoint, and orphan the user's
      * in-flight ZEC with no resume path. Only a *terminal* [SwapStatus] from 1-Click counts as
-     * the bridge actually dying. Cancellation still escapes for coroutine teardown.
+     * the bridge actually dying — and in that case we throw [BridgeTerminallyFailedException],
+     * which the checkpoint persister recognises to clear the checkpoint (re-polling the same
+     * handle would just yield the same terminal status forever). Cancellation escapes normally
+     * for coroutine teardown.
      */
-    @Suppress("TooGenericExceptionCaught")
     private suspend fun pollUntilSettled(depositAddress: String, tokens: List<SwapAsset>) {
         while (true) {
             val status =
@@ -211,7 +213,7 @@ class NearBridgeOfframpFunding(
                     swapDataSource.checkSwapStatus(depositAddress, tokens).status
                 } catch (e: CancellationException) {
                     throw e
-                } catch (e: Throwable) {
+                } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
                     Twig.warn(e) {
                         "NearBridgeOfframpFunding.pollUntilSettled: transient checkSwapStatus failure " +
                             "for $depositAddress — retrying in ${pollIntervalMs}ms"
@@ -225,7 +227,7 @@ class NearBridgeOfframpFunding(
                 }
 
                 SwapStatus.REFUNDED, SwapStatus.FAILED, SwapStatus.EXPIRED, SwapStatus.INCOMPLETE_DEPOSIT -> {
-                    error("NEAR bridge did not deliver USDC for $depositAddress — the user's ZEC was refunded.")
+                    throw BridgeTerminallyFailedException(terminalStatus = status, depositAddress = depositAddress)
                 }
 
                 else -> {
@@ -235,21 +237,24 @@ class NearBridgeOfframpFunding(
         }
     }
 
-    private fun zecAsset(tokens: List<SwapAsset>): SwapAsset =
-        tokens.filterIsInstance<ZecSwapAsset>().firstOrNull()
-            ?: error("ZEC is not in the 1-Click supported-token list")
-
-    // 1-Click asset ids embed the on-chain address (e.g. "nep141:base-0x833589…omft.near"), so match
-    // USDC by the configured contract address rather than hardcoding a NEP asset id per network.
-    private fun usdcAsset(tokens: List<SwapAsset>): SwapAsset =
-        tokens.firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
-            ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list")
-
     private companion object {
         const val DEFAULT_POLL_INTERVAL_MS = 5_000L
         val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("1")
     }
 }
+
+/**
+ * Surfaces a non-recoverable terminal 1-Click [SwapStatus] from [NearBridgeOfframpFunding]. The
+ * type is the structural signal `OfframpCheckpointPersister` uses to clear the checkpoint —
+ * substring-matching `Failed.message` would be fragile to copy edits.
+ */
+class BridgeTerminallyFailedException(
+    val terminalStatus: SwapStatus,
+    val depositAddress: String,
+) : RuntimeException(
+        "NEAR bridge for $depositAddress reached terminal state $terminalStatus — the bridge cannot be resumed. " +
+            "If your ZEC was refunded by 1-Click it should appear at your wallet's refund address shortly.",
+    )
 
 /**
  * Mainnet pull-back: resolves a NEAR 1-Click deposit address for a USDC → ZEC swap so the orchestrator
@@ -270,16 +275,29 @@ class NearPullbackOfframpRefund(
                 flexInput = false,
                 amount = amount.whole,
                 refundAddress = account.checksumHex,
-                originAsset =
-                    tokens.firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
-                        ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list"),
+                originAsset = tokens.usdcAsset(usdc),
                 destinationAddress = wallet.zcashAddress(),
-                destinationAsset =
-                    tokens.filterIsInstance<ZecSwapAsset>().firstOrNull()
-                        ?: error("ZEC is not in the 1-Click supported-token list"),
+                destinationAsset = tokens.zecAsset(),
                 slippage = slippageTolerancePercent,
                 affiliateAddress = AFFILIATE_ADDRESS,
             )
         return Address.parse(quote.depositAddress.address)
     }
 }
+
+// ---- 1-Click supported-token lookup helpers (shared between funding + refund) ------------------
+
+/** Picks the ZEC entry from the 1-Click supported-token catalog; throws if missing. */
+private fun List<SwapAsset>.zecAsset(): SwapAsset =
+    filterIsInstance<ZecSwapAsset>().firstOrNull()
+        ?: error("ZEC is not in the 1-Click supported-token list")
+
+/**
+ * Picks the USDC entry by matching the configured on-chain address against the 1-Click asset id
+ * (which embeds the contract, e.g. `nep141:base-0x833589…omft.near`). Lookups by raw address keep
+ * the catalog network-agnostic — no hardcoded NEP asset id per network — so adding a new chain to
+ * P2pNetworks doesn't drag a new constant in here.
+ */
+private fun List<SwapAsset>.usdcAsset(usdc: Address): SwapAsset =
+    firstOrNull { it.assetId.contains(usdc.lowercaseHex.removePrefix("0x"), ignoreCase = true) }
+        ?: error("USDC (${usdc.checksumHex}) is not in the 1-Click supported-token list")

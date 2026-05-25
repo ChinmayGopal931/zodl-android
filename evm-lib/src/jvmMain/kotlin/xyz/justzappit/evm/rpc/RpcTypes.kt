@@ -2,6 +2,7 @@ package xyz.justzappit.evm.rpc
 
 import kotlinx.serialization.Serializable
 import xyz.justzappit.evm.types.Wei
+import xyz.justzappit.evm.util.hexToBigInteger
 
 @Serializable
 data class TransactionReceipt(

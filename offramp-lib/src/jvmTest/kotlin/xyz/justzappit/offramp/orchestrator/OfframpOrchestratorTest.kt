@@ -33,6 +33,7 @@ import xyz.justzappit.offramp.p2p.Usdc6
 import java.math.BigInteger
 import kotlin.random.Random
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -150,6 +151,21 @@ class OfframpOrchestratorTest {
         return tickCounter
     }
 
+    @BeforeTest
+    fun resetMockState() {
+        // kotlin.test on JVM uses per-test instantiation, so these instance fields reset
+        // implicitly. This explicit reset is belt-and-braces against the day someone promotes
+        // any of them to `companion object` / `@JvmStatic` — at which point silent cross-test
+        // contamination would otherwise depend on JUnit's reflection ordering.
+        nextUsdcBalance = ENCODED_ZERO
+        nextIsOrderExpired = ENCODED_ZERO
+        nextSubgraphResponse = SUBGRAPH_OK_ONE_CIRCLE
+        getAssignableResponse = ENCODED_ADDRESS_ARRAY_OF_ONE
+        rpcRequestLog.clear()
+        rawTxLog.clear()
+        tickCounter = 0L
+    }
+
     @AfterTest
     fun shutdown() {
         rpcHttp.close()
@@ -203,12 +219,15 @@ class OfframpOrchestratorTest {
         }
 
     @Test
-    fun `transient RPC errors during polling do not fail the flow`() =
+    fun `orchestrator absorbs OrderReadSource exceptions during polling and continues`() =
         runTest {
             // Regression for: a single bad poll mid-flight used to throw out of orderReader.fetchOrder
-            // and bail the orchestrator into Failed, orphaning escrowed USDC. After the FallbackOrderReader
-            // total-fix + orchestrator catch wrap, transient failures collapse to null and polling continues.
-            orderReader.enqueue(null) // primary observer "transiently fails"; reader returns null
+            // and bail the orchestrator into Failed, orphaning escrowed USDC. The orchestrator now
+            // wraps each fetchOrder call in a runCatching so a thrown reader collapses to "no
+            // observation this tick" and polling continues. Fallback-between-sources behaviour
+            // (subgraph fails → on-chain wins) is covered in FallbackOrderReaderTest; this test
+            // exercises only the orchestrator's catch-around-reader.
+            orderReader.enqueue(null) // reader returns null (no observation this tick)
             orderReader.enqueueThrow(RuntimeException("kapow")) // even an outright throw is absorbed
             orderReader.enqueue(snapshot(status = OrderStatus.ACCEPTED, pubkey = MERCHANT_PUBKEY, merchant = MERCHANT_ADDRESS))
             orderReader.enqueue(

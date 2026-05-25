@@ -67,7 +67,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-internal fun SupportChatScreen(args: SupportChatArgs) {
+fun SupportChatScreen(args: SupportChatArgs) {
     val viewModel = koinViewModel<SupportChatVM> { parametersOf(args) }
     val state by viewModel.state.collectAsStateWithLifecycle()
     SupportChatEffectsHandler(viewModel)

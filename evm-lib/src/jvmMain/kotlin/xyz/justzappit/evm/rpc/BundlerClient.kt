@@ -40,6 +40,15 @@ class BundlerClient(
     private val bundlerUrl: String,
     private val entryPoint: Address,
     private val chainId: ChainId,
+    /**
+     * Optional Pimlico ERC-7677 sponsorship-policy identifier. When non-blank, every
+     * `pm_sponsorUserOperation` request is scoped to this specific policy (created in the Pimlico
+     * dashboard) — so a stolen `PIMLICO_API_KEY` extracted from the APK can only sponsor calls
+     * matching the policy's (target contract, function selector, sender, amount) constraints.
+     * Without a policy id, Pimlico falls back to the project's default sponsorship rules — fine for
+     * testnet/dev, risky for mainnet where the blast radius is your project budget.
+     */
+    private val sponsorshipPolicyId: String? = null,
 ) {
     private val nextId = AtomicLong(1)
     private val json =
@@ -104,10 +113,16 @@ class BundlerClient(
                     buildJsonArray {
                         add(userOpJson(op))
                         add(entryPoint.checksumHex)
-                        // ERC-7677 context object — empty = use Pimlico's default sponsorship policy
-                        // for the API key's project. Add `sponsorshipPolicyId` here to scope to a
-                        // specific policy created in the Pimlico dashboard.
-                        add(buildJsonObject {})
+                        // ERC-7677 context object. When sponsorshipPolicyId is set, scope this
+                        // sponsorship to a specific Pimlico-dashboard policy — that's the lever
+                        // for blast-radius containment if the in-APK API key is extracted.
+                        add(
+                            buildJsonObject {
+                                if (!sponsorshipPolicyId.isNullOrBlank()) {
+                                    put("sponsorshipPolicyId", sponsorshipPolicyId)
+                                }
+                            },
+                        )
                     },
                 ),
             )

@@ -309,13 +309,16 @@ class OfframpOrchestrator(
         }
     }
 
-    // Resume guard: subgraph can lag the chain, so when it claims "no UPI yet" we re-read on-chain
-    // before re-broadcasting setSellOrderUpi — otherwise the second broadcast reverts UpiAlreadySent.
+    // Subgraph can lag the chain, so re-read on-chain when it claims "no UPI yet". The on-chain
+    // read fails closed: errors and a null result both propagate, since silently treating either
+    // as "no UPI" would re-broadcast setSellOrderUpi and revert UpiAlreadySent.
     private suspend fun isUpiAlreadyOnChain(orderId: BigInteger, accepted: OrderSnapshot): Boolean {
         if (accepted.status.onChain >= OrderStatus.PAID.onChain) return true
         if (accepted.encryptedUserUpi.isNotBlank()) return true
         if (accepted.source == OrderSnapshot.Source.OnChain) return false
-        val onChain = runCatching { onChainOrderReader.fetchOrder(orderId) }.getOrNull() ?: return false
+        val onChain =
+            onChainOrderReader.fetchOrder(orderId)
+                ?: error("Cannot verify UPI idempotency for order $orderId — on-chain reader returned no order")
         return onChain.encryptedUserUpi.isNotBlank() ||
             onChain.status.onChain >= OrderStatus.PAID.onChain
     }
@@ -566,27 +569,28 @@ class OfframpOrchestrator(
         )
     }
 
+    // Only an empty assignable array means "no merchants right now"; RPC failures propagate so
+    // they surface as Failed rather than burning through MAX_VALIDATION_ATTEMPTS as bad circles.
     private suspend fun validateCircleOnChain(
         circleId: CircleId,
         request: OfframpRequest,
-    ): Boolean =
-        runCatching {
-            val ret =
-                rpc.ethCall(
-                    to = network.diamondAddress,
-                    data =
-                        DiamondCalls.getAssignableMerchantsFromCircleCalldata(
-                            circleId = circleId.value,
-                            assignUpTo = BigInteger.valueOf(ASSIGN_UP_TO),
-                            currency = request.currency,
-                            user = accountAddress,
-                            usdtAmount = request.usdcAmount,
-                            fiatAmount = Usdc6.ZERO,
-                            orderType = OrderType.PAY,
-                        ),
-                )
-            OrderReader.decodeAddressArrayNonEmpty(ret)
-        }.getOrDefault(false)
+    ): Boolean {
+        val ret =
+            rpc.ethCall(
+                to = network.diamondAddress,
+                data =
+                    DiamondCalls.getAssignableMerchantsFromCircleCalldata(
+                        circleId = circleId.value,
+                        assignUpTo = BigInteger.valueOf(ASSIGN_UP_TO),
+                        currency = request.currency,
+                        user = accountAddress,
+                        usdtAmount = request.usdcAmount,
+                        fiatAmount = Usdc6.ZERO,
+                        orderType = OrderType.PAY,
+                    ),
+            )
+        return OrderReader.decodeAddressArrayNonEmpty(ret)
+    }
 
     private suspend fun FlowCollector<OfframpStatus>.pollForAcceptance(orderId: BigInteger): PollOutcome =
         pollOrderUntil(
