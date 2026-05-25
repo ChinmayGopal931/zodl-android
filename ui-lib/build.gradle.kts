@@ -218,8 +218,8 @@ androidComponents {
             BuildConfigField(
                 type = "String",
                 value = "\"${project.property("PIMLICO_SPONSORSHIP_POLICY_ID")?.toString().orEmpty()}\"",
-                comment = "Optional Pimlico sponsorship-policy id. When non-blank, scopes pm_sponsorUserOperation " +
-                    "to the policy's (target, selector) constraints so a stolen API key can only sponsor expected calls."
+                comment = "Optional Pimlico sponsorship-policy id; when non-blank, scopes " +
+                    "pm_sponsorUserOperation to the policy's (target, selector) constraints."
             )
         )
     }

@@ -92,14 +92,9 @@ class Erc4337Submitter(
             )
         val signed = sponsored.copy(signature = signOwner(sponsored.userOpHash(entryPoint, chainId)))
         val txHash = bundler.sendUserOperation(signed)
-        // Bundler accepted the op for this nonce — advance the cursor now so the next call doesn't
-        // re-read a possibly-lagging node RPC. The optimistic advance is necessary for back-to-back
-        // sendTransactions where neither caller has awaited a receipt yet (otherwise both would get
-        // the same nonce). If a receipt later comes back !success, awaitReceipt resets the cursor
-        // to force a re-read — the previous "orchestrator stops on revert" assumption was true for
-        // run()/resume() (each builds a fresh submitter) but NOT for bridgeFundsBackToZec, which
-        // reuses one submitter across cancelOrder + USDC.transfer. A failed cancelOrder used to
-        // leave the cursor advanced past the actual on-chain nonce, AA25-storming the next op.
+        // Advance optimistically so back-to-back sends don't collide on the same nonce; awaitReceipt
+        // resets the cursor on a non-success / missing receipt so a reused submitter doesn't
+        // AA25-storm against a stale value.
         nonceCursor = nonce + BigInteger.ONE
         return txHash
     }
@@ -108,21 +103,12 @@ class Erc4337Submitter(
         val deadline = System.currentTimeMillis() + receiptTimeoutMs
         while (System.currentTimeMillis() < deadline) {
             bundler.getUserOperationReceipt(txHash)?.let { receipt ->
-                if (!receipt.success) {
-                    // The UserOp landed on-chain but its inner call reverted. The cursor that
-                    // sendTransaction optimistically advanced is now ahead of EntryPoint's actual
-                    // nonce. Reset so the next sendTransaction re-reads from the node and picks up
-                    // the real value, instead of replaying AA25 retries against a stale cursor.
-                    nonceCursor = null
-                }
+                if (!receipt.success) nonceCursor = null
                 return receipt
             }
             delay(receiptPollIntervalMs)
         }
-        // The bundler hasn't surfaced a receipt — we can't tell whether the op landed or got
-        // dropped, so the cursor's relationship to actual on-chain state is undefined. Reset so the
-        // next sendTransaction re-reads, rather than risk an AA25 storm on a stale cursor when
-        // the op silently never settled.
+        // No receipt: cursor state is undefined, force a re-read on the next send.
         nonceCursor = null
         val minutes = receiptTimeoutMs / 60_000
         error(

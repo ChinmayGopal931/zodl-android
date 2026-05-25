@@ -64,15 +64,10 @@ internal class OfframpCheckpointPersister(
             }
 
             is OfframpStatus.Failed -> {
-                // Three-way decision:
-                //  1. Bridge in-flight, transient failure → keep checkpoint so user can resume.
-                //  2. Bridge terminally dead (REFUNDED/FAILED/EXPIRED/INCOMPLETE_DEPOSIT) → clear,
-                //     because re-polling the same 1-Click handle just yields the same terminal
-                //     status indefinitely and would loop the user with no UX exit. The structural
-                //     signal is the typed BridgeTerminallyFailedException carried in Failed.cause.
-                //  3. Failure after funding settled (approve / placeOrder / setUpi) → clear,
-                //     because the USDC is in the smart account and a fresh attempt will
-                //     short-circuit via FundedFromBase.
+                // Keep only a transient mid-bridge failure so the user can resume the same 1-Click
+                // handle. Terminal bridge failures and post-funding failures both clear — re-polling
+                // a dead bridge loops forever, and post-funding USDC has settled into the smart
+                // account so a retry hits FundedFromBase.
                 val bridgeTerminallyDead = status.cause is BridgeTerminallyFailedException
                 val transientFundingFailure =
                     !bridgeTerminallyDead &&

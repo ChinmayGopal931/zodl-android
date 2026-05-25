@@ -244,19 +244,9 @@ class NearBridgeOfframpFunding(
 }
 
 /**
- * Thrown by [NearBridgeOfframpFunding.pollUntilSettled] when 1-Click has surfaced a non-recoverable
- * terminal [SwapStatus] for the bridge: REFUNDED (ZEC returned), FAILED (bridge dead),
- * EXPIRED (quote expired), or INCOMPLETE_DEPOSIT (user under-sent).
- *
- * Why a typed exception rather than just a string: the persister (sibling
- * `OfframpCheckpointPersister`) keys off the cause type to decide whether to keep the checkpoint
- * (in-flight bridge, user can resume) or to clear it (bridge is dead, re-polling the same handle
- * yields the same terminal status indefinitely). Keying off `Failed.message` substrings would be
- * fragile to copy edits; the type is structural.
- *
- * The orchestrator's generic catch (Throwable) captures this as `Failed.cause`; UI rendering still
- * works off the (English) [message] as a fallback, but the persister's clear-vs-keep decision is
- * based on `cause is BridgeTerminallyFailedException`.
+ * Surfaces a non-recoverable terminal 1-Click [SwapStatus] from [NearBridgeOfframpFunding]. The
+ * type is the structural signal `OfframpCheckpointPersister` uses to clear the checkpoint —
+ * substring-matching `Failed.message` would be fragile to copy edits.
  */
 class BridgeTerminallyFailedException(
     val terminalStatus: SwapStatus,

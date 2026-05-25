@@ -7,6 +7,7 @@ import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
+import co.electriccoin.zcash.ui.common.provider.StoreCorruptedException
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanUpiUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
@@ -21,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -67,11 +69,8 @@ internal class UpiOfframpVM(
      */
     private var smartAccountAddress: Address? = null
 
-    // Subscriber-count proxy: WhileSubscribed below establishes the upstream subscription when the
-    // first downstream subscriber arrives and drops it after the timeout elapses with no
-    // subscribers. We piggyback onStart/onCompletion on the upstream to drive the pollers' active
-    // state — when this reads > 0 the screen is live and polling should run; when it falls back
-    // to 0 the pollers cancel.
+    // Driven by onStart/onCompletion on the state flow; the rate/balance pollers run only while
+    // this is > 0, so a backgrounded screen doesn't burn RPC quota.
     private val activeSubscribers = MutableStateFlow(0)
 
     val state: StateFlow<UpiOfframpState> =
@@ -110,16 +109,19 @@ internal class UpiOfframpVM(
             )
 
     init {
-        // The checkpoint observer is cheap (in-memory flow over EncryptedSharedPreferences) and
-        // must stay live so the in-flight banner is correct the moment the screen subscribes.
         viewModelScope.launch {
-            checkpointStorage.observe().collect { checkpoint -> inFlight.update { checkpoint } }
+            checkpointStorage.observe()
+                .catch { e ->
+                    if (e is StoreCorruptedException) {
+                        Twig.warn(e) { "UpiOfframpVM: corrupted checkpoint blob, discarding" }
+                        checkpointStorage.clear()
+                        emit(null)
+                    } else {
+                        throw e
+                    }
+                }
+                .collect { checkpoint -> inFlight.update { checkpoint } }
         }
-        // Rate + balance pollers gated on whether someone is actually collecting `state`. Before:
-        // the loops ran in init {} unconditionally for the lifetime of the VM, burning a NEAR
-        // 1-Click-equivalent of RPC quota even when the screen was backgrounded behind dialogs,
-        // navigation, or rotation. collectLatest restarts the inner block whenever the active
-        // bit flips, so subscription resumption auto-resumes polling.
         viewModelScope.launch {
             activeSubscribers
                 .map { it > 0 }

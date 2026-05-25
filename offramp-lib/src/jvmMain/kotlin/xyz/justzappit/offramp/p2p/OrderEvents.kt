@@ -21,12 +21,9 @@ object OrderEvents {
         diamondAddress: Address,
         userAddress: Address,
     ): BigInteger? {
-        // We MUST match on the user-topic. The previous implementation had an unchecked fallback
-        // to the first OrderPlaced log in the receipt — degenerate when a single `execute` emits
-        // exactly one event, but a serious foot-gun the moment a batched UserOp (or a future
-        // multicall surface) produces multiple OrderPlaced logs in the same tx. Returning an
-        // orderId that belonged to a different user lets the orchestrator commit USDC against the
-        // wrong escrow. Caller handles null (raises "no OrderPlaced log for our user").
+        // Match the user-topic strictly: a batched UserOp could emit multiple OrderPlaced logs
+        // in one receipt, and returning someone else's orderId would commit USDC against the
+        // wrong escrow. Caller handles null.
         val userTopic = padAddressTopic(userAddress)
         val diamondHex = diamondAddress.lowercaseHex
         return receipt.logs.firstOrNull { log ->

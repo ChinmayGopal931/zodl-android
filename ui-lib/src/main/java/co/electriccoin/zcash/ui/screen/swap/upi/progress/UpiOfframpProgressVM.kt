@@ -6,6 +6,7 @@ import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
+import co.electriccoin.zcash.ui.common.provider.StoreCorruptedException
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
@@ -72,24 +73,22 @@ internal class UpiOfframpProgressVM(
     // a non-sticky reading would flip the label back to "Bridging funds" by the time the user sees it.
     private val fundedFromBaseObserved = MutableStateFlow(false)
 
-    /**
-     * Full history of statuses emitted by this run, in order. The list lets late subscribers (e.g.
-     * a rotation after WaitingForMerchantAcceptance has fired) reconstruct what happened earlier
-     * — the previous design used `shareIn(Eagerly, replay = 1)`, which could silently drop the
-     * entire Idle → SelectingCircle → ... → WaitingForX prefix if subscription was delayed even
-     * one frame, leaving the UI looking like the flow jumped straight to the latest step.
-     *
-     * The orchestrator's cold Flow is collected exactly once (in `init`); every emission appends
-     * here and runs the same side effects (persister, Twig, fundedFromBaseObserved). Downstream
-     * consumers (`state` combine + fee-details listener) read from `statusList`, never from the
-     * raw orchestrator Flow.
-     */
+    // Full history so a late subscriber (rotation, dialog dismiss) sees the prefix, not just the
+    // latest step. The orchestrator's cold Flow is collected exactly once in `init`; every
+    // downstream consumer reads from this list.
     private val statusList = MutableStateFlow<List<OfframpStatus>>(emptyList())
 
     init {
         // Drive the orchestrator. Single collector, full history captured, side effects co-located.
         viewModelScope.launch {
-            val existing = checkpointStorage.get()
+            val existing =
+                try {
+                    checkpointStorage.get()
+                } catch (e: StoreCorruptedException) {
+                    Twig.warn(e) { "UpiOfframpProgress: corrupted checkpoint blob, discarding" }
+                    checkpointStorage.clear()
+                    null
+                }
             // Resume whenever there's an order already placed OR a funding bridge in flight: the
             // bridge's persisted 1-Click deposit address must be re-polled, never re-quoted, or a
             // crash mid-bridge would open a second bridge and double-send the user's ZEC. Only a

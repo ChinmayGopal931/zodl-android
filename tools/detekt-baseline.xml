@@ -768,8 +768,8 @@
     <ID>PackageNaming:TestRuntimeOnlyConfigurationAccessors.kt$package gradle.kotlin.dsl.accessors._8c47cae829ea3d03260d5ff13fb2398e</ID>
     <ID>ReturnCount:AbiDecoder.kt$AbiDecoder$fun dynamicStringAt(byteOffset: Int): String</ID>
     <ID>ReturnCount:Address.kt$Address.Companion$fun parseOrNull(input: String): Address?</ID>
-    <ID>ReturnCount:AddressHex.kt$internal fun parseEpochSecondsOrNull(value: String?): Long?</ID>
-    <ID>ReturnCount:AddressHex.kt$internal fun parseNullableAddress(hex: String?): Address?</ID>
+    <ID>ReturnCount:SubgraphOrderParser.kt$SubgraphOrderParser$private fun parseEpochSecondsOrNull(value: String?): Long?</ID>
+    <ID>ReturnCount:SubgraphOrderParser.kt$SubgraphOrderParser$private fun parseNullableAddress(hex: String?): Address?</ID>
     <ID>ReturnCount:BalanceChartVM.kt$BalanceChartVM$private fun createState( history: List&lt;BalanceHistoryPoint&gt;?, period: BalanceChartPeriod, ): BalanceChartState</ID>
     <ID>ReturnCount:BalanceChartVM.kt$BalanceChartVM$private fun windowForPeriod( history: List&lt;BalanceHistoryPoint&gt;, period: BalanceChartPeriod, ): List&lt;BalanceHistoryPoint&gt;</ID>
     <ID>ReturnCount:BaseRpcClient.kt$BaseRpcClient$suspend fun ethGetTransactionReceipt(txHash: TxHash): TransactionReceipt?</ID>

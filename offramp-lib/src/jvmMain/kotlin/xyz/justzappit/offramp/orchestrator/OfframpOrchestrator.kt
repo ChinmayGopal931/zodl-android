@@ -309,26 +309,16 @@ class OfframpOrchestrator(
         }
     }
 
-    // Resume guard: subgraph can lag the chain, so when it claims "no UPI yet" we re-read on-chain
-    // before re-broadcasting setSellOrderUpi — otherwise the second broadcast reverts UpiAlreadySent.
-    //
-    // Fail-closed semantics: we do NOT runCatching{}.getOrNull() the on-chain read. A transient RPC
-    // blip used to collapse here into "no UPI on chain" → re-broadcast → UpiAlreadySent revert,
-    // surfacing as a confusing Failed step on a flow that was actually fine. Now an RPC failure
-    // propagates to the orchestrator's catch boundary, which emits Failed with the actual error.
-    // A null fetchOrder result means the chain genuinely has no record of this order — a major
-    // subgraph/chain inconsistency, also worth failing rather than silently broadcasting.
+    // Subgraph can lag the chain, so re-read on-chain when it claims "no UPI yet". The on-chain
+    // read fails closed: errors and a null result both propagate, since silently treating either
+    // as "no UPI" would re-broadcast setSellOrderUpi and revert UpiAlreadySent.
     private suspend fun isUpiAlreadyOnChain(orderId: BigInteger, accepted: OrderSnapshot): Boolean {
         if (accepted.status.onChain >= OrderStatus.PAID.onChain) return true
         if (accepted.encryptedUserUpi.isNotBlank()) return true
         if (accepted.source == OrderSnapshot.Source.OnChain) return false
         val onChain =
             onChainOrderReader.fetchOrder(orderId)
-                ?: error(
-                    "Cannot verify UPI idempotency for order $orderId — on-chain reader returned no " +
-                        "order. Refusing to re-broadcast setSellOrderUpi without an authoritative " +
-                        "idempotency check.",
-                )
+                ?: error("Cannot verify UPI idempotency for order $orderId — on-chain reader returned no order")
         return onChain.encryptedUserUpi.isNotBlank() ||
             onChain.status.onChain >= OrderStatus.PAID.onChain
     }
@@ -579,17 +569,12 @@ class OfframpOrchestrator(
         )
     }
 
+    // Only an empty assignable array means "no merchants right now"; RPC failures propagate so
+    // they surface as Failed rather than burning through MAX_VALIDATION_ATTEMPTS as bad circles.
     private suspend fun validateCircleOnChain(
         circleId: CircleId,
         request: OfframpRequest,
     ): Boolean {
-        // Don't swallow RPC failures as "circle has no merchants". The previous
-        // runCatching{...}.getOrDefault(false) collapsed transport errors into "invalid circle",
-        // which then burned through CircleRouter.MAX_VALIDATION_ATTEMPTS=3 attempts and failed the
-        // entire offramp with "Exhausted N validation attempts" — a healthy chain, three RPC
-        // blips, one bad UX. RPC errors propagate to the caller; only an actually-empty assignable
-        // array means "no merchants for this circle right now". (CircleRouter no longer wraps the
-        // validateCircle predicate in runCatching either — H3 fix.)
         val ret =
             rpc.ethCall(
                 to = network.diamondAddress,
