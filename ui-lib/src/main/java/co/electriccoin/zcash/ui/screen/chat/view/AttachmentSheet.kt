@@ -30,7 +30,7 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AttachmentSheet(
+internal fun AttachmentSheet(
     onShareAddress: () -> Unit,
     onSendZec: () -> Unit,
     onAttachMedia: () -> Unit,

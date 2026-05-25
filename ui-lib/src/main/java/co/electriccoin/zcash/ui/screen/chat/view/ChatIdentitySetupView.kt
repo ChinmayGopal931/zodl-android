@@ -45,7 +45,7 @@ import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupTab
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupTabsState
 
 @Composable
-fun ChatIdentitySetupView(
+internal fun ChatIdentitySetupView(
     state: ChatIdentitySetupState,
     modifier: Modifier = Modifier,
 ) {

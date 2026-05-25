@@ -29,7 +29,7 @@ import co.electriccoin.zcash.ui.screen.chat.newconv.NewConversationState
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun NewConversationView(state: NewConversationState, modifier: Modifier = Modifier) {
+internal fun NewConversationView(state: NewConversationState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
 
     Column(

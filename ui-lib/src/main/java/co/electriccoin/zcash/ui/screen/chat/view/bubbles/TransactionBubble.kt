@@ -27,7 +27,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun TransactionBubble(message: ChatMessage, isFromMe: Boolean) {
+internal fun TransactionBubble(message: ChatMessage, isFromMe: Boolean) {
     val parsed =
         try {
             JSONObject(message.content)

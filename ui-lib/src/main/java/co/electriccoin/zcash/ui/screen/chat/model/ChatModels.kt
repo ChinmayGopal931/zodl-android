@@ -5,6 +5,11 @@ import xyz.justzappit.zappmessaging.models.ZMConversation
 import xyz.justzappit.zappmessaging.models.ZMIdentity
 import xyz.justzappit.zappmessaging.models.ZMMessage
 
+internal const val MAX_DISPLAY_NAME_LENGTH = 100
+
+internal fun String.capDisplayName(): String =
+    if (length > MAX_DISPLAY_NAME_LENGTH) take(MAX_DISPLAY_NAME_LENGTH) else this
+
 enum class ConversationType {
     DIRECT,
     GROUP
@@ -18,7 +23,7 @@ data class ChatIdentity(
         fun from(zmIdentity: ZMIdentity) =
             ChatIdentity(
                 publicKey = zmIdentity.publicKey,
-                displayName = zmIdentity.displayName
+                displayName = zmIdentity.displayName.capDisplayName()
             )
     }
 }
@@ -42,7 +47,7 @@ data class ChatConversation(
                         xyz.justzappit.zappmessaging.models.ConversationType.GROUP -> ConversationType.GROUP
                         else -> ConversationType.DIRECT
                     },
-                displayName = zmConv.displayName,
+                displayName = zmConv.displayName.capDisplayName(),
                 lastMessage = zmConv.lastMessage,
                 lastMessageTimestamp = zmConv.lastMessageTimestamp,
                 participantIds = zmConv.participantIds,
@@ -86,7 +91,7 @@ data class ChatMessage(
                 conversationId = zmMsg.conversationId,
                 content = zmMsg.content,
                 contentType = zmMsg.contentType,
-                senderName = zmMsg.senderName,
+                senderName = zmMsg.senderName?.capDisplayName(),
                 isFromMe = zmMsg.isFromMe,
                 timestamp = zmMsg.timestamp,
                 mediaId = zmMsg.mediaId,
@@ -112,7 +117,7 @@ data class ChatContact(
         fun from(zmContact: ZMContact) =
             ChatContact(
                 publicKey = zmContact.publicKey,
-                name = zmContact.name,
+                name = zmContact.name.capDisplayName(),
                 walletAddress = zmContact.walletAddress
             )
     }

@@ -27,7 +27,7 @@ import java.util.Date
 import java.util.Locale
 
 @Composable
-fun FileBubble(message: ChatMessage, isFromMe: Boolean) {
+internal fun FileBubble(message: ChatMessage, isFromMe: Boolean) {
     val fileName = message.content.takeIf { it.isNotBlank() } ?: "File"
     val fileSize = message.mediaSize?.toLong()
 

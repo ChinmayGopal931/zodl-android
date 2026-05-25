@@ -45,7 +45,7 @@ import co.electriccoin.zcash.ui.screen.chat.list.ChatListState
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListSupportRowState
 
 @Composable
-fun ChatListView(
+internal fun ChatListView(
     state: ChatListState,
     showBackButton: Boolean = true,
     modifier: Modifier = Modifier,

@@ -39,7 +39,7 @@ import co.electriccoin.zcash.ui.screen.chat.list.ChatListDhtHealth
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 
 @Composable
-fun ConnectionPill(
+internal fun ConnectionPill(
     connectionStatus: ChatListConnectionStatus,
     peerCount: Int,
     dhtHealth: ChatListDhtHealth,
@@ -120,7 +120,7 @@ fun ConnectionPill(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NetworkDetailsSheet(
+internal fun NetworkDetailsSheet(
     connectionStatus: ChatListConnectionStatus,
     peerCount: Int,
     dhtHealth: ChatListDhtHealth,

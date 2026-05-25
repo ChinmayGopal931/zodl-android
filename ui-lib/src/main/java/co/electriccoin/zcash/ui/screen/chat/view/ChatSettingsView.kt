@@ -54,7 +54,7 @@ import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsEditNameDialogS
 import co.electriccoin.zcash.ui.screen.chat.settings.ChatSettingsState
 
 @Composable
-fun ChatSettingsView(state: ChatSettingsState, modifier: Modifier = Modifier) {
+internal fun ChatSettingsView(state: ChatSettingsState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
 
     Scaffold(
