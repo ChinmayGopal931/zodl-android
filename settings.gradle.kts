@@ -1,5 +1,17 @@
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
+file("local.properties").takeIf { it.exists() }?.let { localPropertiesFile ->
+    val localProperties = java.util.Properties()
+    localPropertiesFile.inputStream().use(localProperties::load)
+    gradle.beforeProject {
+        localProperties.forEach { (key, value) ->
+            val name = key.toString()
+            if ('.' in name) return@forEach
+            extra[name] = value.toString()
+        }
+    }
+}
+
 pluginManagement {
     repositories {
         val isRepoRestrictionEnabled = true
