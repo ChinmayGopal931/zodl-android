@@ -12,6 +12,7 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import cash.z.ecc.sdk.type.fromResources
 import co.electriccoin.lightwallet.client.model.LightWalletEndpoint
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.datasource.RestoreTimestampDataSource
 import co.electriccoin.zcash.ui.common.model.FastestServersState
 import co.electriccoin.zcash.ui.common.model.OnboardingState
@@ -23,6 +24,7 @@ import co.electriccoin.zcash.ui.common.provider.WalletBackupFlagStorageProvider
 import co.electriccoin.zcash.ui.common.provider.WalletRestoringStateProvider
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -75,8 +77,6 @@ interface WalletRepository {
     fun updateWalletEndpoint(endpoint: LightWalletEndpoint)
 
     fun refreshFastestServers()
-
-    fun clearWalletProvisioningError()
 }
 
 class WalletRepositoryImpl(
@@ -173,10 +173,6 @@ class WalletRepositoryImpl(
     private val _walletProvisioningError = MutableStateFlow<Throwable?>(null)
     override val walletProvisioningError: StateFlow<Throwable?> = _walletProvisioningError.asStateFlow()
 
-    override fun clearWalletProvisioningError() {
-        _walletProvisioningError.value = null
-    }
-
     override fun updateWalletEndpoint(endpoint: LightWalletEndpoint) {
         scope.launch {
             val selectedWallet = persistableWalletProvider.getPersistableWallet() ?: return@launch
@@ -194,7 +190,7 @@ class WalletRepositoryImpl(
     override fun createNewWallet() {
         _walletProvisioningError.value = null
         scope.launch {
-            try {
+            runCatching {
                 persistOnboardingStateInternal(OnboardingState.READY)
                 val zcashNetwork = ZcashNetwork.fromResources(application)
                 val newWallet =
@@ -206,9 +202,9 @@ class WalletRepositoryImpl(
                     )
                 persistWalletInternal(newWallet)
                 walletRestoringStateProvider.store(WalletRestoringState.INITIATING)
-            } catch (
-                @Suppress("TooGenericExceptionCaught") e: Exception
-            ) {
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                Twig.warn(e) { "WalletRepository: createNewWallet failed" }
                 _walletProvisioningError.value = e
             }
         }
@@ -236,7 +232,7 @@ class WalletRepositoryImpl(
     ) {
         _walletProvisioningError.value = null
         scope.launch {
-            try {
+            runCatching {
                 val restoredWallet =
                     PersistableWallet(
                         network = network,
@@ -250,9 +246,9 @@ class WalletRepositoryImpl(
                 walletBackupFlagStorageProvider.store(true)
                 restoreTimestampDataSource.getOrCreate()
                 persistOnboardingStateInternal(OnboardingState.READY)
-            } catch (
-                @Suppress("TooGenericExceptionCaught") e: Exception
-            ) {
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                Twig.warn(e) { "WalletRepository: restoreWallet failed" }
                 _walletProvisioningError.value = e
             }
         }

@@ -45,6 +45,11 @@ class ChatBootstrap(
     private val _chatIdentityError = MutableStateFlow<Throwable?>(null)
     val chatIdentityError: StateFlow<Throwable?> = _chatIdentityError.asStateFlow()
 
+    // Bumped by [retry]. Folded into the [AutoDeriveRequest] so a retry after a failed
+    // derive produces a request that is `distinctUntilChanged`-distinct from the last
+    // one, without anything else needing to change.
+    private val retryToken = MutableStateFlow(0)
+
     init {
         scope.launch {
             try {
@@ -63,15 +68,21 @@ class ChatBootstrap(
      * Records the display name the user picked during onboarding. The reactive auto-derive
      * coroutine will pick it up once the SDK is initialised and a wallet seed becomes
      * available, and derive the chat identity from that seed. Safe to call before either
-     * is ready — the request is queued. Idempotent.
+     * is ready — the request is queued. Idempotent: calling with the same name is a no-op
+     * and does *not* clear any in-progress error state.
      */
     fun setPendingDisplayName(displayName: String) {
-        _chatIdentityError.value = null
         pendingDisplayName.value = displayName
     }
 
-    fun clearChatIdentityError() {
+    /**
+     * Re-runs auto-derive after a failure. No-op if no derive is currently queued (i.e. the
+     * SDK is unready, no wallet, no pending name, or an identity already exists). Clearing
+     * the error here means the UI doesn't have to do it separately.
+     */
+    fun retry() {
         _chatIdentityError.value = null
+        retryToken.update { it + 1 }
     }
 
     private suspend fun observePendingChatIdentityDerivation() {
@@ -80,8 +91,9 @@ class ChatBootstrap(
             persistableWalletProvider.persistableWallet,
             sdk.identity,
             pendingDisplayName,
-        ) { initializing, wallet, identity, name ->
-            buildAutoDeriveRequest(initializing, wallet, identity, name)
+            retryToken,
+        ) { initializing, wallet, identity, name, attempt ->
+            buildAutoDeriveRequest(initializing, wallet, identity, name, attempt)
         }
             .distinctUntilChanged()
             .collect { request ->
@@ -94,9 +106,12 @@ class ChatBootstrap(
         wallet: PersistableWallet?,
         identity: ZMIdentity?,
         name: String?,
+        attempt: Int,
     ): AutoDeriveRequest? {
-        if (initializing || wallet == null || identity != null || name.isNullOrBlank()) return null
-        return AutoDeriveRequest(wallet = wallet, displayName = name)
+        val ready = !initializing && wallet != null
+        val needsDerive = identity == null && !name.isNullOrBlank()
+        if (!ready || !needsDerive) return null
+        return AutoDeriveRequest(wallet = wallet, displayName = name, attempt = attempt)
     }
 
     private suspend fun derive(request: AutoDeriveRequest) {
@@ -135,5 +150,9 @@ class ChatBootstrap(
     suspend fun restoreFromSeedPhrase(seedPhrase: String, displayName: String): ZMIdentity =
         sdk.restoreFromSeedPhrase(seedPhrase, displayName)
 
-    private data class AutoDeriveRequest(val wallet: PersistableWallet, val displayName: String)
+    private data class AutoDeriveRequest(
+        val wallet: PersistableWallet,
+        val displayName: String,
+        val attempt: Int,
+    )
 }

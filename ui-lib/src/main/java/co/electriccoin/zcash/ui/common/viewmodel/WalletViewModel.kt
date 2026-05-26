@@ -46,10 +46,6 @@ class WalletViewModel(
         walletRepository.createNewWallet()
     }
 
-    fun clearWalletProvisioningError() {
-        walletRepository.clearWalletProvisioningError()
-    }
-
     fun persistExistingWalletWithSeedPhrase(
         network: ZcashNetwork,
         seedPhrase: SeedPhrase,

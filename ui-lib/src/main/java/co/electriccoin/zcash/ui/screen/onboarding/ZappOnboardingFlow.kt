@@ -1,6 +1,8 @@
 package co.electriccoin.zcash.ui.screen.onboarding
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +21,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,6 +92,7 @@ fun ZappOnboardingFlow(
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
     val chatIdentityError by chatBootstrap.chatIdentityError.collectAsStateWithLifecycle()
+    val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
 
     val securityVM: OnboardingSecurityViewModel = koinViewModel()
     val bioState by securityVM.bioState.collectAsStateWithLifecycle()
@@ -95,21 +100,27 @@ fun ZappOnboardingFlow(
 
     // Process-death recovery: rememberSaveable restores `pendingUsername`, but the
     // in-process `pendingDisplayName` inside ChatBootstrap dies with the process.
-    // Re-publish whenever we're past the username step so the auto-derive coroutine
-    // can resume after restart.
-    LaunchedEffect(pendingUsername, step) {
-        if (pendingUsername.isNotBlank() && step.ordinal >= Step.WALLET_INTRO.ordinal) {
+    // Re-publish once per rehydration. Keyed on `pendingUsername` alone (NOT `step`)
+    // so step transitions don't re-fire this; `setPendingDisplayName` is idempotent
+    // for the same name, but re-firing on every step change risked masking transient
+    // state if its semantics ever drift.
+    LaunchedEffect(pendingUsername) {
+        if (pendingUsername.isNotBlank()) {
             chatBootstrap.setPendingDisplayName(pendingUsername)
         }
     }
 
-    // Auto-advance from WALLET_CHOICE → SECURE_CHOICE whenever a wallet exists.
-    // Keyed on both values so it also fires when the user navigates *back* to
-    // WALLET_CHOICE after the wallet was already created (preventing a second
-    // createNewWallet() call that would crash with SeedNotRelevant).
-    LaunchedEffect(secretState, step) {
+    // Auto-advance from WALLET_CHOICE → SECURE_CHOICE only when the wallet AND the
+    // chat identity are both ready. If chat-derive failed, bounce to WALLET_SEED so
+    // the user sees the error and can retry — otherwise the restore path would jump
+    // silently past every error surface we have. If derivation is still in flight,
+    // hold at WALLET_CHOICE.
+    LaunchedEffect(secretState, chatIdentity, chatIdentityError, step) {
         if (secretState == SecretState.READY && step == Step.WALLET_CHOICE) {
-            step = Step.SECURE_CHOICE
+            when {
+                chatIdentity != null -> step = Step.SECURE_CHOICE
+                chatIdentityError != null -> step = Step.WALLET_SEED
+            }
         }
     }
 
@@ -180,14 +191,27 @@ fun ZappOnboardingFlow(
                         stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
                     else -> null
                 }
-            if (words == null) {
-                SeedLoadingPlaceholder(sdkError = errorMessage)
-            } else {
-                WalletSeedPhraseScreen(
-                    words = words,
-                    onBack = { step = Step.WALLET_CHOICE },
-                    onContinue = { step = Step.SECURE_CHOICE },
-                )
+            // Only chat-identity failures are retryable from here; a wallet-creation failure
+            // means there's no seed to derive from, so a retry of the chat path would just
+            // fail again. The user has to go back to WALLET_CHOICE.
+            val onRetry =
+                if (walletProvisioningError == null && chatIdentityError != null) {
+                    { chatBootstrap.retry() }
+                } else {
+                    null
+                }
+            when {
+                // An error suppresses the seed-phrase display: on the restore path `words` is
+                // the phrase the user just typed, so re-showing it adds nothing and risks
+                // burying the actionable error.
+                errorMessage != null -> SeedLoadingPlaceholder(sdkError = errorMessage, onRetry = onRetry)
+                words == null -> SeedLoadingPlaceholder(sdkError = null, onRetry = null)
+                else ->
+                    WalletSeedPhraseScreen(
+                        words = words,
+                        onBack = { step = Step.WALLET_CHOICE },
+                        onContinue = { step = Step.SECURE_CHOICE },
+                    )
             }
         }
 
@@ -243,7 +267,7 @@ private const val SEED_LOAD_TIMEOUT_MS = 15_000L
  * we fall back to a generic message so the user isn't trapped on a spinner.
  */
 @Composable
-private fun SeedLoadingPlaceholder(sdkError: String?) {
+private fun SeedLoadingPlaceholder(sdkError: String?, onRetry: (() -> Unit)?) {
     val c = ZappTheme.colors
     var timedOut by remember { mutableStateOf(false) }
 
@@ -277,13 +301,36 @@ private fun SeedLoadingPlaceholder(sdkError: String?) {
                 )
                 Spacer(Modifier.height(12.dp))
                 BasicText(
-                    text = "Try going back and submitting again.",
+                    text =
+                        if (onRetry != null) "Tap retry, or go back and submit again."
+                        else "Try going back and submitting again.",
                     style =
                         ZappTheme.typography.body.copy(
                             color = c.textMuted,
                             fontSize = 12.sp,
                         ),
                 )
+                if (onRetry != null) {
+                    Spacer(Modifier.height(20.dp))
+                    Box(
+                        modifier =
+                            Modifier
+                                .border(width = 2.dp, color = c.text, shape = RectangleShape)
+                                .clickable(onClick = onRetry)
+                                .padding(horizontal = 22.dp, vertical = 12.dp),
+                    ) {
+                        BasicText(
+                            text = "Retry",
+                            style =
+                                ZappTheme.typography.body.copy(
+                                    color = c.text,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.2.sp,
+                                ),
+                        )
+                    }
+                }
             }
         } else {
             CircularProgressIndicator(color = c.accent)
