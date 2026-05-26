@@ -10,8 +10,7 @@ class CreateChatIdentityUseCase(
 ) {
     suspend operator fun invoke(displayName: String): ChatResult<String> =
         runChatCallResult("CreateChatIdentityUseCase: createIdentity failed") {
-            sdk.createIdentity(displayName)
-            sdk.exportSeedPhrase()
+            sdk.createIdentity(displayName).seedPhrase
         }.fold(
             onSuccess = { ChatResult.Success(it) },
             onFailure = { ChatResult.Failure(ChatError.CreateIdentityFailed) },

@@ -42,6 +42,14 @@ import org.koin.compose.koinInject
 
 private const val EXPECTED_WORDS = 24
 
+// Mirror the rules in UsernameEntryScreen so restored identities can't carry display names that
+// would have been rejected on the create path (length, charset). Restored seeds are real
+// identities that round-trip across devices; relaxing the rules here would only make the two
+// paths produce different on-disk shapes.
+private const val MIN_NAME_LENGTH = 3
+private const val MAX_NAME_LENGTH = 20
+private val USERNAME_REGEX = Regex("[a-z0-9_]*")
+
 /**
  * Swiss-styled chat-identity restore — entered when the user taps "I already
  * use Zapp" on the welcome gate. The 24-word phrase + display name pair maps
@@ -80,7 +88,9 @@ private fun ChatRestoreContent(
     val identity by bootstrap.identity.collectAsStateWithLifecycle()
 
     val wordCount = if (phrase.isBlank()) 0 else phrase.trim().split(Regex("\\s+")).size
-    val nameValid = displayName.trim().isNotEmpty()
+    val trimmedName = displayName.trim()
+    val nameValid =
+        trimmedName.length in MIN_NAME_LENGTH..MAX_NAME_LENGTH && trimmedName.matches(USERNAME_REGEX)
     val phraseValid = wordCount == EXPECTED_WORDS
     val isValid = nameValid && phraseValid && !isLoading
 
@@ -113,7 +123,12 @@ private fun ChatRestoreContent(
 
             FieldLabel(text = "Display name")
             Spacer(Modifier.height(6.dp))
-            DisplayNameField(value = displayName, onChange = { displayName = it })
+            DisplayNameField(
+                value = displayName,
+                onChange = { raw ->
+                    displayName = raw.lowercase().filter { it.isLetterOrDigit() || it == '_' }
+                },
+            )
 
             Spacer(Modifier.height(20.dp))
 

@@ -28,9 +28,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
@@ -54,6 +56,14 @@ interface WalletRepository {
 
     val walletRestoringState: StateFlow<WalletRestoringState>
 
+    /**
+     * Latest error from [createNewWallet] or [restoreWallet], or null if the most recent
+     * attempt succeeded (or none has happened yet). Resets to null when a new attempt is
+     * kicked off. Surfaces the failure to UI without forcing every caller to wrap the
+     * fire-and-forget create/restore in their own scope.
+     */
+    val walletProvisioningError: StateFlow<Throwable?>
+
     fun createNewWallet()
 
     fun restoreWallet(
@@ -65,6 +75,8 @@ interface WalletRepository {
     fun updateWalletEndpoint(endpoint: LightWalletEndpoint)
 
     fun refreshFastestServers()
+
+    fun clearWalletProvisioningError()
 }
 
 class WalletRepositoryImpl(
@@ -158,6 +170,13 @@ class WalletRepositoryImpl(
                 initialValue = WalletRestoringState.NONE
             )
 
+    private val _walletProvisioningError = MutableStateFlow<Throwable?>(null)
+    override val walletProvisioningError: StateFlow<Throwable?> = _walletProvisioningError.asStateFlow()
+
+    override fun clearWalletProvisioningError() {
+        _walletProvisioningError.value = null
+    }
+
     override fun updateWalletEndpoint(endpoint: LightWalletEndpoint) {
         scope.launch {
             val selectedWallet = persistableWalletProvider.getPersistableWallet() ?: return@launch
@@ -173,18 +192,25 @@ class WalletRepositoryImpl(
     }
 
     override fun createNewWallet() {
+        _walletProvisioningError.value = null
         scope.launch {
-            persistOnboardingStateInternal(OnboardingState.READY)
-            val zcashNetwork = ZcashNetwork.fromResources(application)
-            val newWallet =
-                PersistableWallet.new(
-                    application = application,
-                    zcashNetwork = zcashNetwork,
-                    endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
-                    walletInitMode = WalletInitMode.NewWallet,
-                )
-            persistWalletInternal(newWallet)
-            walletRestoringStateProvider.store(WalletRestoringState.INITIATING)
+            try {
+                persistOnboardingStateInternal(OnboardingState.READY)
+                val zcashNetwork = ZcashNetwork.fromResources(application)
+                val newWallet =
+                    PersistableWallet.new(
+                        application = application,
+                        zcashNetwork = zcashNetwork,
+                        endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
+                        walletInitMode = WalletInitMode.NewWallet,
+                    )
+                persistWalletInternal(newWallet)
+                walletRestoringStateProvider.store(WalletRestoringState.INITIATING)
+            } catch (
+                @Suppress("TooGenericExceptionCaught") e: Exception
+            ) {
+                _walletProvisioningError.value = e
+            }
         }
     }
 
@@ -208,20 +234,27 @@ class WalletRepositoryImpl(
         seedPhrase: SeedPhrase,
         birthday: BlockHeight
     ) {
+        _walletProvisioningError.value = null
         scope.launch {
-            val restoredWallet =
-                PersistableWallet(
-                    network = network,
-                    birthday = birthday,
-                    endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
-                    seedPhrase = seedPhrase,
-                    walletInitMode = WalletInitMode.RestoreWallet,
-                )
-            persistWalletInternal(restoredWallet)
-            walletRestoringStateProvider.store(WalletRestoringState.RESTORING)
-            walletBackupFlagStorageProvider.store(true)
-            restoreTimestampDataSource.getOrCreate()
-            persistOnboardingStateInternal(OnboardingState.READY)
+            try {
+                val restoredWallet =
+                    PersistableWallet(
+                        network = network,
+                        birthday = birthday,
+                        endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
+                        seedPhrase = seedPhrase,
+                        walletInitMode = WalletInitMode.RestoreWallet,
+                    )
+                persistWalletInternal(restoredWallet)
+                walletRestoringStateProvider.store(WalletRestoringState.RESTORING)
+                walletBackupFlagStorageProvider.store(true)
+                restoreTimestampDataSource.getOrCreate()
+                persistOnboardingStateInternal(OnboardingState.READY)
+            } catch (
+                @Suppress("TooGenericExceptionCaught") e: Exception
+            ) {
+                _walletProvisioningError.value = e
+            }
         }
     }
 }

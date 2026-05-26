@@ -3,6 +3,7 @@
     <string name="onboarding_header">Zcash-powered mobile wallet built for financial sovereignty.</string>
     <string name="onboarding_create_new_wallet">Create New Wallet</string>
     <string name="onboarding_import_existing_wallet">Restore Existing Wallet</string>
+    <string name="onboarding_error_wallet_creation_failed">Couldn\'t create your wallet. Go back and try again.</string>
 
     <!-- Wallet-tab empty state: shown when the user reached the tabs without setting up a wallet. -->
     <string name="wallet_empty_eyebrow">Wallet</string>

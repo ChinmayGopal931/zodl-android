@@ -49,7 +49,7 @@ class EoaSigner(
                 value = value,
                 data = data,
             )
-        val sig = EcdsaSigner.sign(tx.signingHash(), BigInteger(1, account.privateKey))
+        val sig = account.signRecoverable(tx.signingHash())
         return rpc.ethSendRawTransaction("0x" + tx.encodeSigned(sig).toHex())
     }
 

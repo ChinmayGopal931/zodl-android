@@ -41,6 +41,7 @@
     <string name="chat_identity_setup_error_create_failed">Failed to create identity. Please try again.</string>
     <string name="chat_identity_setup_error_restore_failed">Failed to restore identity. Please check your seed phrase and try again.</string>
     <string name="chat_identity_setup_error_export_seed_failed">Could not load your seed phrase.</string>
+    <string name="chat_identity_setup_error_wallet_derive_failed">Couldn\'t set up your chat identity from this wallet. Go back and try again.</string>
     <string name="chat_identity_setup_backup_title">Back Up Your Seed Phrase</string>
     <string name="chat_identity_setup_backup_subtitle">Write these words down and store them safely. This is the only way to recover your messaging identity.</string>
     <string name="chat_identity_setup_backup_confirm">I\'ve Saved My Seed Phrase</string>

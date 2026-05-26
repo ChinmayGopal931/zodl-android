@@ -15,15 +15,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -39,7 +40,6 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.WalletChoiceScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletSeedPhraseScreen
 import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 /** All steps the Swiss onboarding flow walks the user through. */
@@ -65,12 +65,12 @@ private enum class Step {
  * - **Part 2 — Wallet** (intro, create/restore/skip, seed)
  * - **Part 3 — Secure Zapp** (biometric/PIN, scan, done)
  *
- * The wallet's 24-word BIP-39 phrase seeds the messaging identity via
- * [ChatBootstrap.restoreFromWalletSeed], so users back up one phrase for
- * everything. Wallet restore forwards to the existing [RestoreSeedArgs] flow;
- * an observer auto-advances to the secure step once `secretState` flips to
- * READY so the user lands back inside onboarding rather than on an unfinished
- * tabs shell.
+ * The wallet's 24-word BIP-39 phrase seeds the messaging identity. The username
+ * picked in [Step.MSG_USERNAME] is handed to [ChatBootstrap.setPendingDisplayName];
+ * a reactive coroutine inside [ChatBootstrap] derives the identity from the wallet
+ * seed as soon as both the SDK and the wallet are ready. This keeps both the
+ * Create and the Restore paths converging on the same code, and survives the
+ * navigation jump into the wallet-restore sub-flow.
  */
 @Composable
 fun ZappOnboardingFlow(
@@ -83,14 +83,25 @@ fun ZappOnboardingFlow(
     var step by rememberSaveable { mutableStateOf(Step.MSG_INTRO) }
     var twoFAMode by rememberSaveable { mutableStateOf(TwoFAMode.Bio) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
-    val onboardingScope = rememberCoroutineScope()
 
     val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
+    val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
+    val chatIdentityError by chatBootstrap.chatIdentityError.collectAsStateWithLifecycle()
 
     val securityVM: OnboardingSecurityViewModel = koinViewModel()
     val bioState by securityVM.bioState.collectAsStateWithLifecycle()
     val pinSaved by securityVM.pinSaved.collectAsStateWithLifecycle()
+
+    // Process-death recovery: rememberSaveable restores `pendingUsername`, but the
+    // in-process `pendingDisplayName` inside ChatBootstrap dies with the process.
+    // Re-publish whenever we're past the username step so the auto-derive coroutine
+    // can resume after restart.
+    LaunchedEffect(pendingUsername, step) {
+        if (pendingUsername.isNotBlank() && step.ordinal >= Step.WALLET_INTRO.ordinal) {
+            chatBootstrap.setPendingDisplayName(pendingUsername)
+        }
+    }
 
     // Auto-advance from WALLET_CHOICE → SECURE_CHOICE whenever a wallet exists.
     // Keyed on both values so it also fires when the user navigates *back* to
@@ -145,13 +156,12 @@ fun ZappOnboardingFlow(
             WalletChoiceScreen(
                 onBack = { step = Step.WALLET_INTRO },
                 onCreate = {
+                    chatBootstrap.setPendingDisplayName(pendingUsername)
                     walletViewModel.createNewWallet()
-                    onboardingScope.launch {
-                        runCatching { chatBootstrap.restoreFromWalletSeed(pendingUsername) }
-                    }
                     step = Step.WALLET_SEED
                 },
                 onRestore = {
+                    chatBootstrap.setPendingDisplayName(pendingUsername)
                     navigationRouter.forward(RestoreSeedArgs)
                 },
             )
@@ -159,11 +169,19 @@ fun ZappOnboardingFlow(
 
         Step.WALLET_SEED -> {
             val words = walletSeed
+            // Wallet-creation failure takes precedence: without a wallet, there's nothing for
+            // chat-identity derivation to operate on, so its error (if any) is a downstream
+            // symptom. Once wallet exists, surface chat-derivation failures alone.
+            val errorMessage =
+                when {
+                    walletProvisioningError != null ->
+                        stringResource(R.string.onboarding_error_wallet_creation_failed)
+                    chatIdentityError != null ->
+                        stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
+                    else -> null
+                }
             if (words == null) {
-                // Wallet creation has no error pipe today — fall back to a
-                // timeout so the user isn't stuck on a spinner if persistence
-                // silently stalls.
-                SeedLoadingPlaceholder(sdkError = null)
+                SeedLoadingPlaceholder(sdkError = errorMessage)
             } else {
                 WalletSeedPhraseScreen(
                     words = words,

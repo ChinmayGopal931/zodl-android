@@ -3,4 +3,5 @@
     <string name="onboarding_header">Billetera móvil impulsada por Zcash, diseñada para la soberanía financiera.</string>
     <string name="onboarding_create_new_wallet">Crear Nueva Billetera</string>
     <string name="onboarding_import_existing_wallet">Restaurar Billetera Existente</string>
+    <string name="onboarding_error_wallet_creation_failed">No se pudo crear tu billetera. Regresa e inténtalo de nuevo.</string>
 </resources>
