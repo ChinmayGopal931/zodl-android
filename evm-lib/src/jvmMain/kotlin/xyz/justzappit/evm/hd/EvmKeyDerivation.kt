@@ -55,12 +55,10 @@ class EvmKey internal constructor(
             address == other.address
     }
 
-    override fun hashCode(): Int {
-        var h = privateKey.contentHashCode()
-        h = 31 * h + publicKey.contentHashCode()
-        h = 31 * h + address.hashCode()
-        return h
-    }
+    // hashCode intentionally omits `privateKey` so the secret scalar isn't distributed across
+    // hash-table buckets if a caller ever drops EvmKey into a HashMap/HashSet. The (publicKey,
+    // address) pair already uniquely identifies a valid secp256k1 keypair.
+    override fun hashCode(): Int = 31 * publicKey.contentHashCode() + address.hashCode()
 
     override fun toString(): String = "EvmKey(address=$address)"
 }

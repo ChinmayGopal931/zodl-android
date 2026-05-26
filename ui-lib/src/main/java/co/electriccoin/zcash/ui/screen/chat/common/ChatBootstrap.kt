@@ -3,7 +3,6 @@ package co.electriccoin.zcash.ui.screen.chat.common
 import android.app.Application
 import cash.z.ecc.android.sdk.model.PersistableWallet
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProvider
-import co.electriccoin.zcash.ui.common.provider.joinedSeedPhraseChars
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,8 +41,11 @@ class ChatBootstrap(
 
     private val pendingDisplayName = MutableStateFlow<String?>(null)
 
-    private val _chatIdentityError = MutableStateFlow<Throwable?>(null)
-    val chatIdentityError: StateFlow<Throwable?> = _chatIdentityError.asStateFlow()
+    private val _chatIdentityFailed = MutableStateFlow(false)
+    val chatIdentityFailed: StateFlow<Boolean> = _chatIdentityFailed.asStateFlow()
+
+    private val _isDeriving = MutableStateFlow(false)
+    val isDeriving: StateFlow<Boolean> = _isDeriving.asStateFlow()
 
     // Bumped by [retry]. Folded into the [AutoDeriveRequest] so a retry after a failed
     // derive produces a request that is `distinctUntilChanged`-distinct from the last
@@ -77,11 +79,13 @@ class ChatBootstrap(
 
     /**
      * Re-runs auto-derive after a failure. No-op if no derive is currently queued (i.e. the
-     * SDK is unready, no wallet, no pending name, or an identity already exists). Clearing
-     * the error here means the UI doesn't have to do it separately.
+     * SDK is unready, no wallet, no pending name, or an identity already exists) or if a
+     * derive is currently in flight — the latter would otherwise let a spammed retry button
+     * queue redundant PBKDF2 round-trips.
      */
     fun retry() {
-        _chatIdentityError.value = null
+        if (_isDeriving.value) return
+        _chatIdentityFailed.value = false
         retryToken.update { it + 1 }
     }
 
@@ -115,21 +119,22 @@ class ChatBootstrap(
     }
 
     private suspend fun derive(request: AutoDeriveRequest) {
-        val seedChars = request.wallet.joinedSeedPhraseChars()
+        _isDeriving.value = true
         try {
+            val seedPhrase = request.wallet.seedPhrase.joinedString()
             runChatCallResult("ChatBootstrap: auto-derive chat identity from wallet seed") {
-                sdk.restoreFromSeedPhrase(seedChars, request.displayName)
+                sdk.restoreFromSeedPhrase(seedPhrase, request.displayName)
             }.fold(
                 onSuccess = {
                     pendingDisplayName.value = null
-                    _chatIdentityError.value = null
+                    _chatIdentityFailed.value = false
                 },
-                onFailure = { e ->
-                    _chatIdentityError.value = e
+                onFailure = {
+                    _chatIdentityFailed.value = true
                 },
             )
         } finally {
-            seedChars.fill(' ')
+            _isDeriving.value = false
         }
     }
 
@@ -156,3 +161,6 @@ class ChatBootstrap(
         val attempt: Int,
     )
 }
+
+private fun cash.z.ecc.android.sdk.model.SeedPhrase.joinedString(): String =
+    split.joinToString(" ")

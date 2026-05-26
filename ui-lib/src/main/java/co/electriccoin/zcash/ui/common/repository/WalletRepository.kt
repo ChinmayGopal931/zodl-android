@@ -190,8 +190,10 @@ class WalletRepositoryImpl(
     override fun createNewWallet() {
         _walletProvisioningError.value = null
         scope.launch {
+            // Order matters: persist the wallet before flipping onboarding=READY. If
+            // PersistableWallet.new throws, a pre-flipped onboarding flag would land the user
+            // in the tabs shell on next launch with no wallet behind it.
             runCatching {
-                persistOnboardingStateInternal(OnboardingState.READY)
                 val zcashNetwork = ZcashNetwork.fromResources(application)
                 val newWallet =
                     PersistableWallet.new(
@@ -202,6 +204,7 @@ class WalletRepositoryImpl(
                     )
                 persistWalletInternal(newWallet)
                 walletRestoringStateProvider.store(WalletRestoringState.INITIATING)
+                persistOnboardingStateInternal(OnboardingState.READY)
             }.onFailure { e ->
                 if (e is CancellationException) throw e
                 Twig.warn(e) { "WalletRepository: createNewWallet failed" }

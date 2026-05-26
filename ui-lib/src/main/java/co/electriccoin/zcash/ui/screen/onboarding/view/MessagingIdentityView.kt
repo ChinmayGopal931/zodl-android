@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.screen.chat.common.UsernameRules
 
 // ───────────────────────────────────────────────────────────────
 // 02 · Phase 1 intro — Messaging account
@@ -83,10 +84,9 @@ fun UsernameEntryScreen(
     onContinue: (username: String) -> Unit,
 ) {
     var username by rememberSaveable { mutableStateOf("") }
-    val isLong = username.length >= 3
-    val isShort = username.length <= 20
-    val isClean = username.matches(Regex("[a-z0-9_]*"))
-    val isValid = isLong && isShort && isClean && username.isNotEmpty()
+    val isLong = username.length >= UsernameRules.MIN_LENGTH
+    val isShort = username.length <= UsernameRules.MAX_LENGTH
+    val isValid = UsernameRules.isValid(username)
 
     OnbScreen(
         step = 1,
@@ -105,11 +105,13 @@ fun UsernameEntryScreen(
 
         UsernameField(
             value = username,
-            onChange = { username = it.lowercase().filter { ch -> ch.isLetterOrDigit() || ch == '_' } },
+            onChange = { username = UsernameRules.sanitize(it) },
             isValid = isValid,
         )
         Spacer(Modifier.height(12.dp))
-        ValidationRow(isLong = isLong && username.isNotEmpty(), isShort = isShort, isClean = isClean && username.isNotEmpty())
+        // `isClean` is implicit: sanitize() guarantees username only contains valid chars,
+        // so the validation badge is always green once the user typed anything.
+        ValidationRow(isLong = isLong, isShort = isShort, isClean = username.isNotEmpty())
         Spacer(Modifier.height(20.dp))
         InfoCallout(text = "Zapp generates a local keypair. No server ever sees your private key.")
     }

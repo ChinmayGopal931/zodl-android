@@ -91,7 +91,8 @@ fun ZappOnboardingFlow(
     val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
-    val chatIdentityError by chatBootstrap.chatIdentityError.collectAsStateWithLifecycle()
+    val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
+    val isDerivingChatIdentity by chatBootstrap.isDeriving.collectAsStateWithLifecycle()
     val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
 
     val securityVM: OnboardingSecurityViewModel = koinViewModel()
@@ -115,11 +116,11 @@ fun ZappOnboardingFlow(
     // the user sees the error and can retry — otherwise the restore path would jump
     // silently past every error surface we have. If derivation is still in flight,
     // hold at WALLET_CHOICE.
-    LaunchedEffect(secretState, chatIdentity, chatIdentityError, step) {
+    LaunchedEffect(secretState, chatIdentity, chatIdentityFailed, step) {
         if (secretState == SecretState.READY && step == Step.WALLET_CHOICE) {
             when {
                 chatIdentity != null -> step = Step.SECURE_CHOICE
-                chatIdentityError != null -> step = Step.WALLET_SEED
+                chatIdentityFailed -> step = Step.WALLET_SEED
             }
         }
     }
@@ -187,15 +188,16 @@ fun ZappOnboardingFlow(
                 when {
                     walletProvisioningError != null ->
                         stringResource(R.string.onboarding_error_wallet_creation_failed)
-                    chatIdentityError != null ->
+                    chatIdentityFailed ->
                         stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
                     else -> null
                 }
             // Only chat-identity failures are retryable from here; a wallet-creation failure
             // means there's no seed to derive from, so a retry of the chat path would just
-            // fail again. The user has to go back to WALLET_CHOICE.
-            val onRetry =
-                if (walletProvisioningError == null && chatIdentityError != null) {
+            // fail again. The user has to go back to WALLET_CHOICE. Gate on `isDeriving` so a
+            // spammed button doesn't queue redundant PBKDF2 round-trips.
+            val onRetry: (() -> Unit)? =
+                if (walletProvisioningError == null && chatIdentityFailed && !isDerivingChatIdentity) {
                     { chatBootstrap.retry() }
                 } else {
                     null

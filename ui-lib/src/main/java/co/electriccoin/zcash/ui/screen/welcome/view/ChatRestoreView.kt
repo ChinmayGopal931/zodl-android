@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.chat.common.UsernameRules
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbBottomDock
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbHero
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbSub
@@ -41,14 +42,6 @@ import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 private const val EXPECTED_WORDS = 24
-
-// Mirror the rules in UsernameEntryScreen so restored identities can't carry display names that
-// would have been rejected on the create path (length, charset). Restored seeds are real
-// identities that round-trip across devices; relaxing the rules here would only make the two
-// paths produce different on-disk shapes.
-private const val MIN_NAME_LENGTH = 3
-private const val MAX_NAME_LENGTH = 20
-private val USERNAME_REGEX = Regex("[a-z0-9_]*")
 
 /**
  * Swiss-styled chat-identity restore — entered when the user taps "I already
@@ -88,9 +81,7 @@ private fun ChatRestoreContent(
     val identity by bootstrap.identity.collectAsStateWithLifecycle()
 
     val wordCount = if (phrase.isBlank()) 0 else phrase.trim().split(Regex("\\s+")).size
-    val trimmedName = displayName.trim()
-    val nameValid =
-        trimmedName.length in MIN_NAME_LENGTH..MAX_NAME_LENGTH && trimmedName.matches(USERNAME_REGEX)
+    val nameValid = UsernameRules.isValid(displayName.trim())
     val phraseValid = wordCount == EXPECTED_WORDS
     val isValid = nameValid && phraseValid && !isLoading
 
@@ -125,9 +116,7 @@ private fun ChatRestoreContent(
             Spacer(Modifier.height(6.dp))
             DisplayNameField(
                 value = displayName,
-                onChange = { raw ->
-                    displayName = raw.lowercase().filter { it.isLetterOrDigit() || it == '_' }
-                },
+                onChange = { raw -> displayName = UsernameRules.sanitize(raw) },
             )
 
             Spacer(Modifier.height(20.dp))
