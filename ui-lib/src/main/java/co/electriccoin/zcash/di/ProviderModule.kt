@@ -73,6 +73,7 @@ import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.BundlerClient
 import xyz.justzappit.evm.rpc.RpcHttpClient
 import xyz.justzappit.offramp.account.DevOfframpAccountProvider
+import xyz.justzappit.offramp.account.StaticOfframpAccountProvider
 import xyz.justzappit.offramp.account.OfframpAccountProvider
 import xyz.justzappit.offramp.account.SeedPhraseSource
 import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
@@ -188,21 +189,11 @@ val providerModule =
         }
         single<SeedPhraseSource> { WalletSeedPhraseSource(persistableWalletProvider = get()) }
         single<OfframpAccountProvider> {
-            // TEMP(mainnet-qa): mainnet is wired to the committed dev key too — not the
-            // user's wallet seed — so the smart-account address is stable across every
-            // rebuild/reinstall during active mainnet testing, and we don't have to keep
-            // re-funding a fresh account each iteration. The dev key is checked into source
-            // (DevOfframpAccountProvider.kt), so anyone with the repo can drain whatever
-            // sits in this account on mainnet — keep funded amounts small.
-            //
-            // To revert before shipping, restore the per-network selection:
-            //     val cfg = get<P2pNetworkConfig>()
-            //     if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
-            //         StaticOfframpAccountProvider(seedPhraseSource = get())
-            //     } else {
-            //         DevOfframpAccountProvider
-            //     }
-            DevOfframpAccountProvider
+            if (BuildConfig.OFFRAMP_USE_DEV_KEY) {
+                DevOfframpAccountProvider
+            } else {
+                StaticOfframpAccountProvider(seedPhraseSource = get())
+            }
         }
         single<BundlerClient> {
             val cfg = get<P2pNetworkConfig>()

@@ -222,6 +222,15 @@ androidComponents {
                     "pm_sponsorUserOperation to the policy's (target, selector) constraints."
             )
         )
+        variant.buildConfigFields?.put(
+            "OFFRAMP_USE_DEV_KEY",
+            BuildConfigField(
+                type = "boolean",
+                value = project.property("OFFRAMP_USE_DEV_KEY").toString().toBoolean().toString(),
+                comment = "When true, the offramp uses a hardcoded dev EVM key (shared smart account); " +
+                    "when false, derives the owner from the user's wallet seed (per-user smart account)."
+            )
+        )
     }
 }
 
