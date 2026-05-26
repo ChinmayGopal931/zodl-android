@@ -2,6 +2,8 @@ package co.electriccoin.zcash.ui.screen.transactiondetail
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -242,18 +245,26 @@ private fun TransactionDetailTopAppBar(
     bookmarkButton: IconButtonState?,
     appBarState: ZashiMainTopAppBarState?,
 ) {
-    ZappScreenHeader(
-        title = "",
-        right = {
-            appBarState?.balanceVisibilityButton?.let {
-                ZashiIconButton(it, modifier = Modifier.size(40.dp))
-                Spacer(Modifier.width(4.dp))
+    Box(
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(ZappTheme.colors.surface)
+                .statusBarsPadding(),
+    ) {
+        ZappScreenHeader(
+            title = "",
+            right = {
+                appBarState?.balanceVisibilityButton?.let {
+                    ZashiIconButton(it, modifier = Modifier.size(40.dp))
+                    Spacer(Modifier.width(4.dp))
+                }
+                bookmarkButton?.let {
+                    ZashiIconButton(it, modifier = Modifier.size(40.dp))
+                }
             }
-            bookmarkButton?.let {
-                ZashiIconButton(it, modifier = Modifier.size(40.dp))
-            }
-        }
-    )
+        )
+    }
 }
 
 @PreviewScreens

@@ -70,11 +70,11 @@ fun FloatingPillNavBar(
         Row(
             modifier =
                 Modifier
-                    .fillMaxWidth()
+                    .fillMaxWidth(0.81f)
                     .shadow(elevation = 4.dp, shape = RectangleShape, clip = false)
                     .background(c.navPill, RectangleShape)
                     .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .padding(horizontal = 6.dp, vertical = 6.dp),
+                    .padding(horizontal = 5.dp, vertical = 5.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -87,7 +87,7 @@ fun FloatingPillNavBar(
                     modifier =
                         Modifier
                             .weight(1f)
-                            .defaultMinSize(minHeight = 44.dp)
+                            .defaultMinSize(minHeight = 40.dp)
                             .background(
                                 color = if (selected) c.accent else Color.Transparent,
                                 shape = RectangleShape,
@@ -106,7 +106,7 @@ fun FloatingPillNavBar(
                         imageVector = icon,
                         contentDescription = tab.title,
                         tint = if (selected) c.onAccent else c.textMuted,
-                        modifier = Modifier.size(22.dp),
+                        modifier = Modifier.size(20.dp),
                     )
 
                     if (showBadge) {
