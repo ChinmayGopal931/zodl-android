@@ -4,6 +4,8 @@ import android.app.Application
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
+import android.os.Process
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
@@ -257,7 +259,15 @@ class ChatProfileVM(
 
     private suspend fun performDeleteIdentity() {
         deleteChatIdentity()
-        navigationRouter.backToRoot()
+        application.packageManager.getLaunchIntentForPackage(application.packageName)?.let { intent ->
+            intent.addFlags(
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+            )
+            application.startActivity(intent)
+        }
+        Process.killProcess(Process.myPid())
     }
 
     private fun onCopyPublicKeyClick() {
