@@ -17,6 +17,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -29,10 +30,12 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.provider.IsTorEnabledStorageProvider
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.onboarding.view.TorOptionScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.BioScanScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.MessagingPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnboardingDoneScreen
@@ -44,13 +47,16 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.WalletChoiceScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletSeedPhraseScreen
 import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 /** All steps the Swiss onboarding flow walks the user through. */
 private enum class Step {
     MSG_INTRO,
     MSG_USERNAME,
     WALLET_INTRO,
+    TOR_OPTION,
     WALLET_CHOICE,
     WALLET_SEED,
     SECURE_CHOICE,
@@ -87,6 +93,7 @@ fun ZappOnboardingFlow(
     var step by rememberSaveable { mutableStateOf(Step.MSG_INTRO) }
     var twoFAMode by rememberSaveable { mutableStateOf(TwoFAMode.Bio) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
+    var torEnabled by rememberSaveable { mutableStateOf(false) }
 
     val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
@@ -160,14 +167,31 @@ fun ZappOnboardingFlow(
         Step.WALLET_INTRO -> {
             WalletPhaseIntro(
                 onBack = { step = Step.MSG_USERNAME },
+                onContinue = { step = Step.TOR_OPTION },
+            )
+        }
+
+        Step.TOR_OPTION -> {
+            TorOptionScreen(
+                torEnabled = torEnabled,
+                onToggle = { torEnabled = !torEnabled },
+                onBack = { step = Step.WALLET_INTRO },
                 onContinue = { step = Step.WALLET_CHOICE },
+                badge = stringResource(R.string.onboarding_tor_badge),
+                ctaText = "Continue",
+                step = 2,
             )
         }
 
         Step.WALLET_CHOICE -> {
+            val torProvider: IsTorEnabledStorageProvider = koinInject()
+            val scope = rememberCoroutineScope()
             WalletChoiceScreen(
-                onBack = { step = Step.WALLET_INTRO },
+                onBack = { step = Step.TOR_OPTION },
                 onCreate = {
+                    if (torEnabled) {
+                        scope.launch { torProvider.store(true) }
+                    }
                     chatBootstrap.setPendingDisplayName(pendingUsername)
                     walletViewModel.createNewWallet()
                     step = Step.WALLET_SEED
@@ -219,7 +243,7 @@ fun ZappOnboardingFlow(
 
         Step.SECURE_CHOICE -> {
             TwoFAChoiceScreen(
-                onBack = { step = Step.WALLET_INTRO },
+                onBack = { step = Step.WALLET_SEED },
                 onPick = { mode ->
                     twoFAMode = mode
                     step =

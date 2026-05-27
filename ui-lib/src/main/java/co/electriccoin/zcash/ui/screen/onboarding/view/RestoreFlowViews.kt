@@ -258,20 +258,23 @@ internal fun RestoreBirthdayScreen(
 // ── 3. Tor option screen ────────────────────────────────────────
 
 @Composable
-internal fun RestoreTorOptionScreen(
+internal fun TorOptionScreen(
     torEnabled: Boolean,
     onToggle: () -> Unit,
     onBack: () -> Unit,
-    onRestore: () -> Unit,
+    onContinue: () -> Unit,
+    badge: String,
+    ctaText: String,
+    step: Int,
 ) {
     val c = ZappTheme.colors
 
     OnbScreen(
-        step = 2,
+        step = step,
         ghostNum = 3,
-        badge = stringResource(R.string.restore_flow_tor_badge),
-        cta = stringResource(R.string.restore_bd_restore_btn),
-        onCta = onRestore,
+        badge = badge,
+        cta = ctaText,
+        onCta = onContinue,
         showBack = true,
         onBack = onBack,
     ) {
@@ -314,7 +317,6 @@ internal fun RestoreTorOptionScreen(
                 )
             }
             Spacer(Modifier.width(14.dp))
-            // Simple on/off indicator
             Box(
                 modifier = Modifier
                     .width(44.dp)
@@ -333,6 +335,24 @@ internal fun RestoreTorOptionScreen(
             }
         }
     }
+}
+
+@Composable
+internal fun RestoreTorOptionScreen(
+    torEnabled: Boolean,
+    onToggle: () -> Unit,
+    onBack: () -> Unit,
+    onRestore: () -> Unit,
+) {
+    TorOptionScreen(
+        torEnabled = torEnabled,
+        onToggle = onToggle,
+        onBack = onBack,
+        onContinue = onRestore,
+        badge = stringResource(R.string.restore_flow_tor_badge),
+        ctaText = stringResource(R.string.restore_bd_restore_btn),
+        step = 2,
+    )
 }
 
 // ── 4. Restore in-progress screen ───────────────────────────────
