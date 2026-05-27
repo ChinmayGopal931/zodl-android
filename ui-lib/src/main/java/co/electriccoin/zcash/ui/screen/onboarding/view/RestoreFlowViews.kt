@@ -266,12 +266,13 @@ internal fun TorOptionScreen(
     badge: String,
     ctaText: String,
     step: Int,
+    ghostNum: Int,
 ) {
     val c = ZappTheme.colors
 
     OnbScreen(
         step = step,
-        ghostNum = 3,
+        ghostNum = ghostNum,
         badge = badge,
         cta = ctaText,
         onCta = onContinue,
@@ -352,6 +353,7 @@ internal fun RestoreTorOptionScreen(
         badge = stringResource(R.string.restore_flow_tor_badge),
         ctaText = stringResource(R.string.restore_bd_restore_btn),
         step = 2,
+        ghostNum = 2,
     )
 }
 
@@ -447,7 +449,7 @@ internal fun KeepZappOpenScreen(
 
     OnbScreen(
         step = 3,
-        ghostNum = 8,
+        ghostNum = 3,
         badge = stringResource(R.string.restore_flow_keep_open_badge),
         cta = stringResource(R.string.restore_flow_keep_open_cta),
         onCta = onEnterApp,

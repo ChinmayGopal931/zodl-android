@@ -180,6 +180,7 @@ fun ZappOnboardingFlow(
                 badge = stringResource(R.string.onboarding_tor_badge),
                 ctaText = "Continue",
                 step = 2,
+                ghostNum = 2,
             )
         }
 
