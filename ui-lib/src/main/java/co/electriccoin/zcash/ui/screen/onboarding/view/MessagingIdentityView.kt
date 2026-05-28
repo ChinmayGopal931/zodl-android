@@ -58,7 +58,8 @@ fun MessagingPhaseIntro(
         OnbSub(
             text =
                 "Your identity is a username backed by your wallet's recovery phrase — " +
-                    "one phrase restores your chats and your wallet on any device.",
+                    "one phrase restores your wallet and messaging identity on any device. " +
+                    "Message history is stored locally and is not recoverable.",
             modifier = Modifier.fillMaxWidth(0.92f),
         )
         Spacer(Modifier.height(28.dp))
