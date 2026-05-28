@@ -3,4 +3,22 @@
     <string name="onboarding_header">Billetera móvil impulsada por Zcash, diseñada para la soberanía financiera.</string>
     <string name="onboarding_create_new_wallet">Crear Nueva Billetera</string>
     <string name="onboarding_import_existing_wallet">Restaurar Billetera Existente</string>
+    <string name="onboarding_error_wallet_creation_failed">No se pudo crear tu billetera. Regresa e inténtalo de nuevo.</string>
+    <string name="onboarding_tor_badge">Configuración · Red</string>
+    <string name="onboarding_continue">Continuar</string>
+
+    <!-- SeedLoadingPlaceholder -->
+    <string name="onboarding_seed_loading_timeout">Está tardando más de lo esperado.</string>
+    <string name="onboarding_seed_loading_retry_hint">Toca reintentar, o regresa e intenta de nuevo.</string>
+    <string name="onboarding_seed_loading_no_retry_hint">Intenta regresar y enviarlo de nuevo.</string>
+    <string name="onboarding_seed_loading_retry">Reintentar</string>
+
+    <!-- Wallet-tab empty state: shown when the user reached the tabs without setting up a wallet. -->
+    <string name="wallet_empty_eyebrow">Billetera</string>
+    <string name="wallet_empty_title">Configura\ntu billetera</string>
+    <string name="wallet_empty_subtitle">Tu billetera vive en este dispositivo. Solo tú tienes las claves.</string>
+    <string name="wallet_empty_create">Crear nueva billetera</string>
+    <string name="wallet_empty_create_sub">Obtén una nueva frase de recuperación</string>
+    <string name="wallet_empty_restore">Restaurar desde frase</string>
+    <string name="wallet_empty_restore_sub">Usa tu frase de recuperación existente</string>
 </resources>

@@ -26,6 +26,8 @@ class WalletViewModel(
 
     val secretState: StateFlow<SecretState> = walletRepository.secretState
 
+    val walletProvisioningError: StateFlow<Throwable?> = walletRepository.walletProvisioningError
+
     /**
      * The 24 words that back the *current* wallet, or null when no wallet exists.
      * Read by the post-create seed-reveal screen so the user sees their actual

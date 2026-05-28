@@ -1,6 +1,8 @@
 package co.electriccoin.zcash.ui.screen.onboarding
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,14 +22,20 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.provider.IsTorEnabledStorageProvider
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.onboarding.view.TorOptionScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.BioScanScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.MessagingPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnboardingDoneScreen
@@ -41,6 +49,7 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.WalletSeedPhraseScreen
 import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 /** All steps the Swiss onboarding flow walks the user through. */
 private enum class Step {
@@ -48,6 +57,7 @@ private enum class Step {
     MSG_USERNAME,
     WALLET_INTRO,
     WALLET_CHOICE,
+    TOR_OPTION,
     WALLET_SEED,
     SECURE_CHOICE,
     BIO_SCAN,
@@ -62,15 +72,15 @@ private enum class Step {
  * dismissed and before the user reaches the tabs shell. Three phases mirror the
  * design canvas:
  * - **Part 1 — Messaging account** (intro, username)
- * - **Part 2 — Wallet** (intro, create/restore/skip, seed)
+ * - **Part 2 — Wallet** (intro, create/restore, seed)
  * - **Part 3 — Secure Zapp** (biometric/PIN, scan, done)
  *
- * The wallet's 24-word BIP-39 phrase seeds the messaging identity via
- * [ChatBootstrap.restoreFromWalletSeed], so users back up one phrase for
- * everything. Wallet restore forwards to the existing [RestoreSeedArgs] flow;
- * an observer auto-advances to the secure step once `secretState` flips to
- * READY so the user lands back inside onboarding rather than on an unfinished
- * tabs shell.
+ * The wallet's 24-word BIP-39 phrase seeds the messaging identity. The username
+ * picked in [Step.MSG_USERNAME] is handed to [ChatBootstrap.setPendingDisplayName];
+ * a reactive coroutine inside [ChatBootstrap] derives the identity from the wallet
+ * seed as soon as both the SDK and the wallet are ready. This keeps both the
+ * Create and the Restore paths converging on the same code, and survives the
+ * navigation jump into the wallet-restore sub-flow.
  */
 @Composable
 fun ZappOnboardingFlow(
@@ -83,22 +93,48 @@ fun ZappOnboardingFlow(
     var step by rememberSaveable { mutableStateOf(Step.MSG_INTRO) }
     var twoFAMode by rememberSaveable { mutableStateOf(TwoFAMode.Bio) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
-    val onboardingScope = rememberCoroutineScope()
+    var torEnabled by rememberSaveable { mutableStateOf(false) }
 
     val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
+    val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
+    val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
+    val isDerivingChatIdentity by chatBootstrap.isDeriving.collectAsStateWithLifecycle()
+    val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
 
     val securityVM: OnboardingSecurityViewModel = koinViewModel()
     val bioState by securityVM.bioState.collectAsStateWithLifecycle()
     val pinSaved by securityVM.pinSaved.collectAsStateWithLifecycle()
 
-    // Auto-advance from WALLET_CHOICE → SECURE_CHOICE whenever a wallet exists.
-    // Keyed on both values so it also fires when the user navigates *back* to
-    // WALLET_CHOICE after the wallet was already created (preventing a second
-    // createNewWallet() call that would crash with SeedNotRelevant).
-    LaunchedEffect(secretState, step) {
-        if (secretState == SecretState.READY && step == Step.WALLET_CHOICE) {
-            step = Step.SECURE_CHOICE
+    // Process-death recovery: rememberSaveable restores `pendingUsername`, but the
+    // in-process `pendingDisplayName` inside ChatBootstrap dies with the process.
+    // Re-publish once per rehydration. Keyed on `pendingUsername` alone (NOT `step`)
+    // so step transitions don't re-fire this; `setPendingDisplayName` is idempotent
+    // for the same name, but re-firing on every step change risked masking transient
+    // state if its semantics ever drift.
+    LaunchedEffect(pendingUsername) {
+        if (pendingUsername.isNotBlank()) {
+            chatBootstrap.setPendingDisplayName(pendingUsername)
+        }
+    }
+
+    // Auto-advance from WALLET_CHOICE / TOR_OPTION → SECURE_CHOICE only when the wallet
+    // AND the chat identity are both ready. If chat-derive failed, bounce to WALLET_SEED
+    // so the user sees the error and can retry — otherwise the restore path would jump
+    // silently past every error surface we have.
+    //
+    // TOR_OPTION is included so a process-death between createNewWallet() and the
+    // step-transition doesn't trap the user on the Tor screen with a wallet already
+    // persisted underneath; clicking Continue again would overwrite a freshly-created
+    // wallet via PersistableWallet.new(). The READY guard ensures we only auto-advance
+    // here when the wallet really did finish creating during the original session.
+    LaunchedEffect(secretState, chatIdentity, chatIdentityFailed, step) {
+        val canAutoAdvance = step == Step.WALLET_CHOICE || step == Step.TOR_OPTION
+        if (secretState == SecretState.READY && canAutoAdvance) {
+            when {
+                chatIdentity != null -> step = Step.SECURE_CHOICE
+                chatIdentityFailed -> step = Step.WALLET_SEED
+            }
         }
     }
 
@@ -144,38 +180,86 @@ fun ZappOnboardingFlow(
         Step.WALLET_CHOICE -> {
             WalletChoiceScreen(
                 onBack = { step = Step.WALLET_INTRO },
-                onCreate = {
-                    walletViewModel.createNewWallet()
-                    onboardingScope.launch {
-                        runCatching { chatBootstrap.restoreFromWalletSeed(pendingUsername) }
-                    }
-                    step = Step.WALLET_SEED
-                },
+                // Create path defers wallet creation until after the Tor opt-in so the
+                // preference is persisted before the Synchronizer is wired up.
+                onCreate = { step = Step.TOR_OPTION },
                 onRestore = {
+                    // Restore path goes into the legacy restore sub-flow, which has its
+                    // own Tor screen at the end — don't double-prompt the user.
+                    chatBootstrap.setPendingDisplayName(pendingUsername)
                     navigationRouter.forward(RestoreSeedArgs)
                 },
             )
         }
 
+        Step.TOR_OPTION -> {
+            val torProvider: IsTorEnabledStorageProvider = koinInject()
+            val scope = rememberCoroutineScope()
+            TorOptionScreen(
+                torEnabled = torEnabled,
+                onToggle = { torEnabled = !torEnabled },
+                onBack = { step = Step.WALLET_CHOICE },
+                onContinue = {
+                    // Persist the Tor preference BEFORE kicking off wallet creation so the
+                    // Synchronizer reads the up-to-date value when it spins up. store() is
+                    // suspend; running it sequentially in a single coroutine eliminates the
+                    // race that the previous structure (concurrent scope.launch + fire-and-
+                    // forget createNewWallet) had.
+                    scope.launch {
+                        torProvider.store(torEnabled)
+                        chatBootstrap.setPendingDisplayName(pendingUsername)
+                        walletViewModel.createNewWallet()
+                        step = Step.WALLET_SEED
+                    }
+                },
+                badge = stringResource(R.string.onboarding_tor_badge),
+                ctaText = stringResource(R.string.onboarding_continue),
+                step = 2,
+                ghostNum = 2,
+            )
+        }
+
         Step.WALLET_SEED -> {
             val words = walletSeed
-            if (words == null) {
-                // Wallet creation has no error pipe today — fall back to a
-                // timeout so the user isn't stuck on a spinner if persistence
-                // silently stalls.
-                SeedLoadingPlaceholder(sdkError = null)
-            } else {
-                WalletSeedPhraseScreen(
-                    words = words,
-                    onBack = { step = Step.WALLET_CHOICE },
-                    onContinue = { step = Step.SECURE_CHOICE },
-                )
+            // Wallet-creation failure takes precedence: without a wallet, there's nothing for
+            // chat-identity derivation to operate on, so its error (if any) is a downstream
+            // symptom. Once wallet exists, surface chat-derivation failures alone.
+            val errorMessage =
+                when {
+                    walletProvisioningError != null ->
+                        stringResource(R.string.onboarding_error_wallet_creation_failed)
+                    chatIdentityFailed ->
+                        stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
+                    else -> null
+                }
+            // Only chat-identity failures are retryable from here; a wallet-creation failure
+            // means there's no seed to derive from, so a retry of the chat path would just
+            // fail again. The user has to go back to WALLET_CHOICE. Gate on `isDeriving` so a
+            // spammed button doesn't queue redundant PBKDF2 round-trips.
+            val onRetry: (() -> Unit)? =
+                if (walletProvisioningError == null && chatIdentityFailed && !isDerivingChatIdentity) {
+                    { chatBootstrap.retry() }
+                } else {
+                    null
+                }
+            when {
+                // An error suppresses the seed-phrase display: on the restore path `words` is
+                // the phrase the user just typed, so re-showing it adds nothing and risks
+                // burying the actionable error.
+                errorMessage != null -> SeedLoadingPlaceholder(sdkError = errorMessage, onRetry = onRetry)
+                words == null -> SeedLoadingPlaceholder(sdkError = null, onRetry = null)
+                else ->
+                    WalletSeedPhraseScreen(
+                        words = words,
+                        onBack = { step = Step.WALLET_CHOICE },
+                        onContinue = { step = Step.SECURE_CHOICE },
+                    )
             }
         }
 
         Step.SECURE_CHOICE -> {
             TwoFAChoiceScreen(
-                onBack = { step = Step.WALLET_INTRO },
+                onBack = { step = Step.WALLET_SEED },
                 onPick = { mode ->
                     twoFAMode = mode
                     step =
@@ -225,9 +309,10 @@ private const val SEED_LOAD_TIMEOUT_MS = 15_000L
  * we fall back to a generic message so the user isn't trapped on a spinner.
  */
 @Composable
-private fun SeedLoadingPlaceholder(sdkError: String?) {
+private fun SeedLoadingPlaceholder(sdkError: String?, onRetry: (() -> Unit)?) {
     val c = ZappTheme.colors
     var timedOut by remember { mutableStateOf(false) }
+    val timeoutMessage = stringResource(R.string.onboarding_seed_loading_timeout)
 
     LaunchedEffect(sdkError) {
         if (sdkError == null) {
@@ -238,7 +323,7 @@ private fun SeedLoadingPlaceholder(sdkError: String?) {
 
     val displayError =
         sdkError
-            ?: "Taking longer than expected.".takeIf { timedOut }
+            ?: timeoutMessage.takeIf { timedOut }
 
     Box(
         modifier = Modifier.fillMaxSize().background(c.bg),
@@ -259,13 +344,39 @@ private fun SeedLoadingPlaceholder(sdkError: String?) {
                 )
                 Spacer(Modifier.height(12.dp))
                 BasicText(
-                    text = "Try going back and submitting again.",
+                    text =
+                        if (onRetry != null) {
+                            stringResource(R.string.onboarding_seed_loading_retry_hint)
+                        } else {
+                            stringResource(R.string.onboarding_seed_loading_no_retry_hint)
+                        },
                     style =
                         ZappTheme.typography.body.copy(
                             color = c.textMuted,
                             fontSize = 12.sp,
                         ),
                 )
+                if (onRetry != null) {
+                    Spacer(Modifier.height(20.dp))
+                    Box(
+                        modifier =
+                            Modifier
+                                .border(width = 2.dp, color = c.text, shape = RectangleShape)
+                                .clickable(onClick = onRetry)
+                                .padding(horizontal = 22.dp, vertical = 12.dp),
+                    ) {
+                        BasicText(
+                            text = stringResource(R.string.onboarding_seed_loading_retry),
+                            style =
+                                ZappTheme.typography.body.copy(
+                                    color = c.text,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Black,
+                                    letterSpacing = 1.2.sp,
+                                ),
+                        )
+                    }
+                }
             }
         } else {
             CircularProgressIndicator(color = c.accent)

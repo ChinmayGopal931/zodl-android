@@ -138,7 +138,7 @@ class Erc4337Submitter(
     /** thirdweb's prebuilt Account contract validates the owner's ECDSA signature over the EIP-191-prefixed userOpHash. */
     private fun signOwner(userOpHash: ByteArray): ByteArray {
         val ethHash = keccak256(EIP191_PREFIX + userOpHash)
-        return encodeSignature(EcdsaSigner.sign(ethHash, BigInteger(1, owner.privateKey)))
+        return encodeSignature(owner.signRecoverable(ethHash))
     }
 
     private fun BigInteger.buffered(): BigInteger =

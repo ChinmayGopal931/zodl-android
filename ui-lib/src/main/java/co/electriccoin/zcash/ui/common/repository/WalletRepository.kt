@@ -12,6 +12,7 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import cash.z.ecc.sdk.type.fromResources
 import co.electriccoin.lightwallet.client.model.LightWalletEndpoint
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.datasource.RestoreTimestampDataSource
 import co.electriccoin.zcash.ui.common.model.FastestServersState
 import co.electriccoin.zcash.ui.common.model.OnboardingState
@@ -23,14 +24,17 @@ import co.electriccoin.zcash.ui.common.provider.WalletBackupFlagStorageProvider
 import co.electriccoin.zcash.ui.common.provider.WalletRestoringStateProvider
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.emitAll
@@ -53,6 +57,14 @@ interface WalletRepository {
     val fastestEndpoints: StateFlow<FastestServersState>
 
     val walletRestoringState: StateFlow<WalletRestoringState>
+
+    /**
+     * Latest error from [createNewWallet] or [restoreWallet], or null if the most recent
+     * attempt succeeded (or none has happened yet). Resets to null when a new attempt is
+     * kicked off. Surfaces the failure to UI without forcing every caller to wrap the
+     * fire-and-forget create/restore in their own scope.
+     */
+    val walletProvisioningError: StateFlow<Throwable?>
 
     fun createNewWallet()
 
@@ -158,6 +170,9 @@ class WalletRepositoryImpl(
                 initialValue = WalletRestoringState.NONE
             )
 
+    private val _walletProvisioningError = MutableStateFlow<Throwable?>(null)
+    override val walletProvisioningError: StateFlow<Throwable?> = _walletProvisioningError.asStateFlow()
+
     override fun updateWalletEndpoint(endpoint: LightWalletEndpoint) {
         scope.launch {
             val selectedWallet = persistableWalletProvider.getPersistableWallet() ?: return@launch
@@ -173,18 +188,28 @@ class WalletRepositoryImpl(
     }
 
     override fun createNewWallet() {
+        _walletProvisioningError.value = null
         scope.launch {
-            persistOnboardingStateInternal(OnboardingState.READY)
-            val zcashNetwork = ZcashNetwork.fromResources(application)
-            val newWallet =
-                PersistableWallet.new(
-                    application = application,
-                    zcashNetwork = zcashNetwork,
-                    endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
-                    walletInitMode = WalletInitMode.NewWallet,
-                )
-            persistWalletInternal(newWallet)
-            walletRestoringStateProvider.store(WalletRestoringState.INITIATING)
+            // Order matters: persist the wallet before flipping onboarding=READY. If
+            // PersistableWallet.new throws, a pre-flipped onboarding flag would land the user
+            // in the tabs shell on next launch with no wallet behind it.
+            runCatching {
+                val zcashNetwork = ZcashNetwork.fromResources(application)
+                val newWallet =
+                    PersistableWallet.new(
+                        application = application,
+                        zcashNetwork = zcashNetwork,
+                        endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
+                        walletInitMode = WalletInitMode.NewWallet,
+                    )
+                persistWalletInternal(newWallet)
+                walletRestoringStateProvider.store(WalletRestoringState.INITIATING)
+                persistOnboardingStateInternal(OnboardingState.READY)
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                Twig.warn(e) { "WalletRepository: createNewWallet failed" }
+                _walletProvisioningError.value = e
+            }
         }
     }
 
@@ -208,20 +233,27 @@ class WalletRepositoryImpl(
         seedPhrase: SeedPhrase,
         birthday: BlockHeight
     ) {
+        _walletProvisioningError.value = null
         scope.launch {
-            val restoredWallet =
-                PersistableWallet(
-                    network = network,
-                    birthday = birthday,
-                    endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
-                    seedPhrase = seedPhrase,
-                    walletInitMode = WalletInitMode.RestoreWallet,
-                )
-            persistWalletInternal(restoredWallet)
-            walletRestoringStateProvider.store(WalletRestoringState.RESTORING)
-            walletBackupFlagStorageProvider.store(true)
-            restoreTimestampDataSource.getOrCreate()
-            persistOnboardingStateInternal(OnboardingState.READY)
+            runCatching {
+                val restoredWallet =
+                    PersistableWallet(
+                        network = network,
+                        birthday = birthday,
+                        endpoint = lightWalletEndpointProvider.getDefaultEndpoint(),
+                        seedPhrase = seedPhrase,
+                        walletInitMode = WalletInitMode.RestoreWallet,
+                    )
+                persistWalletInternal(restoredWallet)
+                walletRestoringStateProvider.store(WalletRestoringState.RESTORING)
+                walletBackupFlagStorageProvider.store(true)
+                restoreTimestampDataSource.getOrCreate()
+                persistOnboardingStateInternal(OnboardingState.READY)
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+                Twig.warn(e) { "WalletRepository: restoreWallet failed" }
+                _walletProvisioningError.value = e
+            }
         }
     }
 }

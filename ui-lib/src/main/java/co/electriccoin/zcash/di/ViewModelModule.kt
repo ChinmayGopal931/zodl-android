@@ -39,6 +39,7 @@ import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsVM
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsVM
 import co.electriccoin.zcash.ui.screen.more.MoreVM
 import co.electriccoin.zcash.ui.screen.onboarding.OnboardingSecurityViewModel
+import co.electriccoin.zcash.ui.screen.onboarding.ZappRestoreFlowVM
 import co.electriccoin.zcash.ui.screen.qrcode.QrCodeVM
 import co.electriccoin.zcash.ui.screen.receive.ReceiveVM
 import co.electriccoin.zcash.ui.screen.request.viewmodel.RequestVM
@@ -100,6 +101,7 @@ val viewModelModule =
         viewModelOf(::WalletViewModel)
         viewModelOf(::AuthenticationViewModel)
         viewModelOf(::OnboardingSecurityViewModel)
+        viewModelOf(::ZappRestoreFlowVM)
         viewModelOf(::SecuritySettingsViewModel)
         viewModelOf(::OldHomeViewModel)
         viewModelOf(::StorageCheckViewModel)

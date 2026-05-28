@@ -13,7 +13,6 @@ import co.electriccoin.zcash.ui.common.usecase.CreateIncreaseEphemeralGapLimitPr
 import co.electriccoin.zcash.ui.common.usecase.CreateKeystoneAccountUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateKeystoneProposalPCZTEncoderUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateLceErrorConfirmationStateUseCase
-import co.electriccoin.zcash.ui.common.usecase.CreateChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateOrUpdateTransactionNoteUseCase
 import co.electriccoin.zcash.ui.common.usecase.CreateProposalUseCase
 import co.electriccoin.zcash.ui.common.usecase.DeleteABContactUseCase
@@ -48,7 +47,6 @@ import co.electriccoin.zcash.ui.common.usecase.GetPersistableWalletUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetProposalUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetResyncDataFromHeightUseCase
 import co.electriccoin.zcash.ui.common.usecase.RefreshChatConversationsUseCase
-import co.electriccoin.zcash.ui.common.usecase.RestoreChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.SendChatMediaMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.SendChatMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSelectedEndpointUseCase
@@ -320,8 +318,6 @@ val useCaseModule =
         singleOf(::NavigateToScanUpiUseCase)
 
         // Chat use cases.
-        factoryOf(::CreateChatIdentityUseCase)
-        factoryOf(::RestoreChatIdentityUseCase)
         factoryOf(::ExportChatSeedPhraseUseCase)
         factoryOf(::ObserveChatIdentityUseCase)
         factoryOf(::UpdateChatDisplayNameUseCase)

@@ -64,6 +64,7 @@ android {
                     "src/main/res/ui/receive",
                     "src/main/res/ui/review_keystone_transaction",
                     "src/main/res/ui/restore",
+                    "src/main/res/ui/restore_flow",
                     "src/main/res/ui/restore_success",
                     "src/main/res/ui/scan",
                     "src/main/res/ui/scan_keystone",
