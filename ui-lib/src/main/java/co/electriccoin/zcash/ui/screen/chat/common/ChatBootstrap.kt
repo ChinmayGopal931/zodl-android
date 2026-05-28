@@ -39,13 +39,20 @@ class ChatBootstrap(
 
     val identity: StateFlow<ZMIdentity?> get() = sdk.identity
 
-    private val pendingDisplayName = MutableStateFlow<String?>(null)
+    private val _pendingDisplayName = MutableStateFlow<String?>(null)
+    val pendingDisplayName: StateFlow<String?> = _pendingDisplayName.asStateFlow()
 
     private val _chatIdentityFailed = MutableStateFlow(false)
     val chatIdentityFailed: StateFlow<Boolean> = _chatIdentityFailed.asStateFlow()
 
     private val _isDeriving = MutableStateFlow(false)
     val isDeriving: StateFlow<Boolean> = _isDeriving.asStateFlow()
+
+    // Seed phrase used in the last successful auto-derive. Preferred by
+    // ExportChatSeedPhraseUseCase over sdk.exportSeedPhrase() to avoid a
+    // potential SDK-side shadow-cache mismatch after restoreFromSeedPhrase.
+    private val _derivedSeedPhrase = MutableStateFlow<String?>(null)
+    val derivedSeedPhrase: StateFlow<String?> = _derivedSeedPhrase.asStateFlow()
 
     // Bumped by [retry]. Folded into the [AutoDeriveRequest] so a retry after a failed
     // derive produces a request that is `distinctUntilChanged`-distinct from the last
@@ -74,7 +81,7 @@ class ChatBootstrap(
      * and does *not* clear any in-progress error state.
      */
     fun setPendingDisplayName(displayName: String) {
-        pendingDisplayName.value = displayName
+        _pendingDisplayName.value = displayName
     }
 
     /**
@@ -94,7 +101,7 @@ class ChatBootstrap(
             _isInitializing,
             persistableWalletProvider.persistableWallet,
             sdk.identity,
-            pendingDisplayName,
+            _pendingDisplayName,
             retryToken,
         ) { initializing, wallet, identity, name, attempt ->
             buildAutoDeriveRequest(initializing, wallet, identity, name, attempt)
@@ -126,7 +133,8 @@ class ChatBootstrap(
                 sdk.restoreFromSeedPhrase(seedPhrase, request.displayName)
             }.fold(
                 onSuccess = {
-                    pendingDisplayName.value = null
+                    _derivedSeedPhrase.value = seedPhrase
+                    _pendingDisplayName.value = null
                     _chatIdentityFailed.value = false
                 },
                 onFailure = {

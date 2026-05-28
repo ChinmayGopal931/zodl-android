@@ -9,6 +9,7 @@ import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.RestoreChatIdentityUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.common.ChatResult
 import co.electriccoin.zcash.ui.screen.chat.common.toStringResource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,10 +25,23 @@ class ChatIdentitySetupVM(
     observeChatIdentity: ObserveChatIdentityUseCase,
     private val createChatIdentity: CreateChatIdentityUseCase,
     private val restoreChatIdentity: RestoreChatIdentityUseCase,
+    chatBootstrap: ChatBootstrap,
 ) : ViewModel() {
-    private val selectedTab = MutableStateFlow(ChatIdentitySetupTab.CREATE)
+    // If auto-derivation already failed (e.g. the user came through the restore
+    // flow but the SDK call failed), land on RESTORE so they can retry with their
+    // seed rather than accidentally creating a new identity.
+    private val selectedTab =
+        MutableStateFlow(
+            if (chatBootstrap.chatIdentityFailed.value) {
+                ChatIdentitySetupTab.RESTORE
+            } else {
+                ChatIdentitySetupTab.CREATE
+            }
+        )
     private val createName = MutableStateFlow("")
-    private val restoreName = MutableStateFlow("")
+    // Pre-fill the display name from the pending name captured during onboarding
+    // so the user doesn't have to retype it after a failed auto-derive.
+    private val restoreName = MutableStateFlow(chatBootstrap.pendingDisplayName.value ?: "")
     private val restoreSeed = MutableStateFlow("")
     private val isSubmitting = MutableStateFlow(false)
     private val error = MutableStateFlow<StringResource?>(null)

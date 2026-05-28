@@ -2,7 +2,7 @@ package co.electriccoin.zcash.ui.screen.chat.common
 
 /**
  * Chat display-name rules. The create path (onboarding's `UsernameEntryScreen`) and the
- * restore path (welcome's `ChatRestoreView`) MUST agree — a restored identity that round-trips
+ * restore path (`ZappRestoreFlow`) MUST agree — a restored identity that round-trips
  * across devices needs to land with a name the create flow would have accepted, otherwise the
  * two paths produce different on-disk shapes.
  */
