@@ -86,6 +86,9 @@ private fun ZappRestoreFlowContent(
     val suggestionsVisible by restoreVM.suggestionsVisible.collectAsStateWithLifecycle()
     val suggestionsList by restoreVM.suggestionsList.collectAsStateWithLifecycle()
     val birthdayText by restoreVM.birthdayText.collectAsStateWithLifecycle()
+    val birthdayMode by restoreVM.birthdayMode.collectAsStateWithLifecycle()
+    val selectedYearMonth by restoreVM.selectedYearMonth.collectAsStateWithLifecycle()
+    val isEstimating by restoreVM.isEstimating.collectAsStateWithLifecycle()
     val torEnabled by restoreVM.torEnabled.collectAsStateWithLifecycle()
     val isRestoring by restoreVM.isRestoring.collectAsStateWithLifecycle()
     val restoreError by restoreVM.restoreError.collectAsStateWithLifecycle()
@@ -154,11 +157,27 @@ private fun ZappRestoreFlowContent(
         }
 
         RestoreStep.BIRTHDAY -> {
+            LaunchedEffect(Unit) {
+                restoreVM.estimationDone.collect {
+                    if (step == RestoreStep.BIRTHDAY) step = RestoreStep.TOR
+                }
+            }
             RestoreBirthdayScreen(
                 birthdayText = birthdayText,
                 onBirthdayChange = restoreVM::onBirthdayChange,
+                birthdayMode = birthdayMode,
+                onBirthdayModeChange = restoreVM::onBirthdayModeChange,
+                selectedYearMonth = selectedYearMonth,
+                onYearMonthChange = restoreVM::onYearMonthChange,
+                isEstimating = isEstimating,
                 onBack = { step = RestoreStep.SEED_ENTRY },
-                onNext = { step = RestoreStep.TOR },
+                onNext = {
+                    if (birthdayMode == BirthdayMode.DATE) {
+                        restoreVM.estimateFromDate()
+                    } else {
+                        step = RestoreStep.TOR
+                    }
+                },
                 onSkip = { step = RestoreStep.TOR },
             )
         }

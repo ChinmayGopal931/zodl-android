@@ -46,9 +46,12 @@ import co.electriccoin.zcash.ui.design.component.SeedTextFieldState
 import co.electriccoin.zcash.ui.design.component.SeedWordInnerTextFieldState
 import co.electriccoin.zcash.ui.design.component.TextSelection
 import co.electriccoin.zcash.ui.design.component.ZashiSeedTextField
+import co.electriccoin.zcash.ui.design.component.ZashiYearMonthWheelDatePicker
 import co.electriccoin.zcash.ui.design.component.rememberSeedTextFieldHandle
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
+import co.electriccoin.zcash.ui.screen.onboarding.BirthdayMode
+import java.time.YearMonth
 import java.util.Locale
 
 // ── 1. Seed entry screen ────────────────────────────────────────
@@ -167,6 +170,11 @@ internal fun RestoreSeedEntryScreen(
 internal fun RestoreBirthdayScreen(
     birthdayText: String,
     onBirthdayChange: (String) -> Unit,
+    birthdayMode: BirthdayMode,
+    onBirthdayModeChange: (BirthdayMode) -> Unit,
+    selectedYearMonth: YearMonth,
+    onYearMonthChange: (YearMonth) -> Unit,
+    isEstimating: Boolean,
     onBack: () -> Unit,
     onNext: () -> Unit,
     onSkip: () -> Unit,
@@ -174,12 +182,19 @@ internal fun RestoreBirthdayScreen(
     val c = ZappTheme.colors
     val borderColor = if (birthdayText.isNotEmpty()) c.text else c.border
 
+    val ctaLabel = when {
+        isEstimating -> stringResource(R.string.restore_flow_birthday_estimating)
+        birthdayMode == BirthdayMode.DATE -> stringResource(R.string.restore_bd_height_btn)
+        else -> stringResource(R.string.restore_bd_restore_btn)
+    }
+
     OnbScreen(
         step = 2,
         ghostNum = 2,
         badge = stringResource(R.string.restore_flow_birthday_badge),
-        cta = stringResource(R.string.restore_bd_restore_btn),
+        cta = ctaLabel,
         onCta = onNext,
+        ctaEnabled = !isEstimating,
         showBack = true,
         onBack = onBack,
     ) {
@@ -191,53 +206,91 @@ internal fun RestoreBirthdayScreen(
         )
         Spacer(Modifier.height(28.dp))
 
-        BasicText(
-            text = stringResource(R.string.restore_flow_birthday_field_label),
-            style = ZappTheme.typography.eyebrow.copy(
-                color = c.textSubtle,
-                fontSize = 10.sp,
-                letterSpacing = 1.8.sp,
-                fontWeight = FontWeight.Black,
-            ),
-        )
-        Spacer(Modifier.height(6.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(width = 2.dp, color = borderColor, shape = RectangleShape)
-                .padding(horizontal = 12.dp, vertical = 14.dp),
-        ) {
-            BasicTextField(
-                value = birthdayText,
-                onValueChange = onBirthdayChange,
-                singleLine = true,
-                cursorBrush = SolidColor(c.accent),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number,
-                    imeAction = ImeAction.Done,
-                ),
-                textStyle = ZappTheme.typography.display.copy(
-                    color = c.text,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = (-0.4).sp,
-                ),
-                decorationBox = { inner ->
-                    if (birthdayText.isEmpty()) {
-                        BasicText(
-                            text = stringResource(R.string.restore_flow_birthday_field_hint),
-                            style = ZappTheme.typography.display.copy(
-                                color = c.textSubtle,
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = (-0.4).sp,
-                            ),
-                        )
-                    }
-                    inner()
-                },
+        Row(modifier = Modifier.fillMaxWidth()) {
+            BirthdayModeTab(
+                label = stringResource(R.string.restore_flow_birthday_mode_height),
+                isSelected = birthdayMode == BirthdayMode.HEIGHT,
+                onClick = { onBirthdayModeChange(BirthdayMode.HEIGHT) },
+                modifier = Modifier.weight(1f),
+            )
+            BirthdayModeTab(
+                label = stringResource(R.string.restore_flow_birthday_mode_date),
+                isSelected = birthdayMode == BirthdayMode.DATE,
+                onClick = { onBirthdayModeChange(BirthdayMode.DATE) },
+                modifier = Modifier.weight(1f),
             )
         }
+        Spacer(Modifier.height(20.dp))
+
+        when (birthdayMode) {
+            BirthdayMode.HEIGHT -> {
+                BasicText(
+                    text = stringResource(R.string.restore_flow_birthday_field_label),
+                    style = ZappTheme.typography.eyebrow.copy(
+                        color = c.textSubtle,
+                        fontSize = 10.sp,
+                        letterSpacing = 1.8.sp,
+                        fontWeight = FontWeight.Black,
+                    ),
+                )
+                Spacer(Modifier.height(6.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(width = 2.dp, color = borderColor, shape = RectangleShape)
+                        .padding(horizontal = 12.dp, vertical = 14.dp),
+                ) {
+                    BasicTextField(
+                        value = birthdayText,
+                        onValueChange = onBirthdayChange,
+                        singleLine = true,
+                        cursorBrush = SolidColor(c.accent),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Done,
+                        ),
+                        textStyle = ZappTheme.typography.display.copy(
+                            color = c.text,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Black,
+                            letterSpacing = (-0.4).sp,
+                        ),
+                        decorationBox = { inner ->
+                            if (birthdayText.isEmpty()) {
+                                BasicText(
+                                    text = stringResource(R.string.restore_flow_birthday_field_hint),
+                                    style = ZappTheme.typography.display.copy(
+                                        color = c.textSubtle,
+                                        fontSize = 22.sp,
+                                        fontWeight = FontWeight.Black,
+                                        letterSpacing = (-0.4).sp,
+                                    ),
+                                )
+                            }
+                            inner()
+                        },
+                    )
+                }
+            }
+            BirthdayMode.DATE -> {
+                ZcashTheme {
+                    ZashiYearMonthWheelDatePicker(
+                        selection = selectedYearMonth,
+                        onSelectionChange = onYearMonthChange,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                BasicText(
+                    text = stringResource(R.string.restore_flow_birthday_date_note),
+                    style = ZappTheme.typography.body.copy(
+                        color = c.textMuted,
+                        fontSize = 12.sp,
+                    ),
+                )
+            }
+        }
+
         Spacer(Modifier.height(20.dp))
         Row(
             modifier = Modifier.clickable(onClick = onSkip).padding(vertical = 6.dp),
@@ -252,6 +305,37 @@ internal fun RestoreBirthdayScreen(
                 ),
             )
         }
+    }
+}
+
+@Composable
+private fun BirthdayModeTab(
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val c = ZappTheme.colors
+    Box(
+        modifier = modifier
+            .border(
+                width = if (isSelected) 2.dp else 1.dp,
+                color = if (isSelected) c.text else c.border,
+                shape = RectangleShape,
+            )
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        BasicText(
+            text = label,
+            style = ZappTheme.typography.button.copy(
+                color = if (isSelected) c.text else c.textMuted,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 1.sp,
+            ),
+        )
     }
 }
 

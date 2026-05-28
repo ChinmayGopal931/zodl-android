@@ -1,10 +1,13 @@
 package co.electriccoin.zcash.ui.screen.onboarding
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.android.bip39.Mnemonics
+import cash.z.ecc.android.sdk.SdkSynchronizer
 import cash.z.ecc.android.sdk.model.BlockHeight
 import cash.z.ecc.android.sdk.model.SeedPhrase
+import co.electriccoin.zcash.ui.common.model.VersionInfo
 import co.electriccoin.zcash.ui.common.provider.IsKeepScreenOnDuringRestoreProvider
 import co.electriccoin.zcash.ui.common.usecase.RestoreWalletUseCase
 import co.electriccoin.zcash.ui.common.usecase.ValidateSeedUseCase
@@ -15,6 +18,7 @@ import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -23,14 +27,21 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.time.YearMonth
+import java.time.ZoneId
 import java.util.Locale
+import kotlin.time.toKotlinInstant
+
+enum class BirthdayMode { HEIGHT, DATE }
 
 @Suppress("TooManyFunctions")
 class ZappRestoreFlowVM(
+    private val application: Application,
     private val validateSeed: ValidateSeedUseCase,
     private val restoreWallet: RestoreWalletUseCase,
     private val chatBootstrap: ChatBootstrap,
@@ -120,6 +131,55 @@ class ZappRestoreFlowVM(
 
     fun onBirthdayChange(value: String) {
         _birthdayText.value = value.filter { it.isDigit() }
+    }
+
+    // ── Birthday mode (height vs date) ─────────────────────────
+
+    private val _birthdayMode = MutableStateFlow(BirthdayMode.HEIGHT)
+    val birthdayMode: StateFlow<BirthdayMode> = _birthdayMode.asStateFlow()
+
+    @Suppress("MagicNumber")
+    private val _selectedYearMonth = MutableStateFlow(YearMonth.of(2018, 10))
+    val selectedYearMonth: StateFlow<YearMonth> = _selectedYearMonth.asStateFlow()
+
+    private val _isEstimating = MutableStateFlow(false)
+    val isEstimating: StateFlow<Boolean> = _isEstimating.asStateFlow()
+
+    private val _estimationDone = Channel<Unit>(Channel.BUFFERED)
+    val estimationDone = _estimationDone.receiveAsFlow()
+
+    fun onBirthdayModeChange(mode: BirthdayMode) {
+        _birthdayMode.value = mode
+    }
+
+    fun onYearMonthChange(yearMonth: YearMonth) {
+        _selectedYearMonth.value = yearMonth
+    }
+
+    fun estimateFromDate() {
+        if (_isEstimating.value) return
+        _isEstimating.value = true
+        viewModelScope.launch {
+            runCatching {
+                val instant =
+                    _selectedYearMonth.value
+                        .atDay(1)
+                        .atStartOfDay()
+                        .atZone(ZoneId.systemDefault())
+                        .toInstant()
+                        .toKotlinInstant()
+                val bday = SdkSynchronizer.estimateBirthdayHeight(
+                    context = application,
+                    date = instant,
+                    network = VersionInfo.NETWORK,
+                )
+                _birthdayText.value = bday.value.toString()
+            }.onFailure { e ->
+                if (e is CancellationException) throw e
+            }
+            _isEstimating.value = false
+            _estimationDone.send(Unit)
+        }
     }
 
     // ── Tor toggle ──────────────────────────────────────────────
