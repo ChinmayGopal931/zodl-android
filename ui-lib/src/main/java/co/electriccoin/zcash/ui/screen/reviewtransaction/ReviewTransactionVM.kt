@@ -368,6 +368,8 @@ class ReviewTransactionVM(
 
     /** Called by the UI when the user cancels out of the send PIN overlay. */
     fun onSendAuthDismissed() {
+        // Cancel the lockout ticker; otherwise its next tick re-shows the PIN overlay and traps the user.
+        sendLockoutTickerJob?.cancel()
         _sendAuthState.value = SendAuthState.Idle
     }
 

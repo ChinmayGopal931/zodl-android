@@ -265,6 +265,8 @@ class WalletBackupViewModel(
 
     /** Called by the UI when the user cancels out of the PIN overlay. */
     fun onPinEntryDismissed() {
+        // Cancel the lockout ticker; otherwise its next tick re-shows the PIN overlay and traps the user.
+        pinLockoutTickerJob?.cancel()
         _pinVerifyState.value = PinVerifyState.Idle
     }
 
