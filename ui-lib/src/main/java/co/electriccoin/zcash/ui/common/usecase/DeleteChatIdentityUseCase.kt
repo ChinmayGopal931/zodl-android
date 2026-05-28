@@ -12,7 +12,6 @@ import co.electriccoin.zcash.ui.common.repository.HomeMessageCacheRepository
 import co.electriccoin.zcash.ui.common.repository.MetadataRepository
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import kotlinx.coroutines.flow.first
-import okhttp3.internal.closeQuietly
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 class DeleteChatIdentityUseCase(
@@ -38,7 +37,7 @@ class DeleteChatIdentityUseCase(
         metadataRepository.delete()
 
         runCatching {
-            (synchronizerProvider.synchronizer.value as? SdkSynchronizer)?.closeQuietly()
+            (synchronizerProvider.synchronizer.value as? SdkSynchronizer)?.close()
         }.onFailure { Twig.warn(it) { "DeleteChatIdentityUseCase: synchronizer close failed" } }
 
         runCatching { walletCoordinator.deleteSdkDataFlow().first() }

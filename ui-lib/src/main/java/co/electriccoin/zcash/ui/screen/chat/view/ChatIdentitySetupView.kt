@@ -17,7 +17,6 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -60,7 +59,7 @@ internal fun ChatIdentitySetupView(
 
         Text(
             text = state.title.getValue(),
-            style = MaterialTheme.typography.headlineSmall,
+            style = ZappTheme.typography.displaySecondary,
             color = ZappTheme.colors.text,
         )
 
@@ -68,7 +67,7 @@ internal fun ChatIdentitySetupView(
 
         Text(
             text = state.subtitle.getValue(),
-            style = MaterialTheme.typography.bodyMedium,
+            style = ZappTheme.typography.body,
             color = ZappTheme.colors.textMuted,
             textAlign = TextAlign.Center,
         )
@@ -93,14 +92,14 @@ internal fun ChatIdentitySetupView(
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = error.getValue(),
-                style = MaterialTheme.typography.bodySmall,
+                style = ZappTheme.typography.caption,
                 color = ZappTheme.colors.danger,
             )
             state.diagnostic?.let { diagnostic ->
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = stringResource(R.string.chat_identity_setup_support_hint),
-                    style = MaterialTheme.typography.bodySmall,
+                    style = ZappTheme.typography.caption,
                     color = ZappTheme.colors.textMuted,
                     textAlign = TextAlign.Center,
                 )
@@ -114,7 +113,7 @@ internal fun ChatIdentitySetupView(
                     },
                     shape = RectangleShape,
                 ) {
-                    Text(copyLabel)
+                    Text(copyLabel, style = ZappTheme.typography.button)
                 }
             }
         }
@@ -162,6 +161,6 @@ private fun PrimarySubmitButton(
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
-        Text(label, modifier = Modifier.padding(vertical = 4.dp))
+        Text(label, modifier = Modifier.padding(vertical = 4.dp), style = ZappTheme.typography.button)
     }
 }

@@ -9,6 +9,7 @@ import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
+import co.electriccoin.zcash.ui.screen.chat.common.UsernameRules
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -73,8 +74,11 @@ class ChatIdentitySetupVM(
             onSubmit = ::onSubmit,
         )
 
+    // Sanitize on every keystroke so the field only ever holds chars the create path
+    // (onboarding's UsernameEntryScreen) would have accepted — the two paths must agree
+    // on the on-disk name shape (see UsernameRules).
     private fun onDisplayNameChange(value: String) {
-        displayName.value = value
+        displayName.value = UsernameRules.sanitize(value)
     }
 
     // Hand the display name to ChatBootstrap, which derives the identity from the wallet
@@ -82,8 +86,8 @@ class ChatIdentitySetupVM(
     // with the same name — setPendingDisplayName alone wouldn't re-fire on an unchanged name.
     private fun onSubmit() {
         val name = displayName.value.trim()
-        if (name.isBlank()) {
-            error.value = stringRes(R.string.chat_identity_setup_error_name_required)
+        if (!UsernameRules.isValid(name)) {
+            error.value = stringRes(R.string.chat_identity_setup_error_name_invalid)
             return
         }
         error.value = null

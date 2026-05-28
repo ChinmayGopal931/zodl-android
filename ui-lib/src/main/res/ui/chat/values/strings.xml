@@ -30,7 +30,7 @@
     <string name="chat_identity_setup_wallet_subtitle">Your messaging identity is derived from your wallet. Pick a display name to finish setting it up.</string>
     <string name="chat_identity_setup_wallet_button">Create my identity</string>
     <string name="chat_identity_setup_display_name_placeholder">Display name</string>
-    <string name="chat_identity_setup_error_name_required">Display name is required</string>
+    <string name="chat_identity_setup_error_name_invalid">Display name must be 3–20 characters, using lowercase letters, numbers, or underscores.</string>
     <string name="chat_identity_setup_error_export_seed_failed">Could not load your seed phrase.</string>
     <string name="chat_identity_setup_error_wallet_derive_failed">Couldn\'t set up your chat identity from this wallet. Go back and try again.</string>
     <string name="chat_identity_setup_support_hint">If this keeps happening, copy the error details and send them to the Zapp team.</string>
