@@ -72,7 +72,7 @@ private enum class Step {
  * dismissed and before the user reaches the tabs shell. Three phases mirror the
  * design canvas:
  * - **Part 1 — Messaging account** (intro, username)
- * - **Part 2 — Wallet** (intro, create/restore/skip, seed)
+ * - **Part 2 — Wallet** (intro, create/restore, seed)
  * - **Part 3 — Secure Zapp** (biometric/PIN, scan, done)
  *
  * The wallet's 24-word BIP-39 phrase seeds the messaging identity. The username

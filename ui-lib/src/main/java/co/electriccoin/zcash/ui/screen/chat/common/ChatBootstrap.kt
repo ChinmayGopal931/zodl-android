@@ -153,9 +153,6 @@ class ChatBootstrap(
         unreadCounts.update { it - conversationId }
     }
 
-    suspend fun restoreFromSeedPhrase(seedPhrase: String, displayName: String): ZMIdentity =
-        sdk.restoreFromSeedPhrase(seedPhrase, displayName)
-
     private data class AutoDeriveRequest(
         val wallet: PersistableWallet,
         val displayName: String,

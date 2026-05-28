@@ -26,25 +26,13 @@
     <string name="chat_list_time_minutes_short">%1$dm</string>
 
     <!-- Chat identity setup -->
-    <string name="chat_identity_setup_welcome_title">Welcome to P2P Chat</string>
-    <string name="chat_identity_setup_restore_title">Restore Your Identity</string>
-    <string name="chat_identity_setup_welcome_subtitle">Create a display name to get started with peer-to-peer messaging.</string>
-    <string name="chat_identity_setup_restore_subtitle">Restore your messaging identity using your wallet\'s 24-word seed phrase.</string>
-    <string name="chat_identity_setup_tab_create">Create</string>
-    <string name="chat_identity_setup_tab_restore">Restore</string>
+    <string name="chat_identity_setup_wallet_title">Set Up Your Chat Identity</string>
+    <string name="chat_identity_setup_wallet_subtitle">Your messaging identity is derived from your wallet. Pick a display name to finish setting it up.</string>
+    <string name="chat_identity_setup_wallet_button">Create my identity</string>
     <string name="chat_identity_setup_display_name_placeholder">Display name</string>
-    <string name="chat_identity_setup_seed_phrase_placeholder">Enter your wallet seed phrase (24 words)</string>
-    <string name="chat_identity_setup_create_button">Create Identity</string>
-    <string name="chat_identity_setup_restore_button">Restore Identity</string>
     <string name="chat_identity_setup_error_name_required">Display name is required</string>
-    <string name="chat_identity_setup_error_seed_word_count">Seed phrase must be exactly 24 words</string>
-    <string name="chat_identity_setup_error_create_failed">Failed to create identity. Please try again.</string>
-    <string name="chat_identity_setup_error_restore_failed">Failed to restore identity. Please check your seed phrase and try again.</string>
     <string name="chat_identity_setup_error_export_seed_failed">Could not load your seed phrase.</string>
     <string name="chat_identity_setup_error_wallet_derive_failed">Couldn\'t set up your chat identity from this wallet. Go back and try again.</string>
-    <string name="chat_identity_setup_backup_title">Back Up Your Seed Phrase</string>
-    <string name="chat_identity_setup_backup_subtitle">Write these words down and store them safely. This is the only way to recover your messaging identity.</string>
-    <string name="chat_identity_setup_backup_confirm">I\'ve Saved My Seed Phrase</string>
 
     <!-- Chat room screen -->
     <string name="chat_room_title_fallback">Chat</string>
