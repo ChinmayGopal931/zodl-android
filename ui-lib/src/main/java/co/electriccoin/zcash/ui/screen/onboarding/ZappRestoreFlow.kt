@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package co.electriccoin.zcash.ui.screen.onboarding
 
 import androidx.compose.runtime.Composable
@@ -6,12 +8,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
-import androidx.compose.ui.res.stringResource
-import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
+import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.onboarding.view.BioScanScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.KeepZappOpenScreen
@@ -72,201 +75,293 @@ private fun ZappRestoreFlowContent(
     val securityVM: OnboardingSecurityViewModel = koinViewModel()
 
     var step by rememberSaveable { mutableStateOf(RestoreStep.USERNAME) }
-    var twoFAMode by rememberSaveable { mutableStateOf(TwoFAMode.Bio) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
 
+    RestoreFlowEffects(
+        step = step,
+        onStepChange = { step = it },
+        pendingUsername = pendingUsername,
+        chatBootstrap = chatBootstrap,
+        walletViewModel = walletViewModel,
+        restoreVM = restoreVM,
+        securityVM = securityVM,
+    )
+
+    RestoreStepHost(
+        step = step,
+        onStepChange = { step = it },
+        pendingUsername = pendingUsername,
+        onPendingUsernameChange = { pendingUsername = it },
+        onBackToWelcome = onBackToWelcome,
+        onComplete = onComplete,
+        walletViewModel = walletViewModel,
+        chatBootstrap = chatBootstrap,
+        restoreVM = restoreVM,
+        securityVM = securityVM,
+    )
+}
+
+/**
+ * Process-death recovery + auto-advance triggers. Lives in its own composable so
+ * the LaunchedEffect conditions don't pile into ZappRestoreFlowContent's complexity.
+ */
+@Composable
+private fun RestoreFlowEffects(
+    step: RestoreStep,
+    onStepChange: (RestoreStep) -> Unit,
+    pendingUsername: String,
+    chatBootstrap: ChatBootstrap,
+    walletViewModel: WalletViewModel,
+    restoreVM: ZappRestoreFlowVM,
+    securityVM: OnboardingSecurityViewModel,
+) {
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
     val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
-    val isDerivingChatIdentity by chatBootstrap.isDeriving.collectAsStateWithLifecycle()
-    val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
-
-    val seedFieldState by restoreVM.seedFieldState.collectAsStateWithLifecycle()
-    val validSeed by restoreVM.validSeed.collectAsStateWithLifecycle()
-    val suggestionsVisible by restoreVM.suggestionsVisible.collectAsStateWithLifecycle()
-    val suggestionsList by restoreVM.suggestionsList.collectAsStateWithLifecycle()
-    val birthdayText by restoreVM.birthdayText.collectAsStateWithLifecycle()
-    val birthdayMode by restoreVM.birthdayMode.collectAsStateWithLifecycle()
-    val selectedYearMonth by restoreVM.selectedYearMonth.collectAsStateWithLifecycle()
-    val isEstimating by restoreVM.isEstimating.collectAsStateWithLifecycle()
-    val torEnabled by restoreVM.torEnabled.collectAsStateWithLifecycle()
-    val isRestoring by restoreVM.isRestoring.collectAsStateWithLifecycle()
-    val restoreError by restoreVM.restoreError.collectAsStateWithLifecycle()
-    val keepScreenOn by restoreVM.keepScreenOn.collectAsStateWithLifecycle()
-
     val bioState by securityVM.bioState.collectAsStateWithLifecycle()
     val pinSaved by securityVM.pinSaved.collectAsStateWithLifecycle()
 
-    // Process-death recovery: rememberSaveable restores `pendingUsername`, but the
+    // rememberSaveable restores `pendingUsername` across process death, but the
     // in-process `pendingDisplayName` inside ChatBootstrap dies with the process.
-    // Re-publish once per rehydration.
     LaunchedEffect(pendingUsername) {
         if (pendingUsername.isNotBlank()) {
             chatBootstrap.setPendingDisplayName(pendingUsername)
         }
     }
 
-    // Auto-advance from RESTORING → SEED_CONFIRM when wallet + chat identity are ready.
     LaunchedEffect(secretState, chatIdentity, chatIdentityFailed, step) {
-        if (step == RestoreStep.RESTORING && secretState == SecretState.READY) {
-            when {
-                chatIdentity != null -> step = RestoreStep.SEED_CONFIRM
-                chatIdentityFailed -> {
-                    // Chat identity derive failed — still advance (wallet is restored).
-                    // The user can set up messaging later.
-                    step = RestoreStep.SEED_CONFIRM
-                }
-            }
+        val walletReady = step == RestoreStep.RESTORING && secretState == SecretState.READY
+        val chatReadyOrFailed = chatIdentity != null || chatIdentityFailed
+        if (walletReady && chatReadyOrFailed) {
+            restoreVM.markRestoreCompleted()
+            onStepChange(RestoreStep.SEED_CONFIRM)
         }
     }
 
-    // Auto-advance from BIO_SCAN → KEEP_OPEN on success.
-    LaunchedEffect(bioState) {
+    LaunchedEffect(bioState, step) {
         if (bioState is OnboardingSecurityViewModel.BioState.Success && step == RestoreStep.BIO_SCAN) {
-            step = RestoreStep.KEEP_OPEN
+            onStepChange(RestoreStep.KEEP_OPEN)
         }
     }
 
-    // Auto-advance from PIN_SETUP → KEEP_OPEN once saved.
-    LaunchedEffect(pinSaved) {
+    LaunchedEffect(pinSaved, step) {
         if (pinSaved && step == RestoreStep.PIN_SETUP) {
-            step = RestoreStep.KEEP_OPEN
+            onStepChange(RestoreStep.KEEP_OPEN)
         }
     }
+}
 
+@Composable
+private fun RestoreStepHost(
+    step: RestoreStep,
+    onStepChange: (RestoreStep) -> Unit,
+    pendingUsername: String,
+    onPendingUsernameChange: (String) -> Unit,
+    onBackToWelcome: () -> Unit,
+    onComplete: () -> Unit,
+    walletViewModel: WalletViewModel,
+    chatBootstrap: ChatBootstrap,
+    restoreVM: ZappRestoreFlowVM,
+    securityVM: OnboardingSecurityViewModel,
+) {
     when (step) {
-        RestoreStep.USERNAME -> {
+        RestoreStep.USERNAME ->
             UsernameEntryScreen(
                 onBack = onBackToWelcome,
                 onContinue = { name ->
-                    pendingUsername = name
-                    step = RestoreStep.SEED_ENTRY
+                    onPendingUsernameChange(name)
+                    onStepChange(RestoreStep.SEED_ENTRY)
                 },
             )
-        }
 
-        RestoreStep.SEED_ENTRY -> {
-            RestoreSeedEntryScreen(
-                seedState = seedFieldState,
-                suggestionsVisible = suggestionsVisible,
-                suggestions = suggestionsList,
-                isSeedValid = validSeed != null,
-                onBack = { step = RestoreStep.USERNAME },
-                onNext = { step = RestoreStep.BIRTHDAY },
-            )
-        }
-
-        RestoreStep.BIRTHDAY -> {
-            LaunchedEffect(Unit) {
-                restoreVM.estimationDone.collect {
-                    if (step == RestoreStep.BIRTHDAY) step = RestoreStep.TOR
-                }
-            }
-            RestoreBirthdayScreen(
-                birthdayText = birthdayText,
-                onBirthdayChange = restoreVM::onBirthdayChange,
-                birthdayMode = birthdayMode,
-                onBirthdayModeChange = restoreVM::onBirthdayModeChange,
-                selectedYearMonth = selectedYearMonth,
-                onYearMonthChange = restoreVM::onYearMonthChange,
-                isEstimating = isEstimating,
-                onBack = { step = RestoreStep.SEED_ENTRY },
-                onNext = {
-                    if (birthdayMode == BirthdayMode.DATE) {
-                        restoreVM.estimateFromDate()
-                    } else {
-                        step = RestoreStep.TOR
-                    }
-                },
-                onSkip = { step = RestoreStep.TOR },
-            )
-        }
-
-        RestoreStep.TOR -> {
-            RestoreTorOptionScreen(
-                torEnabled = torEnabled,
-                onToggle = restoreVM::onTorToggle,
-                onBack = { step = RestoreStep.BIRTHDAY },
-                onRestore = {
-                    restoreVM.startRestore(pendingUsername)
-                    step = RestoreStep.RESTORING
-                },
-            )
-        }
-
-        RestoreStep.RESTORING -> {
-            val errorMsg = when {
-                walletProvisioningError != null -> walletProvisioningError?.message
-                restoreError != null -> restoreError
-                chatIdentityFailed && secretState == SecretState.READY ->
-                    stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
-                else -> null
-            }
-            val onRetry: (() -> Unit)? = when {
-                restoreError != null -> {{ restoreVM.retryRestore(pendingUsername) }}
-                chatIdentityFailed && !isDerivingChatIdentity -> {{ chatBootstrap.retry() }}
-                else -> null
-            }
-            RestoreInProgressScreen(
-                isRestoring = isRestoring,
-                errorMessage = errorMsg,
-                onRetry = onRetry,
-            )
-        }
-
-        RestoreStep.SEED_CONFIRM -> {
-            val words = restoreVM.enteredSeedWords()
-            SeedRevealScreen(
-                step = 2,
-                title = stringResource(R.string.restore_flow_confirm_title),
-                sub = stringResource(R.string.restore_flow_confirm_sub),
-                words = words,
-                onBack = { }, // No going back from here — wallet already restored
-                onContinue = { step = RestoreStep.SECURE_CHOICE },
-            )
-        }
-
-        RestoreStep.SECURE_CHOICE -> {
-            TwoFAChoiceScreen(
-                onBack = { step = RestoreStep.SEED_CONFIRM },
-                onPick = { mode ->
-                    twoFAMode = mode
-                    step = when (mode) {
-                        TwoFAMode.Bio -> RestoreStep.BIO_SCAN
-                        TwoFAMode.Pin -> RestoreStep.PIN_SETUP
-                    }
-                },
-            )
-        }
-
-        RestoreStep.BIO_SCAN -> {
-            BioScanScreen(
-                isEnrolling = bioState is OnboardingSecurityViewModel.BioState.Prompting,
-                errorMessage = (bioState as? OnboardingSecurityViewModel.BioState.Error)?.message,
-                onEnroll = { securityVM.triggerBiometricSetup() },
-                onCancel = {
-                    securityVM.resetBioError()
-                    step = RestoreStep.SECURE_CHOICE
-                },
-            )
-        }
-
-        RestoreStep.PIN_SETUP -> {
-            PinSetupScreen(
-                onBack = { step = RestoreStep.SECURE_CHOICE },
-                onPinConfirmed = { pin -> securityVM.savePin(pin) },
-            )
-        }
-
-        RestoreStep.KEEP_OPEN -> {
-            KeepZappOpenScreen(
-                keepScreenOn = keepScreenOn,
-                onToggleKeepScreenOn = restoreVM::onKeepScreenOnToggle,
-                onEnterApp = {
-                    restoreVM.persistKeepScreenOn()
-                    onComplete()
-                },
-            )
-        }
+        RestoreStep.SEED_ENTRY -> SeedEntryStepView(restoreVM, onStepChange)
+        RestoreStep.BIRTHDAY -> BirthdayStepView(restoreVM, onStepChange)
+        RestoreStep.TOR -> TorStepView(pendingUsername, restoreVM, onStepChange)
+        RestoreStep.RESTORING -> RestoringStepView(pendingUsername, walletViewModel, chatBootstrap, restoreVM)
+        RestoreStep.SEED_CONFIRM -> SeedConfirmStepView(walletViewModel, onStepChange)
+        RestoreStep.SECURE_CHOICE -> SecureChoiceStepView(onStepChange)
+        RestoreStep.BIO_SCAN -> BioStepView(securityVM, onStepChange)
+        RestoreStep.PIN_SETUP -> PinStepView(securityVM, onStepChange)
+        RestoreStep.KEEP_OPEN -> KeepOpenStepView(restoreVM, onComplete)
     }
+}
+
+@Composable
+private fun SeedEntryStepView(restoreVM: ZappRestoreFlowVM, onStepChange: (RestoreStep) -> Unit) {
+    val seedFieldState by restoreVM.seedFieldState.collectAsStateWithLifecycle()
+    val validSeed by restoreVM.validSeed.collectAsStateWithLifecycle()
+    val suggestionsVisible by restoreVM.suggestionsVisible.collectAsStateWithLifecycle()
+    val suggestionsList by restoreVM.suggestionsList.collectAsStateWithLifecycle()
+    RestoreSeedEntryScreen(
+        seedState = seedFieldState,
+        suggestionsVisible = suggestionsVisible,
+        suggestions = suggestionsList,
+        isSeedValid = validSeed != null,
+        onBack = { onStepChange(RestoreStep.USERNAME) },
+        onNext = { onStepChange(RestoreStep.BIRTHDAY) },
+    )
+}
+
+@Composable
+private fun BirthdayStepView(restoreVM: ZappRestoreFlowVM, onStepChange: (RestoreStep) -> Unit) {
+    val birthdayText by restoreVM.birthdayText.collectAsStateWithLifecycle()
+    val birthdayMode by restoreVM.birthdayMode.collectAsStateWithLifecycle()
+    val selectedYearMonth by restoreVM.selectedYearMonth.collectAsStateWithLifecycle()
+    val isEstimating by restoreVM.isEstimating.collectAsStateWithLifecycle()
+    val birthdayErrorRes by restoreVM.birthdayError.collectAsStateWithLifecycle()
+    RestoreBirthdayScreen(
+        birthdayText = birthdayText,
+        onBirthdayChange = restoreVM::onBirthdayChange,
+        birthdayMode = birthdayMode,
+        onBirthdayModeChange = restoreVM::onBirthdayModeChange,
+        selectedYearMonth = selectedYearMonth,
+        onYearMonthChange = restoreVM::onYearMonthChange,
+        isEstimating = isEstimating,
+        errorMessage = birthdayErrorRes?.getValue(),
+        onBack = { onStepChange(RestoreStep.SEED_ENTRY) },
+        onNext = {
+            if (birthdayMode == BirthdayMode.DATE) {
+                restoreVM.estimateFromDate()
+            } else {
+                onStepChange(RestoreStep.TOR)
+            }
+        },
+        onSkip = { onStepChange(RestoreStep.TOR) },
+    )
+}
+
+@Composable
+private fun TorStepView(
+    pendingUsername: String,
+    restoreVM: ZappRestoreFlowVM,
+    onStepChange: (RestoreStep) -> Unit,
+) {
+    val torEnabled by restoreVM.torEnabled.collectAsStateWithLifecycle()
+    RestoreTorOptionScreen(
+        torEnabled = torEnabled,
+        onToggle = restoreVM::onTorToggle,
+        onBack = { onStepChange(RestoreStep.BIRTHDAY) },
+        onRestore = {
+            restoreVM.startRestore(pendingUsername)
+            // If the VM rejected the start (invalid birthday), birthdayError is
+            // set and isRestoring stays false — bounce back so the user can fix it.
+            val nextStep = if (restoreVM.isRestoring.value) RestoreStep.RESTORING else RestoreStep.BIRTHDAY
+            onStepChange(nextStep)
+        },
+    )
+}
+
+@Composable
+private fun RestoringStepView(
+    pendingUsername: String,
+    walletViewModel: WalletViewModel,
+    chatBootstrap: ChatBootstrap,
+    restoreVM: ZappRestoreFlowVM,
+) {
+    val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
+    val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
+    val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
+    val isDerivingChatIdentity by chatBootstrap.isDeriving.collectAsStateWithLifecycle()
+    val restoreErrorRes by restoreVM.restoreError.collectAsStateWithLifecycle()
+
+    val walletProvisionedFailedMsg = stringResource(R.string.onboarding_error_wallet_creation_failed)
+    val chatDeriveFailedMsg = stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
+
+    val errorMessage =
+        rememberRestoringErrorMessage(
+            walletErr = walletProvisioningError != null,
+            walletErrMsg = walletProvisionedFailedMsg,
+            restoreErr = restoreErrorRes?.getValue(),
+            chatFailedAfterReady = chatIdentityFailed && secretState == SecretState.READY,
+            chatErrMsg = chatDeriveFailedMsg,
+        )
+    val onRetry: (() -> Unit)? =
+        when {
+            restoreErrorRes != null -> ({ restoreVM.retryRestore(pendingUsername) })
+            chatIdentityFailed && !isDerivingChatIdentity -> ({ chatBootstrap.retry() })
+            else -> null
+        }
+    RestoreInProgressScreen(errorMessage = errorMessage, onRetry = onRetry)
+}
+
+@Composable
+private fun rememberRestoringErrorMessage(
+    walletErr: Boolean,
+    walletErrMsg: String,
+    restoreErr: String?,
+    chatFailedAfterReady: Boolean,
+    chatErrMsg: String,
+): String? =
+    when {
+        walletErr -> walletErrMsg
+        restoreErr != null -> restoreErr
+        chatFailedAfterReady -> chatErrMsg
+        else -> null
+    }
+
+@Composable
+private fun SeedConfirmStepView(walletViewModel: WalletViewModel, onStepChange: (RestoreStep) -> Unit) {
+    // Pull words from the persisted wallet (not the VM's in-memory entered words):
+    // VM state dies on process death but rememberSaveable restores `step`, so a
+    // rehydrated user would otherwise land on SEED_CONFIRM with 24 empty boxes.
+    val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
+    SeedRevealScreen(
+        step = 2,
+        title = stringResource(R.string.restore_flow_confirm_title),
+        sub = stringResource(R.string.restore_flow_confirm_sub),
+        words = walletSeed.orEmpty(),
+        showBack = false,
+        onBack = { },
+        onContinue = { onStepChange(RestoreStep.SECURE_CHOICE) },
+    )
+}
+
+@Composable
+private fun SecureChoiceStepView(onStepChange: (RestoreStep) -> Unit) {
+    TwoFAChoiceScreen(
+        onBack = { onStepChange(RestoreStep.SEED_CONFIRM) },
+        onPick = { mode ->
+            onStepChange(
+                when (mode) {
+                    TwoFAMode.Bio -> RestoreStep.BIO_SCAN
+                    TwoFAMode.Pin -> RestoreStep.PIN_SETUP
+                }
+            )
+        },
+    )
+}
+
+@Composable
+private fun BioStepView(securityVM: OnboardingSecurityViewModel, onStepChange: (RestoreStep) -> Unit) {
+    val bioState by securityVM.bioState.collectAsStateWithLifecycle()
+    BioScanScreen(
+        isEnrolling = bioState is OnboardingSecurityViewModel.BioState.Prompting,
+        errorMessage = (bioState as? OnboardingSecurityViewModel.BioState.Error)?.message,
+        onEnroll = { securityVM.triggerBiometricSetup() },
+        onCancel = {
+            securityVM.resetBioError()
+            onStepChange(RestoreStep.SECURE_CHOICE)
+        },
+    )
+}
+
+@Composable
+private fun PinStepView(securityVM: OnboardingSecurityViewModel, onStepChange: (RestoreStep) -> Unit) {
+    PinSetupScreen(
+        onBack = { onStepChange(RestoreStep.SECURE_CHOICE) },
+        onPinConfirmed = { pin -> securityVM.savePin(pin) },
+    )
+}
+
+@Composable
+private fun KeepOpenStepView(restoreVM: ZappRestoreFlowVM, onComplete: () -> Unit) {
+    val keepScreenOn by restoreVM.keepScreenOn.collectAsStateWithLifecycle()
+    KeepZappOpenScreen(
+        keepScreenOn = keepScreenOn,
+        onToggleKeepScreenOn = restoreVM::onKeepScreenOnToggle,
+        onEnterApp = {
+            restoreVM.persistKeepScreenOn()
+            onComplete()
+        },
+    )
 }

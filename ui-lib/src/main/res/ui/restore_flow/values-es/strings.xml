@@ -30,6 +30,11 @@
     <string name="restore_flow_loading_error_no_retry">La restauración falló. Regresa e intenta de nuevo.</string>
     <string name="restore_flow_loading_retry">Reintentar</string>
 
+    <!-- Restore flow — errors -->
+    <string name="restore_flow_error_wallet_failed">La restauración de la billetera falló. Toca reintentar.</string>
+    <string name="restore_flow_error_birthday_too_low">La altura de nacimiento debe ser al menos %1$s.</string>
+    <string name="restore_flow_error_estimation_failed">No se pudo estimar una altura para esa fecha. Prueba con otra fecha o ingresa una altura directamente.</string>
+
     <!-- Restore flow — seed confirm -->
     <string name="restore_flow_confirm_title">Confirma tu\nfrase de recuperación</string>
     <string name="restore_flow_confirm_sub">Verifica que estas son las 24 palabras que ingresaste. Esta frase restaura tanto tu billetera como tu identidad de mensajería.</string>

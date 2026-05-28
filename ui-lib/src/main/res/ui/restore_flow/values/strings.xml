@@ -30,6 +30,11 @@
     <string name="restore_flow_loading_error_no_retry">Restore failed. Go back and try again.</string>
     <string name="restore_flow_loading_retry">Retry</string>
 
+    <!-- Restore flow — errors -->
+    <string name="restore_flow_error_wallet_failed">Wallet restore failed. Tap retry to try again.</string>
+    <string name="restore_flow_error_birthday_too_low">Birthday height must be at least %1$s.</string>
+    <string name="restore_flow_error_estimation_failed">Couldn\'t estimate a block height for that date. Try a different date or enter a height directly.</string>
+
     <!-- Restore flow — seed confirm -->
     <string name="restore_flow_confirm_title">Confirm your\nrecovery phrase</string>
     <string name="restore_flow_confirm_sub">Verify these are the 24 words you entered. This phrase restores both your wallet and your messaging identity.</string>

@@ -54,6 +54,9 @@ import co.electriccoin.zcash.ui.screen.onboarding.BirthdayMode
 import java.time.YearMonth
 import java.util.Locale
 
+/** Body content takes ~94% of screen width so the hanging margin matches the Swiss layout. */
+private const val BODY_WIDTH_FRACTION = 0.94f
+
 // ── 1. Seed entry screen ────────────────────────────────────────
 
 @Composable
@@ -90,7 +93,7 @@ internal fun RestoreSeedEntryScreen(
             Spacer(Modifier.height(16.dp))
             OnbSub(
                 text = stringResource(R.string.restore_flow_seed_sub),
-                modifier = Modifier.fillMaxWidth(0.94f),
+                modifier = Modifier.fillMaxWidth(BODY_WIDTH_FRACTION),
             )
             Spacer(Modifier.height(28.dp))
 
@@ -109,11 +112,7 @@ internal fun RestoreSeedEntryScreen(
             val filtered by remember(suggestions, selectedText) {
                 derivedStateOf {
                     val trimmed = selectedText?.lowercase(Locale.US)?.trim().orEmpty()
-                    when {
-                        trimmed.isBlank() -> suggestions
-                        suggestions.contains(trimmed) -> suggestions.filter { it.startsWith(trimmed) }
-                        else -> suggestions.filter { it.startsWith(trimmed) }
-                    }
+                    if (trimmed.isBlank()) suggestions else suggestions.filter { it.startsWith(trimmed) }
                 }
             }
             if (filtered.isNotEmpty() && !selectedText.isNullOrEmpty()) {
@@ -175,6 +174,7 @@ internal fun RestoreBirthdayScreen(
     selectedYearMonth: YearMonth,
     onYearMonthChange: (YearMonth) -> Unit,
     isEstimating: Boolean,
+    errorMessage: String?,
     onBack: () -> Unit,
     onNext: () -> Unit,
     onSkip: () -> Unit,
@@ -202,7 +202,7 @@ internal fun RestoreBirthdayScreen(
         Spacer(Modifier.height(16.dp))
         OnbSub(
             text = stringResource(R.string.restore_flow_birthday_sub),
-            modifier = Modifier.fillMaxWidth(0.94f),
+            modifier = Modifier.fillMaxWidth(BODY_WIDTH_FRACTION),
         )
         Spacer(Modifier.height(28.dp))
 
@@ -291,6 +291,17 @@ internal fun RestoreBirthdayScreen(
             }
         }
 
+        if (errorMessage != null) {
+            Spacer(Modifier.height(16.dp))
+            BasicText(
+                text = errorMessage,
+                style = ZappTheme.typography.body.copy(
+                    color = c.danger,
+                    fontSize = 12.sp,
+                ),
+            )
+        }
+
         Spacer(Modifier.height(20.dp))
         Row(
             modifier = Modifier.clickable(onClick = onSkip).padding(vertical = 6.dp),
@@ -367,7 +378,7 @@ internal fun TorOptionScreen(
         Spacer(Modifier.height(16.dp))
         OnbSub(
             text = stringResource(R.string.restore_flow_tor_sub),
-            modifier = Modifier.fillMaxWidth(0.94f),
+            modifier = Modifier.fillMaxWidth(BODY_WIDTH_FRACTION),
         )
         Spacer(Modifier.height(28.dp))
 
@@ -445,7 +456,6 @@ internal fun RestoreTorOptionScreen(
 
 @Composable
 internal fun RestoreInProgressScreen(
-    isRestoring: Boolean,
     errorMessage: String?,
     onRetry: (() -> Unit)?,
 ) {
@@ -543,7 +553,7 @@ internal fun KeepZappOpenScreen(
         Spacer(Modifier.height(16.dp))
         OnbSub(
             text = stringResource(R.string.restore_flow_keep_open_sub),
-            modifier = Modifier.fillMaxWidth(0.94f),
+            modifier = Modifier.fillMaxWidth(BODY_WIDTH_FRACTION),
         )
         Spacer(Modifier.height(28.dp))
 

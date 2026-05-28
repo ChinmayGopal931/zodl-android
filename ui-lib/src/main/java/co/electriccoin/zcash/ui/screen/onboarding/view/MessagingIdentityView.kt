@@ -311,6 +311,7 @@ fun SeedRevealScreen(
     words: List<String>,
     onBack: () -> Unit,
     onContinue: () -> Unit,
+    showBack: Boolean = true,
 ) {
     var revealed by rememberSaveable { mutableStateOf(false) }
     var saved by rememberSaveable { mutableStateOf(false) }
@@ -431,7 +432,7 @@ fun SeedRevealScreen(
         OnbBottomDock(
             cta = "I've saved it",
             onCta = onContinue,
-            showBack = true,
+            showBack = showBack,
             onBack = onBack,
             ctaEnabled = revealed && saved,
         )

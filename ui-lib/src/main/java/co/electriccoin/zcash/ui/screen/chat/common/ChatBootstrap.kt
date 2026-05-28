@@ -48,12 +48,6 @@ class ChatBootstrap(
     private val _isDeriving = MutableStateFlow(false)
     val isDeriving: StateFlow<Boolean> = _isDeriving.asStateFlow()
 
-    // Seed phrase used in the last successful auto-derive. Preferred by
-    // ExportChatSeedPhraseUseCase over sdk.exportSeedPhrase() to avoid a
-    // potential SDK-side shadow-cache mismatch after restoreFromSeedPhrase.
-    private val _derivedSeedPhrase = MutableStateFlow<String?>(null)
-    val derivedSeedPhrase: StateFlow<String?> = _derivedSeedPhrase.asStateFlow()
-
     // Bumped by [retry]. Folded into the [AutoDeriveRequest] so a retry after a failed
     // derive produces a request that is `distinctUntilChanged`-distinct from the last
     // one, without anything else needing to change.
@@ -133,7 +127,6 @@ class ChatBootstrap(
                 sdk.restoreFromSeedPhrase(seedPhrase, request.displayName)
             }.fold(
                 onSuccess = {
-                    _derivedSeedPhrase.value = seedPhrase
                     _pendingDisplayName.value = null
                     _chatIdentityFailed.value = false
                 },

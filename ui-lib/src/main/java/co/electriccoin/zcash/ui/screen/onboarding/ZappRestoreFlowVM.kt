@@ -7,6 +7,8 @@ import cash.z.ecc.android.bip39.Mnemonics
 import cash.z.ecc.android.sdk.SdkSynchronizer
 import cash.z.ecc.android.sdk.model.BlockHeight
 import cash.z.ecc.android.sdk.model.SeedPhrase
+import co.electriccoin.zcash.spackle.Twig
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.VersionInfo
 import co.electriccoin.zcash.ui.common.provider.IsKeepScreenOnDuringRestoreProvider
 import co.electriccoin.zcash.ui.common.usecase.RestoreWalletUseCase
@@ -14,11 +16,12 @@ import co.electriccoin.zcash.ui.common.usecase.ValidateSeedUseCase
 import co.electriccoin.zcash.ui.design.component.SeedTextFieldState
 import co.electriccoin.zcash.ui.design.component.SeedWordInnerTextFieldState
 import co.electriccoin.zcash.ui.design.component.SeedWordTextFieldState
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +30,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -52,7 +54,7 @@ class ZappRestoreFlowVM(
 
     private val seedWords =
         MutableStateFlow(
-            (0..23).map { index ->
+            (0..SEED_WORD_LAST_INDEX).map { index ->
                 SeedWordTextFieldState(
                     innerState = SeedWordInnerTextFieldState(""),
                     onValueChange = { onSeedWordChange(index, it) },
@@ -75,13 +77,7 @@ class ZappRestoreFlowVM(
             withContext(Dispatchers.Default) {
                 words.map { field ->
                     val trimmed = field.innerState.value.lowercase().trim()
-                    val autocomplete = suggestions.filter { it.startsWith(trimmed) }
-                    val valid = when {
-                        trimmed.isBlank() -> suggestions
-                        suggestions.contains(trimmed) && autocomplete.size == 1 -> suggestions
-                        else -> autocomplete
-                    }
-                    valid.isNotEmpty()
+                    if (trimmed.isBlank()) true else suggestions.any { it.startsWith(trimmed) }
                 }
             }
         }
@@ -124,16 +120,16 @@ class ZappRestoreFlowVM(
         }
     }
 
-    // ── Birthday height ─────────────────────────────────────────
+    // ── Birthday height & mode ──────────────────────────────────
 
     private val _birthdayText = MutableStateFlow("")
     val birthdayText: StateFlow<String> = _birthdayText.asStateFlow()
 
     fun onBirthdayChange(value: String) {
-        _birthdayText.value = value.filter { it.isDigit() }
+        _birthdayText.update { value.filter { it.isDigit() } }
+        // Clear the "below sapling" error as soon as the user edits.
+        _birthdayError.update { null }
     }
-
-    // ── Birthday mode (height vs date) ─────────────────────────
 
     private val _birthdayMode = MutableStateFlow(BirthdayMode.HEIGHT)
     val birthdayMode: StateFlow<BirthdayMode> = _birthdayMode.asStateFlow()
@@ -145,20 +141,29 @@ class ZappRestoreFlowVM(
     private val _isEstimating = MutableStateFlow(false)
     val isEstimating: StateFlow<Boolean> = _isEstimating.asStateFlow()
 
-    private val _estimationDone = Channel<Unit>(Channel.BUFFERED)
-    val estimationDone = _estimationDone.receiveAsFlow()
+    private val _birthdayError = MutableStateFlow<StringResource?>(null)
+    val birthdayError: StateFlow<StringResource?> = _birthdayError.asStateFlow()
 
     fun onBirthdayModeChange(mode: BirthdayMode) {
-        _birthdayMode.value = mode
+        _birthdayMode.update { mode }
+        _birthdayError.update { null }
     }
 
     fun onYearMonthChange(yearMonth: YearMonth) {
-        _selectedYearMonth.value = yearMonth
+        _selectedYearMonth.update { yearMonth }
+        _birthdayError.update { null }
     }
 
+    /**
+     * Estimate a block height from the selected year/month and write it back to
+     * [birthdayText], then switch to HEIGHT mode so the user sees the populated value
+     * on the same screen and taps Restore manually. Failure surfaces a localized error
+     * on the birthday screen — no auto-advance.
+     */
     fun estimateFromDate() {
         if (_isEstimating.value) return
-        _isEstimating.value = true
+        _isEstimating.update { true }
+        _birthdayError.update { null }
         viewModelScope.launch {
             runCatching {
                 val instant =
@@ -168,17 +173,20 @@ class ZappRestoreFlowVM(
                         .atZone(ZoneId.systemDefault())
                         .toInstant()
                         .toKotlinInstant()
-                val bday = SdkSynchronizer.estimateBirthdayHeight(
+                SdkSynchronizer.estimateBirthdayHeight(
                     context = application,
                     date = instant,
                     network = VersionInfo.NETWORK,
                 )
-                _birthdayText.value = bday.value.toString()
+            }.onSuccess { bday ->
+                _birthdayText.update { bday.value.toString() }
+                _birthdayMode.update { BirthdayMode.HEIGHT }
             }.onFailure { e ->
                 if (e is CancellationException) throw e
+                Twig.warn(e) { "ZappRestoreFlowVM: estimateBirthdayHeight failed" }
+                _birthdayError.update { stringRes(R.string.restore_flow_error_estimation_failed) }
             }
-            _isEstimating.value = false
-            _estimationDone.send(Unit)
+            _isEstimating.update { false }
         }
     }
 
@@ -208,40 +216,62 @@ class ZappRestoreFlowVM(
 
     // ── Restore action ──────────────────────────────────────────
 
-    private val _restoreError = MutableStateFlow<String?>(null)
-    val restoreError: StateFlow<String?> = _restoreError.asStateFlow()
+    private val _restoreError = MutableStateFlow<StringResource?>(null)
+    val restoreError: StateFlow<StringResource?> = _restoreError.asStateFlow()
 
     private val _isRestoring = MutableStateFlow(false)
     val isRestoring: StateFlow<Boolean> = _isRestoring.asStateFlow()
 
     fun startRestore(displayName: String) {
-        val seed = validSeed.value ?: return
-        if (_isRestoring.value) return
-        _isRestoring.value = true
-        _restoreError.value = null
+        val seed = validSeed.value
+        val saplingHeight = VersionInfo.NETWORK.saplingActivationHeight.value
+        val userBirthday = _birthdayText.value.toLongOrNull()
+        val effectiveBirthday = computeEffectiveBirthday(userBirthday, saplingHeight)
+        if (seed == null || effectiveBirthday == null || _isRestoring.value) return
 
+        _isRestoring.update { true }
+        _restoreError.update { null }
         chatBootstrap.setPendingDisplayName(displayName)
-
-        val birthday = _birthdayText.value.toLongOrNull()
-        val blockHeight = if (birthday != null && birthday > 0) {
-            BlockHeight.new(birthday)
-        } else {
-            BlockHeight.new(419_200L) // sapling activation height (testnet safe default)
-        }
 
         viewModelScope.launch {
             runCatching {
                 restoreWallet(
                     seedPhrase = seed,
                     enableTor = _torEnabled.value,
-                    birthday = blockHeight,
+                    birthday = BlockHeight.new(effectiveBirthday),
                 )
             }.onFailure { e ->
                 if (e is CancellationException) throw e
-                _restoreError.value = e.message ?: e.toString()
-                _isRestoring.value = false
+                Twig.warn(e) { "ZappRestoreFlowVM: restoreWallet failed" }
+                _restoreError.update { stringRes(R.string.restore_flow_error_wallet_failed) }
+                _isRestoring.update { false }
             }
         }
+    }
+
+    /**
+     * Resolves the user-typed birthday height against the network's sapling activation.
+     * Returns null (and surfaces a birthday error) when the user typed a value below
+     * sapling activation. A blank/missing value falls back to the activation height —
+     * a full-chain scan, but a safe lower bound the SDK will accept.
+     */
+    private fun computeEffectiveBirthday(userBirthday: Long?, saplingHeight: Long): Long? {
+        if (userBirthday != null && userBirthday < saplingHeight) {
+            _birthdayError.update {
+                stringRes(R.string.restore_flow_error_birthday_too_low, saplingHeight.toString())
+            }
+            return null
+        }
+        return userBirthday ?: saplingHeight
+    }
+
+    /**
+     * Called by the composable when the wallet is confirmed restored. Lets the
+     * VM drop the [_isRestoring] flag (the auto-advance moved past the loading
+     * screen, but the flag would otherwise stay true until VM destruction).
+     */
+    fun markRestoreCompleted() {
+        _isRestoring.update { false }
     }
 
     fun retryRestore(displayName: String) {
@@ -249,6 +279,7 @@ class ZappRestoreFlowVM(
         startRestore(displayName)
     }
 
-    fun enteredSeedWords(): List<String> =
-        seedWords.value.map { it.innerState.value.trim() }
+    private companion object {
+        private const val SEED_WORD_LAST_INDEX = 23
+    }
 }
