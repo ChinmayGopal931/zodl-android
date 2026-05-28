@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.buildSetupDiagnostic
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
@@ -39,20 +40,20 @@ class ChatIdentitySetupVM(
             displayName,
             error,
             chatBootstrap.isDeriving,
-            chatBootstrap.chatIdentityFailed,
-        ) { name, err, isDeriving, deriveFailed ->
-            buildState(name, err, isDeriving, deriveFailed)
+            chatBootstrap.chatIdentityErrorCode,
+        ) { name, err, isDeriving, errorCode ->
+            buildState(name, err, isDeriving, errorCode)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-            initialValue = buildState(displayName.value, error = null, isSubmitting = false, deriveFailed = false),
+            initialValue = buildState(displayName.value, error = null, isSubmitting = false, errorCode = null),
         )
 
     private fun buildState(
         name: String,
         error: StringResource?,
         isSubmitting: Boolean,
-        deriveFailed: Boolean,
+        errorCode: String?,
     ): ChatIdentitySetupState =
         ChatIdentitySetupState(
             title = stringRes(R.string.chat_identity_setup_wallet_title),
@@ -64,9 +65,10 @@ class ChatIdentitySetupVM(
             error =
                 when {
                     error != null -> error
-                    deriveFailed -> stringRes(R.string.chat_identity_setup_error_wallet_derive_failed)
+                    errorCode != null -> stringRes(R.string.chat_identity_setup_error_wallet_derive_failed)
                     else -> null
                 },
+            diagnostic = errorCode?.let { buildSetupDiagnostic(operation = "chat-identity setup", code = it) },
             onDisplayNameChange = ::onDisplayNameChange,
             onSubmit = ::onSubmit,
         )

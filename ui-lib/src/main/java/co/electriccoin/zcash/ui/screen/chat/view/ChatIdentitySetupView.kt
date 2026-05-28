@@ -1,5 +1,8 @@
 package co.electriccoin.zcash.ui.screen.chat.view
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -23,8 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupState
@@ -89,6 +96,27 @@ internal fun ChatIdentitySetupView(
                 style = MaterialTheme.typography.bodySmall,
                 color = ZappTheme.colors.danger,
             )
+            state.diagnostic?.let { diagnostic ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.chat_identity_setup_support_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = ZappTheme.colors.textMuted,
+                    textAlign = TextAlign.Center,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                val context = LocalContext.current
+                val copyLabel = stringResource(R.string.chat_identity_setup_copy_details)
+                OutlinedButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                        clipboard?.setPrimaryClip(ClipData.newPlainText(copyLabel, diagnostic))
+                    },
+                    shape = RectangleShape,
+                ) {
+                    Text(copyLabel)
+                }
+            }
         }
     }
 }

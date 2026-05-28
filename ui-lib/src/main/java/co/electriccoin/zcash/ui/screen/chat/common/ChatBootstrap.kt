@@ -3,6 +3,7 @@ package co.electriccoin.zcash.ui.screen.chat.common
 import android.app.Application
 import cash.z.ecc.android.sdk.model.PersistableWallet
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProvider
+import co.electriccoin.zcash.ui.common.toSetupErrorCode
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,8 +43,15 @@ class ChatBootstrap(
     private val _pendingDisplayName = MutableStateFlow<String?>(null)
     val pendingDisplayName: StateFlow<String?> = _pendingDisplayName.asStateFlow()
 
-    private val _chatIdentityFailed = MutableStateFlow(false)
-    val chatIdentityFailed: StateFlow<Boolean> = _chatIdentityFailed.asStateFlow()
+    // Scrubbed code for the last derive failure (null when none / after success or retry).
+    // Source of truth; [chatIdentityFailed] is derived from it so the two can't drift.
+    private val _chatIdentityErrorCode = MutableStateFlow<String?>(null)
+    val chatIdentityErrorCode: StateFlow<String?> = _chatIdentityErrorCode.asStateFlow()
+
+    val chatIdentityFailed: StateFlow<Boolean> =
+        _chatIdentityErrorCode
+            .map { it != null }
+            .stateIn(scope, SharingStarted.Eagerly, false)
 
     private val _isDeriving = MutableStateFlow(false)
     val isDeriving: StateFlow<Boolean> = _isDeriving.asStateFlow()
@@ -86,7 +94,7 @@ class ChatBootstrap(
      */
     fun retry() {
         if (_isDeriving.value) return
-        _chatIdentityFailed.value = false
+        _chatIdentityErrorCode.value = null
         retryToken.update { it + 1 }
     }
 
@@ -128,10 +136,10 @@ class ChatBootstrap(
             }.fold(
                 onSuccess = {
                     _pendingDisplayName.value = null
-                    _chatIdentityFailed.value = false
+                    _chatIdentityErrorCode.value = null
                 },
                 onFailure = {
-                    _chatIdentityFailed.value = true
+                    _chatIdentityErrorCode.value = it.toSetupErrorCode()
                 },
             )
         } finally {

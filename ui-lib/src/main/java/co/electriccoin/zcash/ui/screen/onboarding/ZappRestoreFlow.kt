@@ -117,7 +117,6 @@ private fun RestoreFlowEffects(
 ) {
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
-    val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
     val bioState by securityVM.bioState.collectAsStateWithLifecycle()
     val pinSaved by securityVM.pinSaved.collectAsStateWithLifecycle()
 
@@ -129,10 +128,13 @@ private fun RestoreFlowEffects(
         }
     }
 
-    LaunchedEffect(secretState, chatIdentity, chatIdentityFailed, step) {
+    // Advance only when BOTH the wallet and the chat identity are ready. A chat-derive
+    // failure deliberately does NOT advance: the user stays on the RESTORING screen,
+    // which surfaces the error and a retry (see RestoringStepView). Auto-advancing on
+    // failure would bury the error and sail the user into the app with no chat identity.
+    LaunchedEffect(secretState, chatIdentity, step) {
         val walletReady = step == RestoreStep.RESTORING && secretState == SecretState.READY
-        val chatReadyOrFailed = chatIdentity != null || chatIdentityFailed
-        if (walletReady && chatReadyOrFailed) {
+        if (walletReady && chatIdentity != null) {
             restoreVM.markRestoreCompleted()
             onStepChange(RestoreStep.SEED_CONFIRM)
         }

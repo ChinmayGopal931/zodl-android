@@ -33,6 +33,8 @@
     <string name="chat_identity_setup_error_name_required">Display name is required</string>
     <string name="chat_identity_setup_error_export_seed_failed">Could not load your seed phrase.</string>
     <string name="chat_identity_setup_error_wallet_derive_failed">Couldn\'t set up your chat identity from this wallet. Go back and try again.</string>
+    <string name="chat_identity_setup_support_hint">If this keeps happening, copy the error details and send them to the Zapp team.</string>
+    <string name="chat_identity_setup_copy_details">Copy error details</string>
 
     <!-- Chat room screen -->
     <string name="chat_room_title_fallback">Chat</string>
