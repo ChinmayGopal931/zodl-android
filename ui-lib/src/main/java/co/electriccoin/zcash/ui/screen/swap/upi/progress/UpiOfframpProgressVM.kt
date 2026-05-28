@@ -50,15 +50,18 @@ internal class UpiOfframpProgressVM(
     private val rpc: BaseRpcClient,
 ) : ViewModel() {
     private val request: OfframpRequest =
-        OfframpRequest(
-            recipientUpi = args.recipientUpi,
-            usdcAmount = Usdc6(BigInteger(args.usdcAmountMicro)),
-            fiatAmount = Usdc6(BigInteger(args.fiatAmountMicro)),
-            payeeName = args.payeeName,
-            currency = args.currency,
-            // 1% floor against rate drift across the funding bridge (§5e of findings).
-            fiatAmountLimit = computeFiatAmountLimit(args.fiatAmountMicro),
-        )
+        run {
+            val fiat = Usdc6(BigInteger(args.fiatAmountMicro))
+            OfframpRequest(
+                recipientUpi = args.recipientUpi,
+                usdcAmount = Usdc6(BigInteger(args.usdcAmountMicro)),
+                fiatAmount = fiat,
+                payeeName = args.payeeName,
+                currency = args.currency,
+                // 1% floor against rate drift across the funding bridge (§5e of findings).
+                fiatAmountLimit = OfframpRequest.slippageFloor(fiat),
+            )
+        }
 
     private val persister = OfframpCheckpointPersister(storage = checkpointStorage, request = request)
 
@@ -358,15 +361,6 @@ internal class UpiOfframpProgressVM(
         private const val MAX_RAW_MESSAGE_LEN = 500
         private const val SECONDS_PER_MINUTE = 60L
         private const val MILLIS_PER_SECOND = 1_000L
-
-        private val SLIPPAGE_FLOOR_BASIS_POINTS = BigInteger.valueOf(9_900)
-        private val BASIS_POINTS_DENOMINATOR = BigInteger.valueOf(10_000)
-
-        private fun computeFiatAmountLimit(fiatAmountMicro: String): Usdc6? {
-            val micros = runCatching { BigInteger(fiatAmountMicro) }.getOrNull() ?: return null
-            if (micros.signum() <= 0) return null
-            return Usdc6(micros.multiply(SLIPPAGE_FLOOR_BASIS_POINTS).divide(BASIS_POINTS_DENOMINATOR))
-        }
 
         // Locale-stable format so screenshots / fixtures don't drift across devices.
         private val terminalDateFormat: SimpleDateFormat =

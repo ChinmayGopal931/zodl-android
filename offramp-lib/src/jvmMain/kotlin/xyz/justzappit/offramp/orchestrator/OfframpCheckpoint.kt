@@ -60,12 +60,17 @@ data class OfframpCheckpoint(
     val usdcAmount: Usdc6 get() = Usdc6(BigInteger(usdcAmountMicroDecimal))
     val fiatAmount: Usdc6? get() = fiatAmountMicroDecimal?.let { Usdc6(BigInteger(it)) }
 
-    fun toRequest(fallbackFiatAmount: Usdc6): OfframpRequest =
-        OfframpRequest(
+    fun toRequest(fallbackFiatAmount: Usdc6): OfframpRequest {
+        val resolvedFiat = fiatAmount ?: fallbackFiatAmount
+        return OfframpRequest(
             recipientUpi = recipientUpi,
             usdcAmount = usdcAmount,
-            fiatAmount = fiatAmount ?: fallbackFiatAmount,
+            fiatAmount = resolvedFiat,
             payeeName = payeeName,
             currency = currency,
+            // Resume must re-apply the slippage floor; otherwise placeOrder runs unprotected on the
+            // highest-drift (post-crash) path.
+            fiatAmountLimit = OfframpRequest.slippageFloor(resolvedFiat),
         )
+    }
 }
