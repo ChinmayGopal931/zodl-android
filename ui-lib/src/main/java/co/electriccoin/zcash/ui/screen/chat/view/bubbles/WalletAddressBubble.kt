@@ -1,9 +1,5 @@
 package co.electriccoin.zcash.ui.screen.chat.view.bubbles
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
@@ -31,15 +27,16 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.common.usecase.CopyToClipboardUseCase
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.AndroidQrCodeImageGenerator
 import co.electriccoin.zcash.ui.design.util.JvmQrCodeGenerator
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import org.json.JSONObject
+import org.koin.compose.koinInject
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -57,7 +54,7 @@ internal fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
                 message.content
             }
         }
-    val context = LocalContext.current
+    val copyToClipboard = koinInject<CopyToClipboardUseCase>()
     val haptics = LocalHapticFeedback.current
 
     val qrBitmap =
@@ -127,9 +124,7 @@ internal fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
                         .combinedClickable(
                             onLongClick = {
                                 haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                cm.setPrimaryClip(ClipData.newPlainText("address", address))
-                                Toast.makeText(context, "Address copied", Toast.LENGTH_SHORT).show()
+                                copyToClipboard(address)
                             },
                             onClick = {}
                         )
