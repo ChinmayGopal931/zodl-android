@@ -131,10 +131,14 @@ val providerModule =
             // failures (ConnectException, SSL handshake, etc.) emit no logcat trace and the only
             // signal is the orchestrator's Failed status emission — which gets rotated out of
             // the buffer before we can grab it.
+            // Bundler/RPC/subgraph URLs embed secrets (Pimlico's apikey query param; key-bearing
+            // Alchemy/Graph URLs set in local.properties). ktor's Logging plugin logs the request
+            // URL at INFO, so mask secret query params before they reach logcat.
+            val secretQueryParam = Regex("(?i)(apikey|api_key|api-key|key|token|access_token)=([^&\\s]+)")
             val twigLogger =
                 object : io.ktor.client.plugins.logging.Logger {
                     override fun log(message: String) {
-                        Twig.debug { "OfframpHttp $message" }
+                        Twig.debug { "OfframpHttp " + secretQueryParam.replace(message) { "${it.groupValues[1]}=***" } }
                     }
                 }
             RpcHttpClient.create(
