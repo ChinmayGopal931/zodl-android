@@ -719,9 +719,13 @@ class ChatRoomVM(
     private suspend fun sendTextMessage(text: String, replyTo: ChatMessage? = null) {
         // TODO: thread replyTo through once zappMessaging sdk.sendMessage accepts replyTo*
         // params (not in the currently-pinned SHA in .zapp-deps). Local-only echo for now.
-        sendChatMessage(conversationId = conversationId, content = text).onSuccess { zmMessage ->
-            messages.update { it + ChatMessage.from(zmMessage) }
-        }
+        sendChatMessage(conversationId = conversationId, content = text)
+            .onSuccess { zmMessage -> messages.update { it + ChatMessage.from(zmMessage) } }
+            .onFailure {
+                // Send failed (logged by runChatCallResult); restore the draft that the optimistic
+                // clear wiped so the user can retry instead of silently losing their message.
+                if (messageInput.value.isEmpty()) messageInput.value = text
+            }
     }
 
     private suspend fun sendMediaFromUri(uri: Uri) {
