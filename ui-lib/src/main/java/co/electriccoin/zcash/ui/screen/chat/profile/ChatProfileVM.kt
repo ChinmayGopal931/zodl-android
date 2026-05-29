@@ -1,5 +1,8 @@
 package co.electriccoin.zcash.ui.screen.chat.profile
 
+import android.app.Application
+import android.content.Intent
+import android.os.Process
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
@@ -35,6 +38,7 @@ import kotlinx.coroutines.launch
 
 @Suppress("TooManyFunctions")
 class ChatProfileVM(
+    private val application: Application,
     private val copyToClipboard: CopyToClipboardUseCase,
     observeChatIdentity: ObserveChatIdentityUseCase,
     private val updateChatDisplayName: UpdateChatDisplayNameUseCase,
@@ -254,7 +258,15 @@ class ChatProfileVM(
 
     private suspend fun performDeleteIdentity() {
         deleteChatIdentity()
-        navigationRouter.backToRoot()
+        application.packageManager.getLaunchIntentForPackage(application.packageName)?.let { intent ->
+            intent.addFlags(
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                    Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_CLEAR_TASK
+            )
+            application.startActivity(intent)
+        }
+        Process.killProcess(Process.myPid())
     }
 
     private fun onCopyPublicKeyClick() {

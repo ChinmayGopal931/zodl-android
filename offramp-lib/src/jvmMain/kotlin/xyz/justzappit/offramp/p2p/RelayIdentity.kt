@@ -23,10 +23,15 @@ object RelayIdentities {
             runCatching { EvmKeyDerivation.fromPrivateKey(buf) }
                 .getOrNull()
                 ?.let { key ->
-                    return RelayIdentity(
-                        privateKeyHex = "0x" + key.privateKey.toHex(),
-                        publicKeyHex = key.publicKey.toHex(),
-                    )
+                    val privBytes = key.exportPrivateKeyBytes()
+                    try {
+                        return RelayIdentity(
+                            privateKeyHex = "0x" + privBytes.toHex(),
+                            publicKeyHex = key.publicKey.toHex(),
+                        )
+                    } finally {
+                        privBytes.fill(0)
+                    }
                 }
         }
         error("Exhausted $MAX_RETRIES attempts to generate a relay identity")

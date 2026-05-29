@@ -7,10 +7,10 @@ import xyz.justzappit.offramp.account.SeedPhraseSource
  * [xyz.justzappit.offramp.account.StaticOfframpAccountProvider] can derive the ERC-4337 owner key
  * from the user's own seed (self-custodial), instead of the committed testnet dev key.
  *
- * Returns the mnemonic as a fresh [CharArray] rather than an immutable `String`: callers can
- * zeroize after use, and we don't allocate a `SeedPhrase.joinToString()` intermediate that would
- * linger un-zeroizable in heap. The underlying word `String`s in the wallet's `List<String>` are
- * still immutable (not under our control), but at least we don't amplify the residue.
+ * Returns a fresh, zero-fillable [CharArray] — the offramp's PBKDF2 runs in-process and clears
+ * its `PBEKeySpec` inputs, so wiping the buffer at this seam actually closes a window. The
+ * individual word `String`s in the wallet's `List<String>` remain immutable (not under our
+ * control), but at least we don't pin a joined `String` for the GC to chew through.
  */
 class WalletSeedPhraseSource(
     private val persistableWalletProvider: PersistableWalletProvider,
@@ -18,10 +18,8 @@ class WalletSeedPhraseSource(
     override suspend fun getSeedPhrase(): CharArray {
         val words = persistableWalletProvider.requirePersistableWallet().seedPhrase.split
         if (words.isEmpty()) return CharArray(0)
-
-        // total = sum of word lengths + (words.size - 1) single-space separators
-        val totalLength = words.sumOf { it.length } + (words.size - 1)
-        val out = CharArray(totalLength)
+        val total = words.sumOf { it.length } + (words.size - 1)
+        val out = CharArray(total)
         var pos = 0
         for ((i, word) in words.withIndex()) {
             if (i > 0) {

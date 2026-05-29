@@ -21,8 +21,8 @@ import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupScreen
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListScreen
 import co.electriccoin.zcash.ui.screen.onboarding.ZappOnboardingFlow
+import co.electriccoin.zcash.ui.screen.onboarding.ZappRestoreFlow
 import co.electriccoin.zcash.ui.screen.welcome.WelcomeGateVM
-import co.electriccoin.zcash.ui.screen.welcome.view.ChatRestoreView
 import co.electriccoin.zcash.ui.screen.welcome.view.WelcomeGateView
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -47,13 +47,15 @@ fun ZappTabsScaffold(
         }
 
         restoreMode -> {
-            ChatRestoreView(
-                onBack = { restoreMode = false },
-                onSuccess = {
+            ZappRestoreFlow(
+                onComplete = {
                     welcomeGateVM.dismissWelcome()
                     welcomeGateVM.completeOnboarding()
                     restoreMode = false
                 },
+                onBackToWelcome = { restoreMode = false },
+                walletViewModel = walletViewModel,
+                chatBootstrap = koinInject(),
             )
         }
 

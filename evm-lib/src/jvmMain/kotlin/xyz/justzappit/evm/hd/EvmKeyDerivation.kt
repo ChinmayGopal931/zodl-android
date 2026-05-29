@@ -3,6 +3,8 @@ package xyz.justzappit.evm.hd
 import org.bouncycastle.jce.ECNamedCurveTable
 import org.bouncycastle.jce.spec.ECParameterSpec
 import xyz.justzappit.evm.abi.keccak256
+import xyz.justzappit.evm.signer.EcdsaSignature
+import xyz.justzappit.evm.signer.EcdsaSigner
 import xyz.justzappit.evm.types.Address
 import xyz.justzappit.evm.util.padLeftToWord
 import java.math.BigInteger
@@ -13,11 +15,38 @@ import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
-data class EvmKey(
-    val privateKey: ByteArray,
+/**
+ * A secp256k1 EVM key.
+ *
+ * The 32-byte private key is held as a private field — callers sign through
+ * [signRecoverable] rather than reaching for the raw bytes, so the scalar
+ * doesn't leak across module boundaries (and into any incidental logging or
+ * serialisation along the way). [exportPrivateKeyBytes] is the controlled
+ * escape hatch for legitimate persistence paths (e.g. the relay identity);
+ * it returns a defensive copy so the canonical buffer can still be zeroised
+ * via [zeroize] without affecting persisted hex.
+ */
+class EvmKey internal constructor(
+    internal val privateKey: ByteArray,
     val publicKey: ByteArray,
     val address: Address,
 ) {
+    /** Sign a 32-byte message hash with this key's secp256k1 scalar. */
+    fun signRecoverable(messageHash: ByteArray): EcdsaSignature =
+        EcdsaSigner.sign(messageHash, BigInteger(1, privateKey))
+
+    /** Defensive copy of the raw private key. Caller owns the copy; call [ByteArray.fill] when done. */
+    fun exportPrivateKeyBytes(): ByteArray = privateKey.copyOf()
+
+    /**
+     * Overwrite the canonical private-key buffer with zeros. Defence in depth: a
+     * [BigInteger] derived from these bytes (e.g. inside the signer) carries its
+     * own internal arrays that this can't reach.
+     */
+    fun zeroize() {
+        privateKey.fill(0)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is EvmKey) return false
@@ -26,12 +55,12 @@ data class EvmKey(
             address == other.address
     }
 
-    override fun hashCode(): Int {
-        var h = privateKey.contentHashCode()
-        h = 31 * h + publicKey.contentHashCode()
-        h = 31 * h + address.hashCode()
-        return h
-    }
+    // hashCode intentionally omits `privateKey` so the secret scalar isn't distributed across
+    // hash-table buckets if a caller ever drops EvmKey into a HashMap/HashSet. The (publicKey,
+    // address) pair already uniquely identifies a valid secp256k1 keypair.
+    override fun hashCode(): Int = 31 * publicKey.contentHashCode() + address.hashCode()
+
+    override fun toString(): String = "EvmKey(address=$address)"
 }
 
 @Suppress("TooManyFunctions")

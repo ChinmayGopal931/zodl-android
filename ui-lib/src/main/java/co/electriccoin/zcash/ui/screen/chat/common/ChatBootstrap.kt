@@ -1,14 +1,17 @@
 package co.electriccoin.zcash.ui.screen.chat.common
 
 import android.app.Application
+import cash.z.ecc.android.sdk.model.PersistableWallet
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProvider
+import co.electriccoin.zcash.ui.common.toSetupErrorCode
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -37,6 +40,27 @@ class ChatBootstrap(
 
     val identity: StateFlow<ZMIdentity?> get() = sdk.identity
 
+    private val _pendingDisplayName = MutableStateFlow<String?>(null)
+    val pendingDisplayName: StateFlow<String?> = _pendingDisplayName.asStateFlow()
+
+    // Scrubbed code for the last derive failure (null when none / after success or retry).
+    // Source of truth; [chatIdentityFailed] is derived from it so the two can't drift.
+    private val _chatIdentityErrorCode = MutableStateFlow<String?>(null)
+    val chatIdentityErrorCode: StateFlow<String?> = _chatIdentityErrorCode.asStateFlow()
+
+    val chatIdentityFailed: StateFlow<Boolean> =
+        _chatIdentityErrorCode
+            .map { it != null }
+            .stateIn(scope, SharingStarted.Eagerly, false)
+
+    private val _isDeriving = MutableStateFlow(false)
+    val isDeriving: StateFlow<Boolean> = _isDeriving.asStateFlow()
+
+    // Bumped by [retry]. Folded into the [AutoDeriveRequest] so a retry after a failed
+    // derive produces a request that is `distinctUntilChanged`-distinct from the last
+    // one, without anything else needing to change.
+    private val retryToken = MutableStateFlow(0)
+
     init {
         scope.launch {
             try {
@@ -48,6 +72,79 @@ class ChatBootstrap(
             }
         }
         scope.launch { observeMessagesForUnread() }
+        scope.launch { observePendingChatIdentityDerivation() }
+    }
+
+    /**
+     * Records the display name the user picked during onboarding. The reactive auto-derive
+     * coroutine will pick it up once the SDK is initialised and a wallet seed becomes
+     * available, and derive the chat identity from that seed. Safe to call before either
+     * is ready — the request is queued. Idempotent: calling with the same name is a no-op
+     * and does *not* clear any in-progress error state.
+     */
+    fun setPendingDisplayName(displayName: String) {
+        _pendingDisplayName.value = displayName
+    }
+
+    /**
+     * Re-runs auto-derive after a failure. No-op if no derive is currently queued (i.e. the
+     * SDK is unready, no wallet, no pending name, or an identity already exists) or if a
+     * derive is currently in flight — the latter would otherwise let a spammed retry button
+     * queue redundant PBKDF2 round-trips.
+     */
+    fun retry() {
+        if (_isDeriving.value) return
+        _chatIdentityErrorCode.value = null
+        retryToken.update { it + 1 }
+    }
+
+    private suspend fun observePendingChatIdentityDerivation() {
+        combine(
+            _isInitializing,
+            persistableWalletProvider.persistableWallet,
+            sdk.identity,
+            _pendingDisplayName,
+            retryToken,
+        ) { initializing, wallet, identity, name, attempt ->
+            buildAutoDeriveRequest(initializing, wallet, identity, name, attempt)
+        }
+            .distinctUntilChanged()
+            .collect { request ->
+                if (request != null) derive(request)
+            }
+    }
+
+    private fun buildAutoDeriveRequest(
+        initializing: Boolean,
+        wallet: PersistableWallet?,
+        identity: ZMIdentity?,
+        name: String?,
+        attempt: Int,
+    ): AutoDeriveRequest? {
+        val ready = !initializing && wallet != null
+        val needsDerive = identity == null && !name.isNullOrBlank()
+        if (!ready || !needsDerive) return null
+        return AutoDeriveRequest(wallet = wallet, displayName = name, attempt = attempt)
+    }
+
+    private suspend fun derive(request: AutoDeriveRequest) {
+        _isDeriving.value = true
+        try {
+            val seedPhrase = request.wallet.seedPhrase.joinedString()
+            runChatCallResult("ChatBootstrap: auto-derive chat identity from wallet seed") {
+                sdk.restoreFromSeedPhrase(seedPhrase, request.displayName)
+            }.fold(
+                onSuccess = {
+                    _pendingDisplayName.value = null
+                    _chatIdentityErrorCode.value = null
+                },
+                onFailure = {
+                    _chatIdentityErrorCode.value = it.toSetupErrorCode()
+                },
+            )
+        } finally {
+            _isDeriving.value = false
+        }
     }
 
     private suspend fun observeMessagesForUnread() {
@@ -64,14 +161,12 @@ class ChatBootstrap(
         unreadCounts.update { it - conversationId }
     }
 
-    suspend fun restoreFromWalletSeed(displayName: String): ZMIdentity {
-        val wallet =
-            persistableWalletProvider.persistableWallet.first { it != null }
-                ?: error("Wallet unavailable")
-        val seedWords = wallet.seedPhrase.split.joinToString(" ")
-        return sdk.restoreFromSeedPhrase(seedWords, displayName)
-    }
-
-    suspend fun restoreFromSeedPhrase(seedPhrase: String, displayName: String): ZMIdentity =
-        sdk.restoreFromSeedPhrase(seedPhrase, displayName)
+    private data class AutoDeriveRequest(
+        val wallet: PersistableWallet,
+        val displayName: String,
+        val attempt: Int,
+    )
 }
+
+private fun cash.z.ecc.android.sdk.model.SeedPhrase.joinedString(): String =
+    split.joinToString(" ")

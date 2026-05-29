@@ -72,6 +72,7 @@ import org.koin.dsl.module
 import xyz.justzappit.evm.rpc.BaseRpcClient
 import xyz.justzappit.evm.rpc.BundlerClient
 import xyz.justzappit.evm.rpc.RpcHttpClient
+import xyz.justzappit.offramp.account.CachingOfframpAccountProvider
 import xyz.justzappit.offramp.account.DevOfframpAccountProvider
 import xyz.justzappit.offramp.account.StaticOfframpAccountProvider
 import xyz.justzappit.offramp.account.OfframpAccountProvider
@@ -193,10 +194,13 @@ val providerModule =
         }
         single<SeedPhraseSource> { WalletSeedPhraseSource(persistableWalletProvider = get()) }
         single<OfframpAccountProvider> {
+            // CachingOfframpAccountProvider memoises the derived EvmKey so the mnemonic
+            // crosses the SeedPhraseSource seam once per app lifetime, not once per order —
+            // shrinks the in-heap secret footprint and skips the per-call PBKDF2 + BIP-44.
             if (BuildConfig.OFFRAMP_USE_DEV_KEY) {
                 DevOfframpAccountProvider
             } else {
-                StaticOfframpAccountProvider(seedPhraseSource = get())
+                CachingOfframpAccountProvider(StaticOfframpAccountProvider(seedPhraseSource = get()))
             }
         }
         single<BundlerClient> {

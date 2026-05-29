@@ -17,6 +17,8 @@ interface PersistableWalletProvider {
     suspend fun getPersistableWallet(): PersistableWallet?
 
     suspend fun requirePersistableWallet(): PersistableWallet
+
+    suspend fun clear()
 }
 
 class PersistableWalletProviderImpl(
@@ -40,6 +42,8 @@ class PersistableWalletProviderImpl(
     override suspend fun getPersistableWallet() = persistableWalletStorageProvider.get()
 
     override suspend fun requirePersistableWallet() = checkNotNull(persistableWalletStorageProvider.get())
+
+    override suspend fun clear() = persistableWalletStorageProvider.clear()
 }
 
 private interface PersistableWalletStorageProvider : NullableStorageProvider<PersistableWallet>
