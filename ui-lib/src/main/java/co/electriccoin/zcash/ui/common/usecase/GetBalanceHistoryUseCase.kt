@@ -3,7 +3,6 @@ package co.electriccoin.zcash.ui.common.usecase
 import cash.z.ecc.android.sdk.model.Zatoshi
 import co.electriccoin.zcash.ui.common.repository.ReceiveTransaction
 import co.electriccoin.zcash.ui.common.repository.SendTransaction
-import co.electriccoin.zcash.ui.common.repository.ShieldTransaction
 import co.electriccoin.zcash.ui.common.repository.Transaction
 import co.electriccoin.zcash.ui.common.repository.TransactionRepository
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +46,9 @@ data class BalanceHistoryPoint(
 
 private fun Transaction.signedDeltaZatoshi(): Long =
     when (this) {
-        is ReceiveTransaction -> amount.value
-        is SendTransaction -> -amount.value
-        is ShieldTransaction -> 0L
+        // Only settled (Success) sends/receives move the confirmed balance the chart tracks.
+        // Pending/Failed never settled; shields move funds within the wallet (no net change).
+        is ReceiveTransaction.Success -> amount.value
+        is SendTransaction.Success -> -amount.value
+        else -> 0L
     }
