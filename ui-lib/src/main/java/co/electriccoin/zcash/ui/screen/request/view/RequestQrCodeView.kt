@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cash.z.ecc.android.sdk.model.WalletAddress
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.usecase.CopyToClipboardUseCase
 import co.electriccoin.zcash.ui.design.component.QrCodeDefaults
 import co.electriccoin.zcash.ui.design.component.ZashiQr
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -45,6 +46,7 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.request.model.RequestState
 import co.electriccoin.zcash.ui.util.CURRENCY_TICKER
 import kotlin.math.roundToInt
+import org.koin.compose.koinInject
 
 @Composable
 internal fun RequestQrCodeView(
@@ -169,6 +171,7 @@ private fun AddressSection(
     modifier: Modifier = Modifier,
 ) {
     val c = ZappTheme.colors
+    val copyToClipboard = koinInject<CopyToClipboardUseCase>()
     val isShielded = state.walletAddress !is WalletAddress.Transparent
     val addressLabel = if (isShielded) "Your Shielded Address" else "Your Transparent Address"
     val address = state.walletAddress.address
@@ -210,7 +213,7 @@ private fun AddressSection(
                     Modifier
                         .size(40.dp)
                         .border(BorderStroke(1.dp, c.border), RectangleShape)
-                        .clickable { /* address copy handled by QrCode state — no direct copy callback here */ }
+                        .clickable { copyToClipboard(address) }
                         .semantics { role = Role.Button },
                 contentAlignment = Alignment.Center,
             ) {
