@@ -1,9 +1,6 @@
 package co.electriccoin.zcash.ui.screen.chat.profile
 
 import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import android.content.Intent
 import android.os.Process
 import androidx.lifecycle.ViewModel
@@ -19,6 +16,7 @@ import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
 import co.electriccoin.zcash.ui.common.security.PinAuthGate
+import co.electriccoin.zcash.ui.common.usecase.CopyToClipboardUseCase
 import co.electriccoin.zcash.ui.common.usecase.DeleteChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.ExportChatSeedPhraseUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
@@ -41,6 +39,7 @@ import kotlinx.coroutines.launch
 @Suppress("TooManyFunctions")
 class ChatProfileVM(
     private val application: Application,
+    private val copyToClipboard: CopyToClipboardUseCase,
     observeChatIdentity: ObserveChatIdentityUseCase,
     private val updateChatDisplayName: UpdateChatDisplayNameUseCase,
     private val deleteChatIdentity: DeleteChatIdentityUseCase,
@@ -272,7 +271,7 @@ class ChatProfileVM(
 
     private fun onCopyPublicKeyClick() {
         val pk = identity.value?.publicKey ?: return
-        copyToClipboard(label = "Public Key", value = pk)
+        copyToClipboard(pk)
         isKeyCopied.value = true
         copyKeyResetJob?.cancel()
         copyKeyResetJob =
@@ -284,7 +283,7 @@ class ChatProfileVM(
 
     private fun onCopyAddressClick() {
         val address = currentWalletAddress() ?: return
-        copyToClipboard(label = "Wallet Address", value = address)
+        copyToClipboard(address)
         isAddressCopied.value = true
         copyAddressResetJob?.cancel()
         copyAddressResetJob =
@@ -300,11 +299,6 @@ class ChatProfileVM(
             ChatProfileWalletSubTab.SHIELDED -> account.unified.address.address
             ChatProfileWalletSubTab.TRANSPARENT -> account.transparent.address.address
         }
-    }
-
-    private fun copyToClipboard(label: String, value: String) {
-        val clipboard = application.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-        clipboard?.setPrimaryClip(ClipData.newPlainText(label, value))
     }
 
     // ── Seed phrase reveal (PIN / biometric gate) ───────────────────────

@@ -424,7 +424,7 @@ class ChatRoomVM(
                 messages.value =
                     zmList
                         .map(ChatMessage::from)
-                        .filterNot { msg -> moderationRepository.isBlocked(msg.senderName.orEmpty()) }
+                        .filterNot { msg -> moderationRepository.isBlocked(msg.senderId.orEmpty()) }
             }
         } finally {
             isLoading.value = false

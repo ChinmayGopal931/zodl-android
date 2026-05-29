@@ -1,14 +1,11 @@
 package co.electriccoin.zcash.ui.screen.chat.settings
 
-import android.app.Application
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.usecase.CopyToClipboardUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.ChatContactsArgs
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
@@ -30,7 +27,7 @@ import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 @Suppress("TooManyFunctions")
 class ChatSettingsVM(
-    private val application: Application,
+    private val copyToClipboard: CopyToClipboardUseCase,
     private val sdk: ZappMessagingSDK,
     private val navigationRouter: NavigationRouter,
 ) : ViewModel() {
@@ -199,8 +196,7 @@ class ChatSettingsVM(
 
     private fun onCopyPublicKeyClick() {
         val pk = identity.value?.publicKey ?: return
-        val clipboard = application.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-        clipboard?.setPrimaryClip(ClipData.newPlainText("Public Key", pk))
+        copyToClipboard(pk)
         isPublicKeyCopied.value = true
         copyResetJob?.cancel()
         copyResetJob =

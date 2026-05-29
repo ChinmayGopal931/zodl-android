@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Allow zappMessaging (minSdk 29) on the minSdk 27 host test app, mirroring app/ -->
+    <uses-sdk tools:overrideLibrary="xyz.justzappit.zappmessaging, to.holepunch.bare.kit" />
 
     <!-- For test coverage -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
