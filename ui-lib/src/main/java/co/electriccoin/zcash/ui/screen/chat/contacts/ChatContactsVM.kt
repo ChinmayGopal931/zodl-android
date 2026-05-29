@@ -6,6 +6,7 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.AddressBookRepository
+import co.electriccoin.zcash.ui.common.repository.EnhancedABContact
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanGenericAddressUseCase
 import co.electriccoin.zcash.ui.common.usecase.NavigateToScanPublicKeyUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
@@ -42,6 +44,10 @@ class ChatContactsVM(
     // bridge and contact list — see AddChatContactVM / EditChatContactVM kdoc.
     private val addSheet = MutableStateFlow<AddChatContactVM?>(null)
     private val editSheet = MutableStateFlow<EditChatContactVM?>(null)
+
+    // The address-book row backing the contact being edited, so a save updates it (instead of
+    // appending a duplicate) and the edit sheet can preload its existing per-chain addresses.
+    private var editingAbContact: EnhancedABContact? = null
 
     init {
         viewModelScope.launch { refreshContacts() }
@@ -138,21 +144,32 @@ class ChatContactsVM(
 
     private fun openEditSheet(contact: ChatContact) {
         if (editSheet.value != null) return
-        editSheet.value =
-            EditChatContactVM(
-                contact = contact,
-                scope = viewModelScope,
-                scannedWalletAddressFlow = scannedWalletAddress.asStateFlow(),
-                onConsumeScannedWalletAddress = ::consumeScannedWalletAddress,
-                onScanWalletAddressRequest = ::onScanWalletAddress,
-                onSaveContact = ::updateContactFromSheet,
-                onDeleteContact = ::deleteContactFromSheet,
-                onDismissRequest = ::closeEditSheet,
-            )
+        viewModelScope.launch {
+            // Load the contact's existing address-book row so the edit preloads its per-chain
+            // addresses (instead of wiping them) and the save updates the row instead of appending.
+            val existing =
+                contact.walletAddress
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { addressBookRepository.observeContactByAddress(it).first() }
+            editingAbContact = existing
+            editSheet.value =
+                EditChatContactVM(
+                    contact = contact,
+                    scope = viewModelScope,
+                    scannedWalletAddressFlow = scannedWalletAddress.asStateFlow(),
+                    onConsumeScannedWalletAddress = ::consumeScannedWalletAddress,
+                    onScanWalletAddressRequest = ::onScanWalletAddress,
+                    onSaveContact = ::updateContactFromSheet,
+                    onDeleteContact = ::deleteContactFromSheet,
+                    onDismissRequest = ::closeEditSheet,
+                    initialWalletAddresses = existing?.walletAddresses ?: emptyMap(),
+                )
+        }
     }
 
     private fun closeEditSheet() {
         editSheet.value = null
+        editingAbContact = null
     }
 
     private fun onScanPublicKey() {
@@ -234,13 +251,24 @@ class ChatContactsVM(
         runChatCall("ChatContactsVM: updateContact failed") {
             sdk.updateContact(publicKey, name)
             val wallet = walletAddress.trim()
-            if (wallet.isNotEmpty() || walletAddresses.isNotEmpty()) {
-                addressBookRepository.saveContact(
-                    name = name,
-                    address = wallet,
-                    chain = null,
-                    walletAddresses = walletAddresses,
-                )
+            val existing = editingAbContact
+            when {
+                existing != null ->
+                    addressBookRepository.updateContact(
+                        contact = existing,
+                        name = name,
+                        address = wallet,
+                        chain = null,
+                        walletAddresses = walletAddresses,
+                    )
+
+                wallet.isNotEmpty() || walletAddresses.isNotEmpty() ->
+                    addressBookRepository.saveContact(
+                        name = name,
+                        address = wallet,
+                        chain = null,
+                        walletAddresses = walletAddresses,
+                    )
             }
             refreshContacts()
         }

@@ -35,13 +35,17 @@ class EditChatContactVM(
     private val onSaveContact: (publicKey: String, name: String, walletAddress: String, walletAddresses: Map<String, String>) -> Unit,
     private val onDeleteContact: (publicKey: String) -> Unit,
     private val onDismissRequest: () -> Unit,
+    initialWalletAddresses: Map<String, String> = emptyMap(),
 ) {
     private val name = MutableStateFlow(TextFieldValue(contact.name))
     private val walletAddress = MutableStateFlow(TextFieldValue(contact.walletAddress.orEmpty()))
-    private val transparentAddr = MutableStateFlow(TextFieldValue(""))
-    private val evmAddr = MutableStateFlow(TextFieldValue(""))
-    private val solanaAddr = MutableStateFlow(TextFieldValue(""))
-    private val showAdditionalAddresses = MutableStateFlow(false)
+    private val transparentAddr =
+        MutableStateFlow(TextFieldValue(initialWalletAddresses[AddressBookContact.ADDR_TYPE_TRANSPARENT].orEmpty()))
+    private val evmAddr =
+        MutableStateFlow(TextFieldValue(initialWalletAddresses[AddressBookContact.ADDR_TYPE_EVM].orEmpty()))
+    private val solanaAddr =
+        MutableStateFlow(TextFieldValue(initialWalletAddresses[AddressBookContact.ADDR_TYPE_SOLANA].orEmpty()))
+    private val showAdditionalAddresses = MutableStateFlow(initialWalletAddresses.isNotEmpty())
     private val showDeleteConfirm = MutableStateFlow(false)
     private val error = MutableStateFlow<StringResource?>(null)
 
@@ -127,10 +131,10 @@ class EditChatContactVM(
             originalWalletAddress = originalWallet,
             name = TextFieldValue(contact.name),
             walletAddress = TextFieldValue(originalWallet),
-            transparentAddr = TextFieldValue(""),
-            evmAddr = TextFieldValue(""),
-            solanaAddr = TextFieldValue(""),
-            showAdditionalAddresses = false,
+            transparentAddr = transparentAddr.value,
+            evmAddr = evmAddr.value,
+            solanaAddr = solanaAddr.value,
+            showAdditionalAddresses = showAdditionalAddresses.value,
             showDeleteConfirm = false,
             error = null,
             isSaveEnabled = false,
