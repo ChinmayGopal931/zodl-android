@@ -19,6 +19,7 @@ data class ChatRoomState(
     val isLoading: Boolean,
     val input: ChatRoomInputState,
     val attachmentSheet: ChatRoomAttachmentSheetState?,
+    val paymentSheet: ChatRoomPaymentSheetState?,
     val mediaSheet: ChatRoomMediaSheetState?,
     val networkSheet: ChatRoomNetworkSheetState?,
     val editContactSheet: ChatRoomEditContactSheetState?,
@@ -41,6 +42,7 @@ data class ChatRoomInputState(
     val onChange: (String) -> Unit,
     val onSendClick: () -> Unit,
     val onAttachClick: () -> Unit,
+    val onPaymentClick: () -> Unit,
     val replyPreview: ChatRoomReplyPreviewState? = null,
 )
 
@@ -51,9 +53,17 @@ data class ChatRoomReplyPreviewState(
 )
 
 data class ChatRoomAttachmentSheetState(
-    val onShareAddress: () -> Unit,
+    val onChooseMedia: () -> Unit,
+    val onAttachFile: () -> Unit,
+    val onTakePhoto: () -> Unit,
+    val onDismiss: () -> Unit,
+)
+
+data class ChatRoomPaymentSheetState(
     val onSendZec: () -> Unit,
-    val onAttachMedia: () -> Unit,
+    val onRequestZec: () -> Unit,
+    val onPayMerchant: () -> Unit,
+    val onShareAddress: () -> Unit,
     val onDismiss: () -> Unit,
 )
 

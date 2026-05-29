@@ -75,7 +75,7 @@ fun WalletHomeView() {
         ) {
             item {
                 ZappScreenHeader(
-                    title = "Wallet",
+                    title = "Pay",
                     right = { SyncStatusChip(state = syncChip) },
                 )
             }
@@ -102,10 +102,13 @@ fun WalletHomeView() {
             activitySection(activityState)
         }
 
-        WalletActionFabStack(
+        PayActionFabStack(
+            onPayMerchant = {
+                // TODO: wire to MerchantPayArgs once Phase 2 lands
+                homeState?.fourthButton?.onClick?.invoke()
+            },
             onSend = { homeState?.secondButton?.onClick?.invoke() },
             onReceive = { homeState?.firstButton?.onClick?.invoke() },
-            onSwap = { homeState?.fourthButton?.onClick?.invoke() },
             modifier = Modifier.align(Alignment.BottomEnd),
         )
     }

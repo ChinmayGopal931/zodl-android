@@ -137,9 +137,19 @@ internal fun ChatRoomView(
 
     state.attachmentSheet?.let {
         AttachmentSheet(
-            onShareAddress = it.onShareAddress,
+            onChooseMedia = it.onChooseMedia,
+            onAttachFile = it.onAttachFile,
+            onTakePhoto = it.onTakePhoto,
+            onDismiss = it.onDismiss,
+        )
+    }
+
+    state.paymentSheet?.let {
+        PaymentSheet(
             onSendZec = it.onSendZec,
-            onAttachMedia = it.onAttachMedia,
+            onRequestZec = it.onRequestZec,
+            onPayMerchant = it.onPayMerchant,
+            onShareAddress = it.onShareAddress,
             onDismiss = it.onDismiss,
         )
     }

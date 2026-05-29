@@ -17,8 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TextField
@@ -31,7 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
@@ -56,31 +62,65 @@ internal fun InputRow(state: ChatRoomInputState) {
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // Media attachment button (clip icon)
             Box(
                 modifier =
                     Modifier
-                        .size(36.dp)
+                        .size(40.dp)
                         .background(c.surfaceAlt, RectangleShape)
                         .border(BorderStroke(1.dp, c.border), RectangleShape)
                         .clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(color = c.accent),
                             onClick = state.onAttachClick,
-                        ),
+                        ).semantics {
+                            contentDescription = attachContentDescription
+                            role = Role.Button
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
-                    Icons.Default.Add,
-                    contentDescription = attachContentDescription,
-                    tint = c.accent,
+                    Icons.Default.AttachFile,
+                    contentDescription = null,
+                    tint = c.textMuted,
                     modifier = Modifier.size(18.dp),
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+
+            // Payment button (Z)
+            Box(
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .background(c.accent, RectangleShape)
+                        .border(BorderStroke(1.dp, c.border), RectangleShape)
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(color = c.onAccent),
+                            onClick = state.onPaymentClick,
+                        ).semantics {
+                            contentDescription = "Payment options"
+                            role = Role.Button
+                        },
+                contentAlignment = Alignment.Center,
+            ) {
+                BasicText(
+                    text = "Z",
+                    style =
+                        ZappTheme.typography.button.copy(
+                            color = c.onAccent,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 16.sp,
+                        ),
+                )
+            }
+
+            Spacer(modifier = Modifier.width(6.dp))
 
             TextField(
                 value = state.value,
@@ -88,7 +128,7 @@ internal fun InputRow(state: ChatRoomInputState) {
                 modifier =
                     Modifier
                         .weight(1f)
-                        .defaultMinSize(minHeight = 36.dp),
+                        .defaultMinSize(minHeight = 40.dp),
                 placeholder = {
                     BasicText(
                         text = state.placeholder.getValue(),
@@ -109,12 +149,12 @@ internal fun InputRow(state: ChatRoomInputState) {
                     ),
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
 
             Box(
                 modifier =
                     Modifier
-                        .size(36.dp)
+                        .size(40.dp)
                         .background(if (state.canSend) c.accent else c.surfaceAlt, RectangleShape)
                         .border(BorderStroke(1.dp, c.border), RectangleShape)
                         .clickable(
@@ -122,12 +162,15 @@ internal fun InputRow(state: ChatRoomInputState) {
                             interactionSource = remember { MutableInteractionSource() },
                             indication = ripple(color = c.onAccent),
                             onClick = state.onSendClick,
-                        ),
+                        ).semantics {
+                            contentDescription = sendContentDescription
+                            role = Role.Button
+                        },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Default.ArrowUpward,
-                    contentDescription = sendContentDescription,
+                    contentDescription = null,
                     tint = if (state.canSend) c.onAccent else c.textSubtle,
                     modifier = Modifier.size(18.dp),
                 )

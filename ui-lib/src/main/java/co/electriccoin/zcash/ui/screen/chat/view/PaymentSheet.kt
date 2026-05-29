@@ -10,9 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AttachFile
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.automirrored.filled.CallReceived
+import androidx.compose.material.icons.filled.QrCode2
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -29,17 +30,16 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
-/**
- * Media-only attachment sheet. Payment actions have moved to [PaymentSheet].
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-internal fun AttachmentSheet(
-    onChooseMedia: () -> Unit,
-    onAttachFile: () -> Unit,
-    onTakePhoto: () -> Unit,
+internal fun PaymentSheet(
+    onSendZec: () -> Unit,
+    onRequestZec: () -> Unit,
+    onPayMerchant: () -> Unit,
+    onShareAddress: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     ModalBottomSheet(
@@ -56,35 +56,44 @@ internal fun AttachmentSheet(
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 24.dp)
         ) {
-            MediaRow(
-                icon = Icons.Default.Image,
-                label = "Choose Media",
-                onClick = onChooseMedia,
+            PaymentSheetRow(
+                icon = Icons.AutoMirrored.Filled.Send,
+                label = "Send ZEC",
+                onClick = onSendZec,
             )
             HorizontalDivider(
                 color = ZappTheme.colors.border,
                 modifier = Modifier.padding(horizontal = 8.dp),
             )
-            MediaRow(
-                icon = Icons.Default.AttachFile,
-                label = "Attach File",
-                onClick = onAttachFile,
+            PaymentSheetRow(
+                icon = Icons.AutoMirrored.Filled.CallReceived,
+                label = "Request ZEC",
+                onClick = onRequestZec,
             )
             HorizontalDivider(
                 color = ZappTheme.colors.border,
                 modifier = Modifier.padding(horizontal = 8.dp),
             )
-            MediaRow(
-                icon = Icons.Default.PhotoCamera,
-                label = "Take Photo",
-                onClick = onTakePhoto,
+            PaymentSheetRow(
+                icon = Icons.Default.Storefront,
+                label = "Pay Merchant",
+                onClick = onPayMerchant,
+            )
+            HorizontalDivider(
+                color = ZappTheme.colors.border,
+                modifier = Modifier.padding(horizontal = 8.dp),
+            )
+            PaymentSheetRow(
+                icon = Icons.Default.QrCode2,
+                label = "Share Address",
+                onClick = onShareAddress,
             )
         }
     }
 }
 
 @Composable
-private fun MediaRow(
+private fun PaymentSheetRow(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,

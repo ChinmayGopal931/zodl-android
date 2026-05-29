@@ -21,8 +21,10 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,7 +59,10 @@ import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
+import co.electriccoin.zcash.ui.screen.chat.ChatContactsArgs
 import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
+import co.electriccoin.zcash.ui.screen.swap.SwapArgs
+import co.electriccoin.zcash.ui.screen.tor.settings.TorSettingsArgs
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -87,7 +92,7 @@ fun SettingsTabContent(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars),
         ) {
-            ZappScreenHeader(title = "Settings")
+            ZappScreenHeader(title = "You")
 
             Column(
                 modifier =
@@ -99,6 +104,17 @@ fun SettingsTabContent(
             ) {
                 identity?.let { id ->
                     ProfileCard(displayName = id.displayName)
+                }
+
+                SettingsGroup(title = "People") {
+                    ZappRow(
+                        title = "Contacts",
+                        subtitle = "Manage your chat contacts",
+                        icon = Icons.Default.Contacts,
+                        iconTint = c.accentText,
+                        iconBackground = c.accentSoft,
+                        onClick = { navigationRouter.forward(ChatContactsArgs) },
+                    )
                 }
 
                 SettingsGroup(title = "Security") {
@@ -131,18 +147,24 @@ fun SettingsTabContent(
                     // )
                 }
 
+                SettingsGroup(title = "Privacy") {
+                    ZappRow(
+                        title = "Tor",
+                        subtitle = "Route connections through Tor",
+                        icon = Icons.Default.Security,
+                        onClick = { navigationRouter.forward(TorSettingsArgs) },
+                    )
+                }
+
                 if (hasWallet) {
                     SettingsGroup(title = "Wallet") {
-                        // DEAD CODE [hidden]: Backup seed phrase — uncomment to restore (and the divider below)
-                        // ZappRow(
-                        //     title = "Backup seed phrase",
-                        //     subtitle = "View and save your 24-word recovery phrase",
-                        //     icon = Icons.Default.AccountBalanceWallet,
-                        //     iconTint = c.accentText,
-                        //     iconBackground = c.accentSoft,
-                        //     onClick = { navigationRouter.forward(AdvancedSettingsArgs) },
-                        // )
-                        // ZappRowDivider(inset = true)
+                        ZappRow(
+                            title = "Swap",
+                            subtitle = "Exchange crypto assets",
+                            icon = Icons.Default.SwapHoriz,
+                            onClick = { navigationRouter.forward(SwapArgs) },
+                        )
+                        ZappRowDivider(inset = true)
                         ZappRow(
                             title = "Server",
                             subtitle = "Choose a lightwalletd server",

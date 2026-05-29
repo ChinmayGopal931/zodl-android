@@ -20,12 +20,10 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.automirrored.outlined.Chat
-import androidx.compose.material.icons.filled.AccountBalanceWallet
-import androidx.compose.material.icons.filled.Contacts
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.AccountBalanceWallet
-import androidx.compose.material.icons.outlined.Contacts
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.filled.Payment
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Payment
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -36,6 +34,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,10 +46,9 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 enum class ZappTab(
     val title: String
 ) {
-    WALLET("Wallet"),
+    PAY("Pay"),
     CHATS("Chats"),
-    CONTACTS("Contacts"),
-    SETTINGS("Settings"),
+    YOU("You"),
 }
 
 @Composable
@@ -87,7 +88,7 @@ fun FloatingPillNavBar(
                     modifier =
                         Modifier
                             .weight(1f)
-                            .defaultMinSize(minHeight = 40.dp)
+                            .defaultMinSize(minHeight = 48.dp)
                             .background(
                                 color = if (selected) c.accent else Color.Transparent,
                                 shape = RectangleShape,
@@ -99,12 +100,15 @@ fun FloatingPillNavBar(
                                         bounded = true,
                                     ),
                                 onClick = { onTabSelected(tab) },
-                            ),
+                            ).semantics {
+                                contentDescription = tab.title
+                                role = Role.Tab
+                            },
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = tab.title,
+                        contentDescription = null,
                         tint = if (selected) c.onAccent else c.textMuted,
                         modifier = Modifier.size(20.dp),
                     )
@@ -143,8 +147,7 @@ private fun iconFor(
     selected: Boolean,
 ): ImageVector =
     when (tab) {
-        ZappTab.WALLET -> if (selected) Icons.Filled.AccountBalanceWallet else Icons.Outlined.AccountBalanceWallet
+        ZappTab.PAY -> if (selected) Icons.Filled.Payment else Icons.Outlined.Payment
         ZappTab.CHATS -> if (selected) Icons.AutoMirrored.Filled.Chat else Icons.AutoMirrored.Outlined.Chat
-        ZappTab.CONTACTS -> if (selected) Icons.Filled.Contacts else Icons.Outlined.Contacts
-        ZappTab.SETTINGS -> if (selected) Icons.Filled.Settings else Icons.Outlined.Settings
+        ZappTab.YOU -> if (selected) Icons.Filled.Person else Icons.Outlined.Person
     }
