@@ -68,3 +68,19 @@
 # unchecked CallVoidMethod aborts the VM with
 # "JNI DETECTED ERROR IN APPLICATION: mid == null" on launch. Keep the whole package.
 -keep class to.holepunch.bare.kit.** { *; }
+
+# ZappMessaging SDK. It drives the Bare worklet over an NDJSON IPC bridge
+# (core.IPCBridge / core.BareWorkletManager) and derives the chat identity from the
+# wallet seed via sdk.restoreFromSeedPhrase(). The SDK's own consumer rules only keep
+# its public API (ZappMessagingSDK + models.**), NOT the core.* internals — so in a
+# minified release build R8 shrinks/optimizes those internals and the worklet round-trip
+# silently never completes. Chat identity then stays null, and onboarding (which gates on
+# chatIdentity != null) hangs on the loading screen. Debug builds are fine because R8 is
+# off there. Keep the whole package and its kotlinx.serialization plumbing.
+-keep class xyz.justzappit.zappmessaging.** { *; }
+-keepclassmembers class xyz.justzappit.zappmessaging.** { *; }
+-keepclassmembers class xyz.justzappit.zappmessaging.**$$serializer { *; }
+-keepclassmembers class xyz.justzappit.zappmessaging.** {
+    *** Companion;
+    kotlinx.serialization.KSerializer serializer(...);
+}
