@@ -60,3 +60,11 @@
 -keep class com.keystone.module.** { *; }
 -keepnames class **.R$drawable { *; }
 -keepclassmembers class **.R$drawable { *; }
+
+# Bare runtime (holepunchto/bare-kit), used by the ZappMessaging P2P chat stack.
+# The native JNI layer in bare-kit's IPC.c and Worklet.c resolves Java callback methods
+# (readable/writable/apply) by name at runtime via GetMethodID. R8's shrinker can't see
+# these native call sites, so it strips the methods; GetMethodID then returns null and the
+# unchecked CallVoidMethod aborts the VM with
+# "JNI DETECTED ERROR IN APPLICATION: mid == null" on launch. Keep the whole package.
+-keep class to.holepunch.bare.kit.** { *; }
