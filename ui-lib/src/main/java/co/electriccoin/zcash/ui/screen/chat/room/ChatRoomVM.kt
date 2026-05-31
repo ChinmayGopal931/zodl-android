@@ -11,19 +11,10 @@ import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.usecase.GetChatConnectionDetailsUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetChatMessagesUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetZashiAccountUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatConversationsUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatDhtHealthUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupDeletedUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupRenamedUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatMediaDownloadCompleteUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberAddedUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberLeftUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageReceivedUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageStatusUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatOnlineStateUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerCountUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerStatusUseCase
-import co.electriccoin.zcash.ui.common.usecase.RefreshChatConversationsUseCase
 import co.electriccoin.zcash.ui.common.usecase.SendChatMediaMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.SendChatMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.UpdateChatContactUseCase
@@ -44,6 +35,7 @@ import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
 import co.electriccoin.zcash.ui.screen.chat.model.MessageStatus
 import co.electriccoin.zcash.ui.screen.chat.model.MimeTypes
 import co.electriccoin.zcash.ui.screen.chat.model.ReportCategory
+import co.electriccoin.zcash.ui.screen.chat.repository.ChatConversationsRepository
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 import kotlinx.coroutines.Dispatchers
@@ -66,22 +58,14 @@ class ChatRoomVM(
     args: ChatRoomArgs,
     private val application: Application,
     private val moderationRepository: ChatModerationRepository,
+    private val chatConversationsRepository: ChatConversationsRepository,
     private val getZashiAccount: GetZashiAccountUseCase,
     private val chatSendContext: ChatSendContextProvider,
     private val navigationRouter: NavigationRouter,
-    private val observeChatConversations: ObserveChatConversationsUseCase,
-    private val observeChatOnlineState: ObserveChatOnlineStateUseCase,
-    private val observeChatPeerCount: ObserveChatPeerCountUseCase,
-    private val observeChatDhtHealth: ObserveChatDhtHealthUseCase,
     private val observeChatMessageReceived: ObserveChatMessageReceivedUseCase,
     private val observeChatMessageStatus: ObserveChatMessageStatusUseCase,
     private val observeChatMediaDownloadComplete: ObserveChatMediaDownloadCompleteUseCase,
-    private val observeChatGroupRenamed: ObserveChatGroupRenamedUseCase,
-    private val observeChatMemberLeft: ObserveChatMemberLeftUseCase,
-    private val observeChatMemberAdded: ObserveChatMemberAddedUseCase,
-    private val observeChatGroupDeleted: ObserveChatGroupDeletedUseCase,
     private val observeChatPeerStatus: ObserveChatPeerStatusUseCase,
-    private val refreshChatConversations: RefreshChatConversationsUseCase,
     private val getChatMessages: GetChatMessagesUseCase,
     private val sendChatMessage: SendChatMessageUseCase,
     private val sendChatMediaMessage: SendChatMediaMessageUseCase,
@@ -89,7 +73,10 @@ class ChatRoomVM(
     private val updateChatContact: UpdateChatContactUseCase,
 ) : ViewModel() {
     private val conversationId: String = args.conversationId
-    private val conversation = MutableStateFlow<ChatConversation?>(null)
+    private val conversation: StateFlow<ChatConversation?> =
+        chatConversationsRepository
+            .conversation(conversationId)
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT), null)
     private val messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     private val isLoading = MutableStateFlow(true)
 
@@ -112,11 +99,17 @@ class ChatRoomVM(
     val effects: SharedFlow<ChatRoomEffect> = _effects.asSharedFlow()
 
     init {
+        chatConversationsRepository.setActiveConversation(conversationId)
         viewModelScope.launch { loadConversation() }
         viewModelScope.launch { loadMessages() }
         observeConnection()
         observeMessageEvents()
         observePeerStatus()
+    }
+
+    override fun onCleared() {
+        chatConversationsRepository.setActiveConversation(null)
+        super.onCleared()
     }
 
     val state: StateFlow<ChatRoomState> =
@@ -412,9 +405,11 @@ class ChatRoomVM(
     // ── Sources / observers ───────────────────────────────────────────────────
 
     private suspend fun loadConversation() {
-        if (observeChatConversations().value.isEmpty()) refreshChatConversations()
-        val match = observeChatConversations().value.firstOrNull { it.id == conversationId }
-        conversation.value = match?.let(ChatConversation::from)
+        // The repository owns the conversation cache; ensure it is populated, then [conversation]
+        // (derived from it) emits this room's conversation and tracks member/rename/delete edits.
+        if (chatConversationsRepository.conversations.value.isNullOrEmpty()) {
+            chatConversationsRepository.refresh()
+        }
     }
 
     private suspend fun loadMessages() {
@@ -433,7 +428,7 @@ class ChatRoomVM(
 
     private fun observeConnection() {
         viewModelScope.launch {
-            observeChatOnlineState().collect { online ->
+            chatConversationsRepository.isOnline.collect { online ->
                 connectionStatus.value =
                     if (online) {
                         ChatListConnectionStatus.CONNECTED
@@ -442,17 +437,16 @@ class ChatRoomVM(
                     }
             }
         }
-        viewModelScope.launch { observeChatPeerCount().collect { peerCount.value = it } }
-        viewModelScope.launch { observeChatDhtHealth().collect { dhtHealth.value = mapDhtHealth(it) } }
+        viewModelScope.launch { chatConversationsRepository.peerCount.collect { peerCount.value = it } }
+        viewModelScope.launch {
+            chatConversationsRepository.dhtHealth.collect { dhtHealth.value = mapDhtHealth(it) }
+        }
     }
 
     private fun observeMessageEvents() {
         observeIncomingMessages()
         observeMessageStatus()
         observeMediaDownloads()
-        observeGroupRenames()
-        observeMemberLeaves()
-        observeMemberJoins()
         observeGroupDeletion()
     }
 
@@ -498,44 +492,9 @@ class ChatRoomVM(
             }
         }
 
-    private fun observeGroupRenames() =
-        viewModelScope.launch {
-            observeChatGroupRenamed().collect { (renamedId, newName) ->
-                if (renamedId == conversationId) {
-                    conversation.update { it?.copy(displayName = newName) }
-                }
-            }
-        }
-
-    private fun observeMemberLeaves() =
-        viewModelScope.launch {
-            observeChatMemberLeft().collect { (leftConvId, peer) ->
-                if (leftConvId == conversationId) {
-                    conversation.update { conv ->
-                        conv?.copy(participantIds = conv.participantIds.filter { it != peer })
-                    }
-                }
-            }
-        }
-
-    private fun observeMemberJoins() =
-        viewModelScope.launch {
-            observeChatMemberAdded().collect { (addedConvId, peer, _) ->
-                if (addedConvId == conversationId) {
-                    conversation.update { conv ->
-                        if (conv != null && peer !in conv.participantIds) {
-                            conv.copy(participantIds = conv.participantIds + peer)
-                        } else {
-                            conv
-                        }
-                    }
-                }
-            }
-        }
-
     private fun observeGroupDeletion() =
         viewModelScope.launch {
-            observeChatGroupDeleted().collect { deletedId ->
+            chatConversationsRepository.conversationDeleted.collect { deletedId ->
                 if (deletedId == conversationId) navigationRouter.back()
             }
         }
@@ -668,19 +627,21 @@ class ChatRoomVM(
     }
 
     private fun onBlockConfirm() {
-        val peerKey = conversation.value?.participantIds?.firstOrNull() ?: return
-        val peerName = conversation.value?.displayName
-        moderationRepository.blockUser(peerKey, peerName)
+        // Read the conversation once: it is a WhileSubscribed flow the repository can update off
+        // the main thread, so re-reading .value per field could pair a key with a stale name.
+        val conv = conversation.value ?: return
+        val peerKey = conv.participantIds.firstOrNull() ?: return
+        moderationRepository.blockUser(peerKey, conv.displayName)
         showBlockDialog.value = false
         navigationRouter.back()
     }
 
     private fun onReportSubmit(category: ReportCategory, details: String) {
-        val peerKey = conversation.value?.participantIds?.firstOrNull() ?: return
-        val peerName = conversation.value?.displayName
+        val conv = conversation.value ?: return
+        val peerKey = conv.participantIds.firstOrNull() ?: return
         moderationRepository.submitReport(
             reportedPublicKey = peerKey,
-            reportedDisplayName = peerName,
+            reportedDisplayName = conv.displayName,
             category = category,
             details = details,
             conversationId = conversationId,
@@ -689,9 +650,9 @@ class ChatRoomVM(
     }
 
     private fun onReportDialogBlock() {
-        val peerKey = conversation.value?.participantIds?.firstOrNull() ?: return
-        val peerName = conversation.value?.displayName
-        moderationRepository.blockUser(peerKey, peerName)
+        val conv = conversation.value ?: return
+        val peerKey = conv.participantIds.firstOrNull() ?: return
+        moderationRepository.blockUser(peerKey, conv.displayName)
         showReportDialog.value = false
         navigationRouter.back()
     }
@@ -825,7 +786,7 @@ class ChatRoomVM(
 
     private suspend fun updateContact(publicKey: String, newName: String) {
         updateChatContact(publicKey, newName).onSuccess {
-            conversation.update { it?.copy(displayName = newName) }
+            chatConversationsRepository.renameConversation(conversationId, newName)
         }
     }
 
