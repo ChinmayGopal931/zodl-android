@@ -69,6 +69,7 @@ android {
                     "src/main/res/ui/scan",
                     "src/main/res/ui/scan_keystone",
                     "src/main/res/ui/security_warning",
+                    "src/main/res/ui/securitysettings",
                     "src/main/res/ui/seed_recovery",
                     "src/main/res/ui/select_keystone_account",
                     "src/main/res/ui/send",
