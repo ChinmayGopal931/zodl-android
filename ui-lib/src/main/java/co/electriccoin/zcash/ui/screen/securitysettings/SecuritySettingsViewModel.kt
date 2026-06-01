@@ -117,7 +117,10 @@ class SecuritySettingsViewModel(
      * - PIN → PIN: verify current PIN, then set a new one (Change PIN)
      * - BIO → BIO: re-enroll biometrics directly
      * - PIN → BIO: verify current PIN first, then biometric enrollment
-     * - BIO → PIN: skip bio-verify, go straight to new PIN setup (system bio verify is separate)
+     * - BIO → PIN: verify with the active biometric first, then new PIN setup
+     *
+     * Every transition re-authenticates with the currently-active credential before any change,
+     * so momentary access to an unlocked app can't be used to silently take over the app-lock.
      */
     fun onSaveChanges() {
         val menu = _uiState.value as? SecuritySettingsState.Menu ?: return
@@ -128,7 +131,7 @@ class SecuritySettingsViewModel(
             }
 
             menu.selectedTab == "pin" && menu.currentMethod == "biometric" -> {
-                _uiState.value = SecuritySettingsState.SettingNewPin(NewPinIntent.SwitchFromBiometric)
+                verifyBiometricThenSwitchToPin()
             }
 
             menu.selectedTab == "biometric" && menu.currentMethod == "pin" -> {
@@ -138,6 +141,30 @@ class SecuritySettingsViewModel(
 
             menu.selectedTab == "biometric" && menu.currentMethod == "biometric" -> {
                 triggerBioEnrollment()
+            }
+        }
+    }
+
+    /**
+     * BIO → PIN re-auth gate: the user must pass the currently-active biometric before they are
+     * allowed to set a brand-new PIN and flip the active unlock method. Mirrors the PIN paths
+     * that gate on [submitCurrentPin]. On cancel/failure the active method is left unchanged.
+     */
+    private fun verifyBiometricThenSwitchToPin() {
+        // requestBiometrics() is a silent no-op (no prompt, no exception) when the device can't
+        // authenticate at all — biometrics AND device credential both unavailable. Gate on that
+        // here so a silent return can never fall through to an unauthenticated PIN change.
+        if (!checkBioAvailable()) return
+        viewModelScope.launch {
+            try {
+                biometricRepository.requestBiometrics(
+                    BiometricRequest(message = stringRes("Verify it's you to switch to a PIN"))
+                )
+                _uiState.value = SecuritySettingsState.SettingNewPin(NewPinIntent.SwitchFromBiometric)
+            } catch (_: BiometricsCancelledException) {
+                // User backed out — leave the active unlock method unchanged.
+            } catch (_: BiometricsFailureException) {
+                // Verification failed — do not let an unverified caller change the credential.
             }
         }
     }

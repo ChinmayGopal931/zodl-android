@@ -1,8 +1,6 @@
 package co.electriccoin.zcash.ui.screen.chat.view.bubbles
 
-import android.graphics.BitmapFactory
 import android.os.Build
-import android.util.Base64
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.screen.chat.media.ImageProcessor
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import coil.ImageLoader
 import coil.compose.AsyncImage
@@ -88,12 +87,7 @@ internal fun MediaBubble(
                 }
 
                 message.thumbnailData != null -> {
-                    try {
-                        val bytes = Base64.decode(message.thumbnailData, Base64.DEFAULT)
-                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                    } catch (_: Exception) {
-                        null
-                    }
+                    ImageProcessor.decodePeerThumbnail(message.thumbnailData)
                 }
 
                 else -> {

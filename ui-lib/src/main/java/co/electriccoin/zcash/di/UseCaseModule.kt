@@ -46,7 +46,6 @@ import co.electriccoin.zcash.ui.common.usecase.GetP2pOrderHistoryUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetPersistableWalletUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetProposalUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetResyncDataFromHeightUseCase
-import co.electriccoin.zcash.ui.common.usecase.RefreshChatConversationsUseCase
 import co.electriccoin.zcash.ui.common.usecase.SendChatMediaMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.SendChatMessageUseCase
 import co.electriccoin.zcash.ui.common.usecase.GetSelectedEndpointUseCase
@@ -94,18 +93,10 @@ import co.electriccoin.zcash.ui.common.usecase.ObserveClearSendUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveContactByAddressUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveFastestServersUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveProposalUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatConversationsUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatDhtHealthUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupDeletedUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatGroupRenamedUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatMediaDownloadCompleteUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberAddedUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatMemberLeftUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageReceivedUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatMessageStatusUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatOnlineStateUseCase
-import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerCountUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatPeerStatusUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveTransactionSubmitStateUseCase
@@ -322,19 +313,10 @@ val useCaseModule =
         factoryOf(::ObserveChatIdentityUseCase)
         factoryOf(::UpdateChatDisplayNameUseCase)
         factoryOf(::DeleteChatIdentityUseCase)
-        factoryOf(::ObserveChatConversationsUseCase)
-        factoryOf(::ObserveChatOnlineStateUseCase)
-        factoryOf(::ObserveChatPeerCountUseCase)
-        factoryOf(::ObserveChatDhtHealthUseCase)
         factoryOf(::ObserveChatMessageReceivedUseCase)
         factoryOf(::ObserveChatMessageStatusUseCase)
         factoryOf(::ObserveChatMediaDownloadCompleteUseCase)
-        factoryOf(::ObserveChatGroupRenamedUseCase)
-        factoryOf(::ObserveChatMemberLeftUseCase)
-        factoryOf(::ObserveChatMemberAddedUseCase)
-        factoryOf(::ObserveChatGroupDeletedUseCase)
         factoryOf(::ObserveChatPeerStatusUseCase)
-        factoryOf(::RefreshChatConversationsUseCase)
         factoryOf(::GetChatMessagesUseCase)
         factoryOf(::SendChatMessageUseCase)
         factoryOf(::SendChatMediaMessageUseCase)

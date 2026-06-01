@@ -2,11 +2,9 @@ package co.electriccoin.zcash.ui.screen.chat.view
 
 import android.content.ContentValues
 import android.content.Context
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Base64
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -41,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.screen.chat.media.ImageProcessor
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -69,13 +68,7 @@ internal fun ImageViewerOverlay(
                 }
 
                 message.thumbnailData != null -> {
-                    try {
-                        val bytes = Base64.decode(message.thumbnailData, Base64.DEFAULT)
-                        BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                    } catch (e: IllegalArgumentException) {
-                        Twig.warn(e) { "ImageViewerOverlay: thumbnail base64 decode failed" }
-                        null
-                    }
+                    ImageProcessor.decodePeerThumbnail(message.thumbnailData)
                 }
 
                 else -> {

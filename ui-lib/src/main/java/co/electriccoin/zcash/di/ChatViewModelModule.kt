@@ -25,29 +25,20 @@ val chatViewModelModule =
         viewModelOf(::ChatContactsVM)
         viewModelOf(::NewConversationVM)
         viewModelOf(::ContactEditVM)
-        // ChatRoomVM is constructed manually because its dep count exceeds Koin's
-        // viewModelOf reflection ceiling (22).
+        // ChatRoomVM is constructed manually because it takes a runtime [ChatRoomArgs] parameter.
         viewModel { (args: ChatRoomArgs) ->
             ChatRoomVM(
                 args = args,
                 application = get(),
                 moderationRepository = get(),
+                chatConversationsRepository = get(),
                 getZashiAccount = get(),
                 chatSendContext = get(),
                 navigationRouter = get(),
-                observeChatConversations = get(),
-                observeChatOnlineState = get(),
-                observeChatPeerCount = get(),
-                observeChatDhtHealth = get(),
                 observeChatMessageReceived = get(),
                 observeChatMessageStatus = get(),
                 observeChatMediaDownloadComplete = get(),
-                observeChatGroupRenamed = get(),
-                observeChatMemberLeft = get(),
-                observeChatMemberAdded = get(),
-                observeChatGroupDeleted = get(),
                 observeChatPeerStatus = get(),
-                refreshChatConversations = get(),
                 getChatMessages = get(),
                 sendChatMessage = get(),
                 sendChatMediaMessage = get(),

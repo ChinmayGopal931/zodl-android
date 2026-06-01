@@ -6,6 +6,7 @@ import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.usecase.GetChatConnectionDetailsUseCase
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
@@ -14,35 +15,29 @@ import co.electriccoin.zcash.ui.screen.chat.NewConversationArgs
 import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.chat.common.formatRelativeTime
-import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
-import co.electriccoin.zcash.ui.screen.chat.common.runChatCallResult
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
 import co.electriccoin.zcash.ui.screen.chat.model.ConnectionDetailsUi
 import co.electriccoin.zcash.ui.screen.chat.model.ConversationType
+import co.electriccoin.zcash.ui.screen.chat.repository.ChatConversationsRepository
 import co.electriccoin.zcash.ui.screen.chat.repository.ChatModerationRepository
 import co.electriccoin.zcash.ui.screen.chat.support.SupportChatConstants
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import xyz.justzappit.zappmessaging.ZappMessagingSDK
 
 @Suppress("TooManyFunctions")
 class ChatListVM(
-    private val sdk: ZappMessagingSDK,
+    private val chatConversationsRepository: ChatConversationsRepository,
     private val moderationRepository: ChatModerationRepository,
+    private val getChatConnectionDetails: GetChatConnectionDetailsUseCase,
     private val standardPreferenceProvider: StandardPreferenceProvider,
     private val navigationRouter: NavigationRouter,
     private val chatBootstrap: ChatBootstrap,
 ) : ViewModel() {
-    private val conversations = MutableStateFlow<List<ChatConversation>?>(null)
-    private val localPublicKey = MutableStateFlow<String?>(null)
     private val connectionStatus = MutableStateFlow(ChatListConnectionStatus.CONNECTING)
     private val peerCount = MutableStateFlow(0)
     private val dhtHealth = MutableStateFlow(ChatListDhtHealth.HEALTHY)
@@ -50,14 +45,9 @@ class ChatListVM(
     private val showNetworkSheet = MutableStateFlow(false)
     private val showTosDialog = MutableStateFlow(false)
     private val leaveTarget = MutableStateFlow<ChatConversation?>(null)
-    private val activeConversationId = MutableStateFlow<String?>(null)
-
-    private var refreshJob: Job? = null
 
     init {
-        viewModelScope.launch { observeIdentityAndRefresh() }
         observeConnection()
-        observeConversationUpdates()
         viewModelScope.launch { checkTosAccepted() }
     }
 
@@ -78,9 +68,11 @@ class ChatListVM(
 
     val state: StateFlow<ChatListState> =
         combine(
-            combine(conversations, moderationRepository.blockedKeys, localPublicKey) { c, b, pk ->
-                Triple(c, b, pk)
-            },
+            combine(
+                chatConversationsRepository.conversations,
+                moderationRepository.blockedKeys,
+                chatConversationsRepository.localPublicKey,
+            ) { c, b, pk -> Triple(c, b, pk) },
             combine(connectionStatus, peerCount, dhtHealth) { cs, pc, dh -> Triple(cs, pc, dh) },
             combine(showTosDialog, showNetworkSheet, leaveTarget) { tos, sheet, leave ->
                 Triple(tos, sheet, leave)
@@ -223,7 +215,9 @@ class ChatListVM(
     private fun lastMessageText(value: String?): StringResource =
         when {
             value == null -> stringRes(R.string.chat_list_no_messages)
-            value == MEDIA_PLACEHOLDER_SENTINEL -> stringRes(R.string.chat_list_media_placeholder)
+            value == ChatConversationsRepository.MEDIA_PLACEHOLDER_SENTINEL ->
+                stringRes(R.string.chat_list_media_placeholder)
+
             else -> stringRes(value)
         }
 
@@ -256,10 +250,7 @@ class ChatListVM(
     private fun onSupportClick() = navigationRouter.forward(SupportTicketListArgs)
 
     private fun onConversationClick(conv: ChatConversation) {
-        activeConversationId.value = conv.id
-        conversations.update { current ->
-            current?.map { c -> if (c.id == conv.id) c.copy(unreadCount = 0) else c }
-        }
+        chatConversationsRepository.markConversationRead(conv.id)
         chatBootstrap.markConversationRead(conv.id)
         navigationRouter.forward(ChatRoomArgs(conv.id))
     }
@@ -274,7 +265,7 @@ class ChatListVM(
 
     private fun onLeaveConfirm(conv: ChatConversation) {
         leaveTarget.value = null
-        viewModelScope.launch { leaveConversation(conv) }
+        viewModelScope.launch { chatConversationsRepository.leaveConversation(conv.id) }
     }
 
     private fun onNetworkChipClick() {
@@ -298,35 +289,9 @@ class ChatListVM(
         showTosDialog.value = false
     }
 
-    private suspend fun observeIdentityAndRefresh() {
-        sdk.identity.collect { id ->
-            localPublicKey.value = id?.publicKey
-            if (id != null) startConversationRefresh()
-        }
-    }
-
-    private fun startConversationRefresh() {
-        refreshJob?.cancel()
-        refreshJob = viewModelScope.launch { refreshConversations() }
-    }
-
-    private suspend fun refreshConversations() {
-        runChatCallResult("ChatListVM: failed to refresh conversations") {
-            sdk.refreshConversations()
-            sdk.conversations.value
-                .map(ChatConversation::from)
-                .sortedByDescending { it.lastMessageTimestamp ?: 0L }
-        }.onSuccess { list ->
-            conversations.value = list
-        }.onFailure {
-            // Surface an empty list so the View leaves the loading state.
-            if (conversations.value == null) conversations.value = emptyList()
-        }
-    }
-
     private fun observeConnection() {
         viewModelScope.launch {
-            sdk.isOnline.collect { online ->
+            chatConversationsRepository.isOnline.collect { online ->
                 connectionStatus.value =
                     if (online) {
                         ChatListConnectionStatus.CONNECTED
@@ -335,93 +300,15 @@ class ChatListVM(
                     }
             }
         }
-        viewModelScope.launch { sdk.peerCount.collect { peerCount.value = it } }
-        viewModelScope.launch { sdk.dhtHealth.collect { dhtHealth.value = mapDhtHealth(it) } }
-    }
-
-    private fun observeConversationUpdates() {
+        viewModelScope.launch { chatConversationsRepository.peerCount.collect { peerCount.value = it } }
         viewModelScope.launch {
-            sdk.messageReceived.collect { (conversationId, msg) ->
-                if (moderationRepository.isBlocked(msg.senderId)) return@collect
-                val isViewingConversation = conversationId == activeConversationId.value
-                conversations.update { current ->
-                    current?.map { conv ->
-                        if (conv.id == conversationId) {
-                            conv.copy(
-                                lastMessage = msg.content.ifEmpty { MEDIA_PLACEHOLDER_SENTINEL },
-                                lastMessageTimestamp = msg.timestamp,
-                                unreadCount =
-                                    when {
-                                        msg.isFromMe -> conv.unreadCount
-                                        isViewingConversation -> conv.unreadCount
-                                        else -> conv.unreadCount + 1
-                                    },
-                            )
-                        } else {
-                            conv
-                        }
-                    }
-                }
-            }
-        }
-        viewModelScope.launch {
-            sdk.inviteReceived.collect {
-                delay(CONVERSATION_RELOAD_DEBOUNCE_MS)
-                refreshConversations()
-            }
-        }
-        viewModelScope.launch {
-            sdk.groupDeleted.collect { conversationId ->
-                conversations.update { it?.filter { conv -> conv.id != conversationId } }
-            }
-        }
-        viewModelScope.launch {
-            sdk.groupRenamed.collect { (conversationId, newName) ->
-                conversations.update { list ->
-                    list?.map { conv ->
-                        if (conv.id == conversationId) conv.copy(displayName = newName) else conv
-                    }
-                }
-            }
-        }
-        viewModelScope.launch {
-            sdk.memberLeft.collect { (conversationId, peerKey) ->
-                conversations.update { list ->
-                    list?.map { conv ->
-                        if (conv.id == conversationId) {
-                            conv.copy(participantIds = conv.participantIds.filter { it != peerKey })
-                        } else {
-                            conv
-                        }
-                    }
-                }
-            }
-        }
-        viewModelScope.launch {
-            sdk.memberAdded.collect { (conversationId, peerKey, _) ->
-                conversations.update { list ->
-                    list?.map { conv ->
-                        if (conv.id == conversationId && peerKey !in conv.participantIds) {
-                            conv.copy(participantIds = conv.participantIds + peerKey)
-                        } else {
-                            conv
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun leaveConversation(conv: ChatConversation) {
-        runChatCall("ChatListVM: leave conversation failed") {
-            sdk.removeConversation(conv.id)
-            conversations.update { it?.filter { c -> c.id != conv.id } }
+            chatConversationsRepository.dhtHealth.collect { dhtHealth.value = mapDhtHealth(it) }
         }
     }
 
     private suspend fun refreshConnectionDetails() {
-        runChatCall("ChatListVM: failed to fetch connection details") {
-            connectionDetails.value = ConnectionDetailsUi.from(sdk.getConnectionDetails())
+        getChatConnectionDetails().onSuccess { details ->
+            connectionDetails.value = ConnectionDetailsUi.from(details)
         }
     }
 
@@ -429,10 +316,5 @@ class ChatListVM(
         val accepted =
             StandardPreferenceKeys.IS_CHAT_TOS_ACCEPTED.getValue(standardPreferenceProvider())
         if (!accepted) showTosDialog.value = true
-    }
-
-    companion object {
-        const val MEDIA_PLACEHOLDER_SENTINEL = "[Media]"
-        private const val CONVERSATION_RELOAD_DEBOUNCE_MS = 500L
     }
 }
