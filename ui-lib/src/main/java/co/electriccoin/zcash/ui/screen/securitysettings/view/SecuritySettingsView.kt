@@ -43,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.compose.SecureScreen
 import co.electriccoin.zcash.ui.design.component.zapp.ZappGroupHeader
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRow
@@ -154,7 +156,7 @@ private fun AppLockHub(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars),
         ) {
-            ZappScreenHeader(title = "App lock")
+            ZappScreenHeader(title = stringResource(R.string.security_settings_title))
 
             // Illustration fills remaining vertical space
             Box(
@@ -174,7 +176,7 @@ private fun AppLockHub(
             )
 
             // Contextual action row
-            ZappGroupHeader(text = "Actions")
+            ZappGroupHeader(text = stringResource(R.string.security_settings_actions_header))
             Column(
                 modifier =
                     Modifier
@@ -185,8 +187,8 @@ private fun AppLockHub(
             ) {
                 if (state.selectedTab == "pin") {
                     ZappRow(
-                        title = "Change PIN",
-                        subtitle = "Update your 6-digit unlock code",
+                        title = stringResource(R.string.security_settings_change_pin_row_title),
+                        subtitle = stringResource(R.string.security_settings_change_pin_row_subtitle),
                         icon = Icons.Default.Lock,
                         iconTint = c.accentText,
                         iconBackground = c.accentSoft,
@@ -194,8 +196,8 @@ private fun AppLockHub(
                     )
                 } else {
                     ZappRow(
-                        title = "Re-enroll biometrics",
-                        subtitle = "Use your device's biometric settings",
+                        title = stringResource(R.string.security_settings_reenroll_bio_row_title),
+                        subtitle = stringResource(R.string.security_settings_reenroll_bio_row_subtitle),
                         icon = Icons.Default.Fingerprint,
                         iconTint = c.accentText,
                         iconBackground = c.accentSoft,
@@ -218,7 +220,11 @@ private fun AppLockTabSelector(
     onTabSelected: (String) -> Unit,
 ) {
     val c = ZappTheme.colors
-    val tabs = listOf("pin" to "6-digit PIN", "biometric" to "Biometrics")
+    val tabs =
+        listOf(
+            "pin" to stringResource(R.string.security_settings_tab_pin),
+            "biometric" to stringResource(R.string.security_settings_tab_biometric),
+        )
     Row(
         modifier =
             Modifier
@@ -283,7 +289,14 @@ private fun AuthMethodIllustration(selectedTab: String) {
         }
         Spacer(Modifier.height(20.dp))
         BasicText(
-            text = if (selectedTab == "pin") "6-digit PIN" else "Biometrics",
+            text =
+                stringResource(
+                    if (selectedTab == "pin") {
+                        R.string.security_settings_tab_pin
+                    } else {
+                        R.string.security_settings_tab_biometric
+                    }
+                ),
             style =
                 ZappTheme.typography.display.copy(
                     color = c.text,
@@ -295,11 +308,13 @@ private fun AuthMethodIllustration(selectedTab: String) {
         Spacer(Modifier.height(8.dp))
         BasicText(
             text =
-                if (selectedTab == "pin") {
-                    "A PIN is required each time you open the app."
-                } else {
-                    "Fingerprint or face recognition unlocks the app.\nA PIN fallback is always kept as backup."
-                },
+                stringResource(
+                    if (selectedTab == "pin") {
+                        R.string.security_settings_illustration_pin_body
+                    } else {
+                        R.string.security_settings_illustration_bio_body
+                    }
+                ),
             style =
                 ZappTheme.typography.body.copy(
                     color = c.textMuted,
@@ -313,6 +328,8 @@ private fun AuthMethodIllustration(selectedTab: String) {
 @Composable
 private fun HubBottomDock(onBack: () -> Unit, onSaveChanges: () -> Unit) {
     val c = ZappTheme.colors
+    val backContentDescription = stringResource(R.string.security_settings_back_content_description)
+    val saveChangesContentDescription = stringResource(R.string.security_settings_save_changes_content_description)
     Row(
         modifier =
             Modifier
@@ -328,13 +345,13 @@ private fun HubBottomDock(onBack: () -> Unit, onSaveChanges: () -> Unit) {
                     .border(BorderStroke(1.dp, c.border), RectangleShape)
                     .clickable(onClick = onBack)
                     .semantics {
-                        contentDescription = "Go back"
+                        contentDescription = backContentDescription
                         role = Role.Button
                     },
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
-                text = "←",
+                text = stringResource(R.string.security_settings_back_glyph),
                 style =
                     ZappTheme.typography.button.copy(
                         color = c.text,
@@ -351,13 +368,13 @@ private fun HubBottomDock(onBack: () -> Unit, onSaveChanges: () -> Unit) {
                     .background(c.accent, RectangleShape)
                     .clickable(onClick = onSaveChanges)
                     .semantics {
-                        contentDescription = "Save Changes"
+                        contentDescription = saveChangesContentDescription
                         role = Role.Button
                     },
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
-                text = "SAVE CHANGES",
+                text = stringResource(R.string.security_settings_save_changes_button),
                 style =
                     ZappTheme.typography.button.copy(
                         color = c.onAccent,
@@ -381,6 +398,7 @@ private fun ChangePinScreen(
     SecureScreen()
 
     val c = ZappTheme.colors
+    val backContentDescription = stringResource(R.string.security_settings_back_content_description)
     var isConfirmPhase by rememberSaveable { mutableStateOf(false) }
     var firstPin by rememberSaveable { mutableStateOf("") }
     var currentInput by rememberSaveable { mutableStateOf("") }
@@ -436,7 +454,14 @@ private fun ChangePinScreen(
             ) {
                 Spacer(Modifier.height(14.dp))
                 BasicText(
-                    text = if (isConfirmPhase) "Confirm\nyour PIN" else "Change\nyour PIN",
+                    text =
+                        stringResource(
+                            if (isConfirmPhase) {
+                                R.string.security_settings_change_pin_confirm_title
+                            } else {
+                                R.string.security_settings_change_pin_change_title
+                            }
+                        ),
                     style =
                         ZappTheme.typography.display.copy(
                             color = c.text,
@@ -449,11 +474,13 @@ private fun ChangePinScreen(
                 Spacer(Modifier.height(14.dp))
                 BasicText(
                     text =
-                        when {
-                            mismatchError -> "PINs don't match. Try again."
-                            isConfirmPhase -> "Re-enter your new PIN to confirm."
-                            else -> "Enter a new 6-digit PIN."
-                        },
+                        stringResource(
+                            when {
+                                mismatchError -> R.string.security_settings_change_pin_mismatch
+                                isConfirmPhase -> R.string.security_settings_change_pin_confirm_subtitle
+                                else -> R.string.security_settings_change_pin_enter_subtitle
+                            }
+                        ),
                     style =
                         ZappTheme.typography.body.copy(
                             color = if (mismatchError) c.danger else c.textMuted,
@@ -512,13 +539,13 @@ private fun ChangePinScreen(
                             }
                         })
                         .semantics {
-                            contentDescription = "Go back"
+                            contentDescription = backContentDescription
                             role = Role.Button
                         },
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
-                    text = "←",
+                    text = stringResource(R.string.security_settings_back_glyph),
                     style =
                         ZappTheme.typography.button.copy(
                             color = c.text,
@@ -536,7 +563,7 @@ private fun ChangePinScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
-                    text = "${currentInput.length} of 6 entered",
+                    text = stringResource(R.string.security_settings_change_pin_progress_fmt, currentInput.length),
                     style =
                         ZappTheme.typography.button.copy(
                             color = c.textSubtle,
@@ -578,6 +605,7 @@ private fun PinDotsRow(filledCount: Int, hasError: Boolean) {
 @Composable
 private fun PinKeypadGrid(modifier: Modifier = Modifier, onKey: (String) -> Unit) {
     val c = ZappTheme.colors
+    val deleteContentDescription = stringResource(R.string.security_settings_keypad_delete_content_description)
     val rows =
         listOf(
             listOf("1", "2", "3"),
@@ -600,7 +628,7 @@ private fun PinKeypadGrid(modifier: Modifier = Modifier, onKey: (String) -> Unit
                                     .border(1.dp, c.border, RectangleShape)
                                     .clickable(onClick = { onKey(key) })
                                     .semantics(mergeDescendants = true) {
-                                        contentDescription = if (key == "⌫") "Delete" else key
+                                        contentDescription = if (key == "⌫") deleteContentDescription else key
                                         role = Role.Button
                                     },
                             contentAlignment = Alignment.Center,

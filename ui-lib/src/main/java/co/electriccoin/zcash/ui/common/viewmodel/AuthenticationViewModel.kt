@@ -406,6 +406,10 @@ class AuthenticationViewModel(
                 .setAllowedAuthenticators(allowedAuthenticators)
                 .build()
 
+        // Threat model: AuthenticationResult.Success is a boolean gate, not key-bound — the prompt carries
+        // no CryptoObject, so success proves only that a biometric/credential event occurred and can be
+        // forged on a rooted/instrumented device. Upstream-inherited; binding sensitive reveals to a
+        // Keystore CryptoObject is tracked in #7.
         // TODO [#7]: Consider integrating with the keystore to unlock cryptographic operations
         // TODO [#7]: https://github.com/Electric-Coin-Company/zashi/issues/7
 

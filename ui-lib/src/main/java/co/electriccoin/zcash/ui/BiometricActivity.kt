@@ -50,6 +50,15 @@ class BiometricActivity : FragmentActivity() {
                 .setAllowedAuthenticators(biometricRepository.allowedAuthenticators)
                 .build()
 
+        // Threat model: this is a boolean auth gate, not a key-bound one. No BiometricPrompt.CryptoObject
+        // is passed, so a successful prompt only proves a biometric/credential event happened — it does not
+        // unwrap a Keystore key, and the success callback can be forged on a rooted/instrumented device.
+        // Upstream-inherited (zodl-android-real has the identical flow); the fork additionally gates the
+        // chat seed reveal behind this gate, so the practical stakes are higher here. Binding the highest-
+        // value reveals to a Keystore CryptoObject (setUserAuthenticationRequired + invalidate-on-enroll)
+        // is deferred to upstream #7.
+        // TODO [#7]: Consider integrating with the keystore to unlock cryptographic operations
+        // TODO [#7]: https://github.com/Electric-Coin-Company/zashi/issues/7
         biometricPrompt.authenticate(promptInfo)
     }
 
