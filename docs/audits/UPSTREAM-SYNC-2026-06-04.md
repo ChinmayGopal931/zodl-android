@@ -39,6 +39,14 @@
 
 Verified: `:offramp-lib:assemble`, `:evm-lib:assemble`, `:sdk-ext-lib:assemble`, `:ui-design-lib:compileDebugKotlin`, `:ui-lib:compileZcashmainnetFossDebugKotlin`, `:app:compileZcashmainnetFossDebugKotlin` all green; `detektAll` adds no new violations.
 
+**2026-06-04 — Batch 3 applied** on branch `fix/upstream-sync-2026-06-04-batch3` (off `main`, incl. Batches 1+2):
+
+- [x] **INV-1** Pay/Swap/Send a11y content-descriptions (upstream #2233 intent). The `send_scan_content_description` / `send_address_book_content_description` strings existed but were **orphaned** (zero `.kt` references) — the swap + send screens had lost their TalkBack labels. Wired both up: `ExactInputVMMapper.kt` (swap qr + address-book) and `UnifiedSendViewModel.kt` (send qr + address-book). `SwapView.kt` sites are `@Preview` fixtures (skipped); `UpiOfframpView` already labeled. Left the info / swap-direction-toggle buttons (need new string resources) — matches upstream's own deferral in #2233.
+- [x] **P1-3** Tor-timeout note — one-line gotcha comment in `HttpClientProvider.configureHttpClient()`. The fork installs no `HttpTimeout` plugin, so upstream #2255's `supportsKtorTimeouts()` guard is N/A today; the comment prevents a future Tor+timeout footgun (shared config also feeds the Tor client). Functional guard deferred until/if a timeout plugin is added (e.g. during the SDK bump).
+- [ ] **INV-2 / INV-3** (locale formatters) — DEFERRED. INVESTIGATE-tier; INV-3 explicitly folds into Batch 4 (re-point to SDK formatters once the bumped SDK exposes them). Not part of Batch 3.
+
+Verified: `:ui-lib:compileZcashmainnetFossDebugKotlin` green; `detektAll` adds no new violations.
+
 ---
 
 ## 1. Executive summary

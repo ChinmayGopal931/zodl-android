@@ -586,12 +586,14 @@ internal class UnifiedSendViewModel(
             abButton =
                 IconButtonState(
                     icon = R.drawable.send_address_book,
+                    contentDescription = stringRes(R.string.send_address_book_content_description),
                     onClick = { onAddressBookClick(isSwap) },
                     isEnabled = !isRequesting
                 ),
             qrButton =
                 IconButtonState(
                     icon = R.drawable.qr_code_icon,
+                    contentDescription = stringRes(R.string.send_scan_content_description),
                     onClick = ::onQrScannerClick,
                     isEnabled = !isRequesting
                 ),

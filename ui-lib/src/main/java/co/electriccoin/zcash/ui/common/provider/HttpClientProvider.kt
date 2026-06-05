@@ -43,6 +43,8 @@ class HttpClientProviderImpl(
         }
 
     private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.configureHttpClient() {
+        // Don't install Ktor's HttpTimeout here: this config is shared with the Tor client, and arti
+        // manages its own circuit timeouts — a Ktor timeout aborts offramp/CMC requests over Tor early.
         install(ContentNegotiation) { json() }
         install(Logging) {
             logger = KtorLogger()
