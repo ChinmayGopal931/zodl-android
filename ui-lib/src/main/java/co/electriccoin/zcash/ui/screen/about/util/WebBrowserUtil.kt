@@ -20,7 +20,9 @@ object WebBrowserUtil {
                 .setShowTitle(true)
                 .setShareState(CustomTabsIntent.SHARE_STATE_OFF)
                 .build()
-        intent.launchUrl(activity, Uri.parse(url))
+        runCatching {
+            intent.launchUrl(activity, Uri.parse(url))
+        }
     }
 
     internal fun openBrandedUrl(
@@ -46,6 +48,8 @@ object WebBrowserUtil {
             builder.setStartAnimations(activity, R.anim.slide_up, R.anim.fade_out)
             builder.setExitAnimations(activity, R.anim.fade_in, R.anim.slide_down)
         }
-        builder.build().launchUrl(activity, Uri.parse(url))
+        runCatching {
+            builder.build().launchUrl(activity, Uri.parse(url))
+        }
     }
 }

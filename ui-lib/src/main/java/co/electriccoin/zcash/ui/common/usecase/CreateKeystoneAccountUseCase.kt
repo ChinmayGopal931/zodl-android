@@ -3,11 +3,13 @@ package co.electriccoin.zcash.ui.common.usecase
 import cash.z.ecc.android.sdk.exception.InitializeException
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
+import co.electriccoin.zcash.ui.common.provider.SynchronizerProvider
 import com.keystone.module.ZcashAccount
 import com.keystone.module.ZcashAccounts
 
 class CreateKeystoneAccountUseCase(
     private val accountDataSource: AccountDataSource,
+    private val synchronizerProvider: SynchronizerProvider,
     private val navigationRouter: NavigationRouter,
 ) {
     @Throws(InitializeException.ImportAccountException::class)
@@ -22,6 +24,7 @@ class CreateKeystoneAccountUseCase(
                 index = account.index.toLong()
             )
         accountDataSource.selectAccount(createdAccount)
+        synchronizerProvider.resetSynchronizer()
         navigationRouter.backToRoot()
     }
 }
