@@ -3,6 +3,8 @@
 package co.electriccoin.zcash.ui.design.theme.internal
 
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
@@ -14,9 +16,10 @@ interface TopAppBarColors {
     val subTitleColor: Color
     val actionColor: Color
 
+    @Composable
     @OptIn(ExperimentalMaterial3Api::class)
     fun toMaterialTopAppBarColors() =
-        androidx.compose.material3.TopAppBarColors(
+        TopAppBarDefaults.topAppBarColors(
             containerColor = containerColor,
             scrolledContainerColor = containerColor,
             navigationIconContentColor = navigationColor,

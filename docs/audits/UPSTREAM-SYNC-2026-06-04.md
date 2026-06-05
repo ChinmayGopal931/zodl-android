@@ -29,7 +29,15 @@
 - [x] **P2-1** Keystone synchronizer reset — `CreateKeystoneAccountUseCase.kt` (+`SynchronizerProvider` param + `resetSynchronizer()`; `factoryOf` auto-wires; kept fork's `backToRoot()`).
 - [x] **P1-5** three small fixes — `NearSwapDataSourceImpl.kt` (`distinctBy`), `TransactionRepository.kt` (combine `status` → Pending-while-syncing), `WebBrowserUtil.kt` (`runCatching` both `launchUrl` calls).
 
-> ⚠️ **Local compile blocker (environment, pre-existing, repo-wide — NOT these edits):** `../zcash-android-wallet-sdk` is not checked out, so Gradle falls back to Maven `2.4.8`, whose `Zatoshi.fromZecString(Context, String)` is API-incompatible with the fork's `fromZecString(String, Locale)` (top-level ext only in the pinned SHA `88499ad`). `CreateFlexaTransactionUseCase.kt:96` fails to compile on clean `main` for this reason. To compile/verify locally, the SDK sibling must be cloned at `88499ad` (cargo + NDK are present, so it builds). **Batch 1 changes are not yet compile-verified pending this setup.**
+> ⚠️ **Local compile blocker (environment, pre-existing, repo-wide — NOT these edits):** `../zcash-android-wallet-sdk` is not checked out, so Gradle falls back to Maven `2.4.8`, whose `Zatoshi.fromZecString(Context, String)` is API-incompatible with the fork's `fromZecString(String, Locale)` (top-level ext only in the pinned SHA `88499ad`). `CreateFlexaTransactionUseCase.kt:96` fails to compile on clean `main` for this reason. To compile/verify locally, the SDK sibling must be cloned at `88499ad` (cargo + NDK are present, so it builds). **RESOLVED 2026-06-04:** SDK cloned at `88499ad`; Batch 1 (merged via PR #46) and Batch 2 are compile-verified against it.
+
+**2026-06-04 — Batch 2 applied** on branch `fix/upstream-sync-2026-06-04-batch2` (off `main`, includes merged Batch 1). Dependency bumps in `gradle.properties` to match upstream:
+
+- [x] **P1-4** Ktor `3.1.3 → 3.4.0` — transport for `offramp-lib` (P2P.me) / `evm-lib` (Base RPC) / `sdk-ext-lib`. Compiles clean, **no API breaks**. ⚠️ Still wants a **real offramp-order smoke test** before production (no device/funds available here).
+- [x] **P2-2** Material3 `1.3.1 → 1.4.0` + Flexa `1.1.2 → 1.1.3`. Material3 1.4.0 required porting upstream's MOB-1111 (`baa6515d6`) adaptations: `ZashiModalBottomSheet.kt` (`rememberSheetState` now takes `positionalThreshold`/`velocityThreshold` px-provider lambdas instead of `density`) and `TopAppBarColors.kt` (`@Composable TopAppBarDefaults.topAppBarColors(...)` replacing the deprecated `TopAppBarColors(...)` constructor under `-Werror`).
+- Did NOT touch: `ZCASH_SDK_VERSION` (Batch 4), `JACOCO_VERSION` (fork already at 0.8.14), `ZCASH_VERSION_NAME` (fork owns versioning), `BOUNCY_CASTLE_VERSION` (separate CVE pass).
+
+Verified: `:offramp-lib:assemble`, `:evm-lib:assemble`, `:sdk-ext-lib:assemble`, `:ui-design-lib:compileDebugKotlin`, `:ui-lib:compileZcashmainnetFossDebugKotlin`, `:app:compileZcashmainnetFossDebugKotlin` all green; `detektAll` adds no new violations.
 
 ---
 
