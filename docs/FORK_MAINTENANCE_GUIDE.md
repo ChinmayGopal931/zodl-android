@@ -60,7 +60,7 @@ Pinned sibling SHAs in `.zapp-deps`:
 ```
 zappMessaging=6f6325cbb08a4d31b4fc5258b9d5c9f0ea019663
 bare-kit=15a3569f3d704de7151761051c8d9cc2e299414f
-zcashAndroidWalletSdk=88499adb8d62d364b2c39b3513e996549f2c662e
+zcashAndroidWalletSdk=27af78d334fd54041b6d2420dad711fb32df1bbf
 ```
 
 ### Fork directory structure (additions highlighted with ★)
@@ -364,7 +364,7 @@ These modules have NO source differences (build files may differ):
 | Property / Dependency | Upstream (v3.4.0) | Fork (v4.0.0) | Note |
 |----------------------|-------------------|---------------|------|
 | `ZCASH_VERSION_NAME` | 3.4.0 | 4.0.0 | Zapp versioning |
-| `ZCASH_SDK_VERSION` | 2.5.0-SNAPSHOT | 2.4.8 | Fork pins stable SDK |
+| `ZCASH_SDK_VERSION` | 2.6.1-SNAPSHOT | 2.6.1-SNAPSHOT | Aligned 2026-06-04; both build SDK from source (snapshot-v2.6.1) |
 | `ANDROID_TARGET_SDK_VERSION` | 36 | 35 | Fork one behind |
 | `ANDROIDX_COMPOSE_MATERIAL3_VERSION` | 1.4.0 | 1.3.1 | Fork one behind |
 | `KTOR_VERSION` | 3.4.0 | 3.1.3 | Fork pins older Ktor |
@@ -501,7 +501,7 @@ SDK_INCLUDED_BUILD_PATH=../zcash-android-wallet-sdk
 **Evaluate** these — upstream may bump them for good reason:
 ```
 ANDROID_TARGET_SDK_VERSION    (fork: 35, upstream: 36)
-ZCASH_SDK_VERSION             (fork: 2.4.8, upstream: 2.5.0-SNAPSHOT)
+ZCASH_SDK_VERSION             (fork: 2.6.1-SNAPSHOT, upstream: 2.6.1-SNAPSHOT — aligned 2026-06-04)
 KTOR_VERSION                  (fork: 3.1.3, upstream: 3.4.0)
 FLEXA_VERSION                 (fork: 1.1.2, upstream: 1.1.3)
 ANDROIDX_COMPOSE_MATERIAL3_VERSION (fork: 1.3.1, upstream: 1.4.0)
