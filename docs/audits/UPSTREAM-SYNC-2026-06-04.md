@@ -47,6 +47,14 @@ Verified: `:offramp-lib:assemble`, `:evm-lib:assemble`, `:sdk-ext-lib:assemble`,
 
 Verified: `:ui-lib:compileZcashmainnetFossDebugKotlin` green; `detektAll` adds no new violations.
 
+**2026-06-04 — Batch 4 applied** on branch `fix/upstream-sync-2026-06-04-batch4` (off `main`, incl. Batches 1-3) — the **required SDK network-compatibility bump**:
+
+- [x] **P0-1** SDK → **2.6.1-SNAPSHOT**. Key finding: the public `zcash/zcash-android-wallet-sdk` has **no 2.6.x on `main`** (it's 2.5.1); upstream's `2.6.1-SNAPSHOT` is built from the SDK's **`release/snapshot-v2.6.1`** branch — `27af78d334fd54041b6d2420dad711fb32df1bbf` (LIBRARY_VERSION 2.6.1, 2026-06-03), which carries the 2.6.x network-compat (`zcash_client_sqlite 0.21.0`, `orchard 0.14.0`, …) + the new Synchronizer API. Pinned `.zapp-deps` to that SHA, set `gradle.properties` `ZCASH_SDK_VERSION=2.6.1-SNAPSHOT`, updated `docs/FORK_MAINTENANCE_GUIDE.md`. The fork's **production code needed ZERO changes** (it already mirrors upstream's 2.6.x API).
+- [x] **P0-2** `MockSynchronizer.kt` (androidTest) updated to the new `Synchronizer` interface — compiler-authoritative list: renamed `rescanFromHeight`→`rewindToHeight`, added `fullyScannedHeight`, `getTreeState`, `getWalletDbPathForVoting` (`broadcaster` has a default, not required). `error(...)` stubs, mirroring upstream's app MockSynchronizer.
+- [ ] **INV-3** (locale formatters) — still a post-bump follow-up (re-point to SDK formatters once desired). Not required for the bump to work.
+
+Verified against the SDK source @ `27af78d3`: `:ui-lib:compileZcashmainnetFossDebugKotlin` ✅, `:ui-lib:compileZcashmainnetFossDebugAndroidTestKotlin` ✅, **full `:app:assembleZcashtestnetFossDebug` ✅ → 507 MB APK with the Rust `.so` packaged**, `detektAll` adds no new violations. Remaining gap: on-device runtime sync smoke (no device attached; testnet lightwalletd is down regardless — verify on a mainnet debug build).
+
 ---
 
 ## 1. Executive summary
