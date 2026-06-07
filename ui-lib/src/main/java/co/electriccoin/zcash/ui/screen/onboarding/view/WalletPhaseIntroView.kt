@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 // ───────────────────────────────────────────────────────────────
-// 05 · Phase 2 intro — Wallet
+// Phase 1 intro — Wallet
 // ───────────────────────────────────────────────────────────────
 
 @Composable
@@ -27,9 +27,9 @@ fun WalletPhaseIntro(
     onContinue: () -> Unit,
 ) {
     OnbScreen(
-        step = 2,
-        ghostNum = 2,
-        badge = "Part 2 of 3 · Wallet & Messaging",
+        step = 1,
+        ghostNum = 1,
+        badge = "Part 1 of 3 · Wallet & Messaging",
         cta = "Continue",
         onCta = onContinue,
         showBack = true,
@@ -74,7 +74,7 @@ fun WalletChoiceScreen(
     ) {
         // Progress bar
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
-            OnbProgress(step = 2)
+            OnbProgress(step = 1)
         }
         // Body — hero at top, action card pinned to bottom (thumb zone)
         Box(
@@ -84,9 +84,9 @@ fun WalletChoiceScreen(
                     .fillMaxWidth()
                     .padding(start = 28.dp, end = 28.dp, top = 24.dp),
         ) {
-            GhostNum(n = 2, modifier = Modifier.align(Alignment.TopEnd))
+            GhostNum(n = 1, modifier = Modifier.align(Alignment.TopEnd))
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
-                Eyebrow("Part 2 · Wallet & Messaging")
+                Eyebrow("Part 1 · Wallet & Messaging")
                 Spacer(Modifier.height(14.dp))
                 OnbHero(text = "Set up\nyour wallet")
                 Spacer(Modifier.height(14.dp))
@@ -138,7 +138,7 @@ fun WalletSeedPhraseScreen(
     onContinue: () -> Unit,
 ) {
     SeedRevealScreen(
-        step = 2,
+        step = 1,
         title = "Wallet &\nmessaging phrase",
         sub = "These 24 words restore both your wallet funds and your messaging identity. Back them up offline — they cover everything.",
         words = words,

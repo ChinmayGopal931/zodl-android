@@ -30,12 +30,13 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.UsernameEntryScreen
 import org.koin.androidx.compose.koinViewModel
 
 private enum class RestoreStep {
-    USERNAME,
     SEED_ENTRY,
     BIRTHDAY,
     TOR,
     RESTORING,
     SEED_CONFIRM,
+    USERNAME,
+    DERIVING,
     SECURE_CHOICE,
     BIO_SCAN,
     PIN_SETUP,
@@ -74,7 +75,7 @@ private fun ZappRestoreFlowContent(
     val restoreVM: ZappRestoreFlowVM = koinViewModel()
     val securityVM: OnboardingSecurityViewModel = koinViewModel()
 
-    var step by rememberSaveable { mutableStateOf(RestoreStep.USERNAME) }
+    var step by rememberSaveable { mutableStateOf(RestoreStep.SEED_ENTRY) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
 
     RestoreFlowEffects(
@@ -90,7 +91,6 @@ private fun ZappRestoreFlowContent(
     RestoreStepHost(
         step = step,
         onStepChange = { step = it },
-        pendingUsername = pendingUsername,
         onPendingUsernameChange = { pendingUsername = it },
         onBackToWelcome = onBackToWelcome,
         onComplete = onComplete,
@@ -128,15 +128,23 @@ private fun RestoreFlowEffects(
         }
     }
 
-    // Advance only when BOTH the wallet and the chat identity are ready. A chat-derive
-    // failure deliberately does NOT advance: the user stays on the RESTORING screen,
-    // which surfaces the error and a retry (see RestoringStepView). Auto-advancing on
-    // failure would bury the error and sail the user into the app with no chat identity.
-    LaunchedEffect(secretState, chatIdentity, step) {
-        val walletReady = step == RestoreStep.RESTORING && secretState == SecretState.READY
-        if (walletReady && chatIdentity != null) {
+    // Wallet-provisioning gate. Once the seed is persisted, move to the seed-backup
+    // confirmation. The chat identity is NOT derived here: the username (and the
+    // identity derived from the seed) is collected *after* the wallet exists, so the
+    // wallet comes first.
+    LaunchedEffect(secretState, step) {
+        if (step == RestoreStep.RESTORING && secretState == SecretState.READY) {
             restoreVM.markRestoreCompleted()
             onStepChange(RestoreStep.SEED_CONFIRM)
+        }
+    }
+
+    // Chat-identity gate. After the username is entered, ChatBootstrap derives the
+    // identity from the now-persisted seed. A derive failure deliberately does NOT
+    // advance: the user stays on DERIVING, which surfaces the error and a retry.
+    LaunchedEffect(chatIdentity, step) {
+        if (step == RestoreStep.DERIVING && chatIdentity != null) {
+            onStepChange(RestoreStep.SECURE_CHOICE)
         }
     }
 
@@ -157,7 +165,6 @@ private fun RestoreFlowEffects(
 private fun RestoreStepHost(
     step: RestoreStep,
     onStepChange: (RestoreStep) -> Unit,
-    pendingUsername: String,
     onPendingUsernameChange: (String) -> Unit,
     onBackToWelcome: () -> Unit,
     onComplete: () -> Unit,
@@ -167,20 +174,22 @@ private fun RestoreStepHost(
     securityVM: OnboardingSecurityViewModel,
 ) {
     when (step) {
+        RestoreStep.SEED_ENTRY -> SeedEntryStepView(restoreVM, onBackToWelcome, onStepChange)
+        RestoreStep.BIRTHDAY -> BirthdayStepView(restoreVM, onStepChange)
+        RestoreStep.TOR -> TorStepView(restoreVM, onStepChange)
+        RestoreStep.RESTORING -> RestoringStepView(walletViewModel, restoreVM)
+        RestoreStep.SEED_CONFIRM -> SeedConfirmStepView(walletViewModel, onStepChange)
+
         RestoreStep.USERNAME ->
             UsernameEntryScreen(
-                onBack = onBackToWelcome,
+                onBack = { onStepChange(RestoreStep.SEED_CONFIRM) },
                 onContinue = { name ->
                     onPendingUsernameChange(name)
-                    onStepChange(RestoreStep.SEED_ENTRY)
+                    onStepChange(RestoreStep.DERIVING)
                 },
             )
 
-        RestoreStep.SEED_ENTRY -> SeedEntryStepView(restoreVM, onStepChange)
-        RestoreStep.BIRTHDAY -> BirthdayStepView(restoreVM, onStepChange)
-        RestoreStep.TOR -> TorStepView(pendingUsername, restoreVM, onStepChange)
-        RestoreStep.RESTORING -> RestoringStepView(pendingUsername, walletViewModel, chatBootstrap, restoreVM)
-        RestoreStep.SEED_CONFIRM -> SeedConfirmStepView(walletViewModel, onStepChange)
+        RestoreStep.DERIVING -> DerivingIdentityScreen(step = 2, chatBootstrap = chatBootstrap)
         RestoreStep.SECURE_CHOICE -> SecureChoiceStepView(onStepChange)
         RestoreStep.BIO_SCAN -> BioStepView(securityVM, onStepChange)
         RestoreStep.PIN_SETUP -> PinStepView(securityVM, onStepChange)
@@ -189,7 +198,11 @@ private fun RestoreStepHost(
 }
 
 @Composable
-private fun SeedEntryStepView(restoreVM: ZappRestoreFlowVM, onStepChange: (RestoreStep) -> Unit) {
+private fun SeedEntryStepView(
+    restoreVM: ZappRestoreFlowVM,
+    onBack: () -> Unit,
+    onStepChange: (RestoreStep) -> Unit,
+) {
     val seedFieldState by restoreVM.seedFieldState.collectAsStateWithLifecycle()
     val validSeed by restoreVM.validSeed.collectAsStateWithLifecycle()
     val suggestionsVisible by restoreVM.suggestionsVisible.collectAsStateWithLifecycle()
@@ -199,7 +212,7 @@ private fun SeedEntryStepView(restoreVM: ZappRestoreFlowVM, onStepChange: (Resto
         suggestionsVisible = suggestionsVisible,
         suggestions = suggestionsList,
         isSeedValid = validSeed != null,
-        onBack = { onStepChange(RestoreStep.USERNAME) },
+        onBack = onBack,
         onNext = { onStepChange(RestoreStep.BIRTHDAY) },
     )
 }
@@ -234,7 +247,6 @@ private fun BirthdayStepView(restoreVM: ZappRestoreFlowVM, onStepChange: (Restor
 
 @Composable
 private fun TorStepView(
-    pendingUsername: String,
     restoreVM: ZappRestoreFlowVM,
     onStepChange: (RestoreStep) -> Unit,
 ) {
@@ -244,7 +256,7 @@ private fun TorStepView(
         onToggle = restoreVM::onTorToggle,
         onBack = { onStepChange(RestoreStep.BIRTHDAY) },
         onRestore = {
-            restoreVM.startRestore(pendingUsername)
+            restoreVM.startRestore()
             // If the VM rejected the start (invalid birthday), birthdayError is
             // set and isRestoring stays false — bounce back so the user can fix it.
             val nextStep = if (restoreVM.isRestoring.value) RestoreStep.RESTORING else RestoreStep.BIRTHDAY
@@ -255,51 +267,23 @@ private fun TorStepView(
 
 @Composable
 private fun RestoringStepView(
-    pendingUsername: String,
     walletViewModel: WalletViewModel,
-    chatBootstrap: ChatBootstrap,
     restoreVM: ZappRestoreFlowVM,
 ) {
-    val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
-    val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
-    val isDerivingChatIdentity by chatBootstrap.isDeriving.collectAsStateWithLifecycle()
     val restoreErrorRes by restoreVM.restoreError.collectAsStateWithLifecycle()
 
     val walletProvisionedFailedMsg = stringResource(R.string.onboarding_error_wallet_creation_failed)
-    val chatDeriveFailedMsg = stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
 
     val errorMessage =
-        rememberRestoringErrorMessage(
-            walletErr = walletProvisioningError != null,
-            walletErrMsg = walletProvisionedFailedMsg,
-            restoreErr = restoreErrorRes?.getValue(),
-            chatFailedAfterReady = chatIdentityFailed && secretState == SecretState.READY,
-            chatErrMsg = chatDeriveFailedMsg,
-        )
-    val onRetry: (() -> Unit)? =
         when {
-            restoreErrorRes != null -> ({ restoreVM.retryRestore(pendingUsername) })
-            chatIdentityFailed && !isDerivingChatIdentity -> ({ chatBootstrap.retry() })
-            else -> null
+            walletProvisioningError != null -> walletProvisionedFailedMsg
+            else -> restoreErrorRes?.getValue()
         }
-    RestoreInProgressScreen(errorMessage = errorMessage, onRetry = onRetry)
+    val onRetry: (() -> Unit)? =
+        if (restoreErrorRes != null) ({ restoreVM.retryRestore() }) else null
+    RestoreInProgressScreen(step = 1, errorMessage = errorMessage, onRetry = onRetry)
 }
-
-@Composable
-private fun rememberRestoringErrorMessage(
-    walletErr: Boolean,
-    walletErrMsg: String,
-    restoreErr: String?,
-    chatFailedAfterReady: Boolean,
-    chatErrMsg: String,
-): String? =
-    when {
-        walletErr -> walletErrMsg
-        restoreErr != null -> restoreErr
-        chatFailedAfterReady -> chatErrMsg
-        else -> null
-    }
 
 @Composable
 private fun SeedConfirmStepView(walletViewModel: WalletViewModel, onStepChange: (RestoreStep) -> Unit) {
@@ -308,20 +292,20 @@ private fun SeedConfirmStepView(walletViewModel: WalletViewModel, onStepChange: 
     // rehydrated user would otherwise land on SEED_CONFIRM with 24 empty boxes.
     val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
     SeedRevealScreen(
-        step = 2,
+        step = 1,
         title = stringResource(R.string.restore_flow_confirm_title),
         sub = stringResource(R.string.restore_flow_confirm_sub),
         words = walletSeed.orEmpty(),
         showBack = false,
         onBack = { },
-        onContinue = { onStepChange(RestoreStep.SECURE_CHOICE) },
+        onContinue = { onStepChange(RestoreStep.USERNAME) },
     )
 }
 
 @Composable
 private fun SecureChoiceStepView(onStepChange: (RestoreStep) -> Unit) {
     TwoFAChoiceScreen(
-        onBack = { onStepChange(RestoreStep.SEED_CONFIRM) },
+        onBack = { onStepChange(RestoreStep.DERIVING) },
         onPick = { mode ->
             onStepChange(
                 when (mode) {

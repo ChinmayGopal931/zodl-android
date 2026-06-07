@@ -53,12 +53,13 @@ import org.koin.compose.koinInject
 
 /** All steps the Swiss onboarding flow walks the user through. */
 private enum class Step {
-    MSG_INTRO,
-    MSG_USERNAME,
     WALLET_INTRO,
     WALLET_CHOICE,
     TOR_OPTION,
     WALLET_SEED,
+    MSG_INTRO,
+    MSG_USERNAME,
+    DERIVING,
     SECURE_CHOICE,
     BIO_SCAN,
     PIN_SETUP,
@@ -71,16 +72,16 @@ private enum class Step {
  * Runs after [co.electriccoin.zcash.ui.screen.welcome.view.WelcomeGateView] is
  * dismissed and before the user reaches the tabs shell. Three phases mirror the
  * design canvas:
- * - **Part 1 — Messaging account** (intro, username)
- * - **Part 2 — Wallet** (intro, create/restore, seed)
+ * - **Part 1 — Wallet** (intro, create/restore, seed)
+ * - **Part 2 — Messaging account** (intro, username)
  * - **Part 3 — Secure Zapp** (biometric/PIN, scan, done)
  *
- * The wallet's 24-word BIP-39 phrase seeds the messaging identity. The username
- * picked in [Step.MSG_USERNAME] is handed to [ChatBootstrap.setPendingDisplayName];
- * a reactive coroutine inside [ChatBootstrap] derives the identity from the wallet
- * seed as soon as both the SDK and the wallet are ready. This keeps both the
- * Create and the Restore paths converging on the same code, and survives the
- * navigation jump into the wallet-restore sub-flow.
+ * The wallet comes first because the messaging identity is *derived from* its
+ * 24-word BIP-39 seed. Only once the wallet is provisioned ([Step.WALLET_SEED] for
+ * create, or the restore sub-flow returning READY) do we collect the username in
+ * [Step.MSG_USERNAME] and hand it to [ChatBootstrap.setPendingDisplayName]; the
+ * reactive coroutine inside [ChatBootstrap] then derives the identity from the
+ * now-present seed while [Step.DERIVING] shows a spinner.
  */
 @Composable
 fun ZappOnboardingFlow(
@@ -90,7 +91,7 @@ fun ZappOnboardingFlow(
     chatBootstrap: ChatBootstrap,
     navigationRouter: NavigationRouter,
 ) {
-    var step by rememberSaveable { mutableStateOf(Step.MSG_INTRO) }
+    var step by rememberSaveable { mutableStateOf(Step.WALLET_INTRO) }
     var twoFAMode by rememberSaveable { mutableStateOf(TwoFAMode.Bio) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
     var torEnabled by rememberSaveable { mutableStateOf(false) }
@@ -98,8 +99,6 @@ fun ZappOnboardingFlow(
     val walletSeed by walletViewModel.currentSeedWords.collectAsStateWithLifecycle()
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
-    val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
-    val isDerivingChatIdentity by chatBootstrap.isDeriving.collectAsStateWithLifecycle()
     val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
 
     val securityVM: OnboardingSecurityViewModel = koinViewModel()
@@ -118,23 +117,30 @@ fun ZappOnboardingFlow(
         }
     }
 
-    // Auto-advance from WALLET_CHOICE / TOR_OPTION → SECURE_CHOICE only when the wallet
-    // AND the chat identity are both ready. If chat-derive failed, bounce to WALLET_SEED
-    // so the user sees the error and can retry — otherwise the restore path would jump
-    // silently past every error surface we have.
-    //
-    // TOR_OPTION is included so a process-death between createNewWallet() and the
-    // step-transition doesn't trap the user on the Tor screen with a wallet already
-    // persisted underneath; clicking Continue again would overwrite a freshly-created
-    // wallet via PersistableWallet.new(). The READY guard ensures we only auto-advance
-    // here when the wallet really did finish creating during the original session.
-    LaunchedEffect(secretState, chatIdentity, chatIdentityFailed, step) {
-        val canAutoAdvance = step == Step.WALLET_CHOICE || step == Step.TOR_OPTION
-        if (secretState == SecretState.READY && canAutoAdvance) {
-            when {
-                chatIdentity != null -> step = Step.SECURE_CHOICE
-                chatIdentityFailed -> step = Step.WALLET_SEED
+    // Wallet-ready transitions. The username (and the identity derived from the seed) is
+    // collected AFTER the wallet exists, so READY routes into the messaging phase rather
+    // than straight to security.
+    // - WALLET_CHOICE: the restore sub-flow persisted a wallet and popped back here
+    //   (navigationRouter.backToRoot); move on to the messaging phase.
+    // - TOR_OPTION: process-death safety — if we died between createNewWallet() and the
+    //   step transition, don't strand the user on the Tor screen with a wallet already
+    //   persisted underneath (tapping Continue again would overwrite it).
+    LaunchedEffect(secretState, step) {
+        if (secretState == SecretState.READY) {
+            when (step) {
+                Step.WALLET_CHOICE -> step = Step.MSG_INTRO
+                Step.TOR_OPTION -> step = Step.WALLET_SEED
+                else -> Unit
             }
+        }
+    }
+
+    // Chat-identity gate. Once the username is set, ChatBootstrap derives the identity
+    // from the persisted seed; advance when it lands. A derive failure keeps the user on
+    // DERIVING (which shows the error + retry) instead of advancing.
+    LaunchedEffect(chatIdentity, step) {
+        if (step == Step.DERIVING && chatIdentity != null) {
+            step = Step.SECURE_CHOICE
         }
     }
 
@@ -153,43 +159,28 @@ fun ZappOnboardingFlow(
     }
 
     when (step) {
-        Step.MSG_INTRO -> {
-            MessagingPhaseIntro(
-                onBack = onBackToWelcome,
-                onContinue = { step = Step.MSG_USERNAME },
-            )
-        }
-
-        Step.MSG_USERNAME -> {
-            UsernameEntryScreen(
-                onBack = { step = Step.MSG_INTRO },
-                onContinue = { name ->
-                    pendingUsername = name
-                    step = Step.WALLET_INTRO
-                },
-            )
-        }
-
         Step.WALLET_INTRO -> {
             WalletPhaseIntro(
-                onBack = { step = Step.MSG_USERNAME },
+                onBack = onBackToWelcome,
                 onContinue = { step = Step.WALLET_CHOICE },
             )
         }
 
         Step.WALLET_CHOICE -> {
-            WalletChoiceScreen(
-                onBack = { step = Step.WALLET_INTRO },
-                // Create path defers wallet creation until after the Tor opt-in so the
-                // preference is persisted before the Synchronizer is wired up.
-                onCreate = { step = Step.TOR_OPTION },
-                onRestore = {
-                    // Restore path goes into the legacy restore sub-flow, which has its
-                    // own Tor screen at the end — don't double-prompt the user.
-                    chatBootstrap.setPendingDisplayName(pendingUsername)
-                    navigationRouter.forward(RestoreSeedArgs)
-                },
-            )
+            if (secretState == SecretState.READY) {
+                // The restore sub-flow persisted a wallet and popped back here; the
+                // wallet-ready effect is about to advance to MSG_INTRO. Render a spinner
+                // rather than flash the create/restore chooser for a frame.
+                SeedLoadingPlaceholder(sdkError = null, onRetry = null)
+            } else {
+                WalletChoiceScreen(
+                    onBack = { step = Step.WALLET_INTRO },
+                    // Create path defers wallet creation until after the Tor opt-in so the
+                    // preference is persisted before the Synchronizer is wired up.
+                    onCreate = { step = Step.TOR_OPTION },
+                    onRestore = { navigationRouter.forward(RestoreSeedArgs) },
+                )
+            }
         }
 
         Step.TOR_OPTION -> {
@@ -207,59 +198,61 @@ fun ZappOnboardingFlow(
                     // forget createNewWallet) had.
                     scope.launch {
                         torProvider.store(torEnabled)
-                        chatBootstrap.setPendingDisplayName(pendingUsername)
                         walletViewModel.createNewWallet()
                         step = Step.WALLET_SEED
                     }
                 },
                 badge = stringResource(R.string.onboarding_tor_badge),
                 ctaText = stringResource(R.string.onboarding_continue),
-                step = 2,
-                ghostNum = 2,
+                step = 1,
+                ghostNum = 1,
             )
         }
 
         Step.WALLET_SEED -> {
             val words = walletSeed
-            // Wallet-creation failure takes precedence: without a wallet, there's nothing for
-            // chat-identity derivation to operate on, so its error (if any) is a downstream
-            // symptom. Once wallet exists, surface chat-derivation failures alone.
             val errorMessage =
-                when {
-                    walletProvisioningError != null ->
-                        stringResource(R.string.onboarding_error_wallet_creation_failed)
-                    chatIdentityFailed ->
-                        stringResource(R.string.chat_identity_setup_error_wallet_derive_failed)
-                    else -> null
-                }
-            // Only chat-identity failures are retryable from here; a wallet-creation failure
-            // means there's no seed to derive from, so a retry of the chat path would just
-            // fail again. The user has to go back to WALLET_CHOICE. Gate on `isDeriving` so a
-            // spammed button doesn't queue redundant PBKDF2 round-trips.
-            val onRetry: (() -> Unit)? =
-                if (walletProvisioningError == null && chatIdentityFailed && !isDerivingChatIdentity) {
-                    { chatBootstrap.retry() }
+                if (walletProvisioningError != null) {
+                    stringResource(R.string.onboarding_error_wallet_creation_failed)
                 } else {
                     null
                 }
             when {
-                // An error suppresses the seed-phrase display: on the restore path `words` is
-                // the phrase the user just typed, so re-showing it adds nothing and risks
-                // burying the actionable error.
-                errorMessage != null -> SeedLoadingPlaceholder(sdkError = errorMessage, onRetry = onRetry)
+                errorMessage != null -> SeedLoadingPlaceholder(sdkError = errorMessage, onRetry = null)
                 words == null -> SeedLoadingPlaceholder(sdkError = null, onRetry = null)
                 else ->
                     WalletSeedPhraseScreen(
                         words = words,
                         onBack = { step = Step.WALLET_CHOICE },
-                        onContinue = { step = Step.SECURE_CHOICE },
+                        onContinue = { step = Step.MSG_INTRO },
                     )
             }
         }
 
+        Step.MSG_INTRO -> {
+            // No back: the wallet is already committed at this point.
+            MessagingPhaseIntro(
+                onBack = {},
+                onContinue = { step = Step.MSG_USERNAME },
+                showBack = false,
+            )
+        }
+
+        Step.MSG_USERNAME -> {
+            UsernameEntryScreen(
+                onBack = { step = Step.MSG_INTRO },
+                onContinue = { name ->
+                    pendingUsername = name
+                    step = Step.DERIVING
+                },
+            )
+        }
+
+        Step.DERIVING -> DerivingIdentityScreen(step = 2, chatBootstrap = chatBootstrap)
+
         Step.SECURE_CHOICE -> {
             TwoFAChoiceScreen(
-                onBack = { step = Step.WALLET_SEED },
+                onBack = { step = Step.DERIVING },
                 onPick = { mode ->
                     twoFAMode = mode
                     step =

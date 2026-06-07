@@ -18,7 +18,6 @@ import co.electriccoin.zcash.ui.design.component.SeedWordInnerTextFieldState
 import co.electriccoin.zcash.ui.design.component.SeedWordTextFieldState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
-import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,7 +45,6 @@ class ZappRestoreFlowVM(
     private val application: Application,
     private val validateSeed: ValidateSeedUseCase,
     private val restoreWallet: RestoreWalletUseCase,
-    private val chatBootstrap: ChatBootstrap,
     private val isKeepScreenOnDuringRestoreProvider: IsKeepScreenOnDuringRestoreProvider,
 ) : ViewModel() {
 
@@ -222,7 +220,7 @@ class ZappRestoreFlowVM(
     private val _isRestoring = MutableStateFlow(false)
     val isRestoring: StateFlow<Boolean> = _isRestoring.asStateFlow()
 
-    fun startRestore(displayName: String) {
+    fun startRestore() {
         val seed = validSeed.value
         val saplingHeight = VersionInfo.NETWORK.saplingActivationHeight.value
         val userBirthday = _birthdayText.value.toLongOrNull()
@@ -231,7 +229,6 @@ class ZappRestoreFlowVM(
 
         _isRestoring.update { true }
         _restoreError.update { null }
-        chatBootstrap.setPendingDisplayName(displayName)
 
         viewModelScope.launch {
             runCatching {
@@ -274,9 +271,9 @@ class ZappRestoreFlowVM(
         _isRestoring.update { false }
     }
 
-    fun retryRestore(displayName: String) {
+    fun retryRestore() {
         _isRestoring.update { false }
-        startRestore(displayName)
+        startRestore()
     }
 
     private companion object {
