@@ -25,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import cash.z.ecc.android.sdk.model.Zatoshi
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.appbar.ZashiMainTopAppBarState
@@ -179,6 +180,7 @@ private fun BottomBar(
             )
         }
 
+        val footerButtonStyle = ZashiButtonDefaults.style.copy(fontSize = 14.sp)
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
@@ -189,6 +191,7 @@ private fun BottomBar(
                 ZashiButton(
                     modifier = Modifier.weight(1f),
                     state = it,
+                    style = footerButtonStyle,
                     defaultPrimaryColors = ZashiButtonDefaults.tertiaryColors()
                 )
             }
@@ -198,7 +201,8 @@ private fun BottomBar(
             state.primaryButton?.let {
                 ZashiButton(
                     modifier = Modifier.weight(1f),
-                    state = it
+                    state = it,
+                    style = footerButtonStyle
                 )
             }
         }
