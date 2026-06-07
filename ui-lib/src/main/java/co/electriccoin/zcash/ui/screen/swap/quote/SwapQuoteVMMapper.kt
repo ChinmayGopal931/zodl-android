@@ -6,6 +6,7 @@ import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.DynamicSwapAsset
 import co.electriccoin.zcash.ui.common.model.SwapMode.EXACT_INPUT
 import co.electriccoin.zcash.ui.common.model.SwapMode.EXACT_OUTPUT
+import co.electriccoin.zcash.ui.common.model.SwapMode.FLEX_INPUT
 import co.electriccoin.zcash.ui.common.model.ZecSwapAsset
 import co.electriccoin.zcash.ui.common.model.getQuoteTokenIcon
 import co.electriccoin.zcash.ui.design.component.ButtonState
@@ -76,7 +77,7 @@ internal class SwapQuoteVMMapper {
             SwapQuoteInfoItem(
                 description =
                     when (quote.mode) {
-                        EXACT_INPUT -> stringRes(R.string.swap_quote_from)
+                        EXACT_INPUT, FLEX_INPUT -> stringRes(R.string.swap_quote_from)
                         EXACT_OUTPUT -> stringRes(R.string.pay_from)
                     },
                 title = stringRes(R.string.swap_quote_zashi).withStyle(),
@@ -85,7 +86,7 @@ internal class SwapQuoteVMMapper {
             SwapQuoteInfoItem(
                 description =
                     when (quote.mode) {
-                        EXACT_INPUT -> stringRes(R.string.swap_quote_to)
+                        EXACT_INPUT, FLEX_INPUT -> stringRes(R.string.swap_quote_to)
                         EXACT_OUTPUT -> stringRes(R.string.pay_to)
                     },
                 title = stringResByAddress(quote.destinationAddress.address),
