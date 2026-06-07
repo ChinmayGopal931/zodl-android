@@ -35,7 +35,7 @@ internal class SwapQuoteVMMapper {
                 title =
                     when {
                         quote.destinationAsset is ZecSwapAsset -> stringRes(R.string.swap_quote_review)
-                        quote.mode == EXACT_INPUT -> stringRes(R.string.swap_quote_title)
+                        quote.mode in listOf(EXACT_INPUT, FLEX_INPUT) -> stringRes(R.string.swap_quote_title)
                         quote.mode == EXACT_OUTPUT -> stringRes(R.string.pay_quote_title)
                         else -> throw IllegalStateException("Unknown swap mode")
                     },

@@ -63,7 +63,7 @@ private fun Content(
         Spacer(14.dp)
         Image(
             painter = painterResource(id = R.drawable.img_third_party_scan),
-            contentDescription = stringResource(id = R.string.restore_success_subtitle),
+            contentDescription = null,
         )
         Spacer(24.dp)
         Text(

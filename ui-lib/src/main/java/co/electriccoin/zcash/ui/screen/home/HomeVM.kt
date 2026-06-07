@@ -40,7 +40,8 @@ import co.electriccoin.zcash.ui.screen.home.syncing.WalletSyncingMessageState
 import co.electriccoin.zcash.ui.screen.home.tor.EnableTorMessageState
 import co.electriccoin.zcash.ui.screen.home.updating.WalletUpdatingInfo
 import co.electriccoin.zcash.ui.screen.home.updating.WalletUpdatingMessageState
-import co.electriccoin.zcash.ui.screen.restoresuccess.WrapRestoreSuccessArgs
+import co.electriccoin.zcash.ui.screen.keepopen.KeepOpenArgs
+import co.electriccoin.zcash.ui.screen.keepopen.KeepOpenFlow
 import co.electriccoin.zcash.ui.screen.tor.optin.TorOptInArgs
 import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 import co.electriccoin.zcash.ui.util.CURRENCY_TICKER
@@ -129,7 +130,7 @@ class HomeVM(
 
             if (isRestoreVisible == true && !hasRestoreSuccessBeenShown) {
                 hasRestoreSuccessBeenShown = true
-                navigationRouter.forward(WrapRestoreSuccessArgs)
+                navigationRouter.forward(KeepOpenArgs(KeepOpenFlow.RESTORE))
             }
         }.map { }
             .stateIn(
