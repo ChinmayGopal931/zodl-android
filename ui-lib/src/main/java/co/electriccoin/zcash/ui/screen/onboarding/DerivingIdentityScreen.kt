@@ -8,13 +8,6 @@ import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
 import co.electriccoin.zcash.ui.screen.onboarding.view.RestoreInProgressScreen
 
-/**
- * Spinner shown while [ChatBootstrap] derives the messaging identity from the
- * persisted wallet seed (after the username step). Surfaces a derive failure with
- * a retry, gated on `isDeriving` so a spammed retry can't queue redundant PBKDF2
- * round-trips. Shared by the create and restore onboarding flows so both render the
- * identical Part-2 progress UI.
- */
 @Composable
 internal fun DerivingIdentityScreen(
     step: Int,
