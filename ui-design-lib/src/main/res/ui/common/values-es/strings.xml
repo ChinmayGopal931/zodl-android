@@ -36,4 +36,6 @@
 
     <string name="common_empty_screen_title">Sin resultados</string>
     <string name="common_empty_screen_subtitle">Lo intentamos, pero no pudimos encontrar nada.</string>
+    <string name="general_got_it">¡Entendido!</string>
+    <string name="general_warning">Advertencia:&#160;</string>
 </resources>
