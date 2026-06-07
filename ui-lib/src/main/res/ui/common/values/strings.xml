@@ -29,4 +29,15 @@
     <string name="general_remind_me_in_two_days">two days</string>
     <string name="general_remind_me_in_two_weeks">two weeks</string>
     <string name="general_remind_me_in_two_months">two months</string>
+    <string name="wbh_copy">Copy</string>
+    <string name="wbh_date_subtitle">First Wallet Transaction</string>
+    <string name="wbh_enter_block_height">Enter block height</string>
+    <string name="wbh_estimation_message">Zapp will scan and recover all transactions made after the following block number.</string>
+    <string name="wbh_estimation_subtitle">Estimated Block Height</string>
+    <string name="wbh_message">Entering your Wallet Birthday Height ensures we can display all your funds and transaction history correctly.</string>
+    <string name="wbh_next">Next</string>
+    <string name="wbh_subtitle">Wallet Birthday Height</string>
+    <string name="wbh_text_field_hint">Enter number</string>
+    <string name="wbh_text_field_note">Wallet Birthday Height is the point in time when your wallet was created.</string>
+    <string name="wbh_text_field_title">Block Height</string>
 </resources>

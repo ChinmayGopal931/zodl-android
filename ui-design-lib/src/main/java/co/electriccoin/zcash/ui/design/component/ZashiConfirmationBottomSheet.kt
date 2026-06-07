@@ -41,9 +41,11 @@ data class ZashiConfirmationState(
     val title: StringResource,
     val message: StringResource,
     val primaryAction: ButtonState,
-    val secondaryAction: ButtonState,
+    val secondaryAction: ButtonState? = null,
     override val onBack: () -> Unit
-) : ModalBottomSheetState
+) : ModalBottomSheetState {
+    companion object
+}
 
 @Composable
 private fun ConfirmationContent(
@@ -86,11 +88,13 @@ private fun ConfirmationContent(
             modifier = Modifier.fillMaxWidth(),
             state = state.primaryAction
         )
-        Spacer(8.dp)
-        ZashiButton(
-            modifier = Modifier.fillMaxWidth(),
-            state = state.secondaryAction,
-        )
+        state.secondaryAction?.let { secondaryAction ->
+            Spacer(8.dp)
+            ZashiButton(
+                modifier = Modifier.fillMaxWidth(),
+                state = secondaryAction,
+            )
+        }
     }
 }
 
