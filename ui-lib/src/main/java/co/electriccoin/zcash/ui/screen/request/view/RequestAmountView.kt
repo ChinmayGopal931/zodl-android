@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import cash.z.ecc.sdk.extension.ZcashDecimalFormatSymbols
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.wallet.ExchangeRateState
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -53,7 +54,6 @@ import co.electriccoin.zcash.ui.screen.request.model.OnAmount
 import co.electriccoin.zcash.ui.screen.request.model.RequestCurrency
 import co.electriccoin.zcash.ui.screen.request.model.RequestState
 import co.electriccoin.zcash.ui.util.CURRENCY_TICKER
-import java.text.DecimalFormatSymbols
 
 @Composable
 internal fun RequestAmountView(
@@ -375,7 +375,7 @@ private fun RequestAmountKeyboardView(
 ) {
     val c = ZappTheme.colors
     val locale = rememberDesiredFormatLocale()
-    val decimalSep = DecimalFormatSymbols(locale).decimalSeparator.toString()
+    val decimalSep = ZcashDecimalFormatSymbols(locale).decimalSeparator.toString()
 
     // Replace the null slot with the locale decimal separator
     val rows =
