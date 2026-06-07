@@ -37,6 +37,7 @@ import co.electriccoin.zcash.ui.screen.hotfix.enhancement.EnhancementHotfixVM
 import co.electriccoin.zcash.ui.screen.hotfix.ephemeral.EphemeralHotfixVM
 import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsVM
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsVM
+import co.electriccoin.zcash.ui.screen.keepopen.KeepOpenVM
 import co.electriccoin.zcash.ui.screen.more.MoreVM
 import co.electriccoin.zcash.ui.screen.onboarding.OnboardingSecurityViewModel
 import co.electriccoin.zcash.ui.screen.onboarding.ZappRestoreFlowVM
@@ -142,6 +143,7 @@ val viewModelModule =
         viewModelOf(::BalanceWidgetVM)
         viewModelOf(::BalanceChartVM)
         viewModelOf(::HomeVM)
+        viewModelOf(::KeepOpenVM)
         viewModelOf(::WalletSyncStateVM)
         viewModelOf(::RestoreBDHeightVM)
         viewModelOf(::RestoreBDDateVM)

@@ -31,6 +31,8 @@ import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerScreen
 import co.electriccoin.zcash.ui.screen.connectkeystone.ConnectKeystoneArgs
 import co.electriccoin.zcash.ui.screen.connectkeystone.ConnectKeystoneScreen
+import co.electriccoin.zcash.ui.screen.connectkeystone.connected.KeystoneConnectedArgs
+import co.electriccoin.zcash.ui.screen.connectkeystone.connected.KeystoneConnectedScreen
 import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactArgs
 import co.electriccoin.zcash.ui.screen.contact.AddGenericABContactScreen
 import co.electriccoin.zcash.ui.screen.contact.AddZashiABContactArgs
@@ -83,6 +85,8 @@ import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsArgs
 import co.electriccoin.zcash.ui.screen.insufficientfunds.InsufficientFundsScreen
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsArgs
 import co.electriccoin.zcash.ui.screen.integrations.IntegrationsScreen
+import co.electriccoin.zcash.ui.screen.keepopen.KeepOpenArgs
+import co.electriccoin.zcash.ui.screen.keepopen.KeepOpenScreen
 import co.electriccoin.zcash.ui.screen.more.MoreArgs
 import co.electriccoin.zcash.ui.screen.more.MoreScreen
 import co.electriccoin.zcash.ui.screen.offramp.OfframpArgs
@@ -258,6 +262,8 @@ fun NavGraphBuilder.walletNavGraph(
             RequestScreen(addressType)
         }
         composable<ConnectKeystoneArgs> { ConnectKeystoneScreen() }
+        composable<KeystoneConnectedArgs> { KeystoneConnectedScreen() }
+        composable<KeepOpenArgs> { KeepOpenScreen(it.toRoute()) }
         composable<SelectKeystoneAccount> { AndroidSelectKeystoneAccount(it.toRoute()) }
         composable<ReviewTransactionArgs> { AndroidReviewTransaction() }
         composable<TransactionProgressArgs> { TransactionProgressScreen(it.toRoute()) }

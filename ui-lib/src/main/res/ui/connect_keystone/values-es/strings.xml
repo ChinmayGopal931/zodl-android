@@ -9,4 +9,7 @@
     <string name="connect_keystone_item_4">Elige la app Zapp (Zapp) y escanea el código QR</string>
     <string name="connect_keystone_item_title">Instrucciones:</string>
     <string name="connect_keystone_positive">Listo para Escanear</string>
+    <string name="keystone_connected_subtitle">¡Conectado!</string>
+    <string name="keystone_connected_message">Tu wallet de hardware Keystone se ha conectado correctamente.</string>
+    <string name="keystone_connected_button">Cerrar</string>
 </resources>
