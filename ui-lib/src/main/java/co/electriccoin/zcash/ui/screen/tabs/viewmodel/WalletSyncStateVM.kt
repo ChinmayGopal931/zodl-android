@@ -18,7 +18,7 @@ enum class WalletSyncStatus { SYNCED, SYNCING, RESTORING, DISCONNECTED, ERROR, I
 
 data class WalletSyncChipState(
     val status: WalletSyncStatus,
-    val progressPercent: Int,
+    val progressPercent: Float,
 )
 
 class WalletSyncStateVM(
@@ -31,12 +31,12 @@ class WalletSyncStateVM(
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-                initialValue = WalletSyncChipState(WalletSyncStatus.INITIALIZING, 0),
+                initialValue = WalletSyncChipState(WalletSyncStatus.INITIALIZING, 0f),
             )
 
     private fun toChipState(snapshot: WalletSnapshot?): WalletSyncChipState {
-        if (snapshot == null) return WalletSyncChipState(WalletSyncStatus.INITIALIZING, 0)
-        val percent = (snapshot.progress.decimal * 100f).toInt().coerceIn(0, 100)
+        if (snapshot == null) return WalletSyncChipState(WalletSyncStatus.INITIALIZING, 0f)
+        val percent = (snapshot.progress.decimal * 100f).coerceIn(0f, 100f)
         val status =
             when {
                 snapshot.synchronizerError != null -> WalletSyncStatus.ERROR

@@ -39,7 +39,7 @@ internal fun SyncProgressRow(state: WalletSyncChipState) {
     val c = ZappTheme.colors
     val isError = state.status == WalletSyncStatus.DISCONNECTED || state.status == WalletSyncStatus.ERROR
     val fillColor = if (isError) c.danger else c.accent
-    val fraction = (state.progressPercent.coerceIn(0, 100)) / 100f
+    val fraction = state.progressPercent.coerceIn(0f, 100f) / 100f
     val showPercent = state.status == WalletSyncStatus.SYNCING || state.status == WalletSyncStatus.RESTORING
 
     Column(modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)) {
@@ -60,7 +60,7 @@ internal fun SyncProgressRow(state: WalletSyncChipState) {
             )
             if (showPercent) {
                 BasicText(
-                    text = "${state.progressPercent}%",
+                    text = "%.2f%%".format(state.progressPercent),
                     style =
                         ZappTheme.typography.rowSubtitle.copy(
                             color = c.text,
