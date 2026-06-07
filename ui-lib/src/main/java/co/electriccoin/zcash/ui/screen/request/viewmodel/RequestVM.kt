@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import cash.z.ecc.android.sdk.model.FiatCurrencyConversion
 import cash.z.ecc.android.sdk.model.WalletAddress
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
+import cash.z.ecc.sdk.extension.ZcashDecimalFormatSymbols
 import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
@@ -38,7 +39,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.math.MathContext
-import java.text.DecimalFormatSymbols
 
 @Suppress("TooManyFunctions")
 class RequestVM(
@@ -57,8 +57,8 @@ class RequestVM(
         private const val DEFAULT_URI = ""
     }
 
-    private val decimalFormatSymbols: DecimalFormatSymbols
-        get() = DecimalFormatSymbols(application.resources.configuration.getPreferredLocale())
+    private val decimalFormatSymbols: ZcashDecimalFormatSymbols
+        get() = ZcashDecimalFormatSymbols(application.resources.configuration.getPreferredLocale())
 
     private val decimal: String
         get() = Regex.escape(decimalFormatSymbols.decimalSeparator.toString())

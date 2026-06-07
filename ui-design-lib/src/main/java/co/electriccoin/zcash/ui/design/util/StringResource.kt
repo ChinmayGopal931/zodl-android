@@ -10,13 +10,14 @@ import androidx.compose.ui.platform.LocalContext
 import cash.z.ecc.android.sdk.ext.convertZatoshiToZec
 import cash.z.ecc.android.sdk.model.FiatCurrency
 import cash.z.ecc.android.sdk.model.Zatoshi
+import cash.z.ecc.sdk.extension.currencyFormatter
+import cash.z.ecc.sdk.extension.zatoshiFormatter
 import co.electriccoin.zcash.ui.design.R
 import co.electriccoin.zcash.ui.design.theme.balances.LocalBalancesAvailable
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
 import java.text.DateFormat
-import java.text.NumberFormat
 import java.time.YearMonth
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -160,7 +161,7 @@ fun stringRes(yearMonth: YearMonth): StringResource =
     StringResource.ByYearMonth(yearMonth)
 
 @Stable
-fun stringResByAddress(value: String, ellipsize: Ellipsize = Ellipsize.END): StyledStringResource =
+fun stringResByAddress(value: String, ellipsize: Ellipsize = Ellipsize.MIDDLE): StyledStringResource =
     StringResource.ByAddress(value, ellipsize).styleAsAddress()
 
 fun StringResource.styleAsAddress(): StyledStringResource =
@@ -262,15 +263,7 @@ private fun StringResource.ByNumber.convertNumber(context: StringContext): Strin
 
 private fun StringResource.ByZatoshi.convertZatoshi(context: StringContext): String {
     val zec = this.zatoshi.convertZatoshiToZec(scale = 8)
-    val amount =
-        NumberFormat
-            .getInstance(context.locale)
-            .apply {
-                roundingMode = RoundingMode.HALF_EVEN
-                maximumFractionDigits = 8
-                minimumFractionDigits = 3
-                minimumIntegerDigits = 1
-            }.format(zec)
+    val amount = zatoshiFormatter(context.locale).format(zec)
     return when (this.tickerLocation) {
         TickerLocation.BEFORE -> "ZEC $amount"
         TickerLocation.AFTER -> "$amount ZEC"
@@ -297,10 +290,12 @@ private fun convertNumberToString(
     val bigDecimalAmount = amount.toBigDecimal().stripTrailingZeros()
     val maxFractionDigits = maxDecimals ?: bigDecimalAmount.scale().coerceAtLeast(minDecimals)
     val formatter =
-        NumberFormat.getInstance(locale).apply {
+        currencyFormatter(
+            locale,
+            maximumFractionDigits = maxFractionDigits,
+            minimumFractionDigits = minDecimals,
+        ).apply {
             roundingMode = RoundingMode.HALF_EVEN
-            maximumFractionDigits = maxFractionDigits
-            minimumFractionDigits = minDecimals
             minimumIntegerDigits = 1
             isGroupingUsed = includeGroupingSeparator
         }
@@ -328,10 +323,12 @@ private fun convertDynamicNumberToString(
     val dynamicAmount = bigDecimalAmount.stripFractionsDynamically()
     val maxDecimals = if (bigDecimalAmount.scale() > 0) bigDecimalAmount.scale() else 0
     val formatter =
-        NumberFormat.getInstance(locale).apply {
-            roundingMode = RoundingMode.DOWN
+        currencyFormatter(
+            locale,
+            minimumFractionDigits = 2,
             maximumFractionDigits = maxDecimals.coerceAtLeast(2)
-            minimumFractionDigits = 2
+        ).apply {
+            roundingMode = RoundingMode.DOWN
             minimumIntegerDigits = 1
             isGroupingUsed = includeGroupingSeparator
         }
