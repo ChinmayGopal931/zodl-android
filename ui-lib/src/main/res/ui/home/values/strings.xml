@@ -41,6 +41,8 @@
     <string name="home_message_restoring_title">Restoring Wallet • %1$.1f%% Complete</string>
     <string name="home_message_restoring_subtitle">Keep Zapp open on active phone screen</string>
     <string name="home_message_restoring_subtitle_spendable">Your funds are ready to be used now</string>
+    <string name="home_message_resyncing_title">Resyncing</string>
+    <string name="home_message_resyncing_subtitle">Keep Zapp open on an active phone screen</string>
     <string name="home_message_syncing_title">Syncing • %1$.1f%% Complete</string>
     <string name="home_message_syncing_subtitle">Your wallet is updating</string>
     <string name="home_message_error_title">Error encountered while syncing</string>
@@ -80,6 +82,9 @@
     <string name="home_info_restoring_note">Funds cannot be spent until your wallet is restored.</string>
     <string name="home_info_syncing_title">Wallet Sync in Progress</string>
     <string name="home_info_syncing_message">Zapp is scanning the blockchain for your latest transactions to make sure
+        your balances are displayed correctly. Keep the Zapp app open on an active phone screen to avoid interruptions.</string>
+    <string name="home_info_resyncing_title">Wallet Resync in Progress</string>
+    <string name="home_info_resyncing_message">Zapp is scanning the blockchain for your latest transactions to make sure
         your balances are displayed correctly. Keep the Zapp app open on an active phone screen to avoid interruptions.</string>
     <string name="home_info_updating_title">Updating Balance</string>
     <string name="home_info_updating_message">Your last transaction is getting mined and confirmed.</string>
