@@ -189,8 +189,8 @@ internal fun RestoreBirthdayScreen(
     }
 
     OnbScreen(
-        step = 2,
-        ghostNum = 2,
+        step = 1,
+        ghostNum = 1,
         badge = stringResource(R.string.restore_flow_birthday_badge),
         cta = ctaLabel,
         onCta = onNext,
@@ -447,8 +447,8 @@ internal fun RestoreTorOptionScreen(
         onContinue = onRestore,
         badge = stringResource(R.string.restore_flow_tor_badge),
         ctaText = stringResource(R.string.restore_bd_restore_btn),
-        step = 2,
-        ghostNum = 2,
+        step = 1,
+        ghostNum = 1,
     )
 }
 
@@ -456,6 +456,7 @@ internal fun RestoreTorOptionScreen(
 
 @Composable
 internal fun RestoreInProgressScreen(
+    step: Int,
     errorMessage: String?,
     onRetry: (() -> Unit)?,
 ) {
@@ -468,7 +469,7 @@ internal fun RestoreInProgressScreen(
             .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
-            OnbProgress(step = 2)
+            OnbProgress(step = step)
         }
         Box(
             modifier = Modifier.weight(1f).fillMaxWidth(),

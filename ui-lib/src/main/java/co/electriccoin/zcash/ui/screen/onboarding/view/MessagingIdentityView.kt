@@ -36,21 +36,22 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.UsernameRules
 
 // ───────────────────────────────────────────────────────────────
-// 02 · Phase 1 intro — Messaging account
+// Phase 2 intro — Messaging account
 // ───────────────────────────────────────────────────────────────
 
 @Composable
 fun MessagingPhaseIntro(
     onBack: () -> Unit,
     onContinue: () -> Unit,
+    showBack: Boolean = true,
 ) {
     OnbScreen(
-        step = 1,
-        ghostNum = 1,
-        badge = "Part 1 of 3 · Messaging account",
+        step = 2,
+        ghostNum = 2,
+        badge = "Part 2 of 3 · Messaging account",
         cta = "Continue",
         onCta = onContinue,
-        showBack = true,
+        showBack = showBack,
         onBack = onBack,
     ) {
         OnbHero(text = "Create your\nmessaging\nidentity")
@@ -76,7 +77,7 @@ fun MessagingPhaseIntro(
 }
 
 // ───────────────────────────────────────────────────────────────
-// 03 · Username
+// Phase 2 · Username
 // ───────────────────────────────────────────────────────────────
 
 @Composable
@@ -90,9 +91,9 @@ fun UsernameEntryScreen(
     val isValid = UsernameRules.isValid(username)
 
     OnbScreen(
-        step = 1,
-        ghostNum = 1,
-        badge = "Part 1 · Username",
+        step = 2,
+        ghostNum = 2,
+        badge = "Part 2 · Username",
         cta = "Continue",
         ctaEnabled = isValid,
         onCta = { if (isValid) onContinue(username) },
