@@ -70,7 +70,7 @@ class NearSwapDataSourceImpl(
     ): SwapQuote {
         val decimals =
             when (swapMode) {
-                SwapMode.EXACT_INPUT -> originAsset.decimals
+                SwapMode.EXACT_INPUT, SwapMode.FLEX_INPUT -> originAsset.decimals
                 SwapMode.EXACT_OUTPUT -> destinationAsset.decimals
             }
 
@@ -128,7 +128,7 @@ class NearSwapDataSourceImpl(
                             ?.toBigDecimalOrNull() ?: throw e
                     val errorAsset =
                         when (swapMode) {
-                            SwapMode.EXACT_INPUT -> originAsset
+                            SwapMode.EXACT_INPUT, SwapMode.FLEX_INPUT -> originAsset
                             SwapMode.EXACT_OUTPUT -> destinationAsset
                         }
                     throw QuoteLowAmountException(
