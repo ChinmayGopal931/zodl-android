@@ -74,6 +74,8 @@ interface WalletRepository {
         birthday: BlockHeight
     )
 
+    fun init()
+
     fun updateWalletEndpoint(endpoint: LightWalletEndpoint)
 
     fun refreshFastestServers()
@@ -172,6 +174,17 @@ class WalletRepositoryImpl(
 
     private val _walletProvisioningError = MutableStateFlow<Throwable?>(null)
     override val walletProvisioningError: StateFlow<Throwable?> = _walletProvisioningError.asStateFlow()
+
+    override fun init() {
+        scope.launch { migrateDecommissionedEndpointIfNeeded() }
+    }
+
+    private suspend fun migrateDecommissionedEndpointIfNeeded() {
+        val wallet = persistableWalletProvider.getPersistableWallet() ?: return
+        if (wallet.endpoint.host in lightWalletEndpointProvider.getDecommissionedHosts()) {
+            persistWalletInternal(wallet.copy(endpoint = lightWalletEndpointProvider.getDefaultEndpoint()))
+        }
+    }
 
     override fun updateWalletEndpoint(endpoint: LightWalletEndpoint) {
         scope.launch {

@@ -20,8 +20,6 @@ class LightWalletEndpointProvider(
                 LightWalletEndpoint(host = "ap.zec.rocks", port = 443, isSecure = true),
                 LightWalletEndpoint(host = "us.zec.stardust.rest", port = 443, isSecure = true),
                 LightWalletEndpoint(host = "eu.zec.stardust.rest", port = 443, isSecure = true),
-                LightWalletEndpoint(host = "eu2.zec.stardust.rest", port = 443, isSecure = true),
-                LightWalletEndpoint(host = "jp.zec.stardust.rest", port = 443, isSecure = true),
             )
         } else {
             // testnet.zec.rocks:443 is app-layer dead (TCP up, no gRPC) and produces the
@@ -33,4 +31,10 @@ class LightWalletEndpointProvider(
         }
 
     fun getDefaultEndpoint() = getEndpoints().first()
+
+    fun getDecommissionedHosts(): Set<String> =
+        setOf(
+            "jp.zec.stardust.rest",
+            "eu2.zec.stardust.rest",
+        )
 }

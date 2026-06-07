@@ -6,6 +6,7 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpRequestRetry
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logger
@@ -28,13 +29,13 @@ class HttpClientProviderImpl(
         synchronizerProvider
             .getSynchronizer()
             .getTorHttpClient {
-                configureHttpClient()
+                configureHttpClient(installTimeouts = false)
             }
 
     @Suppress("MagicNumber")
     private fun createDirect() =
         HttpClient(OkHttp) {
-            configureHttpClient()
+            configureHttpClient(installTimeouts = true)
             install(HttpRequestRetry) {
                 maxRetries = 4
                 retryOnExceptionOrServerErrors(4)
@@ -42,16 +43,31 @@ class HttpClientProviderImpl(
             }
         }
 
-    private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.configureHttpClient() {
-        // Don't install Ktor's HttpTimeout here: this config is shared with the Tor client, and arti
-        // manages its own circuit timeouts — a Ktor timeout aborts offramp/CMC requests over Tor early.
+    private fun <T : HttpClientEngineConfig> HttpClientConfig<T>.configureHttpClient(
+        installTimeouts: Boolean
+    ) {
         install(ContentNegotiation) { json() }
+        // arti manages its own circuit timeouts for the Tor client — a Ktor timeout aborts
+        // offramp/CMC requests over Tor early — so install Ktor timeouts only on the direct
+        // (clearnet) client, where an absent timeout would let a request hang indefinitely.
+        if (installTimeouts) {
+            install(HttpTimeout) {
+                requestTimeoutMillis = DEFAULT_REQUEST_TIMEOUT_MILLIS
+                socketTimeoutMillis = DEFAULT_REQUEST_TIMEOUT_MILLIS
+                connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT_MILLIS
+            }
+        }
         install(Logging) {
             logger = KtorLogger()
             level = LogLevel.ALL
             sanitizeHeader { header -> header == HttpHeaders.Authorization }
         }
         expectSuccess = true
+    }
+
+    private companion object {
+        const val DEFAULT_REQUEST_TIMEOUT_MILLIS = 120_000L
+        const val DEFAULT_CONNECT_TIMEOUT_MILLIS = 15_000L
     }
 }
 
