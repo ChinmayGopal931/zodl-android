@@ -142,8 +142,9 @@ private fun RequestBottomBar(
             modifier
                 .fillMaxWidth()
                 .background(c.bg)
-                .border(BorderStroke(1.dp, c.text), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(bottom = 12.dp)
+                .border(BorderStroke(1.dp, c.text), RectangleShape),
     ) {
         when (state) {
             is RequestState.Amount -> {
