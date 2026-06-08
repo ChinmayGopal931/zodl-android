@@ -126,12 +126,14 @@ import co.electriccoin.zcash.ui.screen.restore.tor.RestoreTorArgs
 import co.electriccoin.zcash.ui.screen.restore.tor.RestoreTorScreen
 import co.electriccoin.zcash.ui.screen.restoresuccess.WrapRestoreSuccess
 import co.electriccoin.zcash.ui.screen.restoresuccess.WrapRestoreSuccessArgs
-import co.electriccoin.zcash.ui.screen.resync.confirm.ConfirmResyncArgs
-import co.electriccoin.zcash.ui.screen.resync.confirm.ConfirmResyncScreen
-import co.electriccoin.zcash.ui.screen.resync.date.ResyncBDDateArgs
-import co.electriccoin.zcash.ui.screen.resync.date.ResyncBDDateScreen
-import co.electriccoin.zcash.ui.screen.resync.estimation.ResyncBDEstimationArgs
-import co.electriccoin.zcash.ui.screen.resync.estimation.ResyncBDEstimationScreen
+import co.electriccoin.zcash.ui.screen.resync.confirm.ResyncConfirmArgs
+import co.electriccoin.zcash.ui.screen.resync.confirm.ResyncConfirmScreen
+import co.electriccoin.zcash.ui.screen.resync.date.ResyncDateArgs
+import co.electriccoin.zcash.ui.screen.resync.date.ResyncDateScreen
+import co.electriccoin.zcash.ui.screen.resync.estimation.ResyncEstimationArgs
+import co.electriccoin.zcash.ui.screen.resync.estimation.ResyncEstimationScreen
+import co.electriccoin.zcash.ui.screen.resync.height.ResyncHeightArgs
+import co.electriccoin.zcash.ui.screen.resync.height.ResyncHeightScreen
 import co.electriccoin.zcash.ui.screen.reviewtransaction.AndroidReviewTransaction
 import co.electriccoin.zcash.ui.screen.reviewtransaction.ReviewTransactionArgs
 import co.electriccoin.zcash.ui.screen.scan.ScanArgs
@@ -339,9 +341,10 @@ fun NavGraphBuilder.walletNavGraph(
         composable<DebugArgs> { DebugScreen() }
         composable<DebugDBArgs> { DebugDBScreen() }
         dialogComposable<DebugTextArgs> { DebugTextScreen(it.toRoute()) }
-        composable<ConfirmResyncArgs> { ConfirmResyncScreen() }
-        composable<ResyncBDDateArgs> { ResyncBDDateScreen(it.toRoute()) }
-        composable<ResyncBDEstimationArgs> { ResyncBDEstimationScreen(it.toRoute()) }
+        composable<ResyncConfirmArgs> { ResyncConfirmScreen() }
+        composable<ResyncDateArgs> { ResyncDateScreen(it.toRoute()) }
+        composable<ResyncEstimationArgs> { ResyncEstimationScreen(it.toRoute()) }
+        composable<ResyncHeightArgs> { ResyncHeightScreen() }
         composable<DisconnectArgs> { DisconnectScreen() }
         composable<WrapRestoreSuccessArgs> { WrapRestoreSuccess() }
         composable<RestoreSeedArgs> { RestoreSeedScreen() }

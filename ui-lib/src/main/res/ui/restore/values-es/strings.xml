@@ -55,5 +55,8 @@
     <string name="confirm_resync_info">Tu billetera se resincronizará desde %1$s (%2$s bloques). Usa el botón a continuación si deseas cambiarlo.</string>
     <string name="confirm_resync_change">Cambiar</string>
     <string name="confirm_resync_confirm">Confirmar</string>
+    <string name="resync_wbh_confirm_button">Confirmar</string>
+    <string name="resync_confirm_failed_title">Error de resincronización</string>
+    <string name="resync_confirm_failed_message">No se pudo completar la resincronización de la billetera. Inténtalo de nuevo o informa del problema.</string>
 
 </resources>

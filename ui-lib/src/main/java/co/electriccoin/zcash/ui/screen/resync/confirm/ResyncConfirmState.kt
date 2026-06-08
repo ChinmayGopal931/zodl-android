@@ -4,7 +4,7 @@ import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.StyledStringResource
 
-data class ConfirmResyncState(
+data class ResyncConfirmState(
     val title: StringResource,
     val subtitle: StringResource,
     val message: StringResource,
