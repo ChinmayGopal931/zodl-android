@@ -36,7 +36,7 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.design.util.withStyle
 
 @Composable
-fun ConfirmResyncView(state: ConfirmResyncState) {
+fun ResyncConfirmView(state: ResyncConfirmState) {
     BlankBgScaffold(
         topBar = { AppBar(state) },
         bottomBar = {},
@@ -55,7 +55,7 @@ fun ConfirmResyncView(state: ConfirmResyncState) {
 
 @Composable
 private fun Content(
-    state: ConfirmResyncState,
+    state: ResyncConfirmState,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -108,7 +108,7 @@ private fun Content(
 }
 
 @Composable
-private fun AppBar(state: ConfirmResyncState) {
+private fun AppBar(state: ResyncConfirmState) {
     ZashiSmallTopAppBar(
         title = state.title.getValue(),
         navigationAction = {
@@ -127,11 +127,11 @@ private fun AppBar(state: ConfirmResyncState) {
 
 @PreviewScreens
 @Composable
-private fun ConfirmResyncPreview() =
+private fun ResyncConfirmPreview() =
     ZcashTheme {
-        ConfirmResyncView(
+        ResyncConfirmView(
             state =
-                ConfirmResyncState(
+                ResyncConfirmState(
                     title = stringRes(R.string.resync_title),
                     subtitle = stringRes(R.string.confirm_resync_title),
                     message = stringRes(R.string.confirm_resync_subtitle),
@@ -142,7 +142,7 @@ private fun ConfirmResyncPreview() =
                         stringRes(
                             "Your wallet will be resynced from May 2024 (2,185,500 blocks). " +
                                 "Use the button below if you wish to change it."
-                        ).withStyle()
+                        ).withStyle(),
                 )
         )
     }

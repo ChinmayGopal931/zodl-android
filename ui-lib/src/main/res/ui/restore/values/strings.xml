@@ -61,5 +61,8 @@
     <string name="confirm_resync_info">Your wallet will be resynced from %1$s (%2$s blocks). Use the button below if you wish to change it.</string>
     <string name="confirm_resync_change">Change</string>
     <string name="confirm_resync_confirm">Confirm</string>
+    <string name="resync_wbh_confirm_button">Confirm</string>
+    <string name="resync_confirm_failed_title">Resync Failed</string>
+    <string name="resync_confirm_failed_message">Resync of the wallet couldn’t be finalized. Please try again or report an issue.</string>
 
 </resources>

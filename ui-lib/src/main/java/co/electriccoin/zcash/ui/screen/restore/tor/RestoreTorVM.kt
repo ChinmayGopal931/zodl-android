@@ -9,6 +9,7 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.WalletRepository
 import co.electriccoin.zcash.ui.common.usecase.RestoreWalletUseCase
+import co.electriccoin.zcash.ui.common.usecase.ShowErrorUseCase
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.CheckboxState
@@ -31,6 +32,7 @@ class RestoreTorVM(
     private val navigationRouter: NavigationRouter,
     private val restoreWallet: RestoreWalletUseCase,
     private val walletRepository: WalletRepository,
+    private val showError: ShowErrorUseCase,
 ) : ViewModel() {
     private val isChecked = MutableStateFlow(false)
 
@@ -91,6 +93,10 @@ class RestoreTorVM(
                         else -> null
                     }
                 }.filterNotNull().first()
-            if (didSucceed) navigationRouter.replaceAll(TabsArgs)
+            if (didSucceed) {
+                navigationRouter.replaceAll(TabsArgs)
+            } else {
+                showError()
+            }
         }
 }
