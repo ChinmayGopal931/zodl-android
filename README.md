@@ -26,6 +26,10 @@ adb shell monkey -p xyz.justzappit.zapp.testnet.debug -c android.intent.category
 
 This branch pins `ZCASH_NETWORK=testnet` in `gradle.properties`, so only `Zcashtestnet*` Gradle tasks are registered. To build mainnet, override at invocation: `./gradlew -PZCASH_NETWORK=mainnet :app:installZcashmainnetStoreDebug`. Full setup, exact versions, and troubleshooting live in [Build Environment](#build-environment--exact-versions) below; deeper end-to-end steps in [`DEVELOPER_SETUP.md`](DEVELOPER_SETUP.md).
 
+## Release signing & Play Store
+
+The app ships on Google Play as **Zapp for Android** (`xyz.justzappit.zapp`) with Play App Signing enabled. The current upload key lives at `~/keys/justzappit/zapp-upload-v2.keystore` (rotated 2026-06-08); its password is in git-ignored `local.properties` and the team password manager — **never** in git. Full details — key fingerprints, the four `ZCASH_RELEASE_*` build props, retired keys, and the release procedure — are in [`docs/RELEASE_SIGNING.md`](docs/RELEASE_SIGNING.md). **Back up the keystore file and its password**; losing them forces a ~48h upload-key reset.
+
 ## peer.xyz Integration
 
 Zapp integrates [peer.xyz](https://peer.xyz) as the primary fiat on/off-ramp, with [justzappit.xyz](https://justzappit.xyz/directory) as a fallback in unsupported regions.
