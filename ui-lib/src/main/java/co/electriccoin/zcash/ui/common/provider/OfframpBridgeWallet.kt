@@ -17,6 +17,7 @@ import co.electriccoin.zcash.ui.common.model.SwapQuote
 import co.electriccoin.zcash.ui.common.model.SwapStatus
 import co.electriccoin.zcash.ui.common.model.ZashiAccount
 import co.electriccoin.zcash.ui.common.model.ZecSwapAsset
+import co.electriccoin.zcash.ui.common.model.near.requireQuoteMatchesUserAmount
 import co.electriccoin.zcash.ui.common.repository.KeystoneProposalRepository
 import co.electriccoin.zcash.ui.common.repository.SubmitProposalState
 import co.electriccoin.zcash.ui.common.repository.ZashiProposalRepository
@@ -176,18 +177,37 @@ class NearBridgeOfframpFunding(
         tokens: List<SwapAsset>,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
     ): String {
+        val refundAddress = wallet.zcashAddress()
         val quote =
             swapDataSource.requestQuote(
                 swapMode = SwapMode.EXACT_OUTPUT,
                 flexInput = false,
                 amount = request.usdcAmount.whole,
-                refundAddress = wallet.zcashAddress(),
+                refundAddress = refundAddress,
                 originAsset = tokens.zecAsset(),
                 destinationAddress = account.checksumHex,
                 destinationAsset = tokens.usdcAsset(usdc),
                 slippage = slippageTolerancePercent,
                 affiliateAddress = AFFILIATE_ADDRESS,
             )
+        // This call site bypasses RequestSwapQuoteUseCase's validateQuote layer, so assert the quote
+        // echo here before irreversibly sending ZEC to quote.depositAddress. Asset substitution is
+        // already fail-closed in NearSwapQuote's init.
+        requireQuoteMatchesUserAmount(
+            quoted = quote.amountOutFormatted,
+            requested = request.usdcAmount.whole,
+            decimals = quote.destinationAsset.decimals
+        )
+        requireMatchingAddress(
+            name = "destinationAddress",
+            expected = account.checksumHex,
+            actual = quote.destinationAddress.address
+        )
+        requireMatchingAddress(
+            name = "refundAddress",
+            expected = refundAddress,
+            actual = quote.refundAddress.address
+        )
         val depositAddress = quote.depositAddress.address
         // Persist the 1-Click handle BEFORE any ZEC moves; a crash between send and persist would
         // otherwise let resume open a second bridge and double-send the user's ZEC.
@@ -269,6 +289,7 @@ class NearPullbackOfframpRefund(
 ) : OfframpRefund {
     override suspend fun pullbackTarget(account: Address, amount: Usdc6): Address {
         val tokens = swapDataSource.getSupportedTokens()
+        val destinationAddress = wallet.zcashAddress()
         val quote =
             swapDataSource.requestQuote(
                 swapMode = SwapMode.EXACT_INPUT,
@@ -276,12 +297,35 @@ class NearPullbackOfframpRefund(
                 amount = amount.whole,
                 refundAddress = account.checksumHex,
                 originAsset = tokens.usdcAsset(usdc),
-                destinationAddress = wallet.zcashAddress(),
+                destinationAddress = destinationAddress,
                 destinationAsset = tokens.zecAsset(),
                 slippage = slippageTolerancePercent,
                 affiliateAddress = AFFILIATE_ADDRESS,
             )
+        // Bypasses RequestSwapQuoteUseCase's validateQuote layer — the returned deposit address is
+        // where the sponsored USDC.transfer sends the user's refund, so assert the quote echo first.
+        requireQuoteMatchesUserAmount(
+            quoted = quote.amountInFormatted,
+            requested = amount.whole,
+            decimals = quote.originAsset.decimals
+        )
+        requireMatchingAddress(
+            name = "refundAddress",
+            expected = account.checksumHex,
+            actual = quote.refundAddress.address
+        )
+        requireMatchingAddress(
+            name = "destinationAddress",
+            expected = destinationAddress,
+            actual = quote.destinationAddress.address
+        )
         return Address.parse(quote.depositAddress.address)
+    }
+}
+
+private fun requireMatchingAddress(name: String, expected: String, actual: String) {
+    require(expected == actual) {
+        "Swap quote address mismatch: expected $name=$expected but quote returned $actual"
     }
 }
 
