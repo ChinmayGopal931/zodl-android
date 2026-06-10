@@ -97,6 +97,7 @@ internal fun SwapView(
     appBarState: ZashiMainTopAppBarState,
     onSideEffect: (amountFocusRequester: FocusRequester) -> Unit = { },
     embeddedInTabHost: Boolean = false,
+    tabSwitcher: @Composable () -> Unit = {},
 ) {
     val amountFocusRequester = remember { FocusRequester() }
     val c = ZappTheme.colors
@@ -195,6 +196,9 @@ internal fun SwapView(
                 }
             }
         }
+
+        // ── Tab switcher (when embedded in tab host) ────────────────────────
+        tabSwitcher()
 
         // ── Bottom action bar ────────────────────────────────────────────────
         SwapBottomBar(state)
