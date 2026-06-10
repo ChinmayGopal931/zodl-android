@@ -9,6 +9,7 @@ import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.datasource.AFFILIATE_ADDRESS
 import co.electriccoin.zcash.ui.common.datasource.AccountDataSource
 import co.electriccoin.zcash.ui.common.datasource.SwapDataSource
+import co.electriccoin.zcash.ui.common.datasource.TokenNotFoundException
 import co.electriccoin.zcash.ui.common.model.KeystoneAccount
 import co.electriccoin.zcash.ui.common.model.SubmitResult
 import co.electriccoin.zcash.ui.common.model.SwapAsset
@@ -225,15 +226,29 @@ class NearBridgeOfframpFunding(
      * which the checkpoint persister recognises to clear the checkpoint (re-polling the same
      * handle would just yield the same terminal status forever). Cancellation escapes normally
      * for coroutine teardown.
+     *
+     * Deterministic failures are the exception to the swallow-and-retry rule: the fail-closed
+     * status validations ([IllegalArgumentException]) and catalog lookups ([TokenNotFoundException])
+     * re-fire identically on every poll of the same response, so unbounded retry would hang the
+     * flow silently. They get a small consecutive-failure cap and then bubble — which is
+     * resume-safe, because the persister keeps the checkpoint (deposit address) for a non-terminal
+     * funding failure, so a retry re-polls instead of double-sending.
      */
     private suspend fun pollUntilSettled(depositAddress: String, tokens: List<SwapAsset>) {
+        var deterministicFailures = 0
         while (true) {
             val status =
                 try {
-                    swapDataSource.checkSwapStatus(depositAddress, tokens).status
+                    val result = swapDataSource.checkSwapStatus(depositAddress, tokens).status
+                    deterministicFailures = 0
+                    result
                 } catch (e: CancellationException) {
                     throw e
                 } catch (@Suppress("TooGenericExceptionCaught") e: Throwable) {
+                    if (e is IllegalArgumentException || e is TokenNotFoundException) {
+                        deterministicFailures++
+                        if (deterministicFailures >= MAX_DETERMINISTIC_FAILURES) throw e
+                    }
                     Twig.warn(e) {
                         "NearBridgeOfframpFunding.pollUntilSettled: transient checkSwapStatus failure " +
                             "for $depositAddress — retrying in ${pollIntervalMs}ms"
@@ -259,6 +274,7 @@ class NearBridgeOfframpFunding(
 
     private companion object {
         const val DEFAULT_POLL_INTERVAL_MS = 5_000L
+        const val MAX_DETERMINISTIC_FAILURES = 3
         val DEFAULT_SLIPPAGE_PERCENT: BigDecimal = BigDecimal("1")
     }
 }

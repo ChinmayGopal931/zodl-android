@@ -21,10 +21,7 @@
     <string name="restore_bd_text_field_hint">Ingresa un número</string>
     <string name="restore_bd_text_field_note">La Altura de Cumpleaños de la Billetera es el momento en que se creó tu billetera.</string>
 
-    <string name="restore_bd_date_subtitle">Primera Transacción de la Billetera</string>
-    <string name="restore_bd_date_message">Ingresar la altura de bloque en la que se creó tu billetera reduce la cantidad de bloques que deben escanearse para restaurarla.</string>
-    <string name="restore_bd_date_note">Si no estás seguro, elige una fecha anterior.</string>
-    <string name="restore_bd_date_next">Siguiente</string>
+    <string name="restore_bd_date_message">Decide hasta dónde debe escanear Zapp. Ingresa una fecha anterior a tu primera transacción recibida. Si no estás seguro/a, elige una fecha anterior.</string>
 
     <string name="restore_bd_estimation_subtitle">Altura de Bloque Estimada</string>
     <string name="restore_bd_estimation_message">Zapp escaneará y recuperará todas las transacciones realizadas después del siguiente número de bloque.</string>

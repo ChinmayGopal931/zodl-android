@@ -26,11 +26,7 @@
     <string name="restore_bd_text_field_hint">Enter number</string>
     <string name="restore_bd_text_field_note">Wallet Birthday Height is the point in time when your wallet was created.</string>
 
-    <string name="restore_bd_date_subtitle">First Wallet Transaction</string>
-    <string name="restore_bd_date_message">Entering the block height at which your wallet was created reduces the
-        number of blocks that need to be scanned to recover your wallet.</string>
-    <string name="restore_bd_date_note">If you’re not sure, choose an earlier date.</string>
-    <string name="restore_bd_date_next">Next</string>
+    <string name="restore_bd_date_message">Decide how far Zapp should scan. Enter a date before your first received transaction. If you\’re not sure, choose an earlier date.</string>
 
     <string name="restore_bd_estimation_subtitle">Estimated Block Height</string>
     <string name="restore_bd_estimation_message">Zapp will scan and recover all transactions made after the following block number.</string>
