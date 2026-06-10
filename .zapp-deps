@@ -14,9 +14,9 @@ bare-kit=15a3569f3d704de7151761051c8d9cc2e299414f
 # zcash-android-wallet-sdk is consumed via Gradle includeBuild (SDK_INCLUDED_BUILD_PATH).
 # Upstream zodl-android tracks unreleased SDK commits ahead of the published Maven artifact,
 # so we mirror the SHA upstream's main is built against. Bump alongside upstream-sync work.
-# 27af78d3 = tip of the SDK's release/snapshot-v2.6.1 branch (LIBRARY_VERSION=2.6.1,
-# 2026-06-03) — the source upstream zodl's ZCASH_SDK_VERSION=2.6.1-SNAPSHOT is built from.
-# Carries the network-compat (2.6.x) update + the new Synchronizer API (fullyScannedHeight,
-# getTreeState, getWalletDbPathForVoting, broadcaster, rewindToHeight).
+# 216ae477 = tip of the SDK's release/snapshot-v2.6.2 branch (LIBRARY_VERSION=2.6.2,
+# 2026-06-09) — the source upstream zodl's ZCASH_SDK_VERSION=2.6.2-SNAPSHOT is built from.
+# Carries the reorg-safe chain-tip tree state for new-wallet birthdays, fresh checkpoints,
+# and the SDK-side MOB-1124 multi-currency conversion scaffolding.
 # GitHub: https://github.com/zcash/zcash-android-wallet-sdk
-zcashAndroidWalletSdk=27af78d334fd54041b6d2420dad711fb32df1bbf
+zcashAndroidWalletSdk=216ae477e5c611365465a29cec29cd347f63c625
