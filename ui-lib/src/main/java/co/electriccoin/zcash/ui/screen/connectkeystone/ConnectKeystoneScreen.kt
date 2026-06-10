@@ -3,6 +3,7 @@ package co.electriccoin.zcash.ui.screen.connectkeystone
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.screen.connectkeystone.explainer.KeystoneExplainerScreenArgs
 import co.electriccoin.zcash.ui.screen.scankeystone.ScanKeystoneSignInRequest
 import kotlinx.serialization.Serializable
 import org.koin.compose.koinInject
@@ -19,7 +20,7 @@ fun ConnectKeystoneScreen() {
         state =
             ConnectKeystoneState(
                 onViewKeystoneTutorialClicked = {
-                    // do nothing
+                    navigationRouter.forward(KeystoneExplainerScreenArgs)
                 },
                 onBackClick = {
                     navigationRouter.back()
