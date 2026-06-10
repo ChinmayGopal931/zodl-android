@@ -2,25 +2,26 @@ package co.electriccoin.zcash.ui.screen.restore.date
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import cash.z.ecc.android.sdk.SdkSynchronizer
-import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.model.LceState
 import co.electriccoin.zcash.ui.common.model.VersionInfo
+import co.electriccoin.zcash.ui.common.model.mutableLce
+import co.electriccoin.zcash.ui.common.model.stateIn
+import co.electriccoin.zcash.ui.common.model.withLce
+import co.electriccoin.zcash.ui.common.usecase.ErrorMapperUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.IconButtonState
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.fixture.WalletFixture
+import co.electriccoin.zcash.ui.screen.common.BirthdayPickerState
 import co.electriccoin.zcash.ui.screen.restore.estimation.RestoreBDEstimationArgs
 import co.electriccoin.zcash.ui.screen.restore.info.SeedInfo
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import java.time.YearMonth
 import java.time.ZoneId
 import kotlin.time.toKotlinInstant
@@ -29,27 +30,30 @@ class RestoreBDDateVM(
     private val args: RestoreBDDateArgs,
     private val navigationRouter: NavigationRouter,
     private val application: Application,
+    private val errorStateMapper: ErrorMapperUseCase,
 ) : ViewModel() {
     @Suppress("MagicNumber")
-    private val selection = MutableStateFlow<YearMonth>(YearMonth.of(2018, 10))
+    private val selection = MutableStateFlow(WalletFixture.SAPLING_ACTIVATION_YEAR_MONTH)
+    private val estimateLce = mutableLce<Unit>()
 
-    val state: StateFlow<RestoreBDDateState?> =
-        selection
-            .map {
-                createState(it)
-            }.stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
-                initialValue = createState(selection.value)
-            )
+    val state: StateFlow<LceState<BirthdayPickerState>> =
+        combine(selection, estimateLce.state) { yearMonth, estimate ->
+            createState(yearMonth, estimate.loading)
+        }.withLce(estimateLce, errorStateMapper::mapToState)
+            .stateIn(this, LceState(content = createState(selection.value, false)))
 
-    private fun createState(selection: YearMonth) =
-        RestoreBDDateState(
+    private fun createState(selection: YearMonth, isLoading: Boolean) =
+        BirthdayPickerState(
             title = stringRes(R.string.restore_title),
-            subtitle = stringRes(R.string.restore_bd_date_subtitle),
             message = stringRes(R.string.restore_bd_date_message),
-            note = stringRes(R.string.restore_bd_date_note),
-            next = ButtonState(stringRes(R.string.restore_bd_height_btn), onClick = ::onEstimateClick),
+            logo = null,
+            primaryButton =
+                ButtonState(
+                    text = stringRes(R.string.wbh_next),
+                    isLoading = isLoading,
+                    onClick = ::onEstimateClick,
+                ),
+            secondaryButton = null,
             dialogButton =
                 IconButtonState(
                     icon = R.drawable.ic_help,
@@ -60,8 +64,8 @@ class RestoreBDDateVM(
             selection = selection
         )
 
-    private fun onEstimateClick() {
-        viewModelScope.launch {
+    private fun onEstimateClick() =
+        estimateLce.execute {
             val instant =
                 selection.value
                     .atDay(1)
@@ -77,7 +81,6 @@ class RestoreBDDateVM(
                 )
             navigationRouter.forward(RestoreBDEstimationArgs(seed = args.seed, blockHeight = bday.value))
         }
-    }
 
     private fun onBack() = navigationRouter.back()
 

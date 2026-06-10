@@ -14,6 +14,7 @@ import co.electriccoin.zcash.ui.common.usecase.ErrorMapperUseCase
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.IconButtonState
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.fixture.WalletFixture
 import co.electriccoin.zcash.ui.screen.common.BirthdayPickerState
 import co.electriccoin.zcash.ui.screen.connectkeystone.estimation.KeystoneEstimationArgs
 import co.electriccoin.zcash.ui.screen.connectkeystone.height.KeystoneHeightArgs
@@ -32,7 +33,7 @@ class KeystoneDateVM(
     private val application: Application,
     private val errorStateMapper: ErrorMapperUseCase,
 ) : ViewModel() {
-    private val selection = MutableStateFlow(YearMonth.of(2018, 10))
+    private val selection = MutableStateFlow(WalletFixture.SAPLING_ACTIVATION_YEAR_MONTH)
     private val estimateLce = mutableLce<Unit>()
 
     val state: StateFlow<LceState<BirthdayPickerState>> =
