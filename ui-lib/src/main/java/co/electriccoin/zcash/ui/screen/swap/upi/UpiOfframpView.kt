@@ -47,6 +47,7 @@ import co.electriccoin.zcash.ui.design.component.ZashiIconButton
 import co.electriccoin.zcash.ui.design.component.ZashiImageButton
 import co.electriccoin.zcash.ui.design.component.ZashiNumberTextField
 import co.electriccoin.zcash.ui.design.component.ZashiNumberTextFieldDefaults
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
@@ -326,31 +327,16 @@ private fun BottomBar(
                 .fillMaxWidth()
                 .background(c.surface)
                 .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BOTTOM_BAR_VERTICAL_PADDING.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(width = BACK_BUTTON_WIDTH.dp, height = BOTTOM_BAR_HEIGHT.dp)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable(onClick = onBack),
-            contentAlignment = Alignment.Center,
-        ) {
-            BasicText(
-                text = "\u2190",
-                style =
-                    ZappTheme.typography.button.copy(
-                        color = c.text,
-                        fontWeight = FontWeight.Black,
-                    ),
-            )
-        }
+        ZappBackButton(onClick = onBack)
         ZappButton(
             text = send.text.getValue(),
             enabled = send.isEnabled,
             variant = ZappButtonVariant.Primary,
-            modifier = Modifier.weight(1f).height(BOTTOM_BAR_HEIGHT.dp),
+            modifier = Modifier.weight(1f).padding(start = BOTTOM_BAR_GAP.dp),
             onClick = send.onClick,
         )
     }
@@ -358,8 +344,8 @@ private fun BottomBar(
 
 private const val BODY_HORIZONTAL_PADDING = 18
 private const val BODY_VERTICAL_PADDING = 12
-private const val BACK_BUTTON_WIDTH = 72
-private const val BOTTOM_BAR_HEIGHT = 52
+private const val BOTTOM_BAR_VERTICAL_PADDING = 12
+private const val BOTTOM_BAR_GAP = 12
 private const val GAP_SM = 6
 private const val GAP_MD = 10
 private const val GAP_LG = 16
