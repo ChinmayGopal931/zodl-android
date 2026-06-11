@@ -1,5 +1,3 @@
-@file:Suppress("TooManyFunctions")
-
 package co.electriccoin.zcash.ui.screen.unifiedsend
 
 import androidx.lifecycle.ViewModel
@@ -10,6 +8,7 @@ import cash.z.ecc.android.sdk.model.WalletAddress
 import cash.z.ecc.android.sdk.model.ZecSend
 import cash.z.ecc.android.sdk.type.AddressType
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.SwapAsset
@@ -55,9 +54,6 @@ import co.electriccoin.zcash.ui.screen.swap.SwapCancelState
 import co.electriccoin.zcash.ui.screen.swap.SwapErrorFooterState
 import co.electriccoin.zcash.ui.screen.swap.picker.SwapAssetPickerArgs
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageArgs
-import co.electriccoin.zcash.ui.screen.unifiedsend.model.MemoFieldState
-import co.electriccoin.zcash.ui.screen.unifiedsend.model.PrimaryButtonState
-import co.electriccoin.zcash.ui.screen.unifiedsend.model.UnifiedSendFormState
 import co.electriccoin.zcash.ui.util.isServiceUnavailable
 import io.ktor.client.plugins.ResponseException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -454,7 +450,6 @@ internal class UnifiedSendVM(
         }
     }
 
-    @Suppress("TooGenericExceptionCaught")
     private fun createZecSendClick() {
         val addr = zcashAddress.value
         val type = zcashAddressType.value
@@ -474,8 +469,11 @@ internal class UnifiedSendVM(
                         proposal = null
                     )
                 createProposal(zecSend, fiatWasLastEdited.value)
-            } catch (_: Exception) {
+            } catch (
+                @Suppress("TooGenericExceptionCaught") e: Exception
+            ) {
                 // createProposal handles navigation to error/review internally
+                Twig.warn(e) { "UnifiedSendVM: createZecSendClick failed" }
             } finally {
                 isRequestingQuote.update { false }
             }
@@ -530,7 +528,7 @@ internal class UnifiedSendVM(
         hasZeroBalance: Boolean,
         abHintVisible: Boolean,
         isRequesting: Boolean,
-    ): UnifiedSendFormState {
+    ): UnifiedSendState {
         val hasAmount = zecValue != null && zecValue > BigDecimal.ZERO
         val isAmountValid = !zecAmount.isError && hasAmount
         val isAddressValid =
@@ -549,7 +547,7 @@ internal class UnifiedSendVM(
                 null
             }
 
-        return UnifiedSendFormState(
+        return UnifiedSendState(
             asset = buildAssetState(asset, isRequesting),
             address =
                 TextFieldState(

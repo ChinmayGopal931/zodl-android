@@ -8,7 +8,6 @@ import androidx.navigation.toRoute
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidgetArgs
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidgetVM
 import co.electriccoin.zcash.ui.screen.swap.SwapCancelView
-import co.electriccoin.zcash.ui.screen.unifiedsend.view.UnifiedSendView
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
