@@ -22,6 +22,7 @@ import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListScreen
 import co.electriccoin.zcash.ui.screen.onboarding.ZappOnboardingFlow
 import co.electriccoin.zcash.ui.screen.onboarding.ZappRestoreFlow
+import co.electriccoin.zcash.ui.screen.tabs.TabsVM
 import co.electriccoin.zcash.ui.screen.welcome.WelcomeGateVM
 import co.electriccoin.zcash.ui.screen.welcome.view.WelcomeGateView
 import org.koin.androidx.compose.koinViewModel
@@ -77,15 +78,14 @@ fun ZappTabsScaffold(
         }
 
         else -> {
-            ZappTabsScaffoldContent(navigationRouter = navigationRouter)
+            ZappTabsScaffoldContent()
         }
     }
 }
 
 @Composable
-private fun ZappTabsScaffoldContent(
-    navigationRouter: NavigationRouter,
-) {
+private fun ZappTabsScaffoldContent() {
+    val tabsVM: TabsVM = koinViewModel()
     var currentTab by rememberSaveable { mutableStateOf(ZappTab.WALLET) }
     // Set by tab content when it pushes a fullscreen sub-screen that owns its
     // own bottom CTA (e.g. wallet seed-reveal). Hides the floating nav pill so
@@ -100,7 +100,7 @@ private fun ZappTabsScaffoldContent(
         when (currentTab) {
             ZappTab.WALLET -> {
                 WalletTabContent(
-                    navigationRouter = navigationRouter,
+                    onRestoreWallet = tabsVM::onRestoreWalletClick,
                     onFullscreenChange = { hideNavPill = it },
                 )
             }
@@ -114,7 +114,13 @@ private fun ZappTabsScaffoldContent(
             }
 
             ZappTab.SETTINGS -> {
-                SettingsTabContent(navigationRouter = navigationRouter)
+                SettingsTabContent(
+                    onChatProfileClick = tabsVM::onChatProfileClick,
+                    onAppLockClick = tabsVM::onAppLockClick,
+                    onChooseServerClick = tabsVM::onChooseServerClick,
+                    onP2pTransactionsClick = tabsVM::onP2pTransactionsClick,
+                    onSupportClick = tabsVM::onSupportClick,
+                )
             }
         }
 

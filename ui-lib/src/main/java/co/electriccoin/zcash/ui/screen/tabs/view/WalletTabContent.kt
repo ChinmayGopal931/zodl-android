@@ -23,7 +23,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
@@ -34,7 +33,6 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.OnbActionListCard
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbHero
 import co.electriccoin.zcash.ui.screen.onboarding.view.OnbSub
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletSeedPhraseScreen
-import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
 import org.koin.androidx.compose.koinViewModel
 
 /** Local state machine for the wallet tab when the user post-skipped wallet creation. */
@@ -42,7 +40,7 @@ private enum class CreatePhase { Idle, RevealingSeed }
 
 @Composable
 fun WalletTabContent(
-    navigationRouter: NavigationRouter,
+    onRestoreWallet: () -> Unit,
     onFullscreenChange: (Boolean) -> Unit = {},
     walletViewModel: WalletViewModel = koinViewModel(),
 ) {
@@ -85,7 +83,7 @@ fun WalletTabContent(
                         walletViewModel.createNewWallet()
                         createPhase = CreatePhase.RevealingSeed
                     },
-                    onRestore = { navigationRouter.forward(RestoreSeedArgs) },
+                    onRestore = onRestoreWallet,
                 )
             }
 
