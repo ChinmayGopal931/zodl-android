@@ -49,9 +49,11 @@ internal class EncryptedJsonStore<T>(
         try {
             json.decodeFromString(serializer, raw)
         } catch (e: SerializationException) {
+            // Don't interpolate e.message or chain the cause: kotlinx embeds a "JSON input:"
+            // snippet of the raw input — here the DECRYPTED blob (relay private key, recipient
+            // UPI data) — and callers legitimately Twig.warn this exception.
             throw StoreCorruptedException(
-                "Encrypted-prefs blob for key ${key.key} failed to decode: ${e.message}",
-                e,
+                "Encrypted-prefs blob for key ${key.key} failed to decode (${e::class.simpleName})"
             )
         }
 }

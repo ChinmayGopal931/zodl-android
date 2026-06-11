@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCallResult
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileOutputStream
@@ -26,7 +27,7 @@ object ImageProcessor {
     private const val MAX_THUMBNAIL_BASE64_CHARS = 512 * 1024
 
     fun compressImage(context: Context, uri: Uri, maxSize: Int = MAX_IMAGE_SIZE): File? =
-        try {
+        runChatCallResult("ImageProcessor: compressImage failed") {
             val bitmap = decodeSampledFromUri(context, uri, maxSize) ?: return null
 
             val scaledBitmap = scaleBitmap(bitmap, maxSize)
@@ -37,12 +38,10 @@ object ImageProcessor {
             if (scaledBitmap !== bitmap) scaledBitmap.recycle()
             bitmap.recycle()
             outputFile
-        } catch (e: Exception) {
-            null
-        }
+        }.getOrNull()
 
     fun generateThumbnail(context: Context, uri: Uri): String? =
-        try {
+        runChatCallResult("ImageProcessor: generateThumbnail failed") {
             val bitmap = decodeSampledFromUri(context, uri, THUMBNAIL_MAX_SIZE) ?: return null
 
             val thumbnail = scaleBitmap(bitmap, THUMBNAIL_MAX_SIZE)
@@ -50,9 +49,7 @@ object ImageProcessor {
             if (thumbnail !== bitmap) thumbnail.recycle()
             bitmap.recycle()
             base64
-        } catch (e: Exception) {
-            null
-        }
+        }.getOrNull()
 
     /**
      * Safely decode a remote peer's base64 thumbnail. Caps the encoded length before

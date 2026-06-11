@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.compose.SecureScreen
 import co.electriccoin.zcash.ui.design.component.SeedTextFieldState
 import co.electriccoin.zcash.ui.design.component.SeedWordInnerTextFieldState
 import co.electriccoin.zcash.ui.design.component.TextSelection
@@ -68,6 +69,7 @@ internal fun RestoreSeedEntryScreen(
     onBack: () -> Unit,
     onNext: () -> Unit,
 ) {
+    SecureScreen()
     val c = ZappTheme.colors
     val handle = rememberSeedTextFieldHandle(seedState)
 

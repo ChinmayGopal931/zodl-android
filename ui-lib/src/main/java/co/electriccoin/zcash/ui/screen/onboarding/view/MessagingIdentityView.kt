@@ -32,6 +32,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.common.compose.SecureScreen
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.UsernameRules
 
@@ -314,6 +315,7 @@ fun SeedRevealScreen(
     onContinue: () -> Unit,
     showBack: Boolean = true,
 ) {
+    SecureScreen()
     var revealed by rememberSaveable { mutableStateOf(false) }
     var saved by rememberSaveable { mutableStateOf(false) }
     val c = ZappTheme.colors
