@@ -1,11 +1,14 @@
 package co.electriccoin.zcash.ui.screen.swap
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
@@ -14,20 +17,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
-import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 
 @Composable
-internal fun SwapTabsToolbar(
+internal fun SwapTabSwitcher(
     selected: SwapTab,
     onSelect: (SwapTab) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val c = ZappTheme.colors
@@ -35,89 +38,57 @@ internal fun SwapTabsToolbar(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(c.bg)
-                .padding(horizontal = TOOLBAR_HORIZONTAL_PADDING.dp, vertical = TOOLBAR_VERTICAL_PADDING.dp),
-        verticalAlignment = Alignment.CenterVertically,
+                .padding(horizontal = TAB_HORIZONTAL_PADDING.dp, vertical = TAB_VERTICAL_PADDING.dp)
+                .background(c.surface, RectangleShape)
+                .border(BorderStroke(1.dp, c.border), RectangleShape)
+                .padding(TAB_INNER_PADDING.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        ZappBackButton(onClick = onBack)
-        Box(
-            modifier = Modifier.weight(1f).padding(horizontal = SEGMENT_HORIZONTAL_INSET.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            SegmentedRow(selected, onSelect)
+        SwapTab.entries.forEach { tab ->
+            val isSelected = tab == selected
+            val label =
+                when (tab) {
+                    SwapTab.SWAP -> stringResource(R.string.swap_tab_swap)
+                    SwapTab.OFFRAMP -> stringResource(R.string.swap_tab_offramp)
+                }
+            Box(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .defaultMinSize(minHeight = TAB_CELL_MIN_HEIGHT.dp)
+                        .background(
+                            if (isSelected) c.accent else Color.Transparent,
+                            RectangleShape,
+                        ).clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = ripple(color = c.accent),
+                            onClick = { onSelect(tab) },
+                        ),
+                contentAlignment = Alignment.Center,
+            ) {
+                BasicText(
+                    text = label,
+                    style =
+                        ZappTheme.typography.caption.copy(
+                            color = if (isSelected) c.onAccent else c.textMuted,
+                            fontWeight = if (isSelected) FontWeight.Black else FontWeight.Normal,
+                        ),
+                )
+            }
         }
-        // Mirrors the back button width so the segmented row stays centered.
-        Box(modifier = Modifier.padding(start = BACK_BUTTON_MIRROR_PADDING.dp))
     }
 }
 
-@Composable
-private fun SegmentedRow(
-    selected: SwapTab,
-    onSelect: (SwapTab) -> Unit,
-) {
-    val c = ZappTheme.colors
-    Row(
-        modifier =
-            Modifier
-                .background(c.surfaceAlt),
-        horizontalArrangement = Arrangement.spacedBy(0.dp),
-    ) {
-        SegmentCell(
-            label = stringResource(R.string.swap_tab_swap),
-            isSelected = selected == SwapTab.SWAP,
-            onClick = { onSelect(SwapTab.SWAP) },
-        )
-        SegmentCell(
-            label = stringResource(R.string.swap_tab_offramp),
-            isSelected = selected == SwapTab.OFFRAMP,
-            onClick = { onSelect(SwapTab.OFFRAMP) },
-        )
-    }
-}
-
-@Composable
-private fun SegmentCell(
-    label: String,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-) {
-    val c = ZappTheme.colors
-    val t = ZappTheme.typography
-    Box(
-        modifier =
-            Modifier
-                .background(if (isSelected) c.surface else c.surfaceAlt)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = ripple(color = c.text),
-                    onClick = onClick,
-                ).padding(horizontal = CELL_HORIZONTAL_PADDING.dp, vertical = CELL_VERTICAL_PADDING.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        BasicText(
-            text = label,
-            style =
-                t.button.copy(
-                    color = if (isSelected) c.text else c.textMuted,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                ),
-        )
-    }
-}
-
-private const val TOOLBAR_HORIZONTAL_PADDING = 12
-private const val TOOLBAR_VERTICAL_PADDING = 8
-private const val SEGMENT_HORIZONTAL_INSET = 12
-private const val BACK_BUTTON_MIRROR_PADDING = 40
-private const val CELL_HORIZONTAL_PADDING = 24
-private const val CELL_VERTICAL_PADDING = 10
+private const val TAB_HORIZONTAL_PADDING = 18
+private const val TAB_VERTICAL_PADDING = 8
+private const val TAB_INNER_PADDING = 3
+private const val TAB_CELL_MIN_HEIGHT = 34
 
 @PreviewScreens
 @Composable
 private fun PreviewSwapSelected() {
     ZcashTheme {
-        SwapTabsToolbar(selected = SwapTab.SWAP, onSelect = {}, onBack = {})
+        SwapTabSwitcher(selected = SwapTab.SWAP, onSelect = {})
     }
 }
 
@@ -125,6 +96,6 @@ private fun PreviewSwapSelected() {
 @Composable
 private fun PreviewOfframpSelected() {
     ZcashTheme {
-        SwapTabsToolbar(selected = SwapTab.OFFRAMP, onSelect = {}, onBack = {})
+        SwapTabSwitcher(selected = SwapTab.OFFRAMP, onSelect = {})
     }
 }

@@ -58,14 +58,21 @@ import org.koin.androidx.compose.koinViewModel
 import java.math.BigDecimal
 
 @Composable
-internal fun UpiOfframpBody() {
+internal fun UpiOfframpBody(
+    onBack: () -> Unit = {},
+    tabSwitcher: @Composable () -> Unit = {},
+) {
     val vm = koinViewModel<UpiOfframpVM>()
     val state by vm.state.collectAsStateWithLifecycle()
-    UpiOfframpView(state = state)
+    UpiOfframpView(state = state, onBack = onBack, tabSwitcher = tabSwitcher)
 }
 
 @Composable
-internal fun UpiOfframpView(state: UpiOfframpState) {
+internal fun UpiOfframpView(
+    state: UpiOfframpState,
+    onBack: () -> Unit = {},
+    tabSwitcher: @Composable () -> Unit = {},
+) {
     val c = ZappTheme.colors
 
     Column(modifier = Modifier.fillMaxSize().background(c.bg)) {
@@ -181,7 +188,9 @@ internal fun UpiOfframpView(state: UpiOfframpState) {
             Spacer(modifier = Modifier.height(GAP_LG.dp))
         }
 
-        BottomBar(state.sendButton)
+        tabSwitcher()
+
+        BottomBar(onBack = onBack, send = state.sendButton)
     }
 }
 
@@ -306,7 +315,10 @@ private fun UpiHandleField(field: TextFieldState) {
 }
 
 @Composable
-private fun BottomBar(send: ButtonState) {
+private fun BottomBar(
+    onBack: () -> Unit,
+    send: ButtonState,
+) {
     val c = ZappTheme.colors
     Row(
         modifier =
@@ -314,16 +326,31 @@ private fun BottomBar(send: ButtonState) {
                 .fillMaxWidth()
                 .background(c.surface)
                 .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BOTTOM_BAR_VERTICAL_PADDING.dp),
+                .windowInsetsPadding(WindowInsets.navigationBars),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End,
     ) {
+        Box(
+            modifier =
+                Modifier
+                    .size(width = BACK_BUTTON_WIDTH.dp, height = BOTTOM_BAR_HEIGHT.dp)
+                    .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    .clickable(onClick = onBack),
+            contentAlignment = Alignment.Center,
+        ) {
+            BasicText(
+                text = "\u2190",
+                style =
+                    ZappTheme.typography.button.copy(
+                        color = c.text,
+                        fontWeight = FontWeight.Black,
+                    ),
+            )
+        }
         ZappButton(
             text = send.text.getValue(),
             enabled = send.isEnabled,
             variant = ZappButtonVariant.Primary,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.weight(1f).height(BOTTOM_BAR_HEIGHT.dp),
             onClick = send.onClick,
         )
     }
@@ -331,7 +358,8 @@ private fun BottomBar(send: ButtonState) {
 
 private const val BODY_HORIZONTAL_PADDING = 18
 private const val BODY_VERTICAL_PADDING = 12
-private const val BOTTOM_BAR_VERTICAL_PADDING = 12
+private const val BACK_BUTTON_WIDTH = 72
+private const val BOTTOM_BAR_HEIGHT = 52
 private const val GAP_SM = 6
 private const val GAP_MD = 10
 private const val GAP_LG = 16
