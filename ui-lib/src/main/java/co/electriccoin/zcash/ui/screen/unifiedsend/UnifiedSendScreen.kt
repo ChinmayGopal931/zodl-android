@@ -15,7 +15,7 @@ import org.koin.core.parameter.parametersOf
 
 @Composable
 internal fun UnifiedSendScreen(args: UnifiedSendArgs) {
-    val vm = koinViewModel<UnifiedSendViewModel> { parametersOf(args) }
+    val vm = koinViewModel<UnifiedSendVM> { parametersOf(args) }
     val balanceVM =
         koinViewModel<BalanceWidgetVM> {
             parametersOf(

@@ -13,7 +13,7 @@ data object SecuritySettingsArgs
 
 @Composable
 internal fun SecuritySettingsScreen() {
-    val vm = koinViewModel<SecuritySettingsViewModel>()
+    val vm = koinViewModel<SecuritySettingsVM>()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     val pinError by vm.pinError.collectAsStateWithLifecycle()
     val pinLockoutSeconds by vm.pinLockoutSeconds.collectAsStateWithLifecycle()

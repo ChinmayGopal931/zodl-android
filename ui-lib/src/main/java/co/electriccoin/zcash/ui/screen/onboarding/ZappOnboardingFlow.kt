@@ -101,7 +101,7 @@ fun ZappOnboardingFlow(
     val walletProvisioningError by walletViewModel.walletProvisioningError.collectAsStateWithLifecycle()
     val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
 
-    val securityVM: OnboardingSecurityViewModel = koinViewModel()
+    val securityVM: OnboardingSecurityVM = koinViewModel()
     val bioState by securityVM.bioState.collectAsStateWithLifecycle()
     val pinSaved by securityVM.pinSaved.collectAsStateWithLifecycle()
 
@@ -146,7 +146,7 @@ fun ZappOnboardingFlow(
 
     // Advance to Done once biometric enrollment succeeds.
     LaunchedEffect(bioState) {
-        if (bioState is OnboardingSecurityViewModel.BioState.Success && step == Step.BIO_SCAN) {
+        if (bioState is OnboardingSecurityVM.BioState.Success && step == Step.BIO_SCAN) {
             step = Step.DONE
         }
     }
@@ -266,8 +266,8 @@ fun ZappOnboardingFlow(
 
         Step.BIO_SCAN -> {
             BioScanScreen(
-                isEnrolling = bioState is OnboardingSecurityViewModel.BioState.Prompting,
-                errorMessage = (bioState as? OnboardingSecurityViewModel.BioState.Error)?.message,
+                isEnrolling = bioState is OnboardingSecurityVM.BioState.Prompting,
+                errorMessage = (bioState as? OnboardingSecurityVM.BioState.Error)?.message,
                 onEnroll = { securityVM.triggerBiometricSetup() },
                 onCancel = {
                     securityVM.resetBioError()

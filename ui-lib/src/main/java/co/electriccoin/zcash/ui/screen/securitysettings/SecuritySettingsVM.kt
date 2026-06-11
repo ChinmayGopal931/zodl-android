@@ -47,7 +47,7 @@ sealed class SecuritySettingsState {
     data object SettingNewBio : SecuritySettingsState()
 }
 
-class SecuritySettingsViewModel(
+class SecuritySettingsVM(
     private val biometricRepository: BiometricRepository,
     private val biometricManager: BiometricManager,
     private val standardPreferenceProvider: StandardPreferenceProvider,

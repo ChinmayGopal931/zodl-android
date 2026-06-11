@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  * Biometric path: call [triggerBiometricSetup] → observe [bioState] → advance to Done on [BioState.Success].
  * PIN path: call [savePin] with the confirmed 6-digit string → observe [pinSaved] → advance to Done.
  */
-class OnboardingSecurityViewModel(
+class OnboardingSecurityVM(
     private val biometricRepository: BiometricRepository,
     private val biometricManager: BiometricManager,
     private val standardPreferenceProvider: StandardPreferenceProvider,

@@ -79,7 +79,7 @@ import java.math.BigDecimal
 import java.math.MathContext
 
 @Suppress("TooManyFunctions")
-internal class UnifiedSendViewModel(
+internal class UnifiedSendVM(
     private val args: UnifiedSendArgs,
     getSelectedSwapAsset: GetSelectedSwapAssetUseCase,
     getSwapAssetsUseCase: GetSwapAssetsUseCase,
