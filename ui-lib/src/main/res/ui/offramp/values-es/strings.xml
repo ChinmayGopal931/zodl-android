@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="offramp_title">Retirar fondos</string>
+    <string name="offramp_amount_label">Monto</string>
+    <string name="offramp_info_body">Un comprador envía dinero fiat directamente a tu Venmo, Cash App o Revolut. Normalmente toma menos de 10 min.</string>
+    <string name="offramp_continue_button">Continuar en peer.xyz</string>
+    <string name="offramp_attribution">Con tecnología de peer.xyz</string>
+    <string name="offramp_cancel">Cancelar</string>
+    <string name="offramp_amount_hint">0.0000</string>
+    <string name="notification_zec_arrived_title">ZEC recibido</string>
+    <string name="notification_zec_arrived_body">Tu ZEC ha llegado.</string>
+</resources>
