@@ -26,4 +26,13 @@
     <string name="address_book_addr_evm_hint">Enter 0x address…</string>
     <string name="address_book_addr_solana">Solana Address</string>
     <string name="address_book_addr_solana_hint">Enter Solana address…</string>
+
+    <string name="address_book_messaging_key_hint">Messaging Key (64 hex chars)</string>
+    <string name="address_book_contact_name_required">Name is required</string>
+    <string name="address_book_add_contact_content_description">Add Contact</string>
+    <string name="address_book_scan_messaging_key_content_description">Scan messaging key QR</string>
+    <string name="address_book_scan_wallet_address_content_description">Scan wallet address QR</string>
+    <string name="address_book_scan_addr_qr_content_description">Scan <xliff:g example="EVM Address" id="label">%1$s</xliff:g> QR</string>
+    <string name="address_book_edit_cancel_delete_content_description">Cancel delete</string>
+    <string name="address_book_edit_confirm_delete_content_description">Confirm delete contact</string>
 </resources>

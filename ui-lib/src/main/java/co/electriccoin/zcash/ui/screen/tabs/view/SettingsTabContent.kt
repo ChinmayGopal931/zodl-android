@@ -58,7 +58,7 @@ import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsTabContent(
+internal fun SettingsTabContent(
     onChatProfileClick: () -> Unit,
     onAppLockClick: () -> Unit,
     onChooseServerClick: () -> Unit,
@@ -85,7 +85,7 @@ fun SettingsTabContent(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars),
         ) {
-            ZappScreenHeader(title = "Settings")
+            ZappScreenHeader(title = stringResource(R.string.settings_title))
 
             Column(
                 modifier =
@@ -99,10 +99,10 @@ fun SettingsTabContent(
                     ProfileCard(displayName = id.displayName)
                 }
 
-                SettingsGroup(title = "Security") {
+                SettingsGroup(title = stringResource(R.string.settings_group_security)) {
                     ZappRow(
-                        title = "Profile & identity",
-                        subtitle = "Seed phrase, messaging key, wallet address",
+                        title = stringResource(R.string.settings_profile_identity_title),
+                        subtitle = stringResource(R.string.settings_profile_identity_subtitle),
                         icon = Icons.Default.Person,
                         iconTint = c.accentText,
                         iconBackground = c.accentSoft,
@@ -110,8 +110,8 @@ fun SettingsTabContent(
                     )
                     ZappRowDivider(inset = true)
                     ZappRow(
-                        title = "App lock",
-                        subtitle = "Change PIN or switch auth method",
+                        title = stringResource(R.string.settings_app_lock_title),
+                        subtitle = stringResource(R.string.settings_app_lock_subtitle),
                         icon = Icons.Default.Lock,
                         iconTint = c.accentText,
                         iconBackground = c.accentSoft,
@@ -130,7 +130,7 @@ fun SettingsTabContent(
                 }
 
                 if (hasWallet) {
-                    SettingsGroup(title = "Wallet") {
+                    SettingsGroup(title = stringResource(R.string.settings_group_wallet)) {
                         // DEAD CODE [hidden]: Backup seed phrase — uncomment to restore (and the divider below)
                         // ZappRow(
                         //     title = "Backup seed phrase",
@@ -142,15 +142,15 @@ fun SettingsTabContent(
                         // )
                         // ZappRowDivider(inset = true)
                         ZappRow(
-                            title = "Server",
-                            subtitle = "Choose a lightwalletd server",
+                            title = stringResource(R.string.choose_server_title),
+                            subtitle = stringResource(R.string.settings_server_subtitle),
                             icon = Icons.Default.Cloud,
                             onClick = onChooseServerClick,
                         )
                         ZappRowDivider(inset = true)
                         ZappRow(
-                            title = "P2P transactions",
-                            subtitle = "Balance and order history",
+                            title = stringResource(R.string.p2p_transactions_title),
+                            subtitle = stringResource(R.string.settings_p2p_transactions_subtitle),
                             icon = Icons.Default.SwapHoriz,
                             onClick = onP2pTransactionsClick,
                         )

@@ -52,6 +52,7 @@ internal fun WalletAddressesSection(
     onScanAddress: ((addrType: String) -> Unit)? = null,
 ) {
     val c = ZappTheme.colors
+    val additionalAddressesLabel = stringResource(R.string.address_book_additional_addresses)
 
     // Toggle header
     Row(
@@ -61,7 +62,7 @@ internal fun WalletAddressesSection(
                 .heightIn(min = 48.dp)
                 .clickable(onClick = onToggle)
                 .semantics {
-                    contentDescription = "Additional addresses"
+                    contentDescription = additionalAddressesLabel
                     role = Role.Button
                 },
         verticalAlignment = Alignment.CenterVertically,
@@ -76,7 +77,7 @@ internal fun WalletAddressesSection(
         )
         Spacer(Modifier.width(12.dp))
         BasicText(
-            text = stringResource(R.string.address_book_additional_addresses).uppercase(),
+            text = additionalAddressesLabel.uppercase(),
             style =
                 ZappTheme.typography.eyebrow.copy(
                     color = c.accent,
@@ -203,13 +204,14 @@ internal fun WalletAddressField(
             trailingIcon =
                 if (onScan != null) {
                     {
+                        val scanDescription = stringResource(R.string.address_book_scan_addr_qr_content_description, label)
                         Box(
                             modifier =
                                 Modifier
                                     .size(48.dp)
                                     .clickable(onClick = onScan)
                                     .semantics {
-                                        contentDescription = "Scan $label QR"
+                                        contentDescription = scanDescription
                                         role = Role.Button
                                     },
                             contentAlignment = Alignment.Center,

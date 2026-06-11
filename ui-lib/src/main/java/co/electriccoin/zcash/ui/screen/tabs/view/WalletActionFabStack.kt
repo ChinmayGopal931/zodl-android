@@ -13,7 +13,9 @@ import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappFab
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
 
@@ -37,17 +39,17 @@ internal fun WalletActionFabStack(
     ) {
         ZappFab(
             icon = Icons.AutoMirrored.Filled.CallMade,
-            contentDescription = "Send",
+            contentDescription = stringResource(R.string.home_button_send),
             onClick = onSend,
         )
         ZappFab(
             icon = Icons.AutoMirrored.Filled.CallReceived,
-            contentDescription = "Receive",
+            contentDescription = stringResource(R.string.home_button_receive),
             onClick = onReceive,
         )
         ZappFab(
             icon = Icons.Default.SwapHoriz,
-            contentDescription = "Swap",
+            contentDescription = stringResource(R.string.home_button_swap),
             onClick = onSwap,
         )
     }

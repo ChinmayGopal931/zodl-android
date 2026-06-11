@@ -7,6 +7,15 @@
     <string name="home_balance_chart_period_all">All</string>
     <string name="home_balance_chart_footer" formatted="true">Balance: <xliff:g example="1.2345" id="amount">%1$s</xliff:g> ZEC</string>
     <string name="home_balance_chart_empty">Not enough activity yet for this range.</string>
+    <string name="home_balance_chart_no_data">No data for this period</string>
+    <string name="home_balance_chart_loading">Loading chart…</string>
+    <string name="home_balance_chart_hidden">Balance chart appears here</string>
+
+    <string name="home_wallet_title">Wallet</string>
+    <string name="home_recent_activity_title">Recent activity</string>
+    <string name="home_balance_total_label">Total balance</string>
+    <string name="home_activity_empty_title">No transactions yet.</string>
+    <string name="home_activity_empty_subtitle">Your sends and receives will appear here.</string>
 
     <string name="home_button_receive">Receive</string>
     <string name="home_button_send">Send</string>

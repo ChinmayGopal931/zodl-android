@@ -15,6 +15,16 @@
     <string name="settings_troubleshooting_enable_keep_screen_on">Keep screen on during sync</string>
     <string name="more_cash_out">Cash out</string>
 
+    <!-- Settings tab (Zapp tabbed home) -->
+    <string name="settings_group_security">Security</string>
+    <string name="settings_group_wallet">Wallet</string>
+    <string name="settings_profile_identity_title">Profile &amp; identity</string>
+    <string name="settings_profile_identity_subtitle">Seed phrase, messaging key, wallet address</string>
+    <string name="settings_app_lock_title">App lock</string>
+    <string name="settings_app_lock_subtitle">Change PIN or switch auth method</string>
+    <string name="settings_server_subtitle">Choose a lightwalletd server</string>
+    <string name="settings_p2p_transactions_subtitle">Balance and order history</string>
+
     <!-- P2P transactions (Settings → Wallet entry). Reached from SettingsTabContent → "P2P
          transactions"; the file lives under settings/ rather than swap/ because the screen is a
          settings-tier transaction history, not a swap-flow surface. -->

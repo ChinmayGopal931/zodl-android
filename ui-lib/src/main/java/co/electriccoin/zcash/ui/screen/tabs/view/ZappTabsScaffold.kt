@@ -29,7 +29,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun ZappTabsScaffold(
+internal fun ZappTabsScaffold(
     navigationRouter: NavigationRouter,
 ) {
     val welcomeGateVM: WelcomeGateVM = koinViewModel()

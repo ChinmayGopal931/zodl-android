@@ -39,7 +39,7 @@ import org.koin.androidx.compose.koinViewModel
 private enum class CreatePhase { Idle, RevealingSeed }
 
 @Composable
-fun WalletTabContent(
+internal fun WalletTabContent(
     onRestoreWallet: () -> Unit,
     onFullscreenChange: (Boolean) -> Unit = {},
     walletViewModel: WalletViewModel = koinViewModel(),

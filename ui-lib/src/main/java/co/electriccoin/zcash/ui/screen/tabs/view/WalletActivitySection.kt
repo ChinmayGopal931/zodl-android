@@ -24,11 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRowDivider
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
@@ -137,7 +139,7 @@ private fun ActivityEmpty() {
         )
         Spacer(Modifier.height(10.dp))
         BasicText(
-            text = "No transactions yet.",
+            text = stringResource(R.string.home_activity_empty_title),
             style =
                 ZappTheme.typography.rowTitle.copy(
                     color = c.text,
@@ -148,7 +150,7 @@ private fun ActivityEmpty() {
         )
         Spacer(Modifier.height(4.dp))
         BasicText(
-            text = "Your sends and receives will appear here.",
+            text = stringResource(R.string.home_activity_empty_subtitle),
             style =
                 ZappTheme.typography.rowSubtitle.copy(
                     color = c.textMuted,

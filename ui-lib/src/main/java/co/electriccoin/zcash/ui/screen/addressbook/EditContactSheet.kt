@@ -48,6 +48,9 @@ import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.AddressBookContact
 import co.electriccoin.zcash.ui.design.component.zapp.ZappInputField
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.getValue
+import co.electriccoin.zcash.ui.design.util.stringRes
 
 // ── Edit Contact bottom sheet ───────────────────────────────────────────────
 
@@ -67,7 +70,7 @@ internal fun EditContactSheet(
     val c = ZappTheme.colors
     var nameInput by remember { mutableStateOf(TextFieldValue(editData.originalName)) }
     var walletAddressInput by remember { mutableStateOf(TextFieldValue(editData.originalAddress)) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<StringResource?>(null) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showAdditionalAddresses by remember {
         mutableStateOf(editData.walletAddresses.isNotEmpty())
@@ -187,7 +190,7 @@ internal fun EditContactSheet(
             error?.let {
                 Spacer(Modifier.height(8.dp))
                 BasicText(
-                    text = it,
+                    text = it.getValue(),
                     style = ZappTheme.typography.caption.copy(color = c.danger),
                 )
             }
@@ -239,6 +242,7 @@ internal fun EditContactSheet(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                         ) {
                             // Cancel
+                            val cancelDeleteDescription = stringResource(R.string.address_book_edit_cancel_delete_content_description)
                             Box(
                                 modifier =
                                     Modifier
@@ -247,7 +251,7 @@ internal fun EditContactSheet(
                                         .border(BorderStroke(1.dp, c.border), RectangleShape)
                                         .clickable(onClick = { showDeleteConfirm = false })
                                         .semantics {
-                                            contentDescription = "Cancel delete"
+                                            contentDescription = cancelDeleteDescription
                                             role = Role.Button
                                         },
                                 contentAlignment = Alignment.Center,
@@ -263,6 +267,7 @@ internal fun EditContactSheet(
                                 )
                             }
                             // Confirm delete
+                            val confirmDeleteDescription = stringResource(R.string.address_book_edit_confirm_delete_content_description)
                             Box(
                                 modifier =
                                     Modifier
@@ -271,7 +276,7 @@ internal fun EditContactSheet(
                                         .background(c.danger, RectangleShape)
                                         .clickable(onClick = onDelete)
                                         .semantics {
-                                            contentDescription = "Confirm delete contact"
+                                            contentDescription = confirmDeleteDescription
                                             role = Role.Button
                                         },
                                 contentAlignment = Alignment.Center,
@@ -296,6 +301,7 @@ internal fun EditContactSheet(
             if (!showDeleteConfirm) {
                 val keyboard = LocalSoftwareKeyboardController.current
                 val saveEnabled = hasChanges && isValid
+                val saveChangesDescription = stringResource(R.string.address_book_edit_save_btn)
                 Box(
                     modifier =
                         Modifier
@@ -311,7 +317,7 @@ internal fun EditContactSheet(
                                         val wallet = walletAddressInput.text.trim()
                                         when {
                                             name.isEmpty() -> {
-                                                error = "Name is required"
+                                                error = stringRes(R.string.address_book_contact_name_required)
                                             }
 
                                             else -> {
@@ -324,7 +330,7 @@ internal fun EditContactSheet(
                                     Modifier
                                 }
                             ).semantics {
-                                contentDescription = "Save changes"
+                                contentDescription = saveChangesDescription
                                 role = Role.Button
                                 if (!saveEnabled) disabled()
                             },
@@ -344,6 +350,7 @@ internal fun EditContactSheet(
                 Spacer(Modifier.height(10.dp))
 
                 // DELETE CONTACT button
+                val deleteContactDescription = stringResource(R.string.address_book_edit_delete_btn)
                 Box(
                     modifier =
                         Modifier
@@ -352,7 +359,7 @@ internal fun EditContactSheet(
                             .background(c.dangerSoft, RectangleShape)
                             .clickable(onClick = { showDeleteConfirm = true })
                             .semantics {
-                                contentDescription = "Delete contact"
+                                contentDescription = deleteContactDescription
                                 role = Role.Button
                             },
                     contentAlignment = Alignment.Center,

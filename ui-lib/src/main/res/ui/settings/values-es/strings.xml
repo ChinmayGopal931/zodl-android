@@ -13,6 +13,17 @@
     <string name="settings_troubleshooting_rescan">Volver a escanear la blockchain</string>
     <string name="settings_troubleshooting_enable_background_sync">Sincronización en segundo plano</string>
     <string name="settings_troubleshooting_enable_keep_screen_on">Mantener la pantalla encendida durante la sincronización</string>
+    <string name="more_cash_out">Retirar fondos</string>
+
+    <!-- Pestaña de Configuración (home con pestañas de Zapp) -->
+    <string name="settings_group_security">Seguridad</string>
+    <string name="settings_group_wallet">Wallet</string>
+    <string name="settings_profile_identity_title">Perfil e identidad</string>
+    <string name="settings_profile_identity_subtitle">Frase semilla, clave de mensajería, dirección de la wallet</string>
+    <string name="settings_app_lock_title">Bloqueo de la app</string>
+    <string name="settings_app_lock_subtitle">Cambia el PIN o el método de autenticación</string>
+    <string name="settings_server_subtitle">Elige un servidor lightwalletd</string>
+    <string name="settings_p2p_transactions_subtitle">Saldo e historial de órdenes</string>
 
     <!-- Transacciones P2P (Ajustes → entrada de Cartera) -->
     <string name="p2p_transactions_title">Transacciones P2P</string>
@@ -44,4 +55,15 @@
     <string name="p2p_transactions_status_paid">Pagada</string>
     <string name="p2p_transactions_status_completed">Completada</string>
     <string name="p2p_transactions_status_cancelled">Cancelada</string>
+
+    <!-- Panel de detalle (fila de transacción expandida) -->
+    <string name="p2p_transactions_detail_recipient_upi">UPI del destinatario</string>
+    <string name="p2p_transactions_detail_merchant_upi">UPI del comerciante</string>
+    <string name="p2p_transactions_detail_merchant_address">Dirección del comerciante</string>
+    <string name="p2p_transactions_detail_placed">Realizada</string>
+    <string name="p2p_transactions_detail_completed">Completada</string>
+    <string name="p2p_transactions_detail_cancelled">Cancelada</string>
+    <string name="p2p_transactions_detail_duration">Duración</string>
+    <string name="p2p_transactions_detail_expand_content_description">Mostrar detalles</string>
+    <string name="p2p_transactions_detail_collapse_content_description">Ocultar detalles</string>
 </resources>
