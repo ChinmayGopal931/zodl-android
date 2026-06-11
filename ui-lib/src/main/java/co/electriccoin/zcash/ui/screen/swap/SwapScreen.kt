@@ -15,8 +15,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.appbar.ZashiTopAppBarVM
@@ -59,15 +59,18 @@ fun SwapScreen() {
         )
 
         when (selectedTab) {
-            SwapTab.SWAP ->
+            SwapTab.SWAP -> {
                 SwapBody(
                     tabSwitcher = tabSwitcher,
                 )
-            SwapTab.OFFRAMP ->
+            }
+
+            SwapTab.OFFRAMP -> {
                 UpiOfframpBody(
                     onBack = { navigationRouter.back() },
                     tabSwitcher = tabSwitcher,
                 )
+            }
         }
     }
 }
