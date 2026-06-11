@@ -34,7 +34,7 @@ import co.electriccoin.zcash.ui.design.util.getValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OfframpView(
+internal fun OfframpView(
     state: OfframpState?,
     sheetState: SheetState = rememberScreenModalBottomSheetState(),
 ) {
