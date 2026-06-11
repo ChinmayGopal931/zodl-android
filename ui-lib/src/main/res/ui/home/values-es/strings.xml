@@ -11,7 +11,7 @@
     <string name="home_balance_chart_loading">Cargando gráfico…</string>
     <string name="home_balance_chart_hidden">El gráfico de balance aparecerá aquí</string>
 
-    <string name="home_wallet_title">Wallet</string>
+    <string name="home_wallet_title">Billetera</string>
     <string name="home_recent_activity_title">Actividad reciente</string>
     <string name="home_balance_total_label">Balance total</string>
     <string name="home_activity_empty_title">Aún no hay transacciones.</string>

@@ -17,9 +17,9 @@
 
     <!-- Pestaña de Configuración (home con pestañas de Zapp) -->
     <string name="settings_group_security">Seguridad</string>
-    <string name="settings_group_wallet">Wallet</string>
+    <string name="settings_group_wallet">Billetera</string>
     <string name="settings_profile_identity_title">Perfil e identidad</string>
-    <string name="settings_profile_identity_subtitle">Frase semilla, clave de mensajería, dirección de la wallet</string>
+    <string name="settings_profile_identity_subtitle">Frase semilla, clave de mensajería, dirección de billetera</string>
     <string name="settings_app_lock_title">Bloqueo de la app</string>
     <string name="settings_app_lock_subtitle">Cambia el PIN o el método de autenticación</string>
     <string name="settings_server_subtitle">Elige un servidor lightwalletd</string>

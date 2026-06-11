@@ -301,7 +301,7 @@ internal fun EditContactSheet(
             if (!showDeleteConfirm) {
                 val keyboard = LocalSoftwareKeyboardController.current
                 val saveEnabled = hasChanges && isValid
-                val saveChangesDescription = stringResource(R.string.address_book_edit_save_btn)
+                val saveChangesDescription = stringResource(R.string.address_book_edit_save_content_description)
                 Box(
                     modifier =
                         Modifier
@@ -350,7 +350,7 @@ internal fun EditContactSheet(
                 Spacer(Modifier.height(10.dp))
 
                 // DELETE CONTACT button
-                val deleteContactDescription = stringResource(R.string.address_book_edit_delete_btn)
+                val deleteContactDescription = stringResource(R.string.address_book_edit_delete_content_description)
                 Box(
                     modifier =
                         Modifier

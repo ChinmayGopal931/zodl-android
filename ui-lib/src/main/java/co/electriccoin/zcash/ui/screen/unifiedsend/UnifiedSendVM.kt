@@ -472,8 +472,9 @@ internal class UnifiedSendVM(
             } catch (
                 @Suppress("TooGenericExceptionCaught") e: Exception
             ) {
-                // createProposal handles navigation to error/review internally
-                Twig.warn(e) { "UnifiedSendVM: createZecSendClick failed" }
+                // createProposal handles navigation to error/review internally. Log the class
+                // only — SDK validation messages can embed the typed recipient address.
+                Twig.warn { "UnifiedSendVM: createZecSendClick failed (${e::class.simpleName})" }
             } finally {
                 isRequestingQuote.update { false }
             }

@@ -21,7 +21,7 @@
     <string name="swap_you_send">Envías</string>
     <string name="swap_you_receive">Recibes</string>
     <string name="swap_receiving_to">Recibiendo en</string>
-    <string name="swap_change_address">Cambio</string>
+    <string name="swap_change_address">Cambiar</string>
     <string name="swap_from">De</string>
     <string name="swap_insufficient_funds">Fondos insuficientes</string>
     <string name="swap_max_standalone">Disponible: </string>

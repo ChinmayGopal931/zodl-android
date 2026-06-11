@@ -12,6 +12,8 @@
     <string name="address_book_edit_contact_title">Edit Contact</string>
     <string name="address_book_edit_save_btn">Save Changes</string>
     <string name="address_book_edit_delete_btn">Delete Contact</string>
+    <string name="address_book_edit_save_content_description">Save changes</string>
+    <string name="address_book_edit_delete_content_description">Delete contact</string>
     <string name="address_book_edit_delete_confirm_title">Delete contact?</string>
     <string name="address_book_edit_delete_confirm_message">This cannot be undone.</string>
     <string name="address_book_edit_delete_confirm_yes">Delete</string>
