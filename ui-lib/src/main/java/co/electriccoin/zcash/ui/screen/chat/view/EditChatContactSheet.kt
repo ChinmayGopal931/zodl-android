@@ -61,6 +61,9 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
     val c = ZappTheme.colors
     val keyboard = LocalSoftwareKeyboardController.current
     val shortKey = remember(state.publicKey) { state.publicKey.ellipsizeAddress() }
+    val scanWalletAddressLabel = stringResource(R.string.chat_contact_scan_wallet_address_content_description)
+    val saveChangesLabel = stringResource(R.string.chat_contact_edit_save_changes_content_description)
+    val deleteContactLabel = stringResource(R.string.chat_contact_edit_delete_contact_content_description)
 
     ModalBottomSheet(
         onDismissRequest = state.onDismiss,
@@ -78,7 +81,7 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
                     .padding(bottom = 28.dp),
         ) {
             BasicText(
-                text = "Edit Contact",
+                text = stringResource(R.string.chat_contact_edit_title),
                 style =
                     ZappTheme.typography.sectionTitle.copy(
                         color = c.text,
@@ -152,7 +155,7 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
                                 .size(48.dp)
                                 .clickable(onClick = state.onScanWalletAddress)
                                 .semantics {
-                                    contentDescription = "Scan wallet address QR"
+                                    contentDescription = scanWalletAddressLabel
                                     role = Role.Button
                                 },
                         contentAlignment = Alignment.Center,
@@ -220,14 +223,14 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
                                     Modifier
                                 }
                             ).semantics {
-                                contentDescription = "Save changes"
+                                contentDescription = saveChangesLabel
                                 role = Role.Button
                                 if (!state.isSaveEnabled) disabled()
                             },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
-                        text = "SAVE CHANGES",
+                        text = stringResource(R.string.chat_contact_edit_save_changes_button),
                         style =
                             ZappTheme.typography.button.copy(
                                 color = if (state.isSaveEnabled) c.onAccent else c.textSubtle,
@@ -247,13 +250,13 @@ internal fun EditChatContactSheet(state: EditChatContactState) {
                             .background(c.dangerSoft, RectangleShape)
                             .clickable(onClick = state.onRequestDelete)
                             .semantics {
-                                contentDescription = "Delete contact"
+                                contentDescription = deleteContactLabel
                                 role = Role.Button
                             },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
-                        text = "DELETE CONTACT",
+                        text = stringResource(R.string.chat_contact_edit_delete_contact_button),
                         style =
                             ZappTheme.typography.button.copy(
                                 color = c.danger,
@@ -273,6 +276,8 @@ private fun DeleteConfirmation(
     onConfirm: () -> Unit,
 ) {
     val c = ZappTheme.colors
+    val cancelDeleteLabel = stringResource(R.string.chat_contact_edit_delete_cancel_content_description)
+    val confirmDeleteLabel = stringResource(R.string.chat_contact_edit_delete_confirm_content_description)
     Box(
         modifier =
             Modifier
@@ -283,7 +288,7 @@ private fun DeleteConfirmation(
     ) {
         Column {
             BasicText(
-                text = "Delete contact?",
+                text = stringResource(R.string.chat_contact_edit_delete_confirm_title),
                 style =
                     ZappTheme.typography.rowTitle.copy(
                         color = c.danger,
@@ -292,7 +297,7 @@ private fun DeleteConfirmation(
             )
             Spacer(Modifier.height(4.dp))
             BasicText(
-                text = "This cannot be undone.",
+                text = stringResource(R.string.chat_contact_edit_delete_confirm_subtitle),
                 style = ZappTheme.typography.rowSubtitle.copy(color = c.textMuted),
             )
             Spacer(Modifier.height(14.dp))
@@ -308,13 +313,13 @@ private fun DeleteConfirmation(
                             .border(BorderStroke(1.dp, c.border), RectangleShape)
                             .clickable(onClick = onCancel)
                             .semantics {
-                                contentDescription = "Cancel delete"
+                                contentDescription = cancelDeleteLabel
                                 role = Role.Button
                             },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
-                        text = "CANCEL",
+                        text = stringResource(R.string.chat_contact_edit_delete_cancel_button),
                         style =
                             ZappTheme.typography.button.copy(
                                 color = c.text,
@@ -331,13 +336,13 @@ private fun DeleteConfirmation(
                             .background(c.danger, RectangleShape)
                             .clickable(onClick = onConfirm)
                             .semantics {
-                                contentDescription = "Confirm delete contact"
+                                contentDescription = confirmDeleteLabel
                                 role = Role.Button
                             },
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
-                        text = "DELETE",
+                        text = stringResource(R.string.chat_contact_edit_delete_confirm_button),
                         style =
                             ZappTheme.typography.button.copy(
                                 color = c.onAccent,

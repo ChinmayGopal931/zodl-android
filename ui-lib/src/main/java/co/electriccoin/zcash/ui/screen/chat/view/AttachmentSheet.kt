@@ -23,9 +23,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -51,7 +53,7 @@ internal fun AttachmentSheet(
         ) {
             AttachmentRow(
                 icon = Icons.Default.QrCode2,
-                label = "Share Address",
+                label = stringResource(R.string.chat_attachment_option_share_address),
                 onClick = onShareAddress
             )
             HorizontalDivider(
@@ -60,7 +62,7 @@ internal fun AttachmentSheet(
             )
             AttachmentRow(
                 icon = Icons.AutoMirrored.Filled.Send,
-                label = "Send ZEC",
+                label = stringResource(R.string.chat_attachment_option_send_zec),
                 onClick = onSendZec
             )
             HorizontalDivider(
@@ -69,7 +71,7 @@ internal fun AttachmentSheet(
             )
             AttachmentRow(
                 icon = Icons.Default.AttachFile,
-                label = "Attach Media",
+                label = stringResource(R.string.chat_attachment_option_attach_media),
                 onClick = onAttachMedia
             )
         }

@@ -1,5 +1,8 @@
 package co.electriccoin.zcash.ui.screen.chat.model
 
+import androidx.annotation.StringRes
+import co.electriccoin.zcash.ui.R
+
 /**
  * Represents a blocked user in the local blocklist.
  */
@@ -11,16 +14,19 @@ data class BlockedUser(
 
 /**
  * Report categories for UGC compliance.
+ *
+ * The enum [name] is the persisted value — must NEVER be localized.
+ * [displayNameRes] is the localized label rendered on the report dialog.
  */
 enum class ReportCategory(
-    val displayLabel: String
+    @param:StringRes val displayNameRes: Int
 ) {
-    SPAM("Spam or unwanted messages"),
-    HARASSMENT("Harassment or bullying"),
-    ILLEGAL_CONTENT("Illegal content"),
-    IMPERSONATION("Impersonation"),
-    SCAM("Scam or fraud"),
-    OTHER("Other")
+    SPAM(R.string.chat_report_category_spam),
+    HARASSMENT(R.string.chat_report_category_harassment),
+    ILLEGAL_CONTENT(R.string.chat_report_category_illegal_content),
+    IMPERSONATION(R.string.chat_report_category_impersonation),
+    SCAM(R.string.chat_report_category_scam),
+    OTHER(R.string.chat_report_category_other)
 }
 
 /**

@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import org.json.JSONObject
@@ -53,7 +55,12 @@ internal fun PaymentRequestBubble(message: ChatMessage, isFromMe: Boolean) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isFromMe) "Payment request sent" else "Payment request",
+                    text =
+                        if (isFromMe) {
+                            stringResource(R.string.chat_bubble_payment_request_sent)
+                        } else {
+                            stringResource(R.string.chat_bubble_payment_request)
+                        },
                     style = MaterialTheme.typography.labelSmall,
                     color = ZappTheme.colors.accent
                 )

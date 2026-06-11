@@ -307,6 +307,66 @@
     <string name="chat_report_followup_confirm">Block User</string>
     <string name="chat_report_followup_dismiss">No Thanks</string>
 
+    <!-- Chat moderation — report categories -->
+    <string name="chat_report_category_spam">Spam or unwanted messages</string>
+    <string name="chat_report_category_harassment">Harassment or bullying</string>
+    <string name="chat_report_category_illegal_content">Illegal content</string>
+    <string name="chat_report_category_impersonation">Impersonation</string>
+    <string name="chat_report_category_scam">Scam or fraud</string>
+    <string name="chat_report_category_other">Other</string>
+
+    <!-- Chat contacts — add contact sheet -->
+    <string name="chat_contact_add_title">Add New Contact</string>
+    <string name="chat_contact_add_messaging_key_placeholder">Messaging Key (64 hex chars)</string>
+    <string name="chat_contact_scan_messaging_key_content_description">Scan messaging key QR</string>
+    <string name="chat_contact_scan_wallet_address_content_description">Scan wallet address QR</string>
+    <string name="chat_contact_add_save_content_description">Add Contact</string>
+    <string name="chat_contact_add_save_button">SAVE</string>
+
+    <!-- Chat contacts — edit contact sheet -->
+    <string name="chat_contact_edit_save_changes_button">SAVE CHANGES</string>
+    <string name="chat_contact_edit_save_changes_content_description">Save changes</string>
+    <string name="chat_contact_edit_delete_contact_button">DELETE CONTACT</string>
+    <string name="chat_contact_edit_delete_contact_content_description">Delete contact</string>
+    <string name="chat_contact_edit_delete_confirm_title">Delete contact?</string>
+    <string name="chat_contact_edit_delete_confirm_subtitle">This cannot be undone.</string>
+    <string name="chat_contact_edit_delete_cancel_button">CANCEL</string>
+    <string name="chat_contact_edit_delete_cancel_content_description">Cancel delete</string>
+    <string name="chat_contact_edit_delete_confirm_button">DELETE</string>
+    <string name="chat_contact_edit_delete_confirm_content_description">Confirm delete contact</string>
+
+    <!-- Chat room — attachment options sheet -->
+    <string name="chat_attachment_option_share_address">Share Address</string>
+    <string name="chat_attachment_option_send_zec">Send ZEC</string>
+    <string name="chat_attachment_option_attach_media">Attach Media</string>
+
+    <!-- Chat network — connection pill + details sheet -->
+    <plurals name="chat_network_peers_count">
+        <item quantity="one">%1$d peer</item>
+        <item quantity="other">%1$d peers</item>
+    </plurals>
+    <string name="chat_network_label_tcp_connections">TCP connections</string>
+    <string name="chat_network_label_conversations">Conversations</string>
+    <string name="chat_network_value_conversations_fmt">%1$d direct · %2$d group</string>
+    <string name="chat_network_label_pending">Pending</string>
+    <string name="chat_network_value_pending_fmt">%1$d msgs in %2$d queues</string>
+    <string name="chat_network_value_pending_none">None</string>
+    <string name="chat_network_value_protocol">Zapp Messaging P2P</string>
+    <string name="chat_network_value_encryption">End-to-end (Noise XX)</string>
+
+    <!-- Chat room — message bubbles -->
+    <string name="chat_bubble_location_shared">Location shared</string>
+    <string name="chat_bubble_location_received">Location received</string>
+    <string name="chat_bubble_location_open_in_maps">Open in Maps</string>
+    <string name="chat_bubble_payment_request_sent">Payment request sent</string>
+    <string name="chat_bubble_payment_request">Payment request</string>
+    <string name="chat_bubble_transaction_sent">ZEC sent</string>
+    <string name="chat_bubble_transaction_received">ZEC received</string>
+    <string name="chat_bubble_transaction_signature_fmt">tx: %1$s...%2$s</string>
+    <string name="chat_bubble_wallet_address_shared">Wallet address shared</string>
+    <string name="chat_bubble_wallet_address">Wallet address</string>
+    <string name="chat_bubble_wallet_qr_content_description">Wallet QR</string>
+
     <!-- Chat terms — one-time T&amp;Cs acceptance dialog (Google Play UGC policy) -->
     <string name="chat_terms_dialog_title">Messaging Terms</string>
     <string name="chat_terms_dialog_intro">Before using Zapp messaging, please review and accept our community guidelines:</string>

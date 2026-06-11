@@ -18,7 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.media.FileUtils
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
@@ -28,7 +30,7 @@ import java.util.Locale
 
 @Composable
 internal fun FileBubble(message: ChatMessage, isFromMe: Boolean) {
-    val fileName = message.content.takeIf { it.isNotBlank() } ?: "File"
+    val fileName = message.content.takeIf { it.isNotBlank() } ?: stringResource(R.string.chat_media_option_file)
     val fileSize = message.mediaSize?.toLong()
 
     Surface(

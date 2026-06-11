@@ -28,8 +28,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.usecase.CopyToClipboardUseCase
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.AndroidQrCodeImageGenerator
@@ -90,7 +92,12 @@ internal fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = if (isFromMe) "Wallet address shared" else "Wallet address",
+                    text =
+                        if (isFromMe) {
+                            stringResource(R.string.chat_bubble_wallet_address_shared)
+                        } else {
+                            stringResource(R.string.chat_bubble_wallet_address)
+                        },
                     style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                     color = ZappTheme.colors.accent
                 )
@@ -104,7 +111,7 @@ internal fun WalletAddressBubble(message: ChatMessage, isFromMe: Boolean) {
             ) {
                 Image(
                     bitmap = qrBitmap,
-                    contentDescription = "Wallet QR",
+                    contentDescription = stringResource(R.string.chat_bubble_wallet_qr_content_description),
                     modifier =
                         Modifier
                             .size(160.dp)

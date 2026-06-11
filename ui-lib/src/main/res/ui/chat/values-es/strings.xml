@@ -307,6 +307,67 @@
     <string name="chat_report_followup_confirm">Bloquear usuario</string>
     <string name="chat_report_followup_dismiss">No, gracias</string>
 
+    <!-- Chat moderation — report categories -->
+    <string name="chat_report_category_spam">Spam o mensajes no deseados</string>
+    <string name="chat_report_category_harassment">Acoso o intimidación</string>
+    <string name="chat_report_category_illegal_content">Contenido ilegal</string>
+    <string name="chat_report_category_impersonation">Suplantación de identidad</string>
+    <string name="chat_report_category_scam">Estafa o fraude</string>
+    <string name="chat_report_category_other">Otro</string>
+
+    <!-- Chat contacts — add contact sheet -->
+    <string name="chat_contact_add_title">Agregar nuevo contacto</string>
+    <string name="chat_contact_add_messaging_key_placeholder">Clave de mensajería (64 caracteres hex)</string>
+    <string name="chat_contact_scan_messaging_key_content_description">Escanear QR de la clave de mensajería</string>
+    <string name="chat_contact_scan_wallet_address_content_description">Escanear QR de la dirección de billetera</string>
+    <string name="chat_contact_add_save_content_description">Agregar contacto</string>
+    <string name="chat_contact_add_save_button">GUARDAR</string>
+
+    <!-- Chat contacts — edit contact sheet -->
+    <string name="chat_contact_edit_save_changes_button">GUARDAR CAMBIOS</string>
+    <string name="chat_contact_edit_save_changes_content_description">Guardar cambios</string>
+    <string name="chat_contact_edit_delete_contact_button">ELIMINAR CONTACTO</string>
+    <string name="chat_contact_edit_delete_contact_content_description">Eliminar contacto</string>
+    <string name="chat_contact_edit_delete_confirm_title">¿Eliminar contacto?</string>
+    <string name="chat_contact_edit_delete_confirm_subtitle">Esto no se puede deshacer.</string>
+    <string name="chat_contact_edit_delete_cancel_button">CANCELAR</string>
+    <string name="chat_contact_edit_delete_cancel_content_description">Cancelar eliminación</string>
+    <string name="chat_contact_edit_delete_confirm_button">ELIMINAR</string>
+    <string name="chat_contact_edit_delete_confirm_content_description">Confirmar eliminación del contacto</string>
+
+    <!-- Chat room — attachment options sheet -->
+    <string name="chat_attachment_option_share_address">Compartir dirección</string>
+    <string name="chat_attachment_option_send_zec">Enviar ZEC</string>
+    <string name="chat_attachment_option_attach_media">Adjuntar multimedia</string>
+
+    <!-- Chat network — connection pill + details sheet -->
+    <plurals name="chat_network_peers_count">
+        <item quantity="one">%1$d par</item>
+        <item quantity="many">%1$d pares</item>
+        <item quantity="other">%1$d pares</item>
+    </plurals>
+    <string name="chat_network_label_tcp_connections">Conexiones TCP</string>
+    <string name="chat_network_label_conversations">Conversaciones</string>
+    <string name="chat_network_value_conversations_fmt">%1$d directas · %2$d grupales</string>
+    <string name="chat_network_label_pending">Pendientes</string>
+    <string name="chat_network_value_pending_fmt">%1$d msjs. en %2$d colas</string>
+    <string name="chat_network_value_pending_none">Ninguno</string>
+    <string name="chat_network_value_protocol">Zapp Messaging P2P</string>
+    <string name="chat_network_value_encryption">De extremo a extremo (Noise XX)</string>
+
+    <!-- Chat room — message bubbles -->
+    <string name="chat_bubble_location_shared">Ubicación compartida</string>
+    <string name="chat_bubble_location_received">Ubicación recibida</string>
+    <string name="chat_bubble_location_open_in_maps">Abrir en Maps</string>
+    <string name="chat_bubble_payment_request_sent">Solicitud de pago enviada</string>
+    <string name="chat_bubble_payment_request">Solicitud de pago</string>
+    <string name="chat_bubble_transaction_sent">ZEC enviado</string>
+    <string name="chat_bubble_transaction_received">ZEC recibido</string>
+    <string name="chat_bubble_transaction_signature_fmt">tx: %1$s...%2$s</string>
+    <string name="chat_bubble_wallet_address_shared">Dirección de billetera compartida</string>
+    <string name="chat_bubble_wallet_address">Dirección de billetera</string>
+    <string name="chat_bubble_wallet_qr_content_description">QR de la billetera</string>
+
     <!-- Chat terms — one-time terms-and-conditions acceptance dialog (Google Play UGC policy) -->
     <string name="chat_terms_dialog_title">Términos de mensajería</string>
     <string name="chat_terms_dialog_intro">Antes de usar la mensajería de Zapp, revisa y acepta nuestras normas de la comunidad:</string>

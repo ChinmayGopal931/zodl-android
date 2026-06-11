@@ -24,7 +24,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import org.json.JSONObject
@@ -59,7 +61,12 @@ internal fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isFromMe) "Location shared" else "Location received",
+                    text =
+                        if (isFromMe) {
+                            stringResource(R.string.chat_bubble_location_shared)
+                        } else {
+                            stringResource(R.string.chat_bubble_location_received)
+                        },
                     style = MaterialTheme.typography.labelSmall,
                     color = ZappTheme.colors.accent
                 )
@@ -95,7 +102,7 @@ internal fun LocationBubble(message: ChatMessage, isFromMe: Boolean) {
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
-                    text = "Open in Maps",
+                    text = stringResource(R.string.chat_bubble_location_open_in_maps),
                     style = MaterialTheme.typography.labelSmall,
                     color = ZappTheme.colors.accent
                 )

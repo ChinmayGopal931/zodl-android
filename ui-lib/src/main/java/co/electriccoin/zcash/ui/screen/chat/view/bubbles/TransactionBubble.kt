@@ -18,7 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
 import org.json.JSONObject
@@ -52,7 +54,12 @@ internal fun TransactionBubble(message: ChatMessage, isFromMe: Boolean) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = if (isFromMe) "ZEC sent" else "ZEC received",
+                    text =
+                        if (isFromMe) {
+                            stringResource(R.string.chat_bubble_transaction_sent)
+                        } else {
+                            stringResource(R.string.chat_bubble_transaction_received)
+                        },
                     style = MaterialTheme.typography.labelSmall,
                     color = ZappTheme.colors.accent
                 )
@@ -66,7 +73,7 @@ internal fun TransactionBubble(message: ChatMessage, isFromMe: Boolean) {
             signature?.let {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "tx: ${it.take(8)}...${it.takeLast(4)}",
+                    text = stringResource(R.string.chat_bubble_transaction_signature_fmt, it.take(8), it.takeLast(4)),
                     style = MaterialTheme.typography.labelSmall,
                     color = ZappTheme.colors.textMuted
                 )
