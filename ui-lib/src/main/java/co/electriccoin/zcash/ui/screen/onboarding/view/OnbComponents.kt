@@ -20,9 +20,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 /**
@@ -30,7 +32,7 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
  * (mirrors `OnbProgress` in the design's React reference).
  */
 @Composable
-fun OnbProgress(
+internal fun OnbProgress(
     step: Int,
     total: Int = 3,
     modifier: Modifier = Modifier,
@@ -57,7 +59,7 @@ fun OnbProgress(
  * behind the foreground hero text. Matches `GhostNum` in the design.
  */
 @Composable
-fun GhostNum(n: Int, modifier: Modifier = Modifier) {
+internal fun GhostNum(n: Int, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     BasicText(
         text = String.format("%02d", n),
@@ -75,7 +77,7 @@ fun GhostNum(n: Int, modifier: Modifier = Modifier) {
 
 /** Tiny eyebrow label — uppercase, accent color, wide tracking. */
 @Composable
-fun Eyebrow(text: String, modifier: Modifier = Modifier) {
+internal fun Eyebrow(text: String, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     BasicText(
         text = text.uppercase(),
@@ -92,7 +94,7 @@ fun Eyebrow(text: String, modifier: Modifier = Modifier) {
 
 /** 36×3 accent rule. */
 @Composable
-fun AccentRule(modifier: Modifier = Modifier) {
+internal fun AccentRule(modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     Box(
         modifier =
@@ -108,7 +110,7 @@ fun AccentRule(modifier: Modifier = Modifier) {
  * right. Mirrors `BottomDock` in the design.
  */
 @Composable
-fun OnbBottomDock(
+internal fun OnbBottomDock(
     cta: String,
     onCta: () -> Unit,
     modifier: Modifier = Modifier,
@@ -155,7 +157,7 @@ fun OnbBottomDock(
                         )
                         if (!showCta) {
                             BasicText(
-                                text = "back",
+                                text = stringResource(R.string.onboarding_back_label),
                                 style =
                                     ZappTheme.typography.button.copy(
                                         color = c.textSubtle,
@@ -197,7 +199,7 @@ fun OnbBottomDock(
 
 /** Big bold hero title — 42sp Black, used on most onboarding screens. */
 @Composable
-fun OnbHero(text: String, modifier: Modifier = Modifier) {
+internal fun OnbHero(text: String, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     BasicText(
         text = text,
@@ -215,7 +217,7 @@ fun OnbHero(text: String, modifier: Modifier = Modifier) {
 
 /** Subtitle text under hero — 13sp muted. */
 @Composable
-fun OnbSub(text: String, modifier: Modifier = Modifier) {
+internal fun OnbSub(text: String, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     BasicText(
         text = text,
@@ -248,7 +250,7 @@ data class OnbAction(
  * wallet-tab empty state so both surfaces look identical.
  */
 @Composable
-fun OnbActionListCard(
+internal fun OnbActionListCard(
     actions: List<OnbAction>,
     modifier: Modifier = Modifier,
 ) {
@@ -282,7 +284,7 @@ fun OnbActionListCard(
  * the surrounding list-card border.
  */
 @Composable
-fun OnbActionRow(
+internal fun OnbActionRow(
     action: OnbAction,
     modifier: Modifier = Modifier,
 ) {
@@ -351,7 +353,7 @@ fun OnbActionRow(
  * Used in phase intros to list the points the user is about to cover.
  */
 @Composable
-fun OnbBulletRow(
+internal fun OnbBulletRow(
     label: String,
     sub: String? = null,
     isFirst: Boolean = false,

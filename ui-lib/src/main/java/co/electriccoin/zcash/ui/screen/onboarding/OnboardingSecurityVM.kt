@@ -5,10 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.electriccoin.zcash.preference.EncryptedPreferenceProvider
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.BiometricRepository
 import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
+import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.EncryptedPreferenceKeys
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
@@ -41,7 +43,7 @@ class OnboardingSecurityVM(
 
         /** Authentication failed or hardware unavailable; [message] shown to the user. */
         data class Error(
-            val message: String
+            val message: StringResource
         ) : BioState()
     }
 
@@ -61,15 +63,13 @@ class OnboardingSecurityVM(
         viewModelScope.launch {
             if (!isBiometricAvailable) {
                 _bioState.value =
-                    BioState.Error(
-                        "No biometrics enrolled on this device. Add a fingerprint or face in Settings, then try again."
-                    )
+                    BioState.Error(stringRes(R.string.onboarding_bio_error_not_enrolled))
                 return@launch
             }
             _bioState.value = BioState.Prompting
             try {
                 biometricRepository.requestBiometrics(
-                    BiometricRequest(message = stringRes("Enable biometric unlock for Zapp"))
+                    BiometricRequest(message = stringRes(R.string.onboarding_bio_prompt_message))
                 )
                 StandardPreferenceKeys.IS_APP_ACCESS_AUTHENTICATION
                     .putValue(standardPreferenceProvider(), true)
@@ -79,7 +79,7 @@ class OnboardingSecurityVM(
             } catch (_: BiometricsCancelledException) {
                 _bioState.value = BioState.Idle
             } catch (_: BiometricsFailureException) {
-                _bioState.value = BioState.Error("Biometric verification failed. Tap to retry.")
+                _bioState.value = BioState.Error(stringRes(R.string.onboarding_bio_error_verification_failed))
             }
         }
     }

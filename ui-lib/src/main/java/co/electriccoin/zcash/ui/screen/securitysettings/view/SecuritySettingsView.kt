@@ -58,6 +58,8 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappGroupHeader
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRow
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.screen.onboarding.view.BioScanScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.PinVerifyScreen
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsState
@@ -68,11 +70,11 @@ import kotlinx.coroutines.delay
 // ─────────────────────────────────────────────────────────────
 
 @Composable
-fun SecuritySettingsView(
+internal fun SecuritySettingsView(
     state: SecuritySettingsState,
     pinError: Boolean,
     lockoutSeconds: Int,
-    bioError: String?,
+    bioError: StringResource?,
     isEnrollingBio: Boolean,
     onTabSelected: (String) -> Unit,
     onSaveChanges: () -> Unit,
@@ -136,10 +138,11 @@ private fun AppLockHub(
 ) {
     val c = ZappTheme.colors
     val snackbarHostState = remember { SnackbarHostState() }
+    val successMessage = state.successMessage?.getValue()
 
-    LaunchedEffect(state.successMessage) {
-        if (state.successMessage != null) {
-            snackbarHostState.showSnackbar(state.successMessage)
+    LaunchedEffect(successMessage) {
+        if (successMessage != null) {
+            snackbarHostState.showSnackbar(successMessage)
             onClearSuccessMessage()
         }
     }

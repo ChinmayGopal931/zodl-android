@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 // ───────────────────────────────────────────────────────────────
@@ -22,34 +24,34 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 // ───────────────────────────────────────────────────────────────
 
 @Composable
-fun WalletPhaseIntro(
+internal fun WalletPhaseIntro(
     onBack: () -> Unit,
     onContinue: () -> Unit,
 ) {
     OnbScreen(
         step = 1,
         ghostNum = 1,
-        badge = "Part 1 of 3 · Wallet & Messaging",
-        cta = "Continue",
+        badge = stringResource(R.string.onboarding_wallet_intro_badge),
+        cta = stringResource(R.string.onboarding_continue),
         onCta = onContinue,
         showBack = true,
         onBack = onBack,
     ) {
-        OnbHero(text = "Wallet &\nmessaging\nsetup")
+        OnbHero(text = stringResource(R.string.onboarding_wallet_intro_title))
         Spacer(Modifier.height(16.dp))
         OnbSub(
-            text = "Your wallet's 24-word recovery phrase also seeds your messaging identity — one phrase covers both.",
+            text = stringResource(R.string.onboarding_wallet_intro_sub),
             modifier = Modifier.fillMaxWidth(0.94f),
         )
         Spacer(Modifier.height(28.dp))
         OnbBulletRow(
-            label = "Create or restore a wallet",
-            sub = "Your choice here also sets your messaging identity",
+            label = stringResource(R.string.onboarding_wallet_intro_bullet_create_label),
+            sub = stringResource(R.string.onboarding_wallet_intro_bullet_create_sub),
             isFirst = true,
         )
         OnbBulletRow(
-            label = "One phrase for everything",
-            sub = "24 BIP-39 words restore your funds and your chats — back it up offline.",
+            label = stringResource(R.string.onboarding_wallet_intro_bullet_phrase_label),
+            sub = stringResource(R.string.onboarding_wallet_intro_bullet_phrase_sub),
         )
     }
 }
@@ -59,7 +61,7 @@ fun WalletPhaseIntro(
 // ───────────────────────────────────────────────────────────────
 
 @Composable
-fun WalletChoiceScreen(
+internal fun WalletChoiceScreen(
     onBack: () -> Unit,
     onCreate: () -> Unit,
     onRestore: () -> Unit,
@@ -86,26 +88,26 @@ fun WalletChoiceScreen(
         ) {
             GhostNum(n = 1, modifier = Modifier.align(Alignment.TopEnd))
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
-                Eyebrow("Part 1 · Wallet & Messaging")
+                Eyebrow(stringResource(R.string.onboarding_wallet_choice_badge))
                 Spacer(Modifier.height(14.dp))
-                OnbHero(text = "Set up\nyour wallet")
+                OnbHero(text = stringResource(R.string.wallet_empty_title))
                 Spacer(Modifier.height(14.dp))
-                OnbSub("Your wallet seed also creates your messaging identity. One backup for everything.")
+                OnbSub(stringResource(R.string.onboarding_wallet_choice_subtitle))
             }
             OnbActionListCard(
                 actions =
                     listOf(
                         OnbAction(
                             icon = "✦",
-                            label = "Create new wallet",
-                            sub = "New wallet + fresh messaging identity",
+                            label = stringResource(R.string.wallet_empty_create),
+                            sub = stringResource(R.string.onboarding_wallet_choice_create_sub),
                             onClick = onCreate,
                             highlight = true,
                         ),
                         OnbAction(
                             icon = "⚿",
-                            label = "Restore from phrase",
-                            sub = "Restores wallet and derives your messaging ID from it",
+                            label = stringResource(R.string.wallet_empty_restore),
+                            sub = stringResource(R.string.onboarding_wallet_choice_restore_sub),
                             onClick = onRestore,
                         ),
                     ),
@@ -132,15 +134,15 @@ fun WalletChoiceScreen(
 // ───────────────────────────────────────────────────────────────
 
 @Composable
-fun WalletSeedPhraseScreen(
+internal fun WalletSeedPhraseScreen(
     words: List<String>,
     onBack: () -> Unit,
     onContinue: () -> Unit,
 ) {
     SeedRevealScreen(
         step = 1,
-        title = "Wallet &\nmessaging phrase",
-        sub = "These 24 words restore both your wallet funds and your messaging identity. Back them up offline — they cover everything.",
+        title = stringResource(R.string.onboarding_wallet_seed_title),
+        sub = stringResource(R.string.onboarding_wallet_seed_sub),
         words = words,
         onBack = onBack,
         onContinue = onContinue,

@@ -49,7 +49,7 @@ private enum class RestoreStep {
  * the user through PIN/biometrics and the sync screen.
  */
 @Composable
-fun ZappRestoreFlow(
+internal fun ZappRestoreFlow(
     onComplete: () -> Unit,
     onBackToWelcome: () -> Unit,
     walletViewModel: WalletViewModel,

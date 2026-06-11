@@ -15,10 +15,14 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.getValue
 
 /**
  * Real biometric enrollment screen.
@@ -29,9 +33,9 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
  * @param onCancel Called when the user taps back — returns to the choice screen.
  */
 @Composable
-fun BioScanScreen(
+internal fun BioScanScreen(
     isEnrolling: Boolean,
-    errorMessage: String?,
+    errorMessage: StringResource?,
     onEnroll: () -> Unit,
     onCancel: () -> Unit,
 ) {
@@ -74,10 +78,12 @@ fun BioScanScreen(
                 Spacer(Modifier.height(20.dp))
                 BasicText(
                     text =
-                        when {
-                            isEnrolling -> "Verifying…"
-                            else -> "Biometric unlock"
-                        },
+                        stringResource(
+                            when {
+                                isEnrolling -> R.string.onboarding_bio_verifying
+                                else -> R.string.onboarding_bio_title
+                            }
+                        ),
                     style =
                         ZappTheme.typography.display.copy(
                             color = c.text,
@@ -89,7 +95,7 @@ fun BioScanScreen(
                 Spacer(Modifier.height(8.dp))
                 if (errorMessage != null) {
                     BasicText(
-                        text = errorMessage,
+                        text = errorMessage.getValue(),
                         style =
                             ZappTheme.typography.body.copy(
                                 color = c.danger,
@@ -100,7 +106,7 @@ fun BioScanScreen(
                     )
                 } else {
                     OnbSub(
-                        text = "Zapp will use your fingerprint or face to lock and unlock the app.",
+                        text = stringResource(R.string.onboarding_bio_subtitle),
                         modifier = Modifier.fillMaxWidth(0.9f),
                     )
                 }
@@ -108,11 +114,13 @@ fun BioScanScreen(
         }
         OnbBottomDock(
             cta =
-                when {
-                    isEnrolling -> "Verifying…"
-                    errorMessage != null -> "Retry"
-                    else -> "Enable Biometrics"
-                },
+                stringResource(
+                    when {
+                        isEnrolling -> R.string.onboarding_bio_verifying
+                        errorMessage != null -> R.string.onboarding_seed_loading_retry
+                        else -> R.string.onboarding_bio_enable_cta
+                    }
+                ),
             onCta = onEnroll,
             ctaEnabled = !isEnrolling,
             showBack = true,

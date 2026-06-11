@@ -84,7 +84,7 @@ private enum class Step {
  * now-present seed while [Step.DERIVING] shows a spinner.
  */
 @Composable
-fun ZappOnboardingFlow(
+internal fun ZappOnboardingFlow(
     onComplete: () -> Unit,
     onBackToWelcome: () -> Unit,
     walletViewModel: WalletViewModel,

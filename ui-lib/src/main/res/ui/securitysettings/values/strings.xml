@@ -32,6 +32,17 @@
     <string name="security_settings_change_pin_progress_fmt">%1$d of 6 entered</string>
     <string name="security_settings_keypad_delete_content_description">Delete</string>
 
+    <!-- Re-auth prompts -->
+    <string name="security_settings_bio_verify_switch_pin_prompt">Verify it\'s you to switch to a PIN</string>
+
+    <!-- Success snackbars -->
+    <string name="security_settings_success_switched_pin">Switched to PIN successfully.</string>
+    <string name="security_settings_success_pin_changed">PIN changed successfully.</string>
+    <string name="security_settings_success_bio_enrolled">Biometrics enrolled successfully.</string>
+
+    <!-- Errors -->
+    <string name="security_settings_bio_enroll_failed">Biometric enrollment failed. Tap to retry.</string>
+
     <!-- Visual back-arrow glyph; symbolic, not localised -->
     <string name="security_settings_back_glyph" translatable="false">←</string>
 </resources>
