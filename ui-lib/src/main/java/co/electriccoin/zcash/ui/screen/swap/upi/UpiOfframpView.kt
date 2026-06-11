@@ -325,10 +325,12 @@ private fun BottomBar(
         modifier =
             Modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = BODY_HORIZONTAL_PADDING.dp)
+                .padding(bottom = BOTTOM_BAR_BOTTOM_MARGIN.dp)
                 .background(c.surface)
                 .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BOTTOM_BAR_VERTICAL_PADDING.dp),
+                .padding(BOTTOM_BAR_INNER_PADDING.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ZappBackButton(onClick = onBack)
@@ -344,7 +346,8 @@ private fun BottomBar(
 
 private const val BODY_HORIZONTAL_PADDING = 18
 private const val BODY_VERTICAL_PADDING = 12
-private const val BOTTOM_BAR_VERTICAL_PADDING = 12
+private const val BOTTOM_BAR_INNER_PADDING = 12
+private const val BOTTOM_BAR_BOTTOM_MARGIN = 8
 private const val BOTTOM_BAR_GAP = 12
 private const val GAP_SM = 6
 private const val GAP_MD = 10

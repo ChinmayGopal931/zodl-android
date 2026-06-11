@@ -350,10 +350,12 @@ private fun SwapBottomBar(state: SwapState) {
         modifier =
             Modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 8.dp)
                 .background(c.surface)
                 .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+                .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
