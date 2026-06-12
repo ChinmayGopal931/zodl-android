@@ -102,4 +102,11 @@ object ZappNavBar {
      *            .padding(bottom = FAB_BOTTOM_PADDING_DP.dp)
      */
     const val FAB_BOTTOM_PADDING_DP = 80
+
+    /**
+     * Bottom margin for floating buttons (FAB / back) on pushed sub-screens,
+     * where the pill nav bar is absent — [FAB_BOTTOM_PADDING_DP] there would
+     * strand the buttons 80dp above the thumb zone.
+     */
+    const val PUSHED_FLOATING_MARGIN_DP = 24
 }

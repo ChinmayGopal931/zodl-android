@@ -117,7 +117,6 @@ private fun ZappTabsScaffoldContent() {
                     onSwapClick = tabsVM::onSwapClick,
                     onTorClick = tabsVM::onTorClick,
                     onP2pTransactionsClick = tabsVM::onP2pTransactionsClick,
-                    onSupportClick = tabsVM::onSupportClick,
                 )
             }
         }

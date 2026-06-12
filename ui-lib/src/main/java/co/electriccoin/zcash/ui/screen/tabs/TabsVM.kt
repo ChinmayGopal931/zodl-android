@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.screen.chat.ChatContactsArgs
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
-import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
@@ -30,6 +29,4 @@ class TabsVM(
     fun onTorClick() = navigationRouter.forward(TorSettingsArgs)
 
     fun onP2pTransactionsClick() = navigationRouter.forward(P2pTransactionsArgs)
-
-    fun onSupportClick() = navigationRouter.forward(SupportTicketListArgs)
 }

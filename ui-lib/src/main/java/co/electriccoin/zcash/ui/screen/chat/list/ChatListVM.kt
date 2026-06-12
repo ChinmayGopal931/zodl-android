@@ -51,16 +51,20 @@ class ChatListVM(
         viewModelScope.launch { checkTosAccepted() }
     }
 
-    private fun buildSupportRow(supportConvs: List<ChatConversation>): ChatListSupportRowState? {
-        if (supportConvs.isEmpty()) return null
+    private fun buildSupportRow(supportConvs: List<ChatConversation>): ChatListSupportRowState {
         val latestSupportMsg =
             supportConvs
                 .maxByOrNull { it.lastMessageTimestamp ?: 0L }
                 ?.lastMessage
                 ?.removePrefix(SupportChatConstants.BOT_PREFIX)
+        val subtitle =
+            when {
+                latestSupportMsg != null -> stringRes(latestSupportMsg)
+                supportConvs.isNotEmpty() -> stringRes(R.string.chat_list_support_tickets_fmt, supportConvs.size)
+                else -> stringRes(R.string.chat_list_support_subtitle_default)
+            }
         return ChatListSupportRowState(
-            ticketCount = supportConvs.size,
-            lastMessage = latestSupportMsg?.let { stringRes(it) },
+            subtitle = subtitle,
             totalUnreadCount = supportConvs.sumOf { it.unreadCount },
             onClick = ::onSupportClick,
         )

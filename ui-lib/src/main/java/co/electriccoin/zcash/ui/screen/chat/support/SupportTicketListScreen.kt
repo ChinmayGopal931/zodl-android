@@ -3,7 +3,6 @@ package co.electriccoin.zcash.ui.screen.chat.support
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,15 +23,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -41,6 +37,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappFab
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRowDivider
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
@@ -76,30 +73,7 @@ private fun SupportTicketListView(state: SupportTicketListState) {
                 .windowInsetsPadding(WindowInsets.statusBars),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            ZappScreenHeader(
-                title = stringRes(R.string.support_chat_title).getValue(),
-                left = {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(36.dp)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = ripple(bounded = false),
-                                    onClick = state.onBack,
-                                ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription =
-                                stringRes(R.string.support_ticket_list_back_content_description).getValue(),
-                            tint = c.text,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                },
-            )
+            ZappScreenHeader(title = stringRes(R.string.support_chat_title).getValue())
 
             when {
                 state.isLoading -> {
@@ -151,7 +125,19 @@ private fun SupportTicketListView(state: SupportTicketListState) {
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(
                         end = 20.dp,
-                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                        bottom = ZappNavBar.PUSHED_FLOATING_MARGIN_DP.dp,
+                    ),
+        )
+
+        ZappBackButton(
+            onClick = state.onBack,
+            modifier =
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(
+                        start = 20.dp,
+                        bottom = ZappNavBar.PUSHED_FLOATING_MARGIN_DP.dp,
                     ),
         )
 

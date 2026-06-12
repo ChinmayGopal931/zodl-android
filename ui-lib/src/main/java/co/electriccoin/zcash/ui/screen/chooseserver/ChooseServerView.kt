@@ -4,13 +4,10 @@ package co.electriccoin.zcash.ui.screen.chooseserver
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -20,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
@@ -68,7 +64,7 @@ import co.electriccoin.zcash.ui.design.component.ZashiHorizontalDivider
 import co.electriccoin.zcash.ui.design.component.ZashiRadioButton
 import co.electriccoin.zcash.ui.design.component.ZashiTextField
 import co.electriccoin.zcash.ui.design.component.ZashiTextFieldDefaults
-import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappGroupHeader
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
@@ -82,7 +78,7 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 import java.util.UUID
 
 @Composable
-fun ChooseServerView(state: ChooseServerState?) {
+internal fun ChooseServerView(state: ChooseServerState?) {
     if (state == null) {
         CircularScreenProgressIndicator()
         return
@@ -99,9 +95,19 @@ fun ChooseServerView(state: ChooseServerState?) {
             )
         },
         bottomBar = {
-            ChooseServerBottomBar(
-                saveButtonState = state.saveButton,
+            ZappBottomActionBar(
                 onBack = state.onBack,
+                primaryAction = {
+                    ZappButton(
+                        text = state.saveButton.text.getValue(),
+                        onClick = state.saveButton.onClick,
+                        enabled = state.saveButton.isEnabled,
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .padding(start = 12.dp),
+                    )
+                },
             )
         }
     ) { paddingValues ->
@@ -204,33 +210,7 @@ private fun ErrorDialog(dialogState: ServerDialogState) {
     }
 }
 
-@Composable
-fun ChooseServerBottomBar(saveButtonState: ButtonState, onBack: () -> Unit) {
-    val c = ZappTheme.colors
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 18.dp)
-                .padding(bottom = 8.dp)
-                .background(c.surface)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        ZappBackButton(onClick = onBack)
-        ZappButton(
-            text = saveButtonState.text.getValue(),
-            onClick = saveButtonState.onClick,
-            enabled = saveButtonState.isEnabled,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Suppress("LongMethod", "CyclomaticComplexMethod")
+@Suppress("CyclomaticComplexMethod")
 private fun LazyListScope.serverListItems(state: ServerListState) {
     item(
         key =
@@ -373,7 +353,6 @@ private fun OtherServersHeader(state: ServerListState.Other) {
     }
 }
 
-@Suppress("LongMethod")
 @Composable
 private fun CustomServerRadioButton(
     state: ServerState.Custom,
@@ -467,7 +446,7 @@ private fun CustomServerRadioButton(
     }
 }
 
-@Suppress("LongMethod", "MagicNumber")
+@Suppress("MagicNumber")
 @Composable
 private fun ChooseServerPreview(
     showFastestServerLoading: Boolean = true,

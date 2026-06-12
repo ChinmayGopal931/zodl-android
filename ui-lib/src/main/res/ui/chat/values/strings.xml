@@ -237,7 +237,6 @@
     <string name="support_chat_leave_notice">User has left the chat.</string>
 
     <!-- Support chat — accessibility / content descriptions -->
-    <string name="support_chat_back_content_description">Go back</string>
     <string name="support_chat_overflow_content_description">More options</string>
     <string name="support_chat_send_content_description">Send message</string>
 
@@ -249,14 +248,9 @@
     <string name="support_ticket_close_dialog_message">This will remove the ticket and its messages.</string>
     <string name="support_ticket_close_dialog_confirm">Close</string>
     <string name="support_ticket_close_dialog_cancel">Cancel</string>
-    <string name="support_ticket_list_back_content_description">Go back</string>
     <string name="support_ticket_default_label">Ticket</string>
     <string name="chat_list_support_tickets_fmt">%1$d open ticket(s)</string>
-
-    <!-- Settings tab — support group -->
-    <string name="settings_group_support">Support</string>
-    <string name="settings_support_contact_title">Contact support</string>
-    <string name="settings_support_contact_subtitle">Report issues, share feedback</string>
+    <string name="chat_list_support_subtitle_default">Report issues, share feedback</string>
 
     <!-- Chat room — reply preview fallback names -->
     <string name="chat_room_reply_sender_self">You</string>
