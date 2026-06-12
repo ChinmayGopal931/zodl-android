@@ -6,11 +6,13 @@ import androidx.lifecycle.viewModelScope
 import co.electriccoin.zcash.preference.EncryptedPreferenceProvider
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
 import co.electriccoin.zcash.ui.NavigationRouter
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.BiometricRepository
 import co.electriccoin.zcash.ui.common.repository.BiometricRequest
 import co.electriccoin.zcash.ui.common.repository.BiometricsCancelledException
 import co.electriccoin.zcash.ui.common.repository.BiometricsFailureException
 import co.electriccoin.zcash.ui.common.security.PinAuthGate
+import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.EncryptedPreferenceKeys
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
@@ -30,7 +32,7 @@ sealed class SecuritySettingsState {
         val currentMethod: String, // "pin" | "biometric" — the persisted method
         val selectedTab: String, // "pin" | "biometric" — what the segmented selector shows
         val isBioAvailable: Boolean,
-        val successMessage: String? = null,
+        val successMessage: StringResource? = null,
     ) : SecuritySettingsState()
 
     /** Verifying the existing PIN before advancing to the next step. */
@@ -47,7 +49,7 @@ sealed class SecuritySettingsState {
     data object SettingNewBio : SecuritySettingsState()
 }
 
-class SecuritySettingsViewModel(
+class SecuritySettingsVM(
     private val biometricRepository: BiometricRepository,
     private val biometricManager: BiometricManager,
     private val standardPreferenceProvider: StandardPreferenceProvider,
@@ -66,8 +68,8 @@ class SecuritySettingsViewModel(
     private val _pinLockoutSeconds = MutableStateFlow(0)
     val pinLockoutSeconds: StateFlow<Int> = _pinLockoutSeconds.asStateFlow()
 
-    private val _bioError = MutableStateFlow<String?>(null)
-    val bioError: StateFlow<String?> = _bioError.asStateFlow()
+    private val _bioError = MutableStateFlow<StringResource?>(null)
+    val bioError: StateFlow<StringResource?> = _bioError.asStateFlow()
 
     private val _isEnrollingBio = MutableStateFlow(false)
     val isEnrollingBio: StateFlow<Boolean> = _isEnrollingBio.asStateFlow()
@@ -158,7 +160,7 @@ class SecuritySettingsViewModel(
         viewModelScope.launch {
             try {
                 biometricRepository.requestBiometrics(
-                    BiometricRequest(message = stringRes("Verify it's you to switch to a PIN"))
+                    BiometricRequest(message = stringRes(R.string.security_settings_bio_verify_switch_pin_prompt))
                 )
                 _uiState.value = SecuritySettingsState.SettingNewPin(NewPinIntent.SwitchFromBiometric)
             } catch (_: BiometricsCancelledException) {
@@ -214,8 +216,8 @@ class SecuritySettingsViewModel(
                     isBioAvailable = checkBioAvailable(),
                     successMessage =
                         when (settingState.intent) {
-                            NewPinIntent.SwitchFromBiometric -> "Switched to PIN successfully."
-                            NewPinIntent.ChangeExisting -> "PIN changed successfully."
+                            NewPinIntent.SwitchFromBiometric -> stringRes(R.string.security_settings_success_switched_pin)
+                            NewPinIntent.ChangeExisting -> stringRes(R.string.security_settings_success_pin_changed)
                         },
                 )
         }
@@ -227,7 +229,7 @@ class SecuritySettingsViewModel(
             _bioError.value = null
             try {
                 biometricRepository.requestBiometrics(
-                    BiometricRequest(message = stringRes("Enable biometric unlock for Zapp"))
+                    BiometricRequest(message = stringRes(R.string.onboarding_bio_prompt_message))
                 )
                 val prefs = standardPreferenceProvider()
                 StandardPreferenceKeys.AUTH_METHOD.putValue(prefs, "biometric")
@@ -240,7 +242,7 @@ class SecuritySettingsViewModel(
                         currentMethod = method,
                         selectedTab = method,
                         isBioAvailable = checkBioAvailable(),
-                        successMessage = "Biometrics enrolled successfully.",
+                        successMessage = stringRes(R.string.security_settings_success_bio_enrolled),
                     )
             } catch (_: BiometricsCancelledException) {
                 val method = StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
@@ -251,7 +253,7 @@ class SecuritySettingsViewModel(
                         isBioAvailable = checkBioAvailable(),
                     )
             } catch (_: BiometricsFailureException) {
-                _bioError.value = "Biometric enrollment failed. Tap to retry."
+                _bioError.value = stringRes(R.string.security_settings_bio_enroll_failed)
             } finally {
                 _isEnrollingBio.value = false
             }

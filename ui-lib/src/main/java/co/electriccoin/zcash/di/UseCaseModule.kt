@@ -22,6 +22,7 @@ import co.electriccoin.zcash.ui.common.usecase.DisconnectUseCase
 import co.electriccoin.zcash.ui.common.usecase.EnsureSwapAssetsLoadedUseCase
 import co.electriccoin.zcash.ui.common.usecase.ErrorMapperUseCase
 import co.electriccoin.zcash.ui.common.usecase.ExportChatSeedPhraseUseCase
+import co.electriccoin.zcash.ui.common.usecase.ExportP2pWalletKeyUseCase
 import co.electriccoin.zcash.ui.common.usecase.ExportTaxUseCase
 import co.electriccoin.zcash.ui.common.usecase.FilterSwapAssetsUseCase
 import co.electriccoin.zcash.ui.common.usecase.FilterSwapBlockchainsUseCase
@@ -306,6 +307,7 @@ val useCaseModule =
 
         // UPI offramp use cases.
         factoryOf(::GetP2pOrderHistoryUseCase)
+        factoryOf(::ExportP2pWalletKeyUseCase)
         singleOf(::NavigateToScanUpiUseCase)
 
         // Chat use cases.

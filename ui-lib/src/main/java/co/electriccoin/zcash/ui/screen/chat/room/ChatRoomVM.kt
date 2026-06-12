@@ -89,7 +89,7 @@ class ChatRoomVM(
     private val messageInput = MutableStateFlow("")
     private val replyingTo = MutableStateFlow<ChatMessage?>(null)
     private val showAttachmentSheet = MutableStateFlow(false)
-    private val showPaymentSheet = MutableStateFlow(false)
+    private val showMediaSheet = MutableStateFlow(false)
     private val showNetworkSheet = MutableStateFlow(false)
     private val showEditContact = MutableStateFlow(false)
     private val showBlockDialog = MutableStateFlow(false)
@@ -120,8 +120,8 @@ class ChatRoomVM(
             combine(connectionStatus, peerCount, dhtHealth, peerOnline) { cs, pc, dh, po ->
                 ConnectionSnapshot(cs, pc, dh, po)
             },
-            combine(messageInput, replyingTo, showAttachmentSheet, showPaymentSheet) { input, reply, attach, payment ->
-                InputSnapshot(input, reply, attach, payment)
+            combine(messageInput, replyingTo, showAttachmentSheet, showMediaSheet) { input, reply, attach, media ->
+                InputSnapshot(input, reply, attach, media)
             },
             combine(showNetworkSheet, connectionDetails) { net, details -> net to details },
             combine(showEditContact, showBlockDialog, showReportDialog) { edit, block, report ->
@@ -136,7 +136,7 @@ class ChatRoomVM(
                 messageInput = inputSnap.input,
                 replyingTo = inputSnap.reply,
                 showAttachmentSheet = inputSnap.showAttach,
-                showPaymentSheet = inputSnap.showPayment,
+                showMediaSheet = inputSnap.showMedia,
                 showNetworkSheet = net,
                 connectionDetails = details,
                 showEditContact = edit,
@@ -161,7 +161,7 @@ class ChatRoomVM(
                     messageInput = "",
                     replyingTo = null,
                     showAttachmentSheet = false,
-                    showPaymentSheet = false,
+                    showMediaSheet = false,
                     showNetworkSheet = false,
                     connectionDetails = null,
                     showEditContact = false,
@@ -181,7 +181,7 @@ class ChatRoomVM(
         val input: String,
         val reply: ChatMessage?,
         val showAttach: Boolean,
-        val showPayment: Boolean,
+        val showMedia: Boolean,
     )
 
     private fun createState(
@@ -192,7 +192,7 @@ class ChatRoomVM(
         messageInput: String,
         replyingTo: ChatMessage?,
         showAttachmentSheet: Boolean,
-        showPaymentSheet: Boolean,
+        showMediaSheet: Boolean,
         showNetworkSheet: Boolean,
         connectionDetails: ConnectionDetailsUi?,
         showEditContact: Boolean,
@@ -228,7 +228,6 @@ class ChatRoomVM(
                     onChange = ::onInputChange,
                     onSendClick = ::onSendTextClick,
                     onAttachClick = ::onAttachClick,
-                    onPaymentClick = ::onPaymentClick,
                     replyPreview =
                         replyingTo?.let { msg ->
                             val fallbackRes =
@@ -247,27 +246,26 @@ class ChatRoomVM(
             attachmentSheet =
                 if (showAttachmentSheet) {
                     ChatRoomAttachmentSheetState(
-                        onChooseMedia = ::onChooseMediaClick,
-                        onAttachFile = ::onAttachFileClick,
-                        onTakePhoto = ::onTakePhotoClick,
+                        onShareAddress = ::onShareAddressClick,
+                        onSendZec = ::onSendZecClick,
+                        onAttachMedia = ::onAttachMediaClick,
                         onDismiss = ::dismissAttachmentSheet,
                     )
                 } else {
                     null
                 },
-            paymentSheet =
-                if (showPaymentSheet) {
-                    ChatRoomPaymentSheetState(
-                        onSendZec = ::onPaymentSendZec,
-                        onRequestZec = ::onPaymentRequestZec,
-                        onPayMerchant = ::onPaymentPayMerchant,
-                        onShareAddress = ::onPaymentShareAddress,
-                        onDismiss = ::dismissPaymentSheet,
+            mediaSheet =
+                if (showMediaSheet) {
+                    ChatRoomMediaSheetState(
+                        onChooseMedia = ::onChooseMediaClick,
+                        onAttachFile = ::onAttachFileClick,
+                        onTakePhoto = ::onTakePhotoClick,
+                        onShareLocation = ::onShareLocationClick,
+                        onDismiss = ::dismissMediaSheet,
                     )
                 } else {
                     null
                 },
-            mediaSheet = null,
             networkSheet =
                 if (showNetworkSheet) {
                     ChatRoomNetworkSheetState(
@@ -551,53 +549,49 @@ class ChatRoomVM(
         showAttachmentSheet.value = true
     }
 
-    private fun onPaymentClick() {
-        showPaymentSheet.value = true
-    }
-
-    private fun onChooseMediaClick() {
+    private fun onShareAddressClick() {
         showAttachmentSheet.value = false
-        _effects.tryEmit(ChatRoomEffect.PickMedia)
+        viewModelScope.launch { shareWalletAddress() }
     }
 
-    private fun onAttachFileClick() {
+    private fun onSendZecClick() {
         showAttachmentSheet.value = false
-        _effects.tryEmit(ChatRoomEffect.PickFile)
-    }
-
-    private fun onTakePhotoClick() {
-        showAttachmentSheet.value = false
-        _effects.tryEmit(ChatRoomEffect.TakePhoto)
-    }
-
-    private fun onPaymentSendZec() {
-        showPaymentSheet.value = false
         val peerAddress = resolvePeerWalletAddress()
         chatSendContext.set(conversationId)
         navigationRouter.forward(UnifiedSendArgs(recipientAddress = peerAddress))
     }
 
-    private fun onPaymentRequestZec() {
-        showPaymentSheet.value = false
-        // TODO: wire to Request ZEC flow once Phase 2 lands
+    private fun onAttachMediaClick() {
+        showAttachmentSheet.value = false
+        showMediaSheet.value = true
     }
 
-    private fun onPaymentPayMerchant() {
-        showPaymentSheet.value = false
-        // TODO: wire to MerchantPayArgs once Phase 2 lands
+    private fun onChooseMediaClick() {
+        showMediaSheet.value = false
+        _effects.tryEmit(ChatRoomEffect.PickMedia)
     }
 
-    private fun onPaymentShareAddress() {
-        showPaymentSheet.value = false
-        viewModelScope.launch { shareWalletAddress() }
+    private fun onAttachFileClick() {
+        showMediaSheet.value = false
+        _effects.tryEmit(ChatRoomEffect.PickFile)
+    }
+
+    private fun onTakePhotoClick() {
+        showMediaSheet.value = false
+        _effects.tryEmit(ChatRoomEffect.TakePhoto)
+    }
+
+    private fun onShareLocationClick() {
+        showMediaSheet.value = false
+        _effects.tryEmit(ChatRoomEffect.ShareLocation)
     }
 
     private fun dismissAttachmentSheet() {
         showAttachmentSheet.value = false
     }
 
-    private fun dismissPaymentSheet() {
-        showPaymentSheet.value = false
+    private fun dismissMediaSheet() {
+        showMediaSheet.value = false
     }
 
     private fun dismissNetworkSheet() {

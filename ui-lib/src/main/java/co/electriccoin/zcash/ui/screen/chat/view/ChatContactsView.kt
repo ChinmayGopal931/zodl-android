@@ -199,6 +199,7 @@ private fun ContactListItem(
     val c = ZappTheme.colors
     val initials = remember(contact.name) { initialsOf(contact.name) }
     val shortKey = remember(contact.publicKey) { contact.publicKey.ellipsizeAddress() }
+    val startChatLabel = stringResource(R.string.chat_contacts_start_chat_content_description)
 
     Row(
         modifier =
@@ -244,7 +245,7 @@ private fun ContactListItem(
                     .size(48.dp)
                     .clickable(onClick = onChat)
                     .semantics {
-                        contentDescription = "Start chat"
+                        contentDescription = startChatLabel
                         role = Role.Button
                     },
             contentAlignment = Alignment.Center,

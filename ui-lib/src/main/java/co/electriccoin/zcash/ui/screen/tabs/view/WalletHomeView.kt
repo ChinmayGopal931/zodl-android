@@ -17,8 +17,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.component.zapp.ZappSectionLabel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -33,7 +35,7 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 
 @Composable
-fun WalletHomeView() {
+internal fun WalletHomeView() {
     val balanceVM: BalanceWidgetVM =
         koinViewModel {
             parametersOf(
@@ -75,7 +77,7 @@ fun WalletHomeView() {
         ) {
             item {
                 ZappScreenHeader(
-                    title = "Pay",
+                    title = stringResource(R.string.home_pay_title),
                     right = { SyncStatusChip(state = syncChip) },
                 )
             }
@@ -94,7 +96,7 @@ fun WalletHomeView() {
 
             item {
                 ZappSectionLabel(
-                    text = "Recent activity",
+                    text = stringResource(R.string.home_recent_activity_title),
                     modifier = Modifier.padding(start = 20.dp, bottom = 8.dp),
                 )
             }
@@ -105,7 +107,7 @@ fun WalletHomeView() {
         PayActionFabStack(
             onPayMerchant = {
                 // TODO: wire to MerchantPayArgs once Phase 2 lands
-                homeState?.fourthButton?.onClick?.invoke()
+                homeState?.thirdButton?.onClick?.invoke()
             },
             onSend = { homeState?.secondButton?.onClick?.invoke() },
             onReceive = { homeState?.firstButton?.onClick?.invoke() },

@@ -18,11 +18,13 @@ data class ChatProfileState(
     val onCopyPublicKeyClick: () -> Unit,
     val onCopyAddressClick: () -> Unit,
     val onSeedPhraseClick: () -> Unit,
+    val onP2pKeyClick: () -> Unit,
     val onDeleteClick: () -> Unit,
     val onBack: () -> Unit,
     val editNameDialog: ChatProfileEditNameDialogState?,
     val deleteDialog: ChatProfileDeleteDialogState?,
     val seedPhraseDialog: ChatProfileSeedPhraseDialogState?,
+    val p2pKeyDialog: ChatProfileP2pKeyDialogState?,
     val pinVerify: ChatProfilePinVerifyState?,
 )
 
@@ -45,6 +47,14 @@ data class ChatProfileDeleteDialogState(
 
 data class ChatProfileSeedPhraseDialogState(
     val words: List<String>,
+    val onDismiss: () -> Unit,
+)
+
+data class ChatProfileP2pKeyDialogState(
+    val address: String,
+    val privateKeyHex: String,
+    val onCopyAddress: () -> Unit,
+    val onCopyPrivateKey: () -> Unit,
     val onDismiss: () -> Unit,
 )
 

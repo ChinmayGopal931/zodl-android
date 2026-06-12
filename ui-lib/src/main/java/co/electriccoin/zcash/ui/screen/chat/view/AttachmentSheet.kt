@@ -8,45 +8,40 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.AttachFile
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
-/**
- * Media-only attachment sheet. Payment actions have moved to [PaymentSheet].
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun AttachmentSheet(
-    onChooseMedia: () -> Unit,
-    onAttachFile: () -> Unit,
-    onTakePhoto: () -> Unit,
-    onDismiss: () -> Unit,
+    onShareAddress: () -> Unit,
+    onSendZec: () -> Unit,
+    onAttachMedia: () -> Unit,
+    onDismiss: () -> Unit
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = ZappTheme.colors.surface,
         scrimColor = ZappTheme.colors.overlay,
-        shape = RectangleShape,
     ) {
         Column(
             modifier =
@@ -56,38 +51,38 @@ internal fun AttachmentSheet(
                     .padding(horizontal = 24.dp)
                     .padding(bottom = 24.dp)
         ) {
-            MediaRow(
-                icon = Icons.Default.Image,
-                label = "Choose Media",
-                onClick = onChooseMedia,
+            AttachmentRow(
+                icon = Icons.Default.QrCode2,
+                label = stringResource(R.string.chat_attachment_option_share_address),
+                onClick = onShareAddress
             )
             HorizontalDivider(
                 color = ZappTheme.colors.border,
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
-            MediaRow(
+            AttachmentRow(
+                icon = Icons.AutoMirrored.Filled.Send,
+                label = stringResource(R.string.chat_attachment_option_send_zec),
+                onClick = onSendZec
+            )
+            HorizontalDivider(
+                color = ZappTheme.colors.border,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            AttachmentRow(
                 icon = Icons.Default.AttachFile,
-                label = "Attach File",
-                onClick = onAttachFile,
-            )
-            HorizontalDivider(
-                color = ZappTheme.colors.border,
-                modifier = Modifier.padding(horizontal = 8.dp),
-            )
-            MediaRow(
-                icon = Icons.Default.PhotoCamera,
-                label = "Take Photo",
-                onClick = onTakePhoto,
+                label = stringResource(R.string.chat_attachment_option_attach_media),
+                onClick = onAttachMedia
             )
         }
     }
 }
 
 @Composable
-private fun MediaRow(
+private fun AttachmentRow(
     icon: ImageVector,
     label: String,
-    onClick: () -> Unit,
+    onClick: () -> Unit
 ) {
     Row(
         modifier =
@@ -95,27 +90,21 @@ private fun MediaRow(
                 .fillMaxWidth()
                 .clip(RectangleShape)
                 .clickable(onClick = onClick)
-                .padding(horizontal = 16.dp, vertical = 16.dp)
-                .semantics(mergeDescendants = true) {
-                    contentDescription = label
-                    role = Role.Button
-                },
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Icon(
             icon,
-            contentDescription = null,
+            contentDescription = label,
             tint = ZappTheme.colors.accent,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(24.dp)
         )
-        BasicText(
+        Text(
             label,
-            style =
-                ZappTheme.typography.rowTitle.copy(
-                    color = ZappTheme.colors.text,
-                    fontWeight = FontWeight.Black,
-                ),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = ZappTheme.colors.text
         )
     }
 }

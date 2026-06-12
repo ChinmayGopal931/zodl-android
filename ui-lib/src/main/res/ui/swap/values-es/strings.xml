@@ -15,6 +15,13 @@
     <string name="swap_slippage_low_warning_3">%s%% o más</string>
     <string name="pay_slippage_info">Podrías pagar hasta %s más, además de las comisiones de transacción.</string>
     <string name="swap_title">Swap</string>
+    <string name="swap_available_to_swap">Disponible para swap</string>
+    <string name="swap_stats_price">Precio</string>
+    <string name="swap_stats_fee">Comisión</string>
+    <string name="swap_you_send">Envías</string>
+    <string name="swap_you_receive">Recibes</string>
+    <string name="swap_receiving_to">Recibiendo en</string>
+    <string name="swap_change_address">Cambiar</string>
     <string name="swap_from">De</string>
     <string name="swap_insufficient_funds">Fondos insuficientes</string>
     <string name="swap_max_standalone">Disponible: </string>

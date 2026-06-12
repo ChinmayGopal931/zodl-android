@@ -29,9 +29,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.compose.SecureScreen
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.UsernameRules
 
@@ -40,7 +43,7 @@ import co.electriccoin.zcash.ui.screen.chat.common.UsernameRules
 // ───────────────────────────────────────────────────────────────
 
 @Composable
-fun MessagingPhaseIntro(
+internal fun MessagingPhaseIntro(
     onBack: () -> Unit,
     onContinue: () -> Unit,
     showBack: Boolean = true,
@@ -48,30 +51,27 @@ fun MessagingPhaseIntro(
     OnbScreen(
         step = 2,
         ghostNum = 2,
-        badge = "Part 2 of 3 · Messaging account",
-        cta = "Continue",
+        badge = stringResource(R.string.onboarding_msg_intro_badge),
+        cta = stringResource(R.string.onboarding_continue),
         onCta = onContinue,
         showBack = showBack,
         onBack = onBack,
     ) {
-        OnbHero(text = "Create your\nmessaging\nidentity")
+        OnbHero(text = stringResource(R.string.onboarding_msg_intro_title))
         Spacer(Modifier.height(16.dp))
         OnbSub(
-            text =
-                "Your identity is a username backed by your wallet's recovery phrase — " +
-                    "one phrase restores your wallet and messaging identity on any device. " +
-                    "Message history is stored locally and is not recoverable.",
+            text = stringResource(R.string.onboarding_msg_intro_sub),
             modifier = Modifier.fillMaxWidth(0.92f),
         )
         Spacer(Modifier.height(28.dp))
         OnbBulletRow(
-            label = "Pick a username",
-            sub = "How friends find and message you",
+            label = stringResource(R.string.onboarding_msg_intro_bullet_username_label),
+            sub = stringResource(R.string.onboarding_msg_intro_bullet_username_sub),
             isFirst = true,
         )
         OnbBulletRow(
-            label = "One recovery phrase",
-            sub = "Your wallet's 24-word phrase also restores your messaging identity.",
+            label = stringResource(R.string.onboarding_msg_intro_bullet_phrase_label),
+            sub = stringResource(R.string.onboarding_msg_intro_bullet_phrase_sub),
         )
     }
 }
@@ -81,7 +81,7 @@ fun MessagingPhaseIntro(
 // ───────────────────────────────────────────────────────────────
 
 @Composable
-fun UsernameEntryScreen(
+internal fun UsernameEntryScreen(
     onBack: () -> Unit,
     onContinue: (username: String) -> Unit,
 ) {
@@ -93,16 +93,16 @@ fun UsernameEntryScreen(
     OnbScreen(
         step = 2,
         ghostNum = 2,
-        badge = "Part 2 · Username",
-        cta = "Continue",
+        badge = stringResource(R.string.onboarding_username_badge),
+        cta = stringResource(R.string.onboarding_continue),
         ctaEnabled = isValid,
         onCta = { if (isValid) onContinue(username) },
         showBack = true,
         onBack = onBack,
     ) {
-        OnbHero(text = "Choose a\nusername")
+        OnbHero(text = stringResource(R.string.onboarding_username_title))
         Spacer(Modifier.height(14.dp))
-        OnbSub("This is how friends find you. It cannot be changed later.")
+        OnbSub(stringResource(R.string.onboarding_username_subtitle))
         Spacer(Modifier.height(28.dp))
 
         UsernameField(
@@ -115,7 +115,7 @@ fun UsernameEntryScreen(
         // so the validation badge is always green once the user typed anything.
         ValidationRow(isLong = isLong, isShort = isShort, isClean = username.isNotEmpty())
         Spacer(Modifier.height(20.dp))
-        InfoCallout(text = "Zapp generates a local keypair. No server ever sees your private key.")
+        InfoCallout(text = stringResource(R.string.onboarding_username_info))
     }
 }
 
@@ -218,7 +218,7 @@ internal fun UsernameField(
                 Box {
                     if (value.isEmpty()) {
                         BasicText(
-                            text = "your_handle",
+                            text = stringResource(R.string.onboarding_username_placeholder),
                             style =
                                 ZappTheme.typography.display.copy(
                                     color = c.textSubtle,
@@ -249,9 +249,9 @@ internal fun UsernameField(
 @Composable
 internal fun ValidationRow(isLong: Boolean, isShort: Boolean, isClean: Boolean) {
     Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Chip(label = "3+ chars", ok = isLong)
-        Chip(label = "≤20 chars", ok = isShort)
-        Chip(label = "a–z 0–9 _", ok = isClean)
+        Chip(label = stringResource(R.string.onboarding_username_rule_min), ok = isLong)
+        Chip(label = stringResource(R.string.onboarding_username_rule_max), ok = isShort)
+        Chip(label = stringResource(R.string.onboarding_username_rule_charset), ok = isClean)
     }
 }
 
@@ -305,7 +305,7 @@ internal fun InfoCallout(text: String) {
 // ───────────────────────────────────────────────────────────────
 
 @Composable
-fun SeedRevealScreen(
+internal fun SeedRevealScreen(
     step: Int,
     title: String,
     sub: String,
@@ -314,6 +314,7 @@ fun SeedRevealScreen(
     onContinue: () -> Unit,
     showBack: Boolean = true,
 ) {
+    SecureScreen()
     var revealed by rememberSaveable { mutableStateOf(false) }
     var saved by rememberSaveable { mutableStateOf(false) }
     val c = ZappTheme.colors
@@ -382,7 +383,7 @@ fun SeedRevealScreen(
                         }
                         Spacer(Modifier.height(8.dp))
                         BasicText(
-                            text = "Tap to reveal",
+                            text = stringResource(R.string.onboarding_seed_tap_to_reveal),
                             style =
                                 ZappTheme.typography.button.copy(
                                     color = c.text,
@@ -420,7 +421,7 @@ fun SeedRevealScreen(
                 }
                 Spacer(Modifier.width(12.dp))
                 BasicText(
-                    text = "I've written all ${words.size} words in order. I understand this phrase cannot be recovered if lost.",
+                    text = stringResource(R.string.onboarding_seed_saved_checkbox, words.size),
                     style =
                         ZappTheme.typography.body.copy(
                             color = c.textMuted,
@@ -431,7 +432,7 @@ fun SeedRevealScreen(
             }
         }
         OnbBottomDock(
-            cta = "I've saved it",
+            cta = stringResource(R.string.onboarding_seed_saved_cta),
             onCta = onContinue,
             showBack = showBack,
             onBack = onBack,

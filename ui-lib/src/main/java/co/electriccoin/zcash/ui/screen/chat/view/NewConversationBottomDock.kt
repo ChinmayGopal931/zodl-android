@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.BasicText
@@ -55,9 +56,11 @@ internal fun BottomDock(state: NewConversationState) {
         modifier =
             Modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 8.dp)
                 .background(c.surface)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .border(BorderStroke(1.dp, c.border), RectangleShape),
     ) {
         Box(
             modifier =

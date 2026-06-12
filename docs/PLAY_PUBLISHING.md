@@ -9,20 +9,25 @@ up publishing next.
 
 ---
 
-## 1. Current status (2026-05-30)
+## 1. Current status (2026-06-11)
 
 - App is **Zapp** (`xyz.justzappit.zapp`), in **Internal testing**, still a
   **Draft / unreviewed** app. Not in production.
 - The build currently live on the Internal testing track is **versionCode 1839
-  / 4.0.0**, and it is BROKEN (crashes on launch + new-wallet onboarding loops).
-- As of 2026-05-30 the two ProGuard keep rules that fix both bugs ARE now on
-  `main` (cherry-picked, commits `eb107241` + `08a11824`), so a minified release
-  built from `main` launches and onboards correctly. Only 0xVampirot's redesign
-  UI remains parked off `main` in PR #42 (item 6).
-- The original upload key was on another laptop and is not available. A **new
-  upload key was generated** and an **upload key reset was requested** in Play
-  Console. Until Google approves that reset, Play will REJECT any bundle signed
-  with the new key. Confirm approval before trying to upload.
+  / 4.0.0** (release name "Internal 0.1"), and it is BROKEN (crashes on launch +
+  new-wallet onboarding loops). The ProGuard keep rules that fix both bugs are
+  on `main` (commits `eb107241` + `08a11824`), so a fresh build from `main` is
+  the fix.
+- **Signing is resolved.** The 2026-05-30 key documented in older revisions of
+  this file (`3F:D5:DE…`, `zapp-upload-keystore.jks`) had its password lost and
+  is dead. A second reset was filed 2026-06-08 and **approved ~2026-06-10/11**;
+  the active upload key is now **v2** (`zapp-upload-v2.keystore`, SHA-1
+  `1F:D6:DC…`). Full key history, fingerprints, and the how-a-reset-works
+  explainer live in `docs/RELEASE_SIGNING.md` — that file is now the source of
+  truth for signing; section 3 below is kept only as a quick reference.
+- Next upload: build from `main` with `-PZCASH_VERSION_CODE=1841` (1839 is
+  consumed on Play; 1840 was burned on a stale AAB from old `main` — confirm in
+  App bundle explorer if you want to reuse it).
 
 ---
 
@@ -49,35 +54,35 @@ This app uses **Play App Signing**. That means:
 - We sign uploads with an **upload key**. A lost upload key is recoverable by
   the account owner via an upload key reset.
 
-New upload key (generated 2026-05-30):
-- Keystore: `~/keys/justzappit/zapp-upload-keystore.jks`
-- Certificate (the .pem uploaded to Google for the reset): `~/keys/justzappit/zapp-upload-certificate.pem`
-- Alias: `upload`
-- Algorithm: RSA 2048, valid until 2053
-- SHA-256: `F2:12:5F:F4:98:17:2D:2E:3E:AF:62:A3:56:DB:C2:E5:A5:8E:4A:5B:52:11:E0:00:1F:F9:A1:CA:B4:E9:F6:95`
-- SHA-1: `3F:D5:DE:55:AF:D5:19:57:5B:9C:57:E7:67:82:DC:30:2F:DC:88:42`
+**CURRENT upload key (v2, generated 2026-06-08, reset approved ~2026-06-10/11):**
+- Keystore: `~/keys/justzappit/zapp-upload-v2.keystore`
+- Alias: `zapp-upload`
+- SHA-1: `1F:D6:DC:3A:55:C4:41:57:41:E3:48:C4:39:BE:EB:57:2E:5D:76:34`
+- Full details, retired-key history, and the reset walkthrough:
+  **`docs/RELEASE_SIGNING.md`** (source of truth).
 
-### Upload key reset (do this once, then it's done)
-If Play rejects the bundle with "signed with the wrong key", the reset hasn't
-been approved yet. To (re)request it:
-1. Open the App signing deep link above.
-2. Under **Upload key certificate**, choose **Request upload key reset**.
-3. Reason: lost upload key. Upload `~/keys/justzappit/zapp-upload-certificate.pem`.
-4. Wait for Google's confirmation email (can take up to ~48h). Installed testers
-   are unaffected because Google holds the app signing key.
+> The key previously listed here (`3F:D5:DE…` in `zapp-upload-keystore.jks`,
+> alias `upload`, generated 2026-05-30) is **DEAD** — its password was lost and
+> Google rejects re-registration of old certificates. Do not use the `.jks`
+> still sitting in `~/keys/justzappit/`.
+
+### Upload key reset (quick reference)
+Google never *sends* you a key — you generate the keystore locally, upload only
+its exported certificate via App signing → **Request upload key reset**, and
+Google approves silently within ~48h. To check approval, compare the *Upload key
+certificate* fingerprints on the App signing page against
+`keytool -list -v -keystore <keystore> | grep SHA1`. When they match, sign
+uploads with that keystore. (Full walkthrough in `docs/RELEASE_SIGNING.md`.)
 
 ### Where the secrets live
-- The keystore password (store password = key password) is **already wired** into
-  `~/.gradle/gradle.properties` under the `ZCASH_RELEASE_*` keys, so Gradle reads
-  it automatically on this machine. You do not need to type it to build here.
+- The keystore path/password are wired into the repo's **`local.properties`**
+  (git-ignored) under the four `ZCASH_RELEASE_*` keys, so Gradle signs
+  automatically on this machine. Keystore path must be **absolute** (no `~`).
 - The raw password is also in the project owner's password manager. It is NOT in
   this repo or this doc on purpose.
-- The `~/.gradle/gradle.properties` keys: `ZCASH_RELEASE_KEYSTORE_PATH`,
-  `ZCASH_RELEASE_KEYSTORE_PASSWORD`, `ZCASH_RELEASE_KEY_ALIAS`,
-  `ZCASH_RELEASE_KEY_ALIAS_PASSWORD`. Do NOT move these into the repo's
-  `gradle.properties` (that file is committed).
-- Back up the `.jks` file somewhere safe. If it is lost again, it means another
-  reset.
+- Do NOT move these into the repo's `gradle.properties` (that file is committed).
+- Back up the keystore file AND its password. Losing either means another reset
+  and ~48h of downtime.
 
 ---
 
@@ -179,8 +184,28 @@ from current `main` for upload.
 ## 8. One-page checklist to ship a fixed Internal testing build
 
 1. Make sure the two ProGuard keep rules (item 6) are in the working tree
-   (`app/proguard-project.txt`) — i.e. build from PR #42 or cherry-pick them.
-2. Confirm the upload key reset is approved in Play Console (item 3).
-3. Pick `N` greater than the latest uploaded versionCode (currently 1839).
-4. `./gradlew clean :app:bundleZcashmainnetStoreRelease -PZCASH_VERSION_CODE=N`
-5. Upload the `.aab` to Internal testing and roll out (item 5).
+   (`app/proguard-project.txt`) — on `main` since 2026-05-30.
+2. Confirm the upload key reset is approved in Play Console (item 3) and the
+   four `ZCASH_RELEASE_*` props in `local.properties` point at the **v2**
+   keystore.
+3. **Preflight `local.properties`** — dev overrides silently bake into the AAB
+   (`settings.gradle.kts` makes `local.properties` shadow `gradle.properties`):
+   - `P2P_NETWORK=mainnet` — **`sepolia` AND blank both select Base Sepolia.**
+     A store build must say `mainnet` explicitly or the offramp runs on testnet.
+   - `OFFRAMP_USE_DEV_KEY=false` — `true` derives every user's smart account
+     from the shared dev key instead of their wallet seed.
+   - `PIMLICO_API_KEY` non-blank — blank crashes the offramp progress screen
+     and Settings → P2P transactions at runtime (fail-fast by design).
+   - `P2P_RPC_URL_BASE_MAINNET` + `P2P_SUBGRAPH_URL_MAINNET` non-blank —
+     required when `P2P_NETWORK=mainnet`, or offramp DI throws.
+   - No `ZAPP_MESSAGING_LOG_LEVEL=debug` (ships keypair dumps) and no stray
+     `ZCASH_NETWORK=` override.
+4. Pick `N` greater than the latest uploaded versionCode (currently 1839; 1840
+   was burned on a stale AAB — next is 1841).
+5. `./gradlew clean :app:bundleZcashmainnetStoreRelease -PZCASH_VERSION_CODE=N`
+6. Verify before upload:
+   - signature: `keytool -printcert -jarfile <aab> | grep SHA1` → must be
+     `1F:D6:DC…` (the v2 upload key);
+   - network: `ui-lib/build/generated/source/buildConfig/zcashmainnet/store/release/.../BuildConfig.java`
+     shows `P2P_NETWORK = "mainnet"` and `OFFRAMP_USE_DEV_KEY = false`.
+7. Upload the `.aab` to Internal testing and roll out (item 5).

@@ -21,13 +21,14 @@ import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListScreen
 import co.electriccoin.zcash.ui.screen.onboarding.ZappOnboardingFlow
 import co.electriccoin.zcash.ui.screen.onboarding.ZappRestoreFlow
+import co.electriccoin.zcash.ui.screen.tabs.TabsVM
 import co.electriccoin.zcash.ui.screen.welcome.WelcomeGateVM
 import co.electriccoin.zcash.ui.screen.welcome.view.WelcomeGateView
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun ZappTabsScaffold(
+internal fun ZappTabsScaffold(
     navigationRouter: NavigationRouter,
 ) {
     val welcomeGateVM: WelcomeGateVM = koinViewModel()
@@ -76,15 +77,14 @@ fun ZappTabsScaffold(
         }
 
         else -> {
-            ZappTabsScaffoldContent(navigationRouter = navigationRouter)
+            ZappTabsScaffoldContent()
         }
     }
 }
 
 @Composable
-private fun ZappTabsScaffoldContent(
-    navigationRouter: NavigationRouter,
-) {
+private fun ZappTabsScaffoldContent() {
+    val tabsVM: TabsVM = koinViewModel()
     var currentTab by rememberSaveable { mutableStateOf(ZappTab.CHATS) }
     // Set by tab content when it pushes a fullscreen sub-screen that owns its
     // own bottom CTA (e.g. wallet seed-reveal). Hides the floating nav pill so
@@ -99,7 +99,7 @@ private fun ZappTabsScaffoldContent(
         when (currentTab) {
             ZappTab.PAY -> {
                 WalletTabContent(
-                    navigationRouter = navigationRouter,
+                    onRestoreWallet = tabsVM::onRestoreWalletClick,
                     onFullscreenChange = { hideNavPill = it },
                 )
             }
@@ -109,7 +109,16 @@ private fun ZappTabsScaffoldContent(
             }
 
             ZappTab.YOU -> {
-                SettingsTabContent(navigationRouter = navigationRouter)
+                SettingsTabContent(
+                    onChatProfileClick = tabsVM::onChatProfileClick,
+                    onContactsClick = tabsVM::onContactsClick,
+                    onAppLockClick = tabsVM::onAppLockClick,
+                    onChooseServerClick = tabsVM::onChooseServerClick,
+                    onSwapClick = tabsVM::onSwapClick,
+                    onTorClick = tabsVM::onTorClick,
+                    onP2pTransactionsClick = tabsVM::onP2pTransactionsClick,
+                    onSupportClick = tabsVM::onSupportClick,
+                )
             }
         }
 
@@ -150,4 +159,3 @@ private fun ChatsTabContent() {
         }
     }
 }
-

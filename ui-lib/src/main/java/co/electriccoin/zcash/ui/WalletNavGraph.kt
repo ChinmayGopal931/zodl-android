@@ -124,8 +124,6 @@ import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
 import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedScreen
 import co.electriccoin.zcash.ui.screen.restore.tor.RestoreTorArgs
 import co.electriccoin.zcash.ui.screen.restore.tor.RestoreTorScreen
-import co.electriccoin.zcash.ui.screen.restoresuccess.WrapRestoreSuccess
-import co.electriccoin.zcash.ui.screen.restoresuccess.WrapRestoreSuccessArgs
 import co.electriccoin.zcash.ui.screen.resync.confirm.ResyncConfirmArgs
 import co.electriccoin.zcash.ui.screen.resync.confirm.ResyncConfirmScreen
 import co.electriccoin.zcash.ui.screen.resync.date.ResyncDateArgs
@@ -346,7 +344,6 @@ fun NavGraphBuilder.walletNavGraph(
         composable<ResyncEstimationArgs> { ResyncEstimationScreen(it.toRoute()) }
         composable<ResyncHeightArgs> { ResyncHeightScreen() }
         composable<DisconnectArgs> { DisconnectScreen() }
-        composable<WrapRestoreSuccessArgs> { WrapRestoreSuccess() }
         composable<RestoreSeedArgs> { RestoreSeedScreen() }
         composable<RestoreBDHeight> { AndroidRestoreBDHeight(it.toRoute()) }
         composable<RestoreBDDateArgs> { RestoreBDDateScreen(it.toRoute()) }

@@ -61,4 +61,5 @@
     <string name="transaction_detail_pay_incomplete">Pago incompleto</string>
     <string name="transaction_detail_info_incomplete_deposit_title">Depósito incompleto</string>
     <string name="transaction_detail_info_incomplete_deposit_message">Deposita %1$s adicionales para completar este swap antes del %2$s, o tu depósito será reembolsado.</string>
+    <string name="transaction_detail_convert_button">Convertir</string>
 </resources>

@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -155,7 +156,7 @@ private fun SaveQrTextButton(
             modifier = Modifier.size(16.dp),
         )
         BasicText(
-            text = "Save QR to Photos",
+            text = stringResource(R.string.request_qr_save_btn),
             style =
                 ZappTheme.typography.caption.copy(
                     color = c.textMuted,
@@ -173,7 +174,12 @@ private fun AddressSection(
     val c = ZappTheme.colors
     val copyToClipboard = koinInject<CopyToClipboardUseCase>()
     val isShielded = state.walletAddress !is WalletAddress.Transparent
-    val addressLabel = if (isShielded) "Your Shielded Address" else "Your Transparent Address"
+    val addressLabel =
+        if (isShielded) {
+            stringResource(R.string.request_qr_address_label_shielded)
+        } else {
+            stringResource(R.string.request_qr_address_label_transparent)
+        }
     val address = state.walletAddress.address
     val truncated =
         if (address.length > 16) {
@@ -219,7 +225,7 @@ private fun AddressSection(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_copy_shielded),
-                    contentDescription = "Copy address",
+                    contentDescription = stringResource(R.string.request_qr_copy_address_content_description),
                     modifier = Modifier.size(18.dp),
                     colorFilter = ColorFilter.tint(c.accentText),
                 )
@@ -239,7 +245,7 @@ private fun AddressSection(
             ) {
                 Column {
                     BasicText(
-                        text = "NOTE",
+                        text = stringResource(R.string.request_qr_note_label),
                         style =
                             ZappTheme.typography.eyebrow.copy(
                                 color = c.textSubtle,

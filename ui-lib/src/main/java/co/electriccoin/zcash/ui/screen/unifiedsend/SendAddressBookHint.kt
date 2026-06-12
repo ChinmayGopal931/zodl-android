@@ -1,4 +1,4 @@
-package co.electriccoin.zcash.ui.screen.unifiedsend.view
+package co.electriccoin.zcash.ui.screen.unifiedsend
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -25,7 +25,7 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
 
 @Composable
-fun SendAddressBookHint(modifier: Modifier = Modifier) {
+internal fun SendAddressBookHint(modifier: Modifier = Modifier) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(0.dp),

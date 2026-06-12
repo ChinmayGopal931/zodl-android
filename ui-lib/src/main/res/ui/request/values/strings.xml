@@ -6,6 +6,13 @@
     <string name="request_memo_btn">Request</string>
     <string name="request_qr_share_btn">Share QR Code</string>
     <string name="request_qr_close_btn">Close</string>
+    <string name="request_qr_save_btn">Save QR to Photos</string>
+    <string name="request_qr_note_label">NOTE</string>
+    <string name="request_qr_address_label_shielded">Your Shielded Address</string>
+    <string name="request_qr_address_label_transparent">Your Transparent Address</string>
+    <string name="request_qr_copy_address_content_description">Copy address</string>
+    <string name="request_back_content_description">Go back</string>
+    <string name="request_back_glyph" translatable="false">←</string>
     <string name="request_privacy_level_shielded">Private</string>
     <string name="request_privacy_level_transparent">Not Private</string>
     <string name="request_amount_empty">0</string>

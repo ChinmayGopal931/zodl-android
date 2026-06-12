@@ -55,6 +55,9 @@ import co.electriccoin.zcash.ui.screen.chat.contacts.AddChatContactState
 internal fun AddChatContactSheet(state: AddChatContactState) {
     val c = ZappTheme.colors
     val keyboard = LocalSoftwareKeyboardController.current
+    val scanMessagingKeyLabel = stringResource(R.string.chat_contact_scan_messaging_key_content_description)
+    val scanWalletAddressLabel = stringResource(R.string.chat_contact_scan_wallet_address_content_description)
+    val saveLabel = stringResource(R.string.chat_contact_add_save_content_description)
 
     ModalBottomSheet(
         onDismissRequest = state.onDismiss,
@@ -72,7 +75,7 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
                     .padding(bottom = 28.dp),
         ) {
             BasicText(
-                text = "Add New Contact",
+                text = stringResource(R.string.chat_contact_add_title),
                 style =
                     ZappTheme.typography.sectionTitle.copy(
                         color = c.text,
@@ -103,7 +106,7 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
             ZappInputField(
                 value = state.publicKey,
                 onValueChange = state.onPublicKeyChange,
-                placeholder = "Messaging Key (64 hex chars)",
+                placeholder = stringResource(R.string.chat_contact_add_messaging_key_placeholder),
                 leadingIcon = {
                     Icon(
                         Icons.Default.Key,
@@ -119,7 +122,7 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
                                 .size(48.dp)
                                 .clickable(onClick = state.onScanPublicKey)
                                 .semantics {
-                                    contentDescription = "Scan messaging key QR"
+                                    contentDescription = scanMessagingKeyLabel
                                     role = Role.Button
                                 },
                         contentAlignment = Alignment.Center,
@@ -183,7 +186,7 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
                                 .size(48.dp)
                                 .clickable(onClick = state.onScanWalletAddress)
                                 .semantics {
-                                    contentDescription = "Scan wallet address QR"
+                                    contentDescription = scanWalletAddressLabel
                                     role = Role.Button
                                 },
                         contentAlignment = Alignment.Center,
@@ -235,13 +238,13 @@ internal fun AddChatContactSheet(state: AddChatContactState) {
                             state.onSave()
                         })
                         .semantics {
-                            contentDescription = "Add Contact"
+                            contentDescription = saveLabel
                             role = Role.Button
                         },
                 contentAlignment = Alignment.Center,
             ) {
                 BasicText(
-                    text = "SAVE",
+                    text = stringResource(R.string.chat_contact_add_save_button),
                     style =
                         ZappTheme.typography.button.copy(
                             color = c.onAccent,

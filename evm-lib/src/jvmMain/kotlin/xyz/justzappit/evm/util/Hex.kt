@@ -12,15 +12,17 @@ fun hexToBigInteger(hex: String): BigInteger {
     return if (s.isEmpty()) BigInteger.ZERO else BigInteger(s, 16)
 }
 
+// Error messages must not echo the input: callers pass private-key hex (Ecies.decryptWithPrivateKey,
+// the offramp relay identity), and a malformed persisted key would otherwise land in logged exceptions.
 fun String.hexToBytes(): ByteArray {
     val raw = if (startsWith("0x") || startsWith("0X")) substring(2) else this
-    require(raw.length % 2 == 0) { "hex input must have even length, got ${raw.length}: '$this'" }
+    require(raw.length % 2 == 0) { "hex input must have even length, got ${raw.length}" }
     val out = ByteArray(raw.length / 2)
     var i = 0
     while (i < raw.length) {
         val hi = Character.digit(raw[i], 16)
         val lo = Character.digit(raw[i + 1], 16)
-        require(hi >= 0 && lo >= 0) { "hex input contains non-hex character at index $i: '$this'" }
+        require(hi >= 0 && lo >= 0) { "hex input contains non-hex character at index $i" }
         out[i / 2] = ((hi shl 4) + lo).toByte()
         i += 2
     }

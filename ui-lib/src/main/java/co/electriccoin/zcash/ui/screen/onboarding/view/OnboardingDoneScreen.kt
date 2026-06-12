@@ -15,13 +15,15 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @Composable
-fun OnboardingDoneScreen(
+internal fun OnboardingDoneScreen(
     mode: TwoFAMode,
     onEnter: () -> Unit,
 ) {
@@ -55,7 +57,7 @@ fun OnboardingDoneScreen(
                 )
                 Spacer(Modifier.height(18.dp))
                 BasicText(
-                    text = "You're\nall set.",
+                    text = stringResource(R.string.onboarding_done_title),
                     style =
                         ZappTheme.typography.display.copy(
                             color = c.text,
@@ -70,14 +72,15 @@ fun OnboardingDoneScreen(
                 Spacer(Modifier.height(20.dp))
                 OnbSub(
                     text =
-                        "Identity created, wallet ready" +
+                        stringResource(
                             when (mode) {
-                                TwoFAMode.Bio -> ", secured with biometrics."
-                                TwoFAMode.Pin -> ", secured with a PIN."
-                            },
+                                TwoFAMode.Bio -> R.string.onboarding_done_subtitle_bio
+                                TwoFAMode.Pin -> R.string.onboarding_done_subtitle_pin
+                            }
+                        ),
                 )
             }
         }
-        OnbBottomDock(cta = "Enter Zapp →", onCta = onEnter)
+        OnbBottomDock(cta = stringResource(R.string.onboarding_done_enter_cta), onCta = onEnter)
     }
 }

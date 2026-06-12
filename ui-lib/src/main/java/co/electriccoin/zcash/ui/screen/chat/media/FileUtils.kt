@@ -3,12 +3,13 @@ package co.electriccoin.zcash.ui.screen.chat.media
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import co.electriccoin.zcash.ui.screen.chat.common.runChatCallResult
 import java.io.File
 import java.util.Locale
 
 object FileUtils {
     fun copyUriToCache(context: Context, uri: Uri, subdirectory: String = "chat_media"): File? =
-        try {
+        runChatCallResult("FileUtils: copyUriToCache failed") {
             val dir = File(context.cacheDir, subdirectory).apply { mkdirs() }
             val fileName = getFileName(context, uri) ?: "file_${System.currentTimeMillis()}"
             val destFile = File(dir, fileName)
@@ -16,9 +17,7 @@ object FileUtils {
                 destFile.outputStream().use { output -> input.copyTo(output) }
             }
             destFile
-        } catch (e: Exception) {
-            null
-        }
+        }.getOrNull()
 
     fun getFileName(context: Context, uri: Uri): String? {
         if (uri.scheme == "content") {

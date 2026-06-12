@@ -170,7 +170,7 @@ internal fun ReportUserDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            category.displayLabel,
+                            stringResource(category.displayNameRes),
                             style = ZappTheme.typography.body,
                             color = c.text,
                         )

@@ -56,7 +56,7 @@ internal fun ChatProfileView(state: ChatProfileState, modifier: Modifier = Modif
             }
         }
 
-        SeedPhraseRow(onClick = state.onSeedPhraseClick)
+        KeyExportRows(onSeedPhraseClick = state.onSeedPhraseClick, onP2pKeyClick = state.onP2pKeyClick)
 
         Spacer(Modifier.height(4.dp))
 
@@ -114,4 +114,5 @@ internal fun ChatProfileView(state: ChatProfileState, modifier: Modifier = Modif
     state.deleteDialog?.let { DeleteIdentityDialog(state = it) }
     state.pinVerify?.let { PinVerifyOverlay(state = it) }
     state.seedPhraseDialog?.let { SeedPhraseDialog(state = it) }
+    state.p2pKeyDialog?.let { P2pWalletKeyDialog(state = it) }
 }

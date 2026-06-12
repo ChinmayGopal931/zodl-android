@@ -33,6 +33,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -203,16 +207,21 @@ private fun SwissDockRow(
 @Composable
 private fun SwissBackBox(onClick: () -> Unit) {
     val c = ZappTheme.colors
+    val backContentDescription = stringResource(R.string.request_back_content_description)
     Box(
         modifier =
             Modifier
                 .size(width = 72.dp, height = 52.dp)
                 .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .clickable(onClick = onClick),
+                .clickable(onClick = onClick)
+                .semantics {
+                    contentDescription = backContentDescription
+                    role = Role.Button
+                },
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
-            text = "←",
+            text = stringResource(R.string.request_back_glyph),
             style =
                 ZappTheme.typography.button.copy(
                     color = c.text,

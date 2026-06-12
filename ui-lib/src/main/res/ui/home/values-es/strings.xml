@@ -1,5 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <string name="home_balance_chart_title">Historial de balance</string>
+    <string name="home_balance_chart_period_24h">24h</string>
+    <string name="home_balance_chart_period_1w">1sem</string>
+    <string name="home_balance_chart_period_1m">1m</string>
+    <string name="home_balance_chart_period_all">Todo</string>
+    <string name="home_balance_chart_footer" formatted="true">Balance: <xliff:g example="1.2345" id="amount">%1$s</xliff:g> ZEC</string>
+    <string name="home_balance_chart_empty">Aún no hay suficiente actividad para este rango.</string>
+    <string name="home_balance_chart_no_data">Sin datos para este período</string>
+    <string name="home_balance_chart_loading">Cargando gráfico…</string>
+    <string name="home_balance_chart_hidden">El gráfico de balance aparecerá aquí</string>
+
+    <string name="home_wallet_title">Billetera</string>
+    <string name="home_pay_title">Pagar</string>
+    <string name="home_recent_activity_title">Actividad reciente</string>
+    <string name="home_balance_total_label">Balance total</string>
+    <string name="home_activity_empty_title">Aún no hay transacciones.</string>
+    <string name="home_activity_empty_subtitle">Tus envíos y recepciones aparecerán aquí.</string>
+
+    <!-- Fila / chip de estado de sincronización de la wallet (progreso en home) -->
+    <string name="home_sync_progress_syncing">Sincronizando</string>
+    <string name="home_sync_progress_restoring">Restaurando</string>
+    <string name="home_sync_progress_connecting">Conectando</string>
+    <string name="home_sync_progress_offline">Sin conexión — reconectando</string>
+    <string name="home_sync_progress_error">Error de sincronización</string>
+    <string name="home_sync_chip_synced">Sincronizado</string>
+    <string name="home_sync_chip_offline">Sin conexión</string>
+    <string name="home_sync_chip_syncing_fmt">Sincronizando %1$.2f%%</string>
+    <string name="home_sync_chip_restoring_fmt">Restaurando %1$.2f%%</string>
+
     <string name="home_button_receive">Recibir</string>
     <string name="home_button_send">Enviar</string>
     <string name="home_button_scan">Escanear</string>
@@ -77,5 +106,6 @@
     <string name="balance_action_info_shielded">Protegido (Disponible)</string>
     <string name="balance_action_info_pending">Pendiente</string>
     <string name="home_button_pay">Pagar</string>
+    <string name="home_button_pay_merchant">Pagar a comercio</string>
     <string name="home_button_swap">Swap</string>
 </resources>

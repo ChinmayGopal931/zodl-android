@@ -14,14 +14,16 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 enum class TwoFAMode { Bio, Pin }
 
 @Suppress("UNUSED_PARAMETER")
 @Composable
-fun TwoFAChoiceScreen(
+internal fun TwoFAChoiceScreen(
     onBack: () -> Unit,
     onPick: (TwoFAMode) -> Unit,
 ) {
@@ -45,26 +47,26 @@ fun TwoFAChoiceScreen(
         ) {
             GhostNum(n = 3, modifier = Modifier.align(Alignment.TopEnd))
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
-                Eyebrow("Part 3 of 3 · Secure Zapp")
+                Eyebrow(stringResource(R.string.onboarding_secure_badge))
                 Spacer(Modifier.height(14.dp))
-                OnbHero(text = "Secure\nyour app")
+                OnbHero(text = stringResource(R.string.onboarding_secure_title))
                 Spacer(Modifier.height(14.dp))
-                OnbSub("Choose how you unlock Zapp and authorise payments.")
+                OnbSub(stringResource(R.string.onboarding_secure_subtitle))
             }
             OnbActionListCard(
                 actions =
                     listOf(
                         OnbAction(
                             icon = "◎",
-                            label = "Biometric",
-                            sub = "Fingerprint or face — fastest",
+                            label = stringResource(R.string.onboarding_secure_bio_label),
+                            sub = stringResource(R.string.onboarding_secure_bio_sub),
                             onClick = { onPick(TwoFAMode.Bio) },
                             highlight = true,
                         ),
                         OnbAction(
                             icon = "✱",
-                            label = "6-digit PIN",
-                            sub = "A passcode you remember",
+                            label = stringResource(R.string.security_settings_tab_pin),
+                            sub = stringResource(R.string.onboarding_secure_pin_sub),
                             onClick = { onPick(TwoFAMode.Pin) },
                         ),
                     ),

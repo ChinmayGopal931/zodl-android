@@ -20,8 +20,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.compose.SecureScreen
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import kotlinx.coroutines.delay
@@ -35,7 +37,7 @@ import kotlinx.coroutines.delay
  * On match: [onPinConfirmed] is called with the raw 6-digit string.
  */
 @Composable
-fun PinSetupScreen(
+internal fun PinSetupScreen(
     onBack: () -> Unit,
     onPinConfirmed: (String) -> Unit,
 ) {
@@ -96,15 +98,22 @@ fun PinSetupScreen(
         ) {
             GhostNum(n = 3, modifier = Modifier.align(Alignment.TopEnd))
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
-                Eyebrow("Part 3 of 3 · Secure Zapp")
+                Eyebrow(stringResource(R.string.onboarding_secure_badge))
                 Spacer(Modifier.height(14.dp))
                 OnbHero(
-                    text = if (isConfirmPhase) "Confirm\nyour PIN" else "Create\nyour PIN"
+                    text =
+                        stringResource(
+                            if (isConfirmPhase) {
+                                R.string.security_settings_change_pin_confirm_title
+                            } else {
+                                R.string.onboarding_pin_create_title
+                            }
+                        )
                 )
                 Spacer(Modifier.height(14.dp))
                 if (mismatchError) {
                     BasicText(
-                        text = "PINs don't match. Please try again.",
+                        text = stringResource(R.string.onboarding_pin_mismatch),
                         style =
                             ZappTheme.typography.body.copy(
                                 color = c.danger,
@@ -115,11 +124,13 @@ fun PinSetupScreen(
                 } else {
                     OnbSub(
                         text =
-                            if (isConfirmPhase) {
-                                "Re-enter your 6-digit PIN to confirm."
-                            } else {
-                                "Choose a 6-digit code you'll remember."
-                            },
+                            stringResource(
+                                if (isConfirmPhase) {
+                                    R.string.onboarding_pin_confirm_subtitle
+                                } else {
+                                    R.string.onboarding_pin_create_subtitle
+                                }
+                            ),
                     )
                 }
             }

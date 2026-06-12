@@ -183,7 +183,7 @@ private fun ReceiveMainPanel(
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 BasicText(
-                    text = "TIP",
+                    text = stringResource(R.string.receive_tip_label),
                     style =
                         ZappTheme.typography.eyebrow.copy(
                             color = c.textSubtle,
@@ -232,7 +232,7 @@ private fun ReceiveShareButton(
         contentAlignment = Alignment.Center,
     ) {
         BasicText(
-            text = "Share".uppercase(),
+            text = stringResource(R.string.receive_share).uppercase(),
             style =
                 ZappTheme.typography.button.copy(
                     color = c.textMuted,
@@ -250,13 +250,16 @@ private fun ReceiveBottomDock(
     modifier: Modifier = Modifier,
 ) {
     val c = ZappTheme.colors
+    val backContentDescription = stringResource(R.string.receive_back_content_description)
     Row(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(c.bg)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 8.dp)
+                .background(c.surface)
+                .border(BorderStroke(1.dp, c.border), RectangleShape),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -264,11 +267,15 @@ private fun ReceiveBottomDock(
                 Modifier
                     .size(width = 72.dp, height = 52.dp)
                     .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable(onClick = onBack),
+                    .clickable(onClick = onBack)
+                    .semantics {
+                        contentDescription = backContentDescription
+                        role = Role.Button
+                    },
             contentAlignment = Alignment.Center,
         ) {
             BasicText(
-                text = "←",
+                text = stringResource(R.string.receive_back_glyph),
                 style =
                     ZappTheme.typography.button.copy(
                         color = c.text,
@@ -320,7 +327,12 @@ private fun ReceiveTabSwitcher(
     ) {
         items.forEachIndexed { index, item ->
             val isSelected = index == selectedIndex
-            val label = if (item.isShielded) "Shielded" else "Transparent"
+            val label =
+                if (item.isShielded) {
+                    stringResource(R.string.receive_tab_shielded)
+                } else {
+                    stringResource(R.string.receive_tab_transparent)
+                }
             Box(
                 modifier =
                     Modifier

@@ -1,4 +1,4 @@
-package co.electriccoin.zcash.ui.screen.unifiedsend.view
+package co.electriccoin.zcash.ui.screen.unifiedsend
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -76,14 +76,10 @@ import co.electriccoin.zcash.ui.screen.balances.BalanceWidget
 import co.electriccoin.zcash.ui.screen.balances.BalanceWidgetState
 import co.electriccoin.zcash.ui.screen.swap.SlippageButton
 import co.electriccoin.zcash.ui.screen.swap.SwapErrorFooter
-import co.electriccoin.zcash.ui.screen.unifiedsend.model.MemoFieldState
-import co.electriccoin.zcash.ui.screen.unifiedsend.model.PrimaryButtonState
-import co.electriccoin.zcash.ui.screen.unifiedsend.model.UnifiedSendFormState
-import co.electriccoin.zcash.ui.screen.unifiedsend.view.SendAddressBookHint
 
 @Composable
 internal fun UnifiedSendView(
-    state: UnifiedSendFormState,
+    state: UnifiedSendState,
     balanceState: BalanceWidgetState,
 ) {
     val c = ZappTheme.colors
@@ -277,7 +273,7 @@ private fun TheyReceiveRow(label: StringResource) {
 }
 
 @Composable
-private fun AmountFields(state: UnifiedSendFormState) {
+private fun AmountFields(state: UnifiedSendState) {
     val primarySource = remember { MutableInteractionSource() }
     val isPrimaryFocused by primarySource.collectIsFocusedAsState()
 
@@ -386,7 +382,7 @@ private fun AmountInputField(
 }
 
 @Composable
-private fun AddressField(state: UnifiedSendFormState) {
+private fun AddressField(state: UnifiedSendState) {
     ZashiAddressTextField(
         state = state.address,
         modifier =

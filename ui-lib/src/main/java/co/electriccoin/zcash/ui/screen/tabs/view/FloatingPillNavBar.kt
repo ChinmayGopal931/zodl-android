@@ -1,5 +1,6 @@
 package co.electriccoin.zcash.ui.screen.tabs.view
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -34,6 +35,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
@@ -41,18 +43,19 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
-enum class ZappTab(
-    val title: String
+internal enum class ZappTab(
+    @param:StringRes val titleRes: Int
 ) {
-    PAY("Pay"),
-    CHATS("Chats"),
-    YOU("You"),
+    PAY(R.string.home_pay_title),
+    CHATS(R.string.chat_list_title),
+    YOU(R.string.settings_you_title),
 }
 
 @Composable
-fun FloatingPillNavBar(
+internal fun FloatingPillNavBar(
     currentTab: ZappTab,
     chatUnreadCount: Int,
     onTabSelected: (ZappTab) -> Unit,
@@ -83,6 +86,7 @@ fun FloatingPillNavBar(
                 val selected = tab == currentTab
                 val icon: ImageVector = iconFor(tab, selected)
                 val showBadge = tab == ZappTab.CHATS && chatUnreadCount > 0
+                val label = stringResource(tab.titleRes)
 
                 Box(
                     modifier =
@@ -101,7 +105,7 @@ fun FloatingPillNavBar(
                                     ),
                                 onClick = { onTabSelected(tab) },
                             ).semantics {
-                                contentDescription = tab.title
+                                contentDescription = label
                                 role = Role.Tab
                             },
                     contentAlignment = Alignment.Center,

@@ -1,4 +1,4 @@
-package co.electriccoin.zcash.ui.screen.unifiedsend.model
+package co.electriccoin.zcash.ui.screen.unifiedsend
 
 import co.electriccoin.zcash.ui.design.component.AssetCardState
 import co.electriccoin.zcash.ui.design.component.ChipButtonState
@@ -8,7 +8,7 @@ import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.screen.swap.SwapErrorFooterState
 
-internal data class UnifiedSendFormState(
+internal data class UnifiedSendState(
     // Asset selector — ZEC by default; picking another asset switches to swap mode
     val asset: AssetCardState,
     // Address field

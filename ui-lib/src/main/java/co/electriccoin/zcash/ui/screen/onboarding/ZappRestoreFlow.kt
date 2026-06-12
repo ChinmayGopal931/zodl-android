@@ -49,7 +49,7 @@ private enum class RestoreStep {
  * the user through PIN/biometrics and the sync screen.
  */
 @Composable
-fun ZappRestoreFlow(
+internal fun ZappRestoreFlow(
     onComplete: () -> Unit,
     onBackToWelcome: () -> Unit,
     walletViewModel: WalletViewModel,
@@ -73,7 +73,7 @@ private fun ZappRestoreFlowContent(
     chatBootstrap: ChatBootstrap,
 ) {
     val restoreVM: ZappRestoreFlowVM = koinViewModel()
-    val securityVM: OnboardingSecurityViewModel = koinViewModel()
+    val securityVM: OnboardingSecurityVM = koinViewModel()
 
     var step by rememberSaveable { mutableStateOf(RestoreStep.SEED_ENTRY) }
     var pendingUsername by rememberSaveable { mutableStateOf("") }
@@ -113,7 +113,7 @@ private fun RestoreFlowEffects(
     chatBootstrap: ChatBootstrap,
     walletViewModel: WalletViewModel,
     restoreVM: ZappRestoreFlowVM,
-    securityVM: OnboardingSecurityViewModel,
+    securityVM: OnboardingSecurityVM,
 ) {
     val secretState by walletViewModel.secretState.collectAsStateWithLifecycle()
     val chatIdentity by chatBootstrap.identity.collectAsStateWithLifecycle()
@@ -149,7 +149,7 @@ private fun RestoreFlowEffects(
     }
 
     LaunchedEffect(bioState, step) {
-        if (bioState is OnboardingSecurityViewModel.BioState.Success && step == RestoreStep.BIO_SCAN) {
+        if (bioState is OnboardingSecurityVM.BioState.Success && step == RestoreStep.BIO_SCAN) {
             onStepChange(RestoreStep.KEEP_OPEN)
         }
     }
@@ -171,7 +171,7 @@ private fun RestoreStepHost(
     walletViewModel: WalletViewModel,
     chatBootstrap: ChatBootstrap,
     restoreVM: ZappRestoreFlowVM,
-    securityVM: OnboardingSecurityViewModel,
+    securityVM: OnboardingSecurityVM,
 ) {
     when (step) {
         RestoreStep.SEED_ENTRY -> SeedEntryStepView(restoreVM, onBackToWelcome, onStepChange)
@@ -318,11 +318,11 @@ private fun SecureChoiceStepView(onStepChange: (RestoreStep) -> Unit) {
 }
 
 @Composable
-private fun BioStepView(securityVM: OnboardingSecurityViewModel, onStepChange: (RestoreStep) -> Unit) {
+private fun BioStepView(securityVM: OnboardingSecurityVM, onStepChange: (RestoreStep) -> Unit) {
     val bioState by securityVM.bioState.collectAsStateWithLifecycle()
     BioScanScreen(
-        isEnrolling = bioState is OnboardingSecurityViewModel.BioState.Prompting,
-        errorMessage = (bioState as? OnboardingSecurityViewModel.BioState.Error)?.message,
+        isEnrolling = bioState is OnboardingSecurityVM.BioState.Prompting,
+        errorMessage = (bioState as? OnboardingSecurityVM.BioState.Error)?.message,
         onEnroll = { securityVM.triggerBiometricSetup() },
         onCancel = {
             securityVM.resetBioError()
@@ -332,7 +332,7 @@ private fun BioStepView(securityVM: OnboardingSecurityViewModel, onStepChange: (
 }
 
 @Composable
-private fun PinStepView(securityVM: OnboardingSecurityViewModel, onStepChange: (RestoreStep) -> Unit) {
+private fun PinStepView(securityVM: OnboardingSecurityVM, onStepChange: (RestoreStep) -> Unit) {
     PinSetupScreen(
         onBack = { onStepChange(RestoreStep.SECURE_CHOICE) },
         onPinConfirmed = { pin -> securityVM.savePin(pin) },

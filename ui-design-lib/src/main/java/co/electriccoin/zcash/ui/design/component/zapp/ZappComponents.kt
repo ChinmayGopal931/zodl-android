@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
@@ -43,6 +44,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.design.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 // Shared string helpers used by the list + profile components.
@@ -439,10 +441,12 @@ fun ZappBottomActionBar(
         modifier =
             modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 8.dp)
                 .background(c.surface)
                 .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+                .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -458,6 +462,7 @@ fun ZappBackButton(
     modifier: Modifier = Modifier,
 ) {
     val c = ZappTheme.colors
+    val backContentDescription = stringResource(R.string.general_back_content_description)
     Box(
         modifier =
             modifier
@@ -467,7 +472,7 @@ fun ZappBackButton(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = ripple(bounded = true, color = c.text),
                 ).semantics {
-                    contentDescription = "Go back"
+                    contentDescription = backContentDescription
                     role = Role.Button
                 },
         contentAlignment = Alignment.Center,

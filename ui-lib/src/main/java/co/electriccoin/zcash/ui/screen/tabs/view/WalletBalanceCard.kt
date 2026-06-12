@@ -17,10 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cash.z.ecc.android.sdk.model.Zatoshi
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.wallet.ExchangeRateState
 import co.electriccoin.zcash.ui.design.component.chart.SparkChart
 import co.electriccoin.zcash.ui.design.component.chart.SparkChartData
@@ -54,7 +56,7 @@ internal fun BalanceCard(
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp, vertical = 18.dp),
     ) {
-        ZappSectionLabel(text = "Total balance")
+        ZappSectionLabel(text = stringResource(R.string.home_balance_total_label))
         Spacer(Modifier.height(8.dp))
 
         BalanceAmount(balanceState = balanceState)
@@ -177,15 +179,15 @@ private fun ChartArea(state: BalanceChartState) {
         }
 
         is BalanceChartState.Empty -> {
-            EmptyChartBox("No data for this period")
+            EmptyChartBox(stringResource(R.string.home_balance_chart_no_data))
         }
 
         BalanceChartState.Loading -> {
-            EmptyChartBox("Loading chart…")
+            EmptyChartBox(stringResource(R.string.home_balance_chart_loading))
         }
 
         BalanceChartState.Hidden -> {
-            EmptyChartBox("Balance chart appears here")
+            EmptyChartBox(stringResource(R.string.home_balance_chart_hidden))
         }
     }
 }
@@ -294,10 +296,5 @@ private fun BalanceChartState.onPeriodClickOrNoop(): (BalanceChartPeriod) -> Uni
         BalanceChartState.Loading, BalanceChartState.Hidden -> { _ -> }
     }
 
-private fun BalanceChartPeriod.label(): String =
-    when (this) {
-        BalanceChartPeriod.H24 -> "1D"
-        BalanceChartPeriod.W1 -> "1W"
-        BalanceChartPeriod.M1 -> "1M"
-        BalanceChartPeriod.ALL -> "ALL"
-    }
+@Composable
+private fun BalanceChartPeriod.label(): String = stringResource(labelRes)

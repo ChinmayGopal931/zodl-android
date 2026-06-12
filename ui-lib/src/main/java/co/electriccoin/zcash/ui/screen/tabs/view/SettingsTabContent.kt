@@ -43,7 +43,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.viewmodel.SecretState
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
@@ -54,23 +53,22 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.component.zapp.initialsOf
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
-import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
-import co.electriccoin.zcash.ui.screen.chat.SupportTicketListArgs
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
-import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
-import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
-import co.electriccoin.zcash.ui.screen.chat.ChatContactsArgs
-import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
-import co.electriccoin.zcash.ui.screen.swap.SwapArgs
-import co.electriccoin.zcash.ui.screen.tor.settings.TorSettingsArgs
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsTabContent(
-    navigationRouter: NavigationRouter,
+internal fun SettingsTabContent(
+    onChatProfileClick: () -> Unit,
+    onContactsClick: () -> Unit,
+    onAppLockClick: () -> Unit,
+    onChooseServerClick: () -> Unit,
+    onSwapClick: () -> Unit,
+    onTorClick: () -> Unit,
+    onP2pTransactionsClick: () -> Unit,
+    onSupportClick: () -> Unit,
     walletViewModel: WalletViewModel = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -92,7 +90,7 @@ fun SettingsTabContent(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars),
         ) {
-            ZappScreenHeader(title = "You")
+            ZappScreenHeader(title = stringResource(R.string.settings_you_title))
 
             Column(
                 modifier =
@@ -106,34 +104,34 @@ fun SettingsTabContent(
                     ProfileCard(displayName = id.displayName)
                 }
 
-                SettingsGroup(title = "People") {
+                SettingsGroup(title = stringResource(R.string.settings_group_people)) {
                     ZappRow(
-                        title = "Contacts",
-                        subtitle = "Manage your chat contacts",
+                        title = stringResource(R.string.chat_contacts_title),
+                        subtitle = stringResource(R.string.settings_contacts_subtitle),
                         icon = Icons.Default.Contacts,
                         iconTint = c.accentText,
                         iconBackground = c.accentSoft,
-                        onClick = { navigationRouter.forward(ChatContactsArgs) },
+                        onClick = onContactsClick,
                     )
                 }
 
-                SettingsGroup(title = "Security") {
+                SettingsGroup(title = stringResource(R.string.settings_group_security)) {
                     ZappRow(
-                        title = "Profile & identity",
-                        subtitle = "Seed phrase, messaging key, wallet address",
+                        title = stringResource(R.string.settings_profile_identity_title),
+                        subtitle = stringResource(R.string.settings_profile_identity_subtitle),
                         icon = Icons.Default.Person,
                         iconTint = c.accentText,
                         iconBackground = c.accentSoft,
-                        onClick = { navigationRouter.forward(ChatProfileArgs) },
+                        onClick = onChatProfileClick,
                     )
                     ZappRowDivider(inset = true)
                     ZappRow(
-                        title = "App lock",
-                        subtitle = "Change PIN or switch auth method",
+                        title = stringResource(R.string.settings_app_lock_title),
+                        subtitle = stringResource(R.string.settings_app_lock_subtitle),
                         icon = Icons.Default.Lock,
                         iconTint = c.accentText,
                         iconBackground = c.accentSoft,
-                        onClick = { navigationRouter.forward(SecuritySettingsArgs) },
+                        onClick = onAppLockClick,
                     )
                     // DEAD CODE [hidden]: Backup / restore — uncomment to restore (and the divider above)
                     // ZappRowDivider(inset = true)
@@ -147,36 +145,46 @@ fun SettingsTabContent(
                     // )
                 }
 
-                SettingsGroup(title = "Privacy") {
+                SettingsGroup(title = stringResource(R.string.settings_group_privacy)) {
                     ZappRow(
-                        title = "Tor",
-                        subtitle = "Route connections through Tor",
+                        title = stringResource(R.string.settings_tor_title),
+                        subtitle = stringResource(R.string.settings_tor_subtitle),
                         icon = Icons.Default.Security,
-                        onClick = { navigationRouter.forward(TorSettingsArgs) },
+                        onClick = onTorClick,
                     )
                 }
 
                 if (hasWallet) {
-                    SettingsGroup(title = "Wallet") {
+                    SettingsGroup(title = stringResource(R.string.settings_group_wallet)) {
+                        // DEAD CODE [hidden]: Backup seed phrase — uncomment to restore (and the divider below)
+                        // ZappRow(
+                        //     title = "Backup seed phrase",
+                        //     subtitle = "View and save your 24-word recovery phrase",
+                        //     icon = Icons.Default.AccountBalanceWallet,
+                        //     iconTint = c.accentText,
+                        //     iconBackground = c.accentSoft,
+                        //     onClick = { /* route via TabsVM */ },
+                        // )
+                        // ZappRowDivider(inset = true)
                         ZappRow(
-                            title = "Swap",
-                            subtitle = "Exchange crypto assets",
+                            title = stringResource(R.string.settings_swap_title),
+                            subtitle = stringResource(R.string.settings_swap_subtitle),
                             icon = Icons.Default.SwapHoriz,
-                            onClick = { navigationRouter.forward(SwapArgs) },
+                            onClick = onSwapClick,
                         )
                         ZappRowDivider(inset = true)
                         ZappRow(
-                            title = "Server",
-                            subtitle = "Choose a lightwalletd server",
+                            title = stringResource(R.string.choose_server_title),
+                            subtitle = stringResource(R.string.settings_server_subtitle),
                             icon = Icons.Default.Cloud,
-                            onClick = { navigationRouter.forward(ChooseServerArgs) },
+                            onClick = onChooseServerClick,
                         )
                         ZappRowDivider(inset = true)
                         ZappRow(
-                            title = "P2P transactions",
-                            subtitle = "Balance and order history",
+                            title = stringResource(R.string.p2p_transactions_title),
+                            subtitle = stringResource(R.string.settings_p2p_transactions_subtitle),
                             icon = Icons.Default.SwapHoriz,
-                            onClick = { navigationRouter.forward(P2pTransactionsArgs) },
+                            onClick = onP2pTransactionsClick,
                         )
                     }
                 }
@@ -186,7 +194,7 @@ fun SettingsTabContent(
                         title = stringResource(R.string.settings_support_contact_title),
                         subtitle = stringResource(R.string.settings_support_contact_subtitle),
                         icon = Icons.Default.SupportAgent,
-                        onClick = { navigationRouter.forward(SupportTicketListArgs) },
+                        onClick = onSupportClick,
                     )
                 }
 
@@ -195,7 +203,7 @@ fun SettingsTabContent(
                 //     ZappRow(
                 //         title = "About Zapp",
                 //         icon = Icons.Default.Info,
-                //         onClick = { navigationRouter.forward(AboutArgs) },
+                //         onClick = { /* route via TabsVM */ },
                 //     )
                 // }
 

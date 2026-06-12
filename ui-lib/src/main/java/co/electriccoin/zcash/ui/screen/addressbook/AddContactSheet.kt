@@ -50,6 +50,9 @@ import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.AddressBookContact
 import co.electriccoin.zcash.ui.design.component.zapp.ZappInputField
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
+import co.electriccoin.zcash.ui.design.util.StringResource
+import co.electriccoin.zcash.ui.design.util.getValue
+import co.electriccoin.zcash.ui.design.util.stringRes
 
 // ── Add Contact bottom sheet ─────────────────────────────────────────────────
 
@@ -72,7 +75,7 @@ internal fun AddContactSheet(
     var nameInput by remember { mutableStateOf(TextFieldValue("")) }
     var messagingKeyInput by remember { mutableStateOf(TextFieldValue("")) }
     var walletAddressInput by remember { mutableStateOf(TextFieldValue("")) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var error by remember { mutableStateOf<StringResource?>(null) }
     var showAdditionalAddresses by remember { mutableStateOf(false) }
     var transparentAddr by remember { mutableStateOf(TextFieldValue("")) }
     var evmAddr by remember { mutableStateOf(TextFieldValue("")) }
@@ -172,7 +175,7 @@ internal fun AddContactSheet(
                     messagingKeyInput = it
                     error = null
                 },
-                placeholder = "Messaging Key (64 hex chars)",
+                placeholder = stringResource(R.string.address_book_messaging_key_hint),
                 leadingIcon = {
                     Icon(
                         Icons.Default.Key,
@@ -182,13 +185,14 @@ internal fun AddContactSheet(
                     )
                 },
                 trailingIcon = {
+                    val scanMessagingKeyDescription = stringResource(R.string.address_book_scan_messaging_key_content_description)
                     Box(
                         modifier =
                             Modifier
                                 .size(48.dp)
                                 .clickable(onClick = onScanMessagingKey)
                                 .semantics {
-                                    contentDescription = "Scan messaging key QR"
+                                    contentDescription = scanMessagingKeyDescription
                                     role = Role.Button
                                 },
                         contentAlignment = Alignment.Center,
@@ -249,13 +253,14 @@ internal fun AddContactSheet(
                     )
                 },
                 trailingIcon = {
+                    val scanWalletAddressDescription = stringResource(R.string.address_book_scan_wallet_address_content_description)
                     Box(
                         modifier =
                             Modifier
                                 .size(48.dp)
                                 .clickable(onClick = onScanWalletAddress)
                                 .semantics {
-                                    contentDescription = "Scan wallet address QR"
+                                    contentDescription = scanWalletAddressDescription
                                     role = Role.Button
                                 },
                         contentAlignment = Alignment.Center,
@@ -274,7 +279,7 @@ internal fun AddContactSheet(
             error?.let {
                 Spacer(Modifier.height(8.dp))
                 BasicText(
-                    text = it,
+                    text = it.getValue(),
                     style = ZappTheme.typography.caption.copy(color = c.danger),
                 )
             }
@@ -298,6 +303,7 @@ internal fun AddContactSheet(
 
             // ADD CONTACT CTA
             val keyboard = LocalSoftwareKeyboardController.current
+            val addContactDescription = stringResource(R.string.address_book_add_contact_content_description)
             Box(
                 modifier =
                     Modifier
@@ -321,7 +327,7 @@ internal fun AddContactSheet(
                                 }
                             when {
                                 name.isEmpty() -> {
-                                    error = "Name is required"
+                                    error = stringRes(R.string.address_book_contact_name_required)
                                 }
 
                                 else -> {
@@ -331,7 +337,7 @@ internal fun AddContactSheet(
                             }
                         })
                         .semantics {
-                            contentDescription = "Add Contact"
+                            contentDescription = addContactDescription
                             role = Role.Button
                         },
                 contentAlignment = Alignment.Center,

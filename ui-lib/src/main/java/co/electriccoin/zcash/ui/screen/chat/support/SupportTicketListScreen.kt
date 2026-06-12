@@ -53,7 +53,7 @@ import co.electriccoin.zcash.ui.screen.chat.view.SwipeToRevealActionRow
 import org.koin.androidx.compose.koinViewModel
 
 @Composable
-fun SupportTicketListScreen() {
+internal fun SupportTicketListScreen() {
     val viewModel = koinViewModel<SupportTicketListVM>()
     val state by viewModel.state.collectAsStateWithLifecycle()
     LifecycleResumeEffect(Unit) {

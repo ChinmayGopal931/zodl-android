@@ -32,7 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListConnectionStatus
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListDhtHealth
@@ -71,23 +74,29 @@ internal fun ConnectionPill(
         when (connectionStatus) {
             ChatListConnectionStatus.CONNECTED -> {
                 when {
-                    dhtHealth == ChatListDhtHealth.CRITICAL -> "DHT unreachable"
-                    peerCount > 0 -> if (peerCount == 1) "1 peer" else "$peerCount peers"
-                    dhtHealth == ChatListDhtHealth.DEGRADED -> "DHT degraded"
-                    else -> "Online"
+                    dhtHealth == ChatListDhtHealth.CRITICAL ->
+                        stringResource(R.string.chat_room_subtitle_dht_unreachable)
+
+                    peerCount > 0 ->
+                        pluralStringResource(R.plurals.chat_network_peers_count, peerCount, peerCount)
+
+                    dhtHealth == ChatListDhtHealth.DEGRADED ->
+                        stringResource(R.string.chat_room_subtitle_dht_degraded)
+
+                    else -> stringResource(R.string.chat_room_chip_online)
                 }
             }
 
             ChatListConnectionStatus.CONNECTING -> {
-                "Connecting"
+                stringResource(R.string.chat_settings_connection_connecting)
             }
 
             ChatListConnectionStatus.DISCONNECTED -> {
-                "Offline"
+                stringResource(R.string.chat_room_subtitle_offline)
             }
 
             ChatListConnectionStatus.ERROR -> {
-                "Error"
+                stringResource(R.string.chat_settings_connection_error)
             }
         }
 
@@ -146,7 +155,7 @@ internal fun NetworkDetailsSheet(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                "Network",
+                stringResource(R.string.chat_settings_section_network),
                 style = MaterialTheme.typography.titleMedium,
                 color = ZappTheme.colors.text,
                 modifier = Modifier.padding(bottom = 4.dp)
@@ -154,13 +163,20 @@ internal fun NetworkDetailsSheet(
 
             NetworkDetailRow(
                 icon = Icons.Default.Wifi,
-                label = "Connection",
+                label = stringResource(R.string.chat_settings_label_connection),
                 value =
                     when (connectionStatus) {
-                        ChatListConnectionStatus.CONNECTED -> "Connected"
-                        ChatListConnectionStatus.CONNECTING -> "Connecting"
-                        ChatListConnectionStatus.DISCONNECTED -> "Disconnected"
-                        ChatListConnectionStatus.ERROR -> "Error"
+                        ChatListConnectionStatus.CONNECTED ->
+                            stringResource(R.string.chat_settings_connection_connected)
+
+                        ChatListConnectionStatus.CONNECTING ->
+                            stringResource(R.string.chat_settings_connection_connecting)
+
+                        ChatListConnectionStatus.DISCONNECTED ->
+                            stringResource(R.string.chat_settings_connection_disconnected)
+
+                        ChatListConnectionStatus.ERROR ->
+                            stringResource(R.string.chat_settings_connection_error)
                     },
                 valueColor =
                     when (connectionStatus) {
@@ -172,12 +188,12 @@ internal fun NetworkDetailsSheet(
 
             NetworkDetailRow(
                 icon = Icons.Default.Hub,
-                label = "DHT",
+                label = stringResource(R.string.chat_room_chip_dht),
                 value =
                     when (dhtHealth) {
-                        ChatListDhtHealth.HEALTHY -> "Healthy"
-                        ChatListDhtHealth.DEGRADED -> "Degraded"
-                        ChatListDhtHealth.CRITICAL -> "Critical"
+                        ChatListDhtHealth.HEALTHY -> stringResource(R.string.chat_settings_dht_healthy)
+                        ChatListDhtHealth.DEGRADED -> stringResource(R.string.chat_settings_dht_degraded)
+                        ChatListDhtHealth.CRITICAL -> stringResource(R.string.chat_settings_dht_critical)
                     },
                 valueColor =
                     when (dhtHealth) {
@@ -189,7 +205,7 @@ internal fun NetworkDetailsSheet(
 
             NetworkDetailRow(
                 icon = Icons.Default.People,
-                label = "Peers",
+                label = stringResource(R.string.chat_settings_label_peers),
                 value = peerCount.toString(),
                 valueColor = if (peerCount > 0) okColor else secondaryColor
             )
@@ -199,24 +215,33 @@ internal fun NetworkDetailsSheet(
 
                 NetworkDetailRow(
                     icon = Icons.Default.Cable,
-                    label = "TCP connections",
+                    label = stringResource(R.string.chat_network_label_tcp_connections),
                     value = details.globalConnections.toString()
                 )
 
                 NetworkDetailRow(
                     icon = Icons.AutoMirrored.Filled.Chat,
-                    label = "Conversations",
-                    value = "${details.directConversations} direct · ${details.groupConversations} group"
+                    label = stringResource(R.string.chat_network_label_conversations),
+                    value =
+                        stringResource(
+                            R.string.chat_network_value_conversations_fmt,
+                            details.directConversations,
+                            details.groupConversations
+                        )
                 )
 
                 NetworkDetailRow(
                     icon = Icons.Default.Schedule,
-                    label = "Pending",
+                    label = stringResource(R.string.chat_network_label_pending),
                     value =
                         if (details.pendingMessageCount > 0) {
-                            "${details.pendingMessageCount} msgs in ${details.pendingQueues} queues"
+                            stringResource(
+                                R.string.chat_network_value_pending_fmt,
+                                details.pendingMessageCount,
+                                details.pendingQueues
+                            )
                         } else {
-                            "None"
+                            stringResource(R.string.chat_network_value_pending_none)
                         },
                     valueColor = if (details.pendingMessageCount > 0) warnColor else okColor
                 )
@@ -225,14 +250,14 @@ internal fun NetworkDetailsSheet(
 
                 NetworkDetailRow(
                     icon = Icons.Default.Security,
-                    label = "Protocol",
-                    value = "Zapp Messaging P2P"
+                    label = stringResource(R.string.chat_settings_label_protocol),
+                    value = stringResource(R.string.chat_network_value_protocol)
                 )
 
                 NetworkDetailRow(
                     icon = Icons.Default.Lock,
-                    label = "Encryption",
-                    value = "End-to-end (Noise XX)"
+                    label = stringResource(R.string.chat_settings_label_encryption),
+                    value = stringResource(R.string.chat_network_value_encryption)
                 )
             }
         }

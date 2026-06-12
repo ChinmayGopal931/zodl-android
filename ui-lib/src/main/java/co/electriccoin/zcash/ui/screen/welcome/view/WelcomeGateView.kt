@@ -24,17 +24,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
 import co.electriccoin.zcash.ui.design.theme.ProvideZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @Composable
-fun WelcomeGateView(
+internal fun WelcomeGateView(
     onGetStarted: () -> Unit,
     onRestoreExisting: () -> Unit,
 ) {
@@ -76,7 +78,7 @@ private fun WelcomeGateContent(
                     contentAlignment = Alignment.Center,
                 ) {
                     BasicText(
-                        text = "Z",
+                        text = stringResource(R.string.welcome_logo_glyph),
                         style =
                             ZappTheme.typography.display.copy(
                                 color = c.onAccent,
@@ -87,7 +89,7 @@ private fun WelcomeGateContent(
                 }
                 Spacer(Modifier.width(12.dp))
                 BasicText(
-                    text = "Zapp",
+                    text = stringResource(R.string.welcome_wordmark),
                     style =
                         ZappTheme.typography.screenTitle.copy(
                             color = c.text,
@@ -101,7 +103,7 @@ private fun WelcomeGateContent(
 
             // Hero — line 1 default, line 2 accent
             BasicText(
-                text = "Chat\nprivately.",
+                text = stringResource(R.string.welcome_hero_line1),
                 style =
                     ZappTheme.typography.display.copy(
                         color = c.text,
@@ -113,7 +115,7 @@ private fun WelcomeGateContent(
             )
             Spacer(Modifier.height(6.dp))
             BasicText(
-                text = "Send\ninstantly.",
+                text = stringResource(R.string.welcome_hero_line2),
                 style =
                     ZappTheme.typography.display.copy(
                         color = c.accent,
@@ -135,7 +137,7 @@ private fun WelcomeGateContent(
             Spacer(Modifier.height(20.dp))
 
             BasicText(
-                text = "End-to-end encrypted messaging. Add a self-custody wallet whenever you want — it's optional.",
+                text = stringResource(R.string.welcome_body),
                 style =
                     ZappTheme.typography.body.copy(
                         color = c.textMuted,
@@ -156,7 +158,7 @@ private fun WelcomeGateContent(
                     .padding(start = 28.dp, end = 28.dp, top = 16.dp, bottom = 24.dp),
         ) {
             ZappButton(
-                text = "Get started",
+                text = stringResource(R.string.welcome_get_started_button),
                 onClick = onGetStarted,
                 modifier =
                     Modifier
@@ -165,7 +167,7 @@ private fun WelcomeGateContent(
             )
             Spacer(Modifier.height(8.dp))
             ZappButton(
-                text = "I already use Zapp",
+                text = stringResource(R.string.welcome_restore_button),
                 onClick = onRestoreExisting,
                 variant = ZappButtonVariant.Ghost,
                 modifier =
@@ -175,7 +177,7 @@ private fun WelcomeGateContent(
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                text = "By continuing you accept our terms & privacy policy.",
+                text = stringResource(R.string.welcome_terms_caption),
                 style =
                     ZappTheme.typography.caption.copy(
                         color = c.textSubtle,

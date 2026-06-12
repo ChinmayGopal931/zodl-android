@@ -6,6 +6,12 @@
     <string name="request_memo_btn">Solicitar</string>
     <string name="request_qr_share_btn">Compartir Código QR</string>
     <string name="request_qr_close_btn">Cerrar</string>
+    <string name="request_qr_save_btn">Guardar QR en Fotos</string>
+    <string name="request_qr_note_label">NOTA</string>
+    <string name="request_qr_address_label_shielded">Tu dirección protegida</string>
+    <string name="request_qr_address_label_transparent">Tu dirección transparente</string>
+    <string name="request_qr_copy_address_content_description">Copiar dirección</string>
+    <string name="request_back_content_description">Atrás</string>
     <string name="request_privacy_level_shielded">Privado</string>
     <string name="request_privacy_level_transparent">Público</string>
 

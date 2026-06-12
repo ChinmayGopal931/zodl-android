@@ -21,8 +21,10 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.compose.SecureScreen
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
@@ -42,7 +44,7 @@ import co.electriccoin.zcash.ui.design.theme.ZappTheme
  *   when [showBack] is true.
  */
 @Composable
-fun PinVerifyScreen(
+internal fun PinVerifyScreen(
     hasError: Boolean,
     showBack: Boolean = true,
     lockoutSecondsRemaining: Int = 0,
@@ -86,12 +88,12 @@ fun PinVerifyScreen(
         ) {
             Column(modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()) {
                 Spacer(Modifier.height(14.dp))
-                OnbHero(text = "Enter\nyour PIN")
+                OnbHero(text = stringResource(R.string.onboarding_pin_verify_title))
                 Spacer(Modifier.height(14.dp))
                 when {
                     isLocked -> {
                         BasicText(
-                            text = "Too many attempts. Try again in ${lockoutSecondsRemaining}s.",
+                            text = stringResource(R.string.onboarding_pin_verify_lockout, lockoutSecondsRemaining),
                             style =
                                 ZappTheme.typography.body.copy(
                                     color = c.danger,
@@ -103,7 +105,7 @@ fun PinVerifyScreen(
 
                     hasError -> {
                         BasicText(
-                            text = "Incorrect PIN. Please try again.",
+                            text = stringResource(R.string.onboarding_pin_verify_incorrect),
                             style =
                                 ZappTheme.typography.body.copy(
                                     color = c.danger,
@@ -114,7 +116,7 @@ fun PinVerifyScreen(
                     }
 
                     else -> {
-                        OnbSub(text = "Enter your 6-digit PIN to continue.")
+                        OnbSub(text = stringResource(R.string.onboarding_pin_verify_subtitle))
                     }
                 }
             }
