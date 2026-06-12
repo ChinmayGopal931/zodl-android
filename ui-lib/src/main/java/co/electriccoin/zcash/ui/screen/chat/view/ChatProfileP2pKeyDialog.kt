@@ -16,10 +16,10 @@ import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.compose.SecureScreen
 import co.electriccoin.zcash.ui.common.compose.shouldSecureScreen
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
-import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileSeedPhraseDialogState
+import co.electriccoin.zcash.ui.screen.chat.profile.ChatProfileP2pKeyDialogState
 
 @Composable
-internal fun SeedPhraseDialog(state: ChatProfileSeedPhraseDialogState) {
+internal fun P2pWalletKeyDialog(state: ChatProfileP2pKeyDialogState) {
     val c = ZappTheme.colors
     if (shouldSecureScreen) {
         SecureScreen()
@@ -32,22 +32,31 @@ internal fun SeedPhraseDialog(state: ChatProfileSeedPhraseDialogState) {
         shape = RectangleShape,
         title = {
             BasicText(
-                text = stringResource(R.string.chat_profile_seed_phrase_dialog_title),
+                text = stringResource(R.string.chat_profile_p2p_key_dialog_title),
                 style = ZappTheme.typography.sectionTitle.copy(color = c.text),
             )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 BasicText(
-                    text = stringResource(R.string.chat_profile_seed_phrase_dialog_message),
+                    text = stringResource(R.string.chat_profile_p2p_key_dialog_message),
                     style = ZappTheme.typography.body.copy(color = c.textMuted),
                 )
-                SeedWordGrid(words = state.words)
+                P2pKeyField(
+                    label = stringResource(R.string.chat_profile_p2p_key_address_label),
+                    value = state.address,
+                    onCopy = state.onCopyAddress,
+                )
+                P2pKeyField(
+                    label = stringResource(R.string.chat_profile_p2p_key_private_key_label),
+                    value = state.privateKeyHex,
+                    onCopy = state.onCopyPrivateKey,
+                )
             }
         },
         confirmButton = {
             DialogTextButton(
-                label = stringResource(R.string.chat_profile_seed_phrase_dialog_done),
+                label = stringResource(R.string.chat_profile_p2p_key_dialog_done),
                 color = c.accent,
                 onClick = state.onDismiss,
             )
@@ -56,35 +65,27 @@ internal fun SeedPhraseDialog(state: ChatProfileSeedPhraseDialogState) {
 }
 
 @Composable
-private fun SeedWordGrid(words: List<String>) {
+private fun P2pKeyField(label: String, value: String, onCopy: () -> Unit) {
     val c = ZappTheme.colors
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        listOf(words.take(SEED_HALF) to 0, words.drop(SEED_HALF) to SEED_HALF).forEach { (col, offset) ->
-            Column(
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            BasicText(
+                text = label,
+                style = ZappTheme.typography.rowTitle.copy(color = c.text),
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                col.forEachIndexed { i, word ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        BasicText(
-                            text = "${offset + i + 1}".padStart(2, '0'),
-                            style = ZappTheme.typography.mono.copy(color = c.textSubtle),
-                        )
-                        BasicText(
-                            text = word,
-                            style = ZappTheme.typography.rowTitle.copy(color = c.text),
-                        )
-                    }
-                }
-            }
+            )
+            DialogTextButton(
+                label = stringResource(R.string.chat_profile_p2p_key_copy),
+                color = c.accent,
+                onClick = onCopy,
+            )
         }
+        BasicText(
+            text = value,
+            style = ZappTheme.typography.mono.copy(color = c.textMuted),
+        )
     }
 }
-
-private const val SEED_HALF = 12

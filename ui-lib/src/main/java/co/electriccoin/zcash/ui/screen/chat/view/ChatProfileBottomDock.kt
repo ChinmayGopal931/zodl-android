@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
@@ -34,10 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRow
+import co.electriccoin.zcash.ui.design.component.zapp.ZappRowDivider
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @Composable
-internal fun SeedPhraseRow(onClick: () -> Unit) {
+internal fun KeyExportRows(onSeedPhraseClick: () -> Unit, onP2pKeyClick: () -> Unit) {
     val c = ZappTheme.colors
     Column(
         modifier =
@@ -53,7 +55,16 @@ internal fun SeedPhraseRow(onClick: () -> Unit) {
             icon = Icons.Default.Key,
             iconBackground = c.accentSoft,
             iconTint = c.accentText,
-            onClick = onClick,
+            onClick = onSeedPhraseClick,
+        )
+        ZappRowDivider(inset = true)
+        ZappRow(
+            title = stringResource(R.string.chat_profile_p2p_key_title),
+            subtitle = stringResource(R.string.chat_profile_p2p_key_subtitle),
+            icon = Icons.Default.AccountBalanceWallet,
+            iconBackground = c.accentSoft,
+            iconTint = c.accentText,
+            onClick = onP2pKeyClick,
         )
     }
 }
@@ -67,9 +78,11 @@ internal fun BottomDock(onBack: () -> Unit, onDelete: () -> Unit) {
         modifier =
             Modifier
                 .fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 8.dp)
                 .background(c.surface)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .border(BorderStroke(1.dp, c.border), RectangleShape),
     ) {
         Box(
             modifier =

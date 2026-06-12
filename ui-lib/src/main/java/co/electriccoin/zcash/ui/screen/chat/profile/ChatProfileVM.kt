@@ -3,11 +3,13 @@ package co.electriccoin.zcash.ui.screen.chat.profile
 import android.app.Application
 import android.content.Intent
 import android.os.Process
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
 import co.electriccoin.zcash.preference.EncryptedPreferenceProvider
 import co.electriccoin.zcash.preference.StandardPreferenceProvider
+import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.model.WalletAccount
@@ -19,8 +21,10 @@ import co.electriccoin.zcash.ui.common.security.PinAuthGate
 import co.electriccoin.zcash.ui.common.usecase.CopyToClipboardUseCase
 import co.electriccoin.zcash.ui.common.usecase.DeleteChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.ExportChatSeedPhraseUseCase
+import co.electriccoin.zcash.ui.common.usecase.ExportP2pWalletKeyUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveChatIdentityUseCase
 import co.electriccoin.zcash.ui.common.usecase.ObserveSelectedWalletAccountUseCase
+import co.electriccoin.zcash.ui.common.usecase.P2pWalletKey
 import co.electriccoin.zcash.ui.common.usecase.UpdateChatDisplayNameUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
@@ -44,6 +48,7 @@ class ChatProfileVM(
     private val updateChatDisplayName: UpdateChatDisplayNameUseCase,
     private val deleteChatIdentity: DeleteChatIdentityUseCase,
     private val exportChatSeedPhrase: ExportChatSeedPhraseUseCase,
+    private val exportP2pWalletKey: ExportP2pWalletKeyUseCase,
     observeSelectedWalletAccount: ObserveSelectedWalletAccountUseCase,
     private val biometricRepository: BiometricRepository,
     private val standardPreferenceProvider: StandardPreferenceProvider,
@@ -59,6 +64,9 @@ class ChatProfileVM(
     private val editNameInput = MutableStateFlow("")
     private val pinVerifyMode = MutableStateFlow<PinVerifyMode>(PinVerifyMode.Idle)
     private val pendingSeedPhrase = MutableStateFlow<String?>(null)
+    private val pendingP2pKey = MutableStateFlow<P2pWalletKey?>(null)
+
+    private var revealTarget = RevealTarget.SEED_PHRASE
 
     private val walletAccount =
         observeSelectedWalletAccount()
@@ -89,9 +97,9 @@ class ChatProfileVM(
             combine(showDeleteDialog, showEditNameDialog, editNameInput) { del, edit, input ->
                 Triple(del, edit, input)
             },
-            combine(pinVerifyMode, pendingSeedPhrase) { pin, seed -> pin to seed },
-        ) { (tab, sub, id), wallet, (keyCopied, addrCopied), (delDlg, editDlg, editInput), (pinMode, seed) ->
-            createState(tab, sub, id, wallet, keyCopied, addrCopied, delDlg, editDlg, editInput, pinMode, seed)
+            combine(pinVerifyMode, pendingSeedPhrase, pendingP2pKey) { pin, seed, p2p -> Triple(pin, seed, p2p) },
+        ) { (tab, sub, id), wallet, (keyCopied, addrCopied), (delDlg, editDlg, editInput), (pinMode, seed, p2pKey) ->
+            createState(tab, sub, id, wallet, keyCopied, addrCopied, delDlg, editDlg, editInput, pinMode, seed, p2pKey)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
@@ -108,6 +116,7 @@ class ChatProfileVM(
                     editInput = "",
                     pinMode = PinVerifyMode.Idle,
                     seed = null,
+                    p2pKey = null,
                 ),
         )
 
@@ -123,6 +132,7 @@ class ChatProfileVM(
         editInput: String,
         pinMode: PinVerifyMode,
         seed: String?,
+        p2pKey: P2pWalletKey?,
     ): ChatProfileState =
         ChatProfileState(
             title = stringRes(R.string.chat_profile_title),
@@ -140,6 +150,7 @@ class ChatProfileVM(
             onCopyPublicKeyClick = ::onCopyPublicKeyClick,
             onCopyAddressClick = ::onCopyAddressClick,
             onSeedPhraseClick = ::onSeedPhraseClick,
+            onP2pKeyClick = ::onP2pKeyClick,
             onDeleteClick = ::onDeleteClick,
             onBack = ::onBack,
             editNameDialog =
@@ -168,6 +179,16 @@ class ChatProfileVM(
                     ChatProfileSeedPhraseDialogState(
                         words = phrase.split(" ").filter { it.isNotBlank() },
                         onDismiss = ::dismissSeedPhraseDialog,
+                    )
+                },
+            p2pKeyDialog =
+                p2pKey?.let { key ->
+                    ChatProfileP2pKeyDialogState(
+                        address = key.address,
+                        privateKeyHex = key.privateKeyHex,
+                        onCopyAddress = { copyToClipboard(key.address) },
+                        onCopyPrivateKey = { copyToClipboard(key.privateKeyHex) },
+                        onDismiss = ::dismissP2pKeyDialog,
                     )
                 },
             pinVerify = pinMode.toState(),
@@ -301,22 +322,28 @@ class ChatProfileVM(
         }
     }
 
-    // ── Seed phrase reveal (PIN / biometric gate) ───────────────────────
+    // ── Secret reveal (PIN / biometric gate) ────────────────────────────
 
     private fun onSeedPhraseClick() {
-        viewModelScope.launch { initiateSeedReveal() }
+        revealTarget = RevealTarget.SEED_PHRASE
+        viewModelScope.launch { initiateReveal() }
     }
 
-    private suspend fun initiateSeedReveal() {
+    private fun onP2pKeyClick() {
+        revealTarget = RevealTarget.P2P_KEY
+        viewModelScope.launch { initiateReveal() }
+    }
+
+    private suspend fun initiateReveal() {
         val authMethod =
             StandardPreferenceKeys.AUTH_METHOD.getValue(standardPreferenceProvider())
         when (authMethod) {
             AUTH_METHOD_BIOMETRIC -> {
                 try {
                     biometricRepository.requestBiometrics(
-                        BiometricRequest(message = stringRes(R.string.chat_profile_seed_phrase_biometric_prompt)),
+                        BiometricRequest(message = stringRes(revealTarget.biometricPromptRes)),
                     )
-                    exportAndEmitSeedPhrase()
+                    performReveal()
                 } catch (_: BiometricsFailureException) {
                     // user dismissed / hardware failed — silent
                 } catch (_: BiometricsCancelledException) {
@@ -329,8 +356,15 @@ class ChatProfileVM(
             }
 
             else -> {
-                exportAndEmitSeedPhrase()
+                performReveal()
             }
+        }
+    }
+
+    private suspend fun performReveal() {
+        when (revealTarget) {
+            RevealTarget.SEED_PHRASE -> exportAndEmitSeedPhrase()
+            RevealTarget.P2P_KEY -> exportAndEmitP2pKey()
         }
     }
 
@@ -341,7 +375,7 @@ class ChatProfileVM(
             when (result) {
                 PinAuthGate.Result.Success -> {
                     pinVerifyMode.value = PinVerifyMode.Idle
-                    exportAndEmitSeedPhrase()
+                    performReveal()
                 }
 
                 PinAuthGate.Result.Wrong -> {
@@ -383,6 +417,23 @@ class ChatProfileVM(
 
     private fun dismissSeedPhraseDialog() {
         pendingSeedPhrase.value = null
+    }
+
+    private suspend fun exportAndEmitP2pKey() {
+        runCatching { exportP2pWalletKey() }
+            .onSuccess { pendingP2pKey.value = it }
+            .onFailure { Twig.warn(it) { "ChatProfileVM: P2P wallet key export failed" } }
+    }
+
+    private fun dismissP2pKeyDialog() {
+        pendingP2pKey.value = null
+    }
+
+    private enum class RevealTarget(
+        @param:StringRes val biometricPromptRes: Int
+    ) {
+        SEED_PHRASE(R.string.chat_profile_seed_phrase_biometric_prompt),
+        P2P_KEY(R.string.chat_profile_p2p_key_biometric_prompt),
     }
 
     private sealed class PinVerifyMode {

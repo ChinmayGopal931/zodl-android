@@ -135,6 +135,17 @@
     <string name="chat_profile_seed_phrase_dialog_done">Done</string>
     <string name="chat_profile_seed_phrase_biometric_prompt">View your seed phrase</string>
 
+    <!-- Chat profile — P2P wallet key row & reveal dialog -->
+    <string name="chat_profile_p2p_key_title">P2P Wallet Key</string>
+    <string name="chat_profile_p2p_key_subtitle">Key for your P2P cash-out account, derived from your seed</string>
+    <string name="chat_profile_p2p_key_biometric_prompt">View your P2P wallet key</string>
+    <string name="chat_profile_p2p_key_dialog_title">P2P Wallet Key</string>
+    <string name="chat_profile_p2p_key_dialog_message">Derived from your seed phrase. This key controls your P2P cash-out account — anyone with it can spend those funds.</string>
+    <string name="chat_profile_p2p_key_address_label">Owner Address</string>
+    <string name="chat_profile_p2p_key_private_key_label">Private Key</string>
+    <string name="chat_profile_p2p_key_copy">Copy</string>
+    <string name="chat_profile_p2p_key_dialog_done">Done</string>
+
     <!-- Chat settings screen -->
     <string name="chat_settings_title">Chat Settings</string>
     <string name="chat_settings_delete_button">Delete Identity</string>
