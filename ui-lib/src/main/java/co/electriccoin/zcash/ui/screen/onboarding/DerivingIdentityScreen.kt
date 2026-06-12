@@ -10,7 +10,6 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.RestoreInProgressScreen
 
 @Composable
 internal fun DerivingIdentityScreen(
-    step: Int,
     chatBootstrap: ChatBootstrap,
 ) {
     val chatIdentityFailed by chatBootstrap.chatIdentityFailed.collectAsStateWithLifecycle()
@@ -20,5 +19,5 @@ internal fun DerivingIdentityScreen(
         if (chatIdentityFailed) stringResource(R.string.chat_identity_setup_error_wallet_derive_failed) else null
     val onRetry: (() -> Unit)? =
         if (chatIdentityFailed && !isDeriving) ({ chatBootstrap.retry() }) else null
-    RestoreInProgressScreen(step = step, errorMessage = errorMessage, onRetry = onRetry)
+    RestoreInProgressScreen(errorMessage = errorMessage, onRetry = onRetry)
 }
