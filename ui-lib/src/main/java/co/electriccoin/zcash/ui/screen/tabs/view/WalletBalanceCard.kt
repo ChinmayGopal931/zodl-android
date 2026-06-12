@@ -115,9 +115,22 @@ private fun BalanceAmount(balanceState: BalanceWidgetState) {
             style = ZappTheme.typography.caption.copy(color = c.textMuted),
         )
     } else {
-        BasicText(text = zec, style = wholeStyle, maxLines = 1, softWrap = false)
-        Spacer(Modifier.height(2.dp))
-        BasicText(text = "ZEC", style = fractionStyle, maxLines = 1, softWrap = false)
+        Row {
+            BasicText(
+                text = zec,
+                style = wholeStyle,
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier.alignByBaseline(),
+            )
+            BasicText(
+                text = " ZEC",
+                style = fractionStyle,
+                maxLines = 1,
+                softWrap = false,
+                modifier = Modifier.alignByBaseline(),
+            )
+        }
     }
 }
 
