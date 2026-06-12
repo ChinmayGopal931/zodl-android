@@ -105,10 +105,7 @@ internal fun WalletHomeView() {
         }
 
         PayActionFabStack(
-            onPayMerchant = {
-                // TODO: wire to MerchantPayArgs once Phase 2 lands
-                homeState?.thirdButton?.onClick?.invoke()
-            },
+            onPayMerchant = homeVM::onPayMerchantClick,
             onSend = { homeState?.secondButton?.onClick?.invoke() },
             onReceive = { homeState?.firstButton?.onClick?.invoke() },
             modifier = Modifier.align(Alignment.BottomEnd),

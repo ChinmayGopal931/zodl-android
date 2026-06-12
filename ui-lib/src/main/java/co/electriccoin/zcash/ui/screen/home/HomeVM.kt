@@ -42,6 +42,7 @@ import co.electriccoin.zcash.ui.screen.home.updating.WalletUpdatingInfo
 import co.electriccoin.zcash.ui.screen.home.updating.WalletUpdatingMessageState
 import co.electriccoin.zcash.ui.screen.keepopen.KeepOpenArgs
 import co.electriccoin.zcash.ui.screen.keepopen.KeepOpenFlow
+import co.electriccoin.zcash.ui.screen.swap.UpiOfframpArgs
 import co.electriccoin.zcash.ui.screen.tor.optin.TorOptInArgs
 import co.electriccoin.zcash.ui.screen.unifiedsend.UnifiedSendArgs
 import co.electriccoin.zcash.ui.util.CURRENCY_TICKER
@@ -282,6 +283,8 @@ class HomeVM(
     private fun onSendButtonClick() = navigationRouter.forward(UnifiedSendArgs())
 
     private fun onReceiveButtonClick() = viewModelScope.launch { navigateToReceive() }
+
+    fun onPayMerchantClick() = navigationRouter.forward(UpiOfframpArgs)
 
     private fun onPayButtonClick() {
         if (onPayButtonClickJob?.isActive == true) return
