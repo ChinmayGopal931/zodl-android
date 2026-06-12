@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -57,12 +56,14 @@ internal fun InputRow(state: ChatRoomInputState) {
                 Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 8.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+            // Bottom-aligned so the buttons stay anchored beside the last line
+            // when the field grows to multiple lines.
+            verticalAlignment = Alignment.Bottom,
         ) {
             Box(
                 modifier =
                     Modifier
-                        .size(36.dp)
+                        .size(TextFieldDefaults.MinHeight)
                         .background(c.surfaceAlt, RectangleShape)
                         .border(BorderStroke(1.dp, c.border), RectangleShape)
                         .clickable(
@@ -76,7 +77,7 @@ internal fun InputRow(state: ChatRoomInputState) {
                     Icons.Default.Add,
                     contentDescription = attachContentDescription,
                     tint = c.accent,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
 
@@ -85,10 +86,8 @@ internal fun InputRow(state: ChatRoomInputState) {
             TextField(
                 value = state.value,
                 onValueChange = state.onChange,
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .defaultMinSize(minHeight = 36.dp),
+                modifier = Modifier.weight(1f),
+                textStyle = ZappTheme.typography.body,
                 placeholder = {
                     BasicText(
                         text = state.placeholder.getValue(),
@@ -114,7 +113,7 @@ internal fun InputRow(state: ChatRoomInputState) {
             Box(
                 modifier =
                     Modifier
-                        .size(36.dp)
+                        .size(TextFieldDefaults.MinHeight)
                         .background(if (state.canSend) c.accent else c.surfaceAlt, RectangleShape)
                         .border(BorderStroke(1.dp, c.border), RectangleShape)
                         .clickable(
@@ -129,7 +128,7 @@ internal fun InputRow(state: ChatRoomInputState) {
                     Icons.Default.ArrowUpward,
                     contentDescription = sendContentDescription,
                     tint = if (state.canSend) c.onAccent else c.textSubtle,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }
