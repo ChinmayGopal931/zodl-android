@@ -30,9 +30,9 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun SwapScreen() {
+fun SwapScreen(initialTab: SwapTab = SwapTab.SWAP) {
     val navigationRouter = koinInject<NavigationRouter>()
-    var selectedTab by rememberSaveable { mutableStateOf(SwapTab.SWAP) }
+    var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
 
     val tabSwitcher: @Composable () -> Unit = {
         SwapTabSwitcher(
@@ -110,3 +110,7 @@ private fun SwapBody(tabSwitcher: @Composable () -> Unit = {}) {
 
 @Serializable
 data object SwapArgs
+
+/** Opens the swap screen directly on the UPI offramp tab (the pay-merchant flow). */
+@Serializable
+data object UpiOfframpArgs

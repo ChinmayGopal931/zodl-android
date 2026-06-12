@@ -16,7 +16,6 @@ import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.common.viewmodel.WalletViewModel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.common.ChatBootstrap
-import co.electriccoin.zcash.ui.screen.chat.contacts.ChatContactsScreen
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupScreen
 import co.electriccoin.zcash.ui.screen.chat.identity.ChatIdentitySetupVM
 import co.electriccoin.zcash.ui.screen.chat.list.ChatListScreen
@@ -86,7 +85,7 @@ internal fun ZappTabsScaffold(
 @Composable
 private fun ZappTabsScaffoldContent() {
     val tabsVM: TabsVM = koinViewModel()
-    var currentTab by rememberSaveable { mutableStateOf(ZappTab.WALLET) }
+    var currentTab by rememberSaveable { mutableStateOf(ZappTab.CHATS) }
     // Set by tab content when it pushes a fullscreen sub-screen that owns its
     // own bottom CTA (e.g. wallet seed-reveal). Hides the floating nav pill so
     // the two don't overlap.
@@ -98,7 +97,7 @@ private fun ZappTabsScaffoldContent() {
 
     Box(modifier = Modifier.fillMaxSize().background(c.bg)) {
         when (currentTab) {
-            ZappTab.WALLET -> {
+            ZappTab.PAY -> {
                 WalletTabContent(
                     onRestoreWallet = tabsVM::onRestoreWalletClick,
                     onFullscreenChange = { hideNavPill = it },
@@ -109,15 +108,14 @@ private fun ZappTabsScaffoldContent() {
                 ChatsTabContent()
             }
 
-            ZappTab.CONTACTS -> {
-                ContactsTabContent()
-            }
-
-            ZappTab.SETTINGS -> {
+            ZappTab.YOU -> {
                 SettingsTabContent(
                     onChatProfileClick = tabsVM::onChatProfileClick,
+                    onContactsClick = tabsVM::onContactsClick,
                     onAppLockClick = tabsVM::onAppLockClick,
                     onChooseServerClick = tabsVM::onChooseServerClick,
+                    onSwapClick = tabsVM::onSwapClick,
+                    onTorClick = tabsVM::onTorClick,
                     onP2pTransactionsClick = tabsVM::onP2pTransactionsClick,
                     onSupportClick = tabsVM::onSupportClick,
                 )
@@ -158,31 +156,6 @@ private fun ChatsTabContent() {
             ChatListScreen(
                 showBackButton = false,
             )
-        }
-    }
-}
-
-@Composable
-private fun ContactsTabContent() {
-    val bootstrap: ChatBootstrap = koinInject()
-    val identitySetupVm: ChatIdentitySetupVM = koinViewModel()
-    val isInitializing by bootstrap.isInitializing.collectAsState()
-    val isSetupComplete by identitySetupVm.isSetupComplete.collectAsState()
-
-    val c = ZappTheme.colors
-    when {
-        isInitializing -> {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = c.accent)
-            }
-        }
-
-        !isSetupComplete -> {
-            ChatIdentitySetupScreen()
-        }
-
-        else -> {
-            ChatContactsScreen(showBackButton = false)
         }
     }
 }

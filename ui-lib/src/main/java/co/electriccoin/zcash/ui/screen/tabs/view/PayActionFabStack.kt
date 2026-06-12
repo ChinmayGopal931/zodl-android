@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CallMade
 import androidx.compose.material.icons.automirrored.filled.CallReceived
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -20,10 +20,10 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappFab
 import co.electriccoin.zcash.ui.design.theme.colors.ZappNavBar
 
 @Composable
-internal fun WalletActionFabStack(
+internal fun PayActionFabStack(
+    onPayMerchant: () -> Unit,
     onSend: () -> Unit,
     onReceive: () -> Unit,
-    onSwap: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -38,6 +38,11 @@ internal fun WalletActionFabStack(
         horizontalAlignment = Alignment.End,
     ) {
         ZappFab(
+            icon = Icons.Default.Storefront,
+            contentDescription = stringResource(R.string.home_button_pay_merchant),
+            onClick = onPayMerchant,
+        )
+        ZappFab(
             icon = Icons.AutoMirrored.Filled.CallMade,
             contentDescription = stringResource(R.string.home_button_send),
             onClick = onSend,
@@ -46,11 +51,6 @@ internal fun WalletActionFabStack(
             icon = Icons.AutoMirrored.Filled.CallReceived,
             contentDescription = stringResource(R.string.home_button_receive),
             onClick = onReceive,
-        )
-        ZappFab(
-            icon = Icons.Default.SwapHoriz,
-            contentDescription = stringResource(R.string.home_button_swap),
-            onClick = onSwap,
         )
     }
 }

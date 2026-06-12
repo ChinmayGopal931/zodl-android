@@ -16,12 +16,20 @@
     <string name="more_cash_out">Cash out</string>
 
     <!-- Settings tab (Zapp tabbed home) -->
+    <string name="settings_you_title">You</string>
+    <string name="settings_group_people">People</string>
     <string name="settings_group_security">Security</string>
+    <string name="settings_group_privacy">Privacy</string>
     <string name="settings_group_wallet">Wallet</string>
+    <string name="settings_contacts_subtitle">Manage your chat contacts</string>
     <string name="settings_profile_identity_title">Profile &amp; identity</string>
     <string name="settings_profile_identity_subtitle">Seed phrase, messaging key, wallet address</string>
     <string name="settings_app_lock_title">App lock</string>
     <string name="settings_app_lock_subtitle">Change PIN or switch auth method</string>
+    <string name="settings_tor_title">Tor</string>
+    <string name="settings_tor_subtitle">Route connections through Tor</string>
+    <string name="settings_swap_title">Swap</string>
+    <string name="settings_swap_subtitle">Exchange crypto assets</string>
     <string name="settings_server_subtitle">Choose a lightwalletd server</string>
     <string name="settings_p2p_transactions_subtitle">Balance and order history</string>
 

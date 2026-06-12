@@ -43,6 +43,7 @@ import co.electriccoin.zcash.ui.screen.onboarding.view.PinSetupScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.TwoFAChoiceScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.TwoFAMode
 import co.electriccoin.zcash.ui.screen.onboarding.view.UsernameEntryScreen
+import co.electriccoin.zcash.ui.screen.onboarding.view.WalletEncryptingScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletChoiceScreen
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletPhaseIntro
 import co.electriccoin.zcash.ui.screen.onboarding.view.WalletSeedPhraseScreen
@@ -171,7 +172,11 @@ internal fun ZappOnboardingFlow(
                 // The restore sub-flow persisted a wallet and popped back here; the
                 // wallet-ready effect is about to advance to MSG_INTRO. Render a spinner
                 // rather than flash the create/restore chooser for a frame.
-                SeedLoadingPlaceholder(sdkError = null, onRetry = null)
+                WalletEncryptingScreen(
+                    message = stringResource(R.string.onboarding_encrypting_message),
+                    errorMessage = null,
+                    onRetry = null,
+                )
             } else {
                 WalletChoiceScreen(
                     onBack = { step = Step.WALLET_INTRO },
@@ -218,8 +223,19 @@ internal fun ZappOnboardingFlow(
                     null
                 }
             when {
-                errorMessage != null -> SeedLoadingPlaceholder(sdkError = errorMessage, onRetry = null)
-                words == null -> SeedLoadingPlaceholder(sdkError = null, onRetry = null)
+                errorMessage != null ->
+                    WalletEncryptingScreen(
+                        message = stringResource(R.string.onboarding_encrypting_message),
+                        errorMessage = errorMessage,
+                        onRetry = null,
+                    )
+
+                words == null ->
+                    WalletEncryptingScreen(
+                        message = stringResource(R.string.onboarding_encrypting_message),
+                        errorMessage = null,
+                        onRetry = null,
+                    )
                 else ->
                     WalletSeedPhraseScreen(
                         words = words,
@@ -248,7 +264,7 @@ internal fun ZappOnboardingFlow(
             )
         }
 
-        Step.DERIVING -> DerivingIdentityScreen(step = 2, chatBootstrap = chatBootstrap)
+        Step.DERIVING -> DerivingIdentityScreen(chatBootstrap = chatBootstrap)
 
         Step.SECURE_CHOICE -> {
             TwoFAChoiceScreen(
@@ -292,87 +308,3 @@ internal fun ZappOnboardingFlow(
     }
 }
 
-private const val SEED_LOAD_TIMEOUT_MS = 15_000L
-
-/**
- * Brief skeleton shown while the SDK finishes generating the recovery phrase
- * (chat) or persisting the new wallet (wallet). On the happy path this flashes
- * for under a second; if [sdkError] is non-null we surface it immediately. If
- * the SDK doesn't error but also doesn't finish within [SEED_LOAD_TIMEOUT_MS],
- * we fall back to a generic message so the user isn't trapped on a spinner.
- */
-@Composable
-private fun SeedLoadingPlaceholder(sdkError: String?, onRetry: (() -> Unit)?) {
-    val c = ZappTheme.colors
-    var timedOut by remember { mutableStateOf(false) }
-    val timeoutMessage = stringResource(R.string.onboarding_seed_loading_timeout)
-
-    LaunchedEffect(sdkError) {
-        if (sdkError == null) {
-            kotlinx.coroutines.delay(SEED_LOAD_TIMEOUT_MS)
-            timedOut = true
-        }
-    }
-
-    val displayError =
-        sdkError
-            ?: timeoutMessage.takeIf { timedOut }
-
-    Box(
-        modifier = Modifier.fillMaxSize().background(c.bg),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (displayError != null) {
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                BasicText(
-                    text = displayError,
-                    style =
-                        ZappTheme.typography.body.copy(
-                            color = c.danger,
-                            fontSize = 13.sp,
-                        ),
-                )
-                Spacer(Modifier.height(12.dp))
-                BasicText(
-                    text =
-                        if (onRetry != null) {
-                            stringResource(R.string.onboarding_seed_loading_retry_hint)
-                        } else {
-                            stringResource(R.string.onboarding_seed_loading_no_retry_hint)
-                        },
-                    style =
-                        ZappTheme.typography.body.copy(
-                            color = c.textMuted,
-                            fontSize = 12.sp,
-                        ),
-                )
-                if (onRetry != null) {
-                    Spacer(Modifier.height(20.dp))
-                    Box(
-                        modifier =
-                            Modifier
-                                .border(width = 2.dp, color = c.text, shape = RectangleShape)
-                                .clickable(onClick = onRetry)
-                                .padding(horizontal = 22.dp, vertical = 12.dp),
-                    ) {
-                        BasicText(
-                            text = stringResource(R.string.onboarding_seed_loading_retry),
-                            style =
-                                ZappTheme.typography.body.copy(
-                                    color = c.text,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.2.sp,
-                                ),
-                        )
-                    }
-                }
-            }
-        } else {
-            CircularProgressIndicator(color = c.accent)
-        }
-    }
-}

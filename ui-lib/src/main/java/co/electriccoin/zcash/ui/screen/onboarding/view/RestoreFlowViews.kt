@@ -458,80 +458,17 @@ internal fun RestoreTorOptionScreen(
 
 @Composable
 internal fun RestoreInProgressScreen(
-    step: Int,
     errorMessage: String?,
     onRetry: (() -> Unit)?,
 ) {
-    val c = ZappTheme.colors
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(c.bg)
-            .windowInsetsPadding(WindowInsets.statusBars),
-    ) {
-        Box(modifier = Modifier.fillMaxWidth().padding(start = 28.dp, end = 28.dp, top = 20.dp)) {
-            OnbProgress(step = step)
-        }
-        Box(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (errorMessage != null) {
-                Column(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 28.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    BasicText(
-                        text = errorMessage,
-                        style = ZappTheme.typography.body.copy(color = c.danger, fontSize = 13.sp),
-                    )
-                    Spacer(Modifier.height(12.dp))
-                    BasicText(
-                        text = if (onRetry != null) {
-                            stringResource(R.string.restore_flow_loading_error)
-                        } else {
-                            stringResource(R.string.restore_flow_loading_error_no_retry)
-                        },
-                        style = ZappTheme.typography.body.copy(color = c.textMuted, fontSize = 12.sp),
-                    )
-                    if (onRetry != null) {
-                        Spacer(Modifier.height(20.dp))
-                        Box(
-                            modifier = Modifier
-                                .border(width = 2.dp, color = c.text, shape = RectangleShape)
-                                .clickable(onClick = onRetry)
-                                .padding(horizontal = 22.dp, vertical = 12.dp),
-                        ) {
-                            BasicText(
-                                text = stringResource(R.string.restore_flow_loading_retry),
-                                style = ZappTheme.typography.body.copy(
-                                    color = c.text,
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Black,
-                                    letterSpacing = 1.2.sp,
-                                ),
-                            )
-                        }
-                    }
-                }
-            } else {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    CircularProgressIndicator(color = c.accent)
-                    Spacer(Modifier.height(20.dp))
-                    BasicText(
-                        text = stringResource(R.string.restore_flow_loading_sub),
-                        style = ZappTheme.typography.body.copy(
-                            color = c.textMuted,
-                            fontSize = 13.sp,
-                            lineHeight = 22.sp,
-                        ),
-                        modifier = Modifier.padding(horizontal = 28.dp),
-                    )
-                }
-            }
-        }
-    }
+    WalletEncryptingScreen(
+        message = stringResource(R.string.restore_flow_loading_sub),
+        errorMessage = errorMessage,
+        onRetry = onRetry,
+        retryHint = stringResource(R.string.restore_flow_loading_error),
+        noRetryHint = stringResource(R.string.restore_flow_loading_error_no_retry),
+        retryLabel = stringResource(R.string.restore_flow_loading_retry),
+    )
 }
 
 // ── 5. Keep Zapp open screen ────────────────────────────────────

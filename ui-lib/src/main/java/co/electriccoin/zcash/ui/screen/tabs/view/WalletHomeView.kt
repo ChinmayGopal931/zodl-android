@@ -77,7 +77,7 @@ internal fun WalletHomeView() {
         ) {
             item {
                 ZappScreenHeader(
-                    title = stringResource(R.string.home_wallet_title),
+                    title = stringResource(R.string.home_pay_title),
                     right = { SyncStatusChip(state = syncChip) },
                 )
             }
@@ -104,10 +104,10 @@ internal fun WalletHomeView() {
             activitySection(activityState)
         }
 
-        WalletActionFabStack(
+        PayActionFabStack(
+            onPayMerchant = homeVM::onPayMerchantClick,
             onSend = { homeState?.secondButton?.onClick?.invoke() },
             onReceive = { homeState?.firstButton?.onClick?.invoke() },
-            onSwap = { homeState?.fourthButton?.onClick?.invoke() },
             modifier = Modifier.align(Alignment.BottomEnd),
         )
     }

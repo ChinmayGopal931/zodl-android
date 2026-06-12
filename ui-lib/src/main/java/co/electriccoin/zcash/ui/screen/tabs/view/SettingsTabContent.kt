@@ -21,8 +21,10 @@ import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,8 +62,11 @@ import org.koin.compose.koinInject
 @Composable
 internal fun SettingsTabContent(
     onChatProfileClick: () -> Unit,
+    onContactsClick: () -> Unit,
     onAppLockClick: () -> Unit,
     onChooseServerClick: () -> Unit,
+    onSwapClick: () -> Unit,
+    onTorClick: () -> Unit,
     onP2pTransactionsClick: () -> Unit,
     onSupportClick: () -> Unit,
     walletViewModel: WalletViewModel = koinViewModel(),
@@ -85,7 +90,7 @@ internal fun SettingsTabContent(
                     .fillMaxSize()
                     .windowInsetsPadding(WindowInsets.statusBars),
         ) {
-            ZappScreenHeader(title = stringResource(R.string.settings_title))
+            ZappScreenHeader(title = stringResource(R.string.settings_you_title))
 
             Column(
                 modifier =
@@ -97,6 +102,17 @@ internal fun SettingsTabContent(
             ) {
                 identity?.let { id ->
                     ProfileCard(displayName = id.displayName)
+                }
+
+                SettingsGroup(title = stringResource(R.string.settings_group_people)) {
+                    ZappRow(
+                        title = stringResource(R.string.chat_contacts_title),
+                        subtitle = stringResource(R.string.settings_contacts_subtitle),
+                        icon = Icons.Default.Contacts,
+                        iconTint = c.accentText,
+                        iconBackground = c.accentSoft,
+                        onClick = onContactsClick,
+                    )
                 }
 
                 SettingsGroup(title = stringResource(R.string.settings_group_security)) {
@@ -129,6 +145,15 @@ internal fun SettingsTabContent(
                     // )
                 }
 
+                SettingsGroup(title = stringResource(R.string.settings_group_privacy)) {
+                    ZappRow(
+                        title = stringResource(R.string.settings_tor_title),
+                        subtitle = stringResource(R.string.settings_tor_subtitle),
+                        icon = Icons.Default.Security,
+                        onClick = onTorClick,
+                    )
+                }
+
                 if (hasWallet) {
                     SettingsGroup(title = stringResource(R.string.settings_group_wallet)) {
                         // DEAD CODE [hidden]: Backup seed phrase — uncomment to restore (and the divider below)
@@ -141,6 +166,13 @@ internal fun SettingsTabContent(
                         //     onClick = { /* route via TabsVM */ },
                         // )
                         // ZappRowDivider(inset = true)
+                        ZappRow(
+                            title = stringResource(R.string.settings_swap_title),
+                            subtitle = stringResource(R.string.settings_swap_subtitle),
+                            icon = Icons.Default.SwapHoriz,
+                            onClick = onSwapClick,
+                        )
+                        ZappRowDivider(inset = true)
                         ZappRow(
                             title = stringResource(R.string.choose_server_title),
                             subtitle = stringResource(R.string.settings_server_subtitle),
