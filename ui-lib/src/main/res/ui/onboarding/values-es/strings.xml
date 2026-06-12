@@ -25,9 +25,9 @@
     <string name="wallet_empty_restore_sub">Usa tu frase de recuperación existente</string>
 
     <!-- Welcome gate (shown before onboarding starts) -->
-    <string name="welcome_hero_line1">Chatea\nen privado.</string>
-    <string name="welcome_hero_line2">Envía\nal instante.</string>
-    <string name="welcome_body">Mensajería cifrada de extremo a extremo. Agrega una billetera de autocustodia cuando quieras — es opcional.</string>
+    <string name="welcome_hero_line1">Tus mensajes\ny tu dinero.</string>
+    <string name="welcome_hero_line2">Cifrados.</string>
+    <string name="welcome_body">Mensajería cifrada de extremo a extremo con una billetera Zcash blindada integrada.</string>
     <string name="welcome_get_started_button">Comenzar</string>
     <string name="welcome_restore_button">Ya uso Zapp</string>
     <string name="welcome_terms_caption">Al continuar aceptas nuestros términos y política de privacidad.</string>

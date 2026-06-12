@@ -6,8 +6,8 @@ Fork of upstream `zodl-inc/zodl-android` with Zapp's P2P messaging integrated. T
 
 ## Running locally
 
-- Build/install: `./gradlew :app:installZcashtestnetFossDebug` (mainnet has no debug install task).
-- Package on device: `xyz.justzappit.zapp.testnet.foss.debug`.
+- Build/install: `./gradlew :app:installZcashtestnetFossDebug`, or `:app:installZcashmainnetFossDebug` for mainnet (side-by-side packages; launcher names "Zapp [DFT]" / "Zapp [DFM]").
+- Package on device: `xyz.justzappit.zapp.testnet.foss.debug` (testnet) / `xyz.justzappit.zapp.foss.debug` (mainnet).
 - Testnet lightwalletd is currently offline → home shows "Offline — reconnecting". Expected, not a regression.
 - After pulling JS changes in `../zappMessaging/`: run `npm run build:android` there before `./gradlew`.
 

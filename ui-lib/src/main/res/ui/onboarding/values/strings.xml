@@ -28,9 +28,9 @@
     <!-- Welcome gate (shown before onboarding starts) -->
     <string name="welcome_logo_glyph" translatable="false">Z</string>
     <string name="welcome_wordmark" translatable="false">Zapp</string>
-    <string name="welcome_hero_line1">Chat\nprivately.</string>
-    <string name="welcome_hero_line2">Send\ninstantly.</string>
-    <string name="welcome_body">End-to-end encrypted messaging. Add a self-custody wallet whenever you want — it\'s optional.</string>
+    <string name="welcome_hero_line1">Your messages\nand money.</string>
+    <string name="welcome_hero_line2">Encrypted.</string>
+    <string name="welcome_body">End-to-end encrypted messaging with a shielded Zcash wallet built in.</string>
     <string name="welcome_get_started_button">Get started</string>
     <string name="welcome_restore_button">I already use Zapp</string>
     <string name="welcome_terms_caption">By continuing you accept our terms &amp; privacy policy.</string>
