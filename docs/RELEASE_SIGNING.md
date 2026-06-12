@@ -41,7 +41,33 @@ SHA-256:  80:0C:61:A4:61:11:25:FB:F0:DD:C3:D1:AB:FE:22:CF:F7:EA:D7:65:E8:42:04:D
 ```
 
 Registered via Play Console → **App integrity → App signing → Request upload key reset** on **2026-06-08**
-(reason: "lost upload key"). Google approval of an upload-key reset can take up to ~48h.
+(reason: "lost upload key"). Google approval of an upload-key reset can take up to ~48h. **Approved and live
+as of 2026-06-11** (Play Console shows `1F:D6:DC…` as the active upload certificate).
+
+## How an upload-key reset actually works (read this before panicking)
+
+We lost time once (2026-06-11) looking for "the new key Google sent us". **Google never sends a key.**
+The flow is the reverse of what you might expect:
+
+1. **You generate the new keystore yourself, locally**, before or while filing the reset request:
+   ```bash
+   keytool -genkeypair -keystore ~/keys/justzappit/zapp-upload-v3.keystore \
+     -alias zapp-upload -keyalg RSA -keysize 2048 -validity 10000
+   keytool -exportcert -rfc -keystore ~/keys/justzappit/zapp-upload-v3.keystore \
+     -alias zapp-upload -file upload-cert.pem
+   ```
+2. You upload only the **certificate** (`.pem`) with the reset request. The private key never leaves
+   this machine — which is why nobody can "find it" anywhere but here.
+3. Google approves silently after up to ~48h. **There is no obvious notification.** To check whether the
+   reset is live, open Play Console → **App integrity → App signing** and compare the *Upload key
+   certificate* fingerprints against your local keystore:
+   ```bash
+   keytool -list -v -keystore ~/keys/justzappit/zapp-upload-v2.keystore -alias zapp-upload | grep SHA1
+   ```
+   When they match, the reset is done and the next `.aab` you upload must be signed with that keystore.
+4. **Immediately after generating a new keystore:** record its path + fingerprints in this doc, and back up
+   the keystore file *and* password to the team password manager. Losing either means another reset and
+   another ~48h of downtime.
 
 ## Where the secrets live (and where they must NOT)
 
