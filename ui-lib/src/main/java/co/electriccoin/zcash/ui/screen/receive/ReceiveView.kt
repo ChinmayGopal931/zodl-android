@@ -255,9 +255,11 @@ private fun ReceiveBottomDock(
         modifier =
             modifier
                 .fillMaxWidth()
-                .background(c.bg)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 8.dp)
+                .background(c.surface)
+                .border(BorderStroke(1.dp, c.border), RectangleShape),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(

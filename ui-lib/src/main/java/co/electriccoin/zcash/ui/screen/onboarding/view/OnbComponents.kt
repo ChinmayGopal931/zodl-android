@@ -125,8 +125,10 @@ internal fun OnbBottomDock(
         modifier =
             modifier
                 .fillMaxWidth()
-                .let { if (noBorder) it else it.border(1.dp, c.text, RectangleShape) }
-                .windowInsetsPadding(WindowInsets.navigationBars),
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(horizontal = 18.dp)
+                .padding(bottom = 8.dp)
+                .let { if (noBorder) it else it.border(1.dp, c.text, RectangleShape) },
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
