@@ -7,8 +7,10 @@
     <string name="onboarding_tor_badge">Setup · Network</string>
     <string name="onboarding_continue">Continue</string>
 
-    <!-- SeedLoadingPlaceholder: shown while the SDK persists a freshly-created or
+    <!-- WalletEncryptingScreen: shown while the SDK persists a freshly-created or
          restored wallet and (optionally) derives the chat identity. -->
+    <string name="onboarding_encrypting_greeting">Hey.</string>
+    <string name="onboarding_encrypting_message">Hold on a moment —\nwe\'re encrypting your new wallet.</string>
     <string name="onboarding_seed_loading_timeout">Taking longer than expected.</string>
     <string name="onboarding_seed_loading_retry_hint">Tap retry, or go back and submit again.</string>
     <string name="onboarding_seed_loading_no_retry_hint">Try going back and submitting again.</string>

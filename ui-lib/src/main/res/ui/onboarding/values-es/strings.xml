@@ -8,6 +8,8 @@
     <string name="onboarding_continue">Continuar</string>
 
     <!-- SeedLoadingPlaceholder -->
+    <string name="onboarding_encrypting_greeting">Hola.</string>
+    <string name="onboarding_encrypting_message">Un momento —\nestamos cifrando tu nueva billetera.</string>
     <string name="onboarding_seed_loading_timeout">Está tardando más de lo esperado.</string>
     <string name="onboarding_seed_loading_retry_hint">Toca reintentar, o regresa e intenta de nuevo.</string>
     <string name="onboarding_seed_loading_no_retry_hint">Intenta regresar y enviarlo de nuevo.</string>

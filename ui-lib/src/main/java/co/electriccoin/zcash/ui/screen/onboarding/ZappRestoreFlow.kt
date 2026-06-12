@@ -189,7 +189,7 @@ private fun RestoreStepHost(
                 },
             )
 
-        RestoreStep.DERIVING -> DerivingIdentityScreen(step = 2, chatBootstrap = chatBootstrap)
+        RestoreStep.DERIVING -> DerivingIdentityScreen(chatBootstrap = chatBootstrap)
         RestoreStep.SECURE_CHOICE -> SecureChoiceStepView(onStepChange)
         RestoreStep.BIO_SCAN -> BioStepView(securityVM, onStepChange)
         RestoreStep.PIN_SETUP -> PinStepView(securityVM, onStepChange)
@@ -282,7 +282,7 @@ private fun RestoringStepView(
         }
     val onRetry: (() -> Unit)? =
         if (restoreErrorRes != null) ({ restoreVM.retryRestore() }) else null
-    RestoreInProgressScreen(step = 1, errorMessage = errorMessage, onRetry = onRetry)
+    RestoreInProgressScreen(errorMessage = errorMessage, onRetry = onRetry)
 }
 
 @Composable
