@@ -25,7 +25,6 @@ import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -64,9 +63,7 @@ internal fun SettingsTabContent(
     onContactsClick: () -> Unit,
     onAppLockClick: () -> Unit,
     onChooseServerClick: () -> Unit,
-    onSwapClick: () -> Unit,
     onTorClick: () -> Unit,
-    onP2pTransactionsClick: () -> Unit,
     walletViewModel: WalletViewModel = koinViewModel(),
 ) {
     val scope = rememberCoroutineScope()
@@ -165,24 +162,10 @@ internal fun SettingsTabContent(
                         // )
                         // ZappRowDivider(inset = true)
                         ZappRow(
-                            title = stringResource(R.string.settings_swap_title),
-                            subtitle = stringResource(R.string.settings_swap_subtitle),
-                            icon = Icons.Default.SwapHoriz,
-                            onClick = onSwapClick,
-                        )
-                        ZappRowDivider(inset = true)
-                        ZappRow(
                             title = stringResource(R.string.choose_server_title),
                             subtitle = stringResource(R.string.settings_server_subtitle),
                             icon = Icons.Default.Cloud,
                             onClick = onChooseServerClick,
-                        )
-                        ZappRowDivider(inset = true)
-                        ZappRow(
-                            title = stringResource(R.string.p2p_transactions_title),
-                            subtitle = stringResource(R.string.settings_p2p_transactions_subtitle),
-                            icon = Icons.Default.SwapHoriz,
-                            onClick = onP2pTransactionsClick,
                         )
                     }
                 }

@@ -314,7 +314,7 @@ fun NavGraphBuilder.walletNavGraph(
         dialogComposable<SwapAssetPickerArgs> { SwapAssetPickerScreen(it.toRoute()) }
         dialogComposable<SwapBlockchainPickerArgs> { SwapBlockchainPickerScreen(it.toRoute()) }
         composable<SwapArgs> { SwapScreen() }
-        composable<UpiOfframpArgs> { SwapScreen(initialTab = SwapTab.OFFRAMP) }
+        composable<UpiOfframpArgs> { SwapScreen(tab = SwapTab.OFFRAMP) }
         composable<UpiOfframpProgressArgs> { UpiOfframpProgressScreen(it.toRoute()) }
         composable<ScanUpiArgs> { ScanUpiScreen(it.toRoute()) }
         dialogComposable<SwapSlippageArgs> { SwapSlippageScreen(it.toRoute()) }

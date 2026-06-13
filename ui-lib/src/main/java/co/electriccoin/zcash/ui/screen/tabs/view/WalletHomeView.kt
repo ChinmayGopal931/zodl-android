@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -104,11 +103,12 @@ internal fun WalletHomeView() {
             activitySection(activityState)
         }
 
-        PayActionFabStack(
+        PayActionSpeedDial(
             onPayMerchant = homeVM::onPayMerchantClick,
             onSend = { homeState?.secondButton?.onClick?.invoke() },
+            onSwap = homeVM::onSwapClick,
             onReceive = { homeState?.firstButton?.onClick?.invoke() },
-            modifier = Modifier.align(Alignment.BottomEnd),
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

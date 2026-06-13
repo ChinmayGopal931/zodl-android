@@ -7,8 +7,6 @@ import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
 import co.electriccoin.zcash.ui.screen.chooseserver.ChooseServerArgs
 import co.electriccoin.zcash.ui.screen.restore.seed.RestoreSeedArgs
 import co.electriccoin.zcash.ui.screen.securitysettings.SecuritySettingsArgs
-import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
-import co.electriccoin.zcash.ui.screen.swap.SwapArgs
 import co.electriccoin.zcash.ui.screen.tor.settings.TorSettingsArgs
 
 class TabsVM(
@@ -24,9 +22,5 @@ class TabsVM(
 
     fun onChooseServerClick() = navigationRouter.forward(ChooseServerArgs)
 
-    fun onSwapClick() = navigationRouter.forward(SwapArgs)
-
     fun onTorClick() = navigationRouter.forward(TorSettingsArgs)
-
-    fun onP2pTransactionsClick() = navigationRouter.forward(P2pTransactionsArgs)
 }

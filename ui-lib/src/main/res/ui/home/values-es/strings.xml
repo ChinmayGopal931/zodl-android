@@ -107,5 +107,7 @@
     <string name="balance_action_info_pending">Pendiente</string>
     <string name="home_button_pay">Pagar</string>
     <string name="home_button_pay_merchant">Pagar a comercio</string>
+    <string name="home_fab_actions_expand">Acciones de pago</string>
+    <string name="home_fab_actions_collapse">Cerrar acciones de pago</string>
     <string name="home_button_swap">Swap</string>
 </resources>

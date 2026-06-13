@@ -21,6 +21,7 @@ internal data class UpiOfframpState(
     val errorText: StringResource?,
     val sendButton: ButtonState,
     val onScanQr: () -> Unit,
+    val onHistoryClick: () -> Unit,
     /**
      * Smart account's current USDC balance on Base, shown inline above the USDC input. Null until the
      * first balance read returns (treated as unknown — UI hides the label).

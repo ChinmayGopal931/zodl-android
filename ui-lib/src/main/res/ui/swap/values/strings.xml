@@ -85,7 +85,6 @@
     <string name="swap_deposit_info_step_4">It’s best to send from a wallet you own. Sending from an exchange may result in delays or refunds.</string>
 
     <!-- Swap / Offramp tab toggle -->
-    <string name="swap_tab_swap">Swap</string>
     <string name="swap_tab_offramp">Offramp</string>
 
     <!-- UPI Offramp form -->

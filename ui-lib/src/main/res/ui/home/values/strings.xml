@@ -118,5 +118,7 @@
     <string name="balance_action_info_pending">Pending</string>
     <string name="home_button_pay">Pay</string>
     <string name="home_button_pay_merchant">Pay Merchant</string>
+    <string name="home_fab_actions_expand">Payment actions</string>
+    <string name="home_fab_actions_collapse">Close payment actions</string>
     <string name="home_button_swap">Swap</string>
 </resources>

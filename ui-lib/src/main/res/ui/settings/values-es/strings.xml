@@ -31,7 +31,6 @@
     <string name="settings_swap_title">Swap</string>
     <string name="settings_swap_subtitle">Intercambia criptoactivos</string>
     <string name="settings_server_subtitle">Elige un servidor lightwalletd</string>
-    <string name="settings_p2p_transactions_subtitle">Saldo e historial de órdenes</string>
 
     <!-- Transacciones P2P (Ajustes → entrada de Cartera) -->
     <string name="p2p_transactions_title">Transacciones P2P</string>

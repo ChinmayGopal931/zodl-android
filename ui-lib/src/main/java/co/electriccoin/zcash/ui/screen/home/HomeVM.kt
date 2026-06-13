@@ -286,6 +286,8 @@ class HomeVM(
 
     fun onPayMerchantClick() = navigationRouter.forward(UpiOfframpArgs)
 
+    fun onSwapClick() = onSwapButtonClick()
+
     private fun onPayButtonClick() {
         if (onPayButtonClickJob?.isActive == true) return
         onPayButtonClickJob = viewModelScope.launch { navigateToNearPay() }
