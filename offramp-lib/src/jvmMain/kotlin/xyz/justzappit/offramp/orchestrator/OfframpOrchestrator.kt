@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import xyz.justzappit.evm.abi.AbiDecoder
 import xyz.justzappit.evm.abi.AbiEncoder
 import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.crypto.Ecies
@@ -25,6 +24,7 @@ import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.funding.FundingOutcome
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
+import xyz.justzappit.offramp.funding.OfframpTopUp
 import xyz.justzappit.offramp.p2p.CircleId
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.CurrencyCode
@@ -47,6 +47,7 @@ import xyz.justzappit.offramp.p2p.SubgraphClient
 import xyz.justzappit.offramp.p2p.UpiPayUri
 import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getOrCreate
+import xyz.justzappit.offramp.p2p.getSmallOrderFixedFeePay
 import xyz.justzappit.offramp.p2p.getUsdcBalance
 import java.math.BigInteger
 
@@ -54,6 +55,20 @@ interface OfframpDriver {
     fun run(request: OfframpRequest): Flow<OfframpStatus>
 
     fun resume(checkpoint: OfframpCheckpoint): Flow<OfframpStatus>
+
+    /**
+     * Standalone "top up Base": bridge [addUsdc] of ZEC onto the reusable Base balance, with no order
+     * placed. [resumeBridgeHandle] is a persisted 1-Click deposit address — non-null forces the bridge
+     * to re-poll the existing deposit instead of opening a second one, so a crash mid-bridge can't
+     * double-send the user's ZEC.
+     */
+    fun bridgeToBase(addUsdc: Usdc6, resumeBridgeHandle: String?): Flow<BridgeToBaseStatus>
+
+    /**
+     * Whether any eligible circle currently has an assignable merchant for an [usdc]/[currency] order.
+     * Best-effort gate shown before a top-up bridge; returns false on RPC failure or no eligible circle.
+     */
+    suspend fun isMerchantAvailable(usdc: Usdc6, currency: CurrencyCode): Boolean
 
     /**
      * "Get my USDC back to ZEC". Cleanup-call selection depends on on-chain order state:
@@ -74,6 +89,9 @@ class OfframpOrchestrator(
     private val orderReader: OrderReadSource,
     private val funding: OfframpFunding,
     private val refund: OfframpRefund,
+    // Mainnet-only NEAR bridge for the standalone "top up Base" flow. Defaulted to a throwing stub so
+    // tests that only exercise the order path don't have to supply one.
+    private val topUp: OfframpTopUp = OfframpTopUp { _, _, _, _ -> error("No top-up configured") },
     private val router: CircleRouter = CircleRouter(),
     private val pollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
     /**
@@ -126,7 +144,7 @@ class OfframpOrchestrator(
                 router.selectCircleForOrder(
                     circles = circles,
                     orderCurrency = currencyHex,
-                ) { id -> validateCircleOnChain(id, request) }
+                ) { id -> validateCircleOnChain(id, request.usdcAmount, request.currency) }
             val circleId = selectedCircle.value
             emit(OfframpStatus.SelectingCircle(candidateCount = circles.size, selectedCircleId = circleId))
 
@@ -145,7 +163,7 @@ class OfframpOrchestrator(
             // Route re-validation: the funding bridge can take minutes, long enough for the merchant the
             // eligibility gate picked to drop out. Re-confirm the circle still has an assignable merchant
             // before committing funds — otherwise placeOrder reverts and the bridged USDC strands.
-            check(validateCircleOnChain(selectedCircle, request)) {
+            check(validateCircleOnChain(selectedCircle, request.usdcAmount, request.currency)) {
                 "Selected circle $circleId lost its assignable merchant during funding — not placing the order"
             }
 
@@ -249,6 +267,41 @@ class OfframpOrchestrator(
                 emit(buildFailedStatus(e, orderId, currentStep, lastTxHash))
             }
         }
+
+    override fun bridgeToBase(addUsdc: Usdc6, resumeBridgeHandle: String?): Flow<BridgeToBaseStatus> =
+        flow {
+            emit(BridgeToBaseStatus.Idle)
+            var depositAddress: String? = resumeBridgeHandle
+            try {
+                topUp.bridge(accountAddress, addUsdc, resumeHandle = resumeBridgeHandle) { addr ->
+                    depositAddress = addr
+                    emit(BridgeToBaseStatus.Bridging(amount = addUsdc, depositAddress = addr))
+                }
+                // The bridge has settled (1-Click SUCCESS); the balance read is display-only. Don't let
+                // its RPC blip collapse a completed, irreversible bridge into Failed — fall back to the
+                // added amount, which the screen's own balance poll corrects on the next refresh.
+                val newBalance = runCatching { Usdc6(usdcBalanceOf(accountAddress)) }.getOrDefault(addUsdc)
+                emit(BridgeToBaseStatus.Complete(addedAmount = addUsdc, baseBalance = newBalance))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                emit(
+                    BridgeToBaseStatus.Failed(
+                        message = e.message ?: "Bridge failed",
+                        depositAddress = depositAddress,
+                        cause = e,
+                    ),
+                )
+            }
+        }
+
+    override suspend fun isMerchantAvailable(usdc: Usdc6, currency: CurrencyCode): Boolean =
+        runCatching {
+            val currencyHex = "0x" + AbiEncoder.bytes32String(currency.code).value.toHex()
+            val circles = subgraph.circlesForRouting(currencyHex)
+            router.selectCircleForOrder(circles, currencyHex) { id -> validateCircleOnChain(id, usdc, currency) }
+            true
+        }.getOrDefault(false)
 
     override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> =
         flow {
@@ -453,20 +506,8 @@ class OfframpOrchestrator(
         return PriceConfigDecoder.decode(ret).sellPriceAsRate()
     }
 
-    // The Diamond pulls `smallOrderFixedFeePay` as a separate transferFrom inside setSellOrderUpi
-    // (on top of `placed`). If allowance is short of `placed + fee`, the contract atomic-emits
-    // `CancelledOrders` from inside the user's own setUpi call — visually indistinguishable from
-    // a merchant decline but actually a silent allowance underflow. Verified mainnet 2026-05-24:
-    // 0.99 USDC orders cancelled atomically with allowance == placed; same orders completed once
-    // we approved `placed + fee`. user-app-client sidesteps this by approving `MAX_UINT256` once.
-    private suspend fun readSmallOrderFixedFeePay(currency: CurrencyCode): Usdc6 {
-        val ret =
-            rpc.ethCall(
-                to = network.diamondAddress,
-                data = DiamondCalls.getSmallOrderFixedFeePayCalldata(currency),
-            )
-        return Usdc6(AbiDecoder(ret).also { it.requireWords(1) }.uint(0))
-    }
+    private suspend fun readSmallOrderFixedFeePay(currency: CurrencyCode): Usdc6 =
+        rpc.getSmallOrderFixedFeePay(network.diamondAddress, currency)
 
     private suspend fun resolveFallbackFiat(checkpoint: OfframpCheckpoint): Usdc6 {
         val rate = runCatching { readSellPriceInrPerUsdc(checkpoint.currency) }.getOrNull()
@@ -573,7 +614,8 @@ class OfframpOrchestrator(
     // they surface as Failed rather than burning through MAX_VALIDATION_ATTEMPTS as bad circles.
     private suspend fun validateCircleOnChain(
         circleId: CircleId,
-        request: OfframpRequest,
+        usdcAmount: Usdc6,
+        currency: CurrencyCode,
     ): Boolean {
         val ret =
             rpc.ethCall(
@@ -582,9 +624,9 @@ class OfframpOrchestrator(
                     DiamondCalls.getAssignableMerchantsFromCircleCalldata(
                         circleId = circleId.value,
                         assignUpTo = BigInteger.valueOf(ASSIGN_UP_TO),
-                        currency = request.currency,
+                        currency = currency,
                         user = accountAddress,
-                        usdtAmount = request.usdcAmount,
+                        usdtAmount = usdcAmount,
                         fiatAmount = Usdc6.ZERO,
                         orderType = OrderType.PAY,
                     ),

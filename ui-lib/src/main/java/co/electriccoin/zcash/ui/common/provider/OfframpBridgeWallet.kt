@@ -33,6 +33,7 @@ import xyz.justzappit.evm.types.Address
 import xyz.justzappit.offramp.funding.FundingOutcome
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
+import xyz.justzappit.offramp.funding.OfframpTopUp
 import xyz.justzappit.offramp.orchestrator.OfframpRequest
 import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getUsdcBalance
@@ -128,6 +129,14 @@ class RealOfframpBridgeWallet(
 }
 
 /**
+ * Read-only estimate for the "Add funds to Base" screen: how long a top-up bridge is expected to take.
+ * Mainnet quotes 1-Click for it; testnet (no route) binds a no-op returning null.
+ */
+fun interface OfframpTopUpPreview {
+    suspend fun estimatedDurationSeconds(account: Address, usdc: Usdc6): Int?
+}
+
+/**
  * Mainnet funding: bridges ZEC → USDC into the smart account via NEAR 1-Click, **reusing** the app's
  * existing [SwapDataSource] for the quote and status polling (it is not modified here). The bridge is
  * `EXACT_OUTPUT` so it delivers exactly the order's USDC and refunds any excess ZEC to the user.
@@ -143,7 +152,7 @@ class NearBridgeOfframpFunding(
     private val wallet: OfframpBridgeWallet,
     private val slippageTolerancePercent: BigDecimal = DEFAULT_SLIPPAGE_PERCENT,
     private val pollIntervalMs: Long = DEFAULT_POLL_INTERVAL_MS,
-) : OfframpFunding {
+) : OfframpFunding, OfframpTopUp, OfframpTopUpPreview {
     override suspend fun ensureFunded(
         account: Address,
         request: OfframpRequest,
@@ -162,7 +171,7 @@ class NearBridgeOfframpFunding(
                 onBridgeStarted(resumeHandle)
                 resumeHandle
             } else {
-                openBridge(account, request, tokens, onBridgeStarted)
+                openBridge(account, request.usdcAmount, tokens, onBridgeStarted)
             }
 
         pollUntilSettled(depositAddress, tokens)
@@ -172,31 +181,78 @@ class NearBridgeOfframpFunding(
         return FundingOutcome.Bridged(depositAddress = depositAddress)
     }
 
+    /**
+     * Top-up path: bridge exactly [usdc] onto [account] with no AlreadyFunded short-circuit — the user
+     * has deliberately chosen to add this much to their reusable Base balance even if it already holds
+     * some. Reports success on 1-Click SUCCESS without asserting a balance increase: on a resume the
+     * USDC may have landed in a prior session, so an increase check would false-fail a completed bridge.
+     * The fail-closed guards are the quote-echo + destination-address checks in [openBridge], asserted
+     * before any ZEC is sent.
+     */
+    override suspend fun bridge(
+        account: Address,
+        usdc: Usdc6,
+        resumeHandle: String?,
+        onBridgeStarted: suspend (depositAddress: String) -> Unit,
+    ): FundingOutcome {
+        val tokens = swapDataSource.getSupportedTokens()
+        val depositAddress =
+            if (resumeHandle != null) {
+                onBridgeStarted(resumeHandle)
+                resumeHandle
+            } else {
+                openBridge(account, usdc, tokens, onBridgeStarted)
+            }
+
+        // pollUntilSettled returns only on 1-Click SUCCESS (terminal states throw). No balance-delta
+        // assertion here: on a resume the USDC may have already landed in a prior session, so it won't
+        // increase during this re-poll — checking for an increase would false-fail a completed bridge.
+        pollUntilSettled(depositAddress, tokens)
+        return FundingOutcome.Bridged(depositAddress = depositAddress)
+    }
+
+    /**
+     * Read-only ZEC→USDC quote for the top-up bridge UI: returns 1-Click's estimated time-to-settle in
+     * seconds, or null when the provider omits it (the UI then shows a static estimate). No ZEC moves.
+     */
+    override suspend fun estimatedDurationSeconds(account: Address, usdc: Usdc6): Int? =
+        runCatching {
+            val tokens = swapDataSource.getSupportedTokens()
+            requestBridgeQuote(account, usdc, tokens, refundAddress = wallet.zcashAddress()).estimatedDurationSeconds
+        }.getOrNull()
+
+    private suspend fun requestBridgeQuote(
+        account: Address,
+        amount: Usdc6,
+        tokens: List<SwapAsset>,
+        refundAddress: String,
+    ): SwapQuote =
+        swapDataSource.requestQuote(
+            swapMode = SwapMode.EXACT_OUTPUT,
+            flexInput = false,
+            amount = amount.whole,
+            refundAddress = refundAddress,
+            originAsset = tokens.zecAsset(),
+            destinationAddress = account.checksumHex,
+            destinationAsset = tokens.usdcAsset(usdc),
+            slippage = slippageTolerancePercent,
+            affiliateAddress = AFFILIATE_ADDRESS,
+        )
+
     private suspend fun openBridge(
         account: Address,
-        request: OfframpRequest,
+        amount: Usdc6,
         tokens: List<SwapAsset>,
         onBridgeStarted: suspend (depositAddress: String) -> Unit,
     ): String {
         val refundAddress = wallet.zcashAddress()
-        val quote =
-            swapDataSource.requestQuote(
-                swapMode = SwapMode.EXACT_OUTPUT,
-                flexInput = false,
-                amount = request.usdcAmount.whole,
-                refundAddress = refundAddress,
-                originAsset = tokens.zecAsset(),
-                destinationAddress = account.checksumHex,
-                destinationAsset = tokens.usdcAsset(usdc),
-                slippage = slippageTolerancePercent,
-                affiliateAddress = AFFILIATE_ADDRESS,
-            )
+        val quote = requestBridgeQuote(account, amount, tokens, refundAddress)
         // This call site bypasses RequestSwapQuoteUseCase's validateQuote layer, so assert the quote
         // echo here before irreversibly sending ZEC to quote.depositAddress. Asset substitution is
         // already fail-closed in NearSwapQuote's init.
         requireQuoteMatchesUserAmount(
             quoted = quote.amountOutFormatted,
-            requested = request.usdcAmount.whole,
+            requested = amount.whole,
             decimals = quote.destinationAsset.decimals
         )
         requireMatchingAddress(

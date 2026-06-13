@@ -6,7 +6,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -17,7 +16,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
@@ -103,10 +101,7 @@ internal fun UpiOfframpProgressView(state: UpiOfframpProgressState) {
             }
 
             Spacer(modifier = Modifier.height(GAP_LG.dp))
-            state.steps.forEachIndexed { idx, step ->
-                if (idx > 0) Spacer(modifier = Modifier.height(GAP_MD.dp))
-                StepRow(step)
-            }
+            OfframpStepList(state.steps)
         }
         ZappBottomActionBar(
             onBack = state.onBack,
@@ -292,29 +287,6 @@ private fun SummaryLinkRow(label: String, value: String, url: String, uriHandler
     }
 }
 
-/** Ellipsized, tappable monospace link to a block explorer (address or tx hash). */
-@Composable
-private fun ExplorerLink(
-    value: String,
-    url: String,
-    prefix: Int,
-    suffix: Int,
-    uriHandler: UriHandler,
-) {
-    val c = ZappTheme.colors
-    val t = ZappTheme.typography
-    BasicText(
-        text = value.ellipsizeMiddle(prefix, suffix),
-        style = t.mono.copy(color = c.accent, textDecoration = TextDecoration.Underline),
-        modifier =
-            Modifier.clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = ripple(color = c.accent),
-                onClick = { uriHandler.openUri(url) },
-            ),
-    )
-}
-
 @Composable
 private fun FailureCard(failure: UpiOfframpFailureCard) {
     val c = ZappTheme.colors
@@ -346,7 +318,7 @@ private fun FailureCard(failure: UpiOfframpFailureCard) {
         )
         if (failure.txHash != null && failure.txExplorerUrl != null) {
             Spacer(modifier = Modifier.height(GAP_SM.dp))
-            ExplorerLink(
+            OfframpExplorerLink(
                 value = failure.txHash,
                 url = failure.txExplorerUrl,
                 prefix = TX_HASH_ELLIPSIS_PREFIX,
@@ -357,87 +329,14 @@ private fun FailureCard(failure: UpiOfframpFailureCard) {
     }
 }
 
-@Composable
-private fun StepRow(step: UpiOfframpStep) {
-    val c = ZappTheme.colors
-    val t = ZappTheme.typography
-    val uriHandler = LocalUriHandler.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top,
-    ) {
-        StepIndicator(step.status)
-        Spacer(modifier = Modifier.width(GAP_MD.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            BasicText(
-                text = step.label.getValue(),
-                style =
-                    t.body.copy(
-                        color =
-                            when (step.status) {
-                                UpiOfframpStepStatus.Failed -> c.danger
-                                UpiOfframpStepStatus.Pending -> c.textMuted
-                                else -> c.text
-                            },
-                        fontWeight =
-                            when (step.status) {
-                                UpiOfframpStepStatus.InProgress -> FontWeight.SemiBold
-                                else -> FontWeight.Normal
-                            },
-                    ),
-            )
-            step.detailLines.forEach { detail ->
-                Spacer(modifier = Modifier.height(2.dp))
-                BasicText(
-                    text = detail.getValue(),
-                    style = t.caption.copy(color = c.textMuted),
-                )
-            }
-            if (step.txHash != null && step.txExplorerUrl != null) {
-                Spacer(modifier = Modifier.height(4.dp))
-                ExplorerLink(
-                    value = step.txHash,
-                    url = step.txExplorerUrl,
-                    prefix = TX_HASH_ELLIPSIS_PREFIX,
-                    suffix = TX_HASH_ELLIPSIS_SUFFIX,
-                    uriHandler = uriHandler,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StepIndicator(status: UpiOfframpStepStatus) {
-    val c = ZappTheme.colors
-    val color =
-        when (status) {
-            UpiOfframpStepStatus.Pending -> c.border
-            UpiOfframpStepStatus.InProgress -> c.accent
-            UpiOfframpStepStatus.Completed -> c.accent
-            UpiOfframpStepStatus.Failed -> c.danger
-        }
-    Box(
-        modifier =
-            Modifier
-                .padding(top = STEP_INDICATOR_TOP_OFFSET.dp)
-                .size(STEP_INDICATOR_SIZE.dp)
-                .background(color),
-    )
-}
-
 private const val HORIZONTAL_PADDING = 18
 private const val VERTICAL_PADDING = 16
 private const val CARD_PADDING = 14
 private const val GAP_SM = 6
 private const val GAP_MD = 10
 private const val GAP_LG = 20
-private const val STEP_INDICATOR_SIZE = 12
-private const val STEP_INDICATOR_TOP_OFFSET = 6
 private const val ADDRESS_ELLIPSIS_PREFIX = 10
 private const val ADDRESS_ELLIPSIS_SUFFIX = 6
-private const val TX_HASH_ELLIPSIS_PREFIX = 12
-private const val TX_HASH_ELLIPSIS_SUFFIX = 8
 
 private val previewSummary =
     UpiOfframpOrderSummary(

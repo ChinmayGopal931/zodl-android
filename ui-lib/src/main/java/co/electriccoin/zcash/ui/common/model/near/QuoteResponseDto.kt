@@ -51,5 +51,9 @@ data class QuoteDetails(
     @Serializable(with = BigDecimalSerializer::class)
     val minAmountOut: BigDecimal? = null,
     @SerialName("deadline")
-    val deadline: Instant
+    val deadline: Instant,
+    // 1-Click's estimated time-to-settle in seconds. Optional: absent on older responses, in which
+    // case the UI falls back to a static "a few minutes" estimate.
+    @SerialName("timeEstimate")
+    val timeEstimate: Int? = null,
 )

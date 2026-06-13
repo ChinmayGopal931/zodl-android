@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cash.z.ecc.android.sdk.model.Zatoshi
@@ -45,6 +47,7 @@ import kotlin.math.absoluteValue
 internal fun BalanceCard(
     balanceState: BalanceWidgetState,
     chartState: BalanceChartState,
+    zecUsdPrice: BigDecimal? = null,
     modifier: Modifier = Modifier,
 ) {
     val c = ZappTheme.colors
@@ -59,7 +62,7 @@ internal fun BalanceCard(
         ZappSectionLabel(text = stringResource(R.string.home_balance_total_label))
         Spacer(Modifier.height(8.dp))
 
-        BalanceAmount(balanceState = balanceState)
+        BalanceAmount(balanceState = balanceState, zecUsdPrice = zecUsdPrice)
 
         // Chart, period selector, and delta only render when there's something
         // to chart. A flat-zero balance hides them entirely — the design says
@@ -76,9 +79,9 @@ internal fun BalanceCard(
 }
 
 @Composable
-private fun BalanceAmount(balanceState: BalanceWidgetState) {
+private fun BalanceAmount(balanceState: BalanceWidgetState, zecUsdPrice: BigDecimal?) {
     val c = ZappTheme.colors
-    val fiat = balanceState.toFiatFormatted()
+    val fiat = balanceState.formattedFiat(zecUsdPrice)
     val context = LocalContext.current
     val zec =
         remember(balanceState.totalBalance, context) {
@@ -115,22 +118,15 @@ private fun BalanceAmount(balanceState: BalanceWidgetState) {
             style = ZappTheme.typography.caption.copy(color = c.textMuted),
         )
     } else {
-        Row {
-            BasicText(
-                text = zec,
-                style = wholeStyle,
-                maxLines = 1,
-                softWrap = false,
-                modifier = Modifier.alignByBaseline(),
-            )
-            BasicText(
-                text = " ZEC",
-                style = fractionStyle,
-                maxLines = 1,
-                softWrap = false,
-                modifier = Modifier.alignByBaseline(),
-            )
-        }
+        // Auto-shrink so a long balance can't clip the "ZEC" suffix off the right edge. Drop the absolute
+        // lineHeight/letterSpacing so the line box and tracking scale with the chosen font size.
+        BasicText(
+            text = "$zec ZEC",
+            style = wholeStyle.copy(lineHeight = TextUnit.Unspecified, letterSpacing = TextUnit.Unspecified),
+            maxLines = 1,
+            softWrap = false,
+            autoSize = TextAutoSize.StepBased(minFontSize = 22.sp, maxFontSize = 52.sp),
+        )
     }
 }
 
@@ -244,26 +240,31 @@ private data class FormattedFiat(
 )
 
 @Composable
-private fun BalanceWidgetState.toFiatFormatted(): FormattedFiat? {
-    val exchange = exchangeRate
-    if (exchange !is ExchangeRateState.Data) return null
-    val conversion = exchange.currencyConversion ?: return null
-
-    return remember(totalBalance, conversion.priceOfZec, exchange.fiatCurrency.symbol) {
-        val zec = totalBalance.convertZatoshiToZec()
-        val fiatAmount =
-            zec
-                .multiply(BigDecimal(conversion.priceOfZec), MathContext.DECIMAL128)
-                .setScale(2, RoundingMode.HALF_UP)
-        val symbol = exchange.fiatCurrency.symbol
-        val whole = fiatAmount.toBigInteger()
-        val fractionCents = fiatAmount.subtract(BigDecimal(whole)).multiply(BigDecimal(100)).toInt()
-        val wholeFormatted = DecimalFormat("#,###").format(whole)
-        FormattedFiat(
-            whole = "$symbol$wholeFormatted",
-            fraction = ".%02d".format(fractionCents.absoluteValue),
-        )
+private fun BalanceWidgetState.formattedFiat(zecUsdPrice: BigDecimal?): FormattedFiat? {
+    // Prefer the opt-in exchange rate, which respects the user's chosen fiat currency; fall back to the
+    // always-on swap USD price so a fiat value still shows when the exchange rate is off (USD-labelled).
+    val exchangeData = exchangeRate as? ExchangeRateState.Data
+    val conversion = exchangeData?.currencyConversion
+    val (price, symbol) =
+        when {
+            exchangeData != null && conversion != null ->
+                BigDecimal(conversion.priceOfZec) to exchangeData.fiatCurrency.symbol
+            zecUsdPrice != null && zecUsdPrice.signum() > 0 -> zecUsdPrice to "$"
+            else -> return null
+        }
+    return remember(totalBalance, price, symbol) {
+        formatFiat(totalBalance.convertZatoshiToZec().multiply(price, MathContext.DECIMAL128), symbol)
     }
+}
+
+private fun formatFiat(fiatAmount: BigDecimal, symbol: String): FormattedFiat {
+    val scaled = fiatAmount.setScale(2, RoundingMode.HALF_UP)
+    val whole = scaled.toBigInteger()
+    val fractionCents = scaled.subtract(BigDecimal(whole)).multiply(BigDecimal(100)).toInt()
+    return FormattedFiat(
+        whole = "$symbol${DecimalFormat("#,###").format(whole)}",
+        fraction = ".%02d".format(fractionCents.absoluteValue),
+    )
 }
 
 private fun Zatoshi.convertZatoshiToZec(): BigDecimal =

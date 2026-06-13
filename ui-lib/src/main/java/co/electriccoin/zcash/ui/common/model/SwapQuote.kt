@@ -30,6 +30,9 @@ interface SwapQuote {
     val timestamp: Instant
     val deadline: Instant
 
+    /** Provider's estimated time-to-settle in seconds, or null when the provider doesn't supply one. */
+    val estimatedDurationSeconds: Int?
+
     val slippage: BigDecimal
 
     fun getTotal(proposal: Proposal?): BigDecimal

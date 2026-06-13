@@ -182,6 +182,8 @@ import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteArgs
 import co.electriccoin.zcash.ui.screen.swap.quote.SwapQuoteScreen
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageArgs
 import co.electriccoin.zcash.ui.screen.swap.slippage.SwapSlippageScreen
+import co.electriccoin.zcash.ui.screen.swap.upi.bridge.BridgeToBaseArgs
+import co.electriccoin.zcash.ui.screen.swap.upi.bridge.BridgeToBaseScreen
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressScreen
 import co.electriccoin.zcash.ui.screen.swap.upi.scan.ScanUpiArgs
@@ -316,6 +318,7 @@ fun NavGraphBuilder.walletNavGraph(
         composable<SwapArgs> { SwapScreen() }
         composable<UpiOfframpArgs> { SwapScreen(tab = SwapTab.OFFRAMP) }
         composable<UpiOfframpProgressArgs> { UpiOfframpProgressScreen(it.toRoute()) }
+        composable<BridgeToBaseArgs> { BridgeToBaseScreen(it.toRoute()) }
         composable<ScanUpiArgs> { ScanUpiScreen(it.toRoute()) }
         dialogComposable<SwapSlippageArgs> { SwapSlippageScreen(it.toRoute()) }
         dialogComposable<SwapInfoArgs> { SwapInfoScreen() }
