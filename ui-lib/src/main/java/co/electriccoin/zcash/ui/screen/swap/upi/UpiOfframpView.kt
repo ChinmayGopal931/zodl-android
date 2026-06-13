@@ -23,6 +23,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -50,6 +52,7 @@ import co.electriccoin.zcash.ui.design.component.ZashiNumberTextFieldDefaults
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
+import co.electriccoin.zcash.ui.design.component.zapp.ZappFab
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.theme.ZcashTheme
@@ -59,137 +62,142 @@ import org.koin.androidx.compose.koinViewModel
 import java.math.BigDecimal
 
 @Composable
-internal fun UpiOfframpBody(
-    onBack: () -> Unit = {},
-    tabSwitcher: @Composable () -> Unit = {},
-) {
+internal fun UpiOfframpBody(onBack: () -> Unit = {}) {
     val vm = koinViewModel<UpiOfframpVM>()
     val state by vm.state.collectAsStateWithLifecycle()
-    UpiOfframpView(state = state, onBack = onBack, tabSwitcher = tabSwitcher)
+    UpiOfframpView(state = state, onBack = onBack)
 }
 
 @Composable
 internal fun UpiOfframpView(
     state: UpiOfframpState,
     onBack: () -> Unit = {},
-    tabSwitcher: @Composable () -> Unit = {},
 ) {
     val c = ZappTheme.colors
 
     Column(modifier = Modifier.fillMaxSize().background(c.bg)) {
-        Column(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BODY_VERTICAL_PADDING.dp),
-        ) {
-            AmountFieldBlock(
-                label = stringResource(R.string.upi_offramp_you_send),
-                trailingLabel = state.baseBalanceText?.getValue(),
-                tokenLabel = stringResource(R.string.upi_offramp_token_usdc),
-                state = state.usdcInput,
-                isActive = state.primary == UpiOfframpAmountSide.USDC,
-            )
-
-            DirectionSwapButton(onClick = state.onSwapSides)
-
-            AmountFieldBlock(
-                label = stringResource(R.string.upi_offramp_recipient_gets),
-                tokenLabel = stringResource(R.string.upi_offramp_token_inr),
-                state = state.inrInput,
-                isActive = state.primary == UpiOfframpAmountSide.INR,
-            )
-
-            Spacer(modifier = Modifier.height(GAP_LG.dp))
-
-            BasicText(
-                text = state.rateText.getValue(),
-                style = ZappTheme.typography.caption.copy(color = c.textMuted),
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(modifier = Modifier.height(GAP_SM.dp))
-
-            BasicText(
-                text = stringResource(R.string.upi_offramp_limit_hint),
-                style = ZappTheme.typography.caption.copy(color = c.textMuted),
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            Spacer(modifier = Modifier.height(GAP_LG.dp))
-
-            BasicText(
-                text = stringResource(R.string.upi_offramp_upi_id_label),
-                style = ZappTheme.typography.eyebrow.copy(color = c.textMuted),
-            )
-            Spacer(modifier = Modifier.height(GAP_SM.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(modifier = Modifier.weight(1f)) { UpiHandleField(state.upiField) }
-                Spacer(modifier = Modifier.width(GAP_SM.dp))
-                ZashiIconButton(
-                    state =
-                        IconButtonState(
-                            icon = R.drawable.qr_code_icon,
-                            contentDescription = stringRes(R.string.upi_offramp_scan_qr_cd),
-                            onClick = state.onScanQr,
-                        ),
-                    modifier = Modifier.size(SCAN_ICON_BUTTON_SIZE.dp),
+        Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
+            Column(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BODY_VERTICAL_PADDING.dp),
+            ) {
+                AmountFieldBlock(
+                    label = stringResource(R.string.upi_offramp_you_send),
+                    trailingLabel = state.baseBalanceText?.getValue(),
+                    tokenLabel = stringResource(R.string.upi_offramp_token_usdc),
+                    state = state.usdcInput,
+                    isActive = state.primary == UpiOfframpAmountSide.USDC,
                 )
-            }
-
-            Spacer(modifier = Modifier.height(GAP_MD.dp))
-
-            state.errorText?.let { err ->
-                BasicText(
-                    text = err.getValue(),
-                    style =
-                        ZappTheme.typography.caption.copy(
-                            color = c.danger,
-                            fontWeight = FontWeight.Medium,
-                        ),
+    
+                DirectionSwapButton(onClick = state.onSwapSides)
+    
+                AmountFieldBlock(
+                    label = stringResource(R.string.upi_offramp_recipient_gets),
+                    tokenLabel = stringResource(R.string.upi_offramp_token_inr),
+                    state = state.inrInput,
+                    isActive = state.primary == UpiOfframpAmountSide.INR,
                 )
-                Spacer(modifier = Modifier.height(GAP_SM.dp))
-            }
-
-            state.infoText?.let { info ->
+    
+                Spacer(modifier = Modifier.height(GAP_LG.dp))
+    
                 BasicText(
-                    text = info.getValue(),
+                    text = state.rateText.getValue(),
                     style = ZappTheme.typography.caption.copy(color = c.textMuted),
+                    modifier = Modifier.fillMaxWidth(),
                 )
-            }
-
-            state.fundingPlanText?.let { plan ->
+    
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
+    
                 BasicText(
-                    text = plan.getValue(),
-                    style =
-                        ZappTheme.typography.caption.copy(
-                            color = c.text,
-                            fontWeight = FontWeight.Medium,
-                        ),
+                    text = stringResource(R.string.upi_offramp_limit_hint),
+                    style = ZappTheme.typography.caption.copy(color = c.textMuted),
+                    modifier = Modifier.fillMaxWidth(),
                 )
-            }
-
-            state.onDiscardInFlight?.let { onDiscard ->
+    
+                Spacer(modifier = Modifier.height(GAP_LG.dp))
+    
+                BasicText(
+                    text = stringResource(R.string.upi_offramp_upi_id_label),
+                    style = ZappTheme.typography.eyebrow.copy(color = c.textMuted),
+                )
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
-                BasicText(
-                    text = stringResource(R.string.upi_offramp_discard_in_flight),
-                    style =
-                        ZappTheme.typography.caption.copy(
-                            color = c.danger,
-                            textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
-                        ),
-                    modifier = Modifier.clickable(onClick = onDiscard),
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(modifier = Modifier.weight(1f)) { UpiHandleField(state.upiField) }
+                    Spacer(modifier = Modifier.width(GAP_SM.dp))
+                    ZashiIconButton(
+                        state =
+                            IconButtonState(
+                                icon = R.drawable.qr_code_icon,
+                                contentDescription = stringRes(R.string.upi_offramp_scan_qr_cd),
+                                onClick = state.onScanQr,
+                            ),
+                        modifier = Modifier.size(SCAN_ICON_BUTTON_SIZE.dp),
+                    )
+                }
+    
+                Spacer(modifier = Modifier.height(GAP_MD.dp))
+    
+                state.errorText?.let { err ->
+                    BasicText(
+                        text = err.getValue(),
+                        style =
+                            ZappTheme.typography.caption.copy(
+                                color = c.danger,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                    )
+                    Spacer(modifier = Modifier.height(GAP_SM.dp))
+                }
+    
+                state.infoText?.let { info ->
+                    BasicText(
+                        text = info.getValue(),
+                        style = ZappTheme.typography.caption.copy(color = c.textMuted),
+                    )
+                }
+    
+                state.fundingPlanText?.let { plan ->
+                    Spacer(modifier = Modifier.height(GAP_SM.dp))
+                    BasicText(
+                        text = plan.getValue(),
+                        style =
+                            ZappTheme.typography.caption.copy(
+                                color = c.text,
+                                fontWeight = FontWeight.Medium,
+                            ),
+                    )
+                }
+    
+                state.onDiscardInFlight?.let { onDiscard ->
+                    Spacer(modifier = Modifier.height(GAP_SM.dp))
+                    BasicText(
+                        text = stringResource(R.string.upi_offramp_discard_in_flight),
+                        style =
+                            ZappTheme.typography.caption.copy(
+                                color = c.danger,
+                                textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline,
+                            ),
+                        modifier = Modifier.clickable(onClick = onDiscard),
+                    )
+                }
+    
+                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(GAP_LG.dp))
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.height(GAP_LG.dp))
+            ZappFab(
+                icon = Icons.Default.History,
+                contentDescription = stringResource(R.string.p2p_transactions_title),
+                onClick = state.onHistoryClick,
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = BODY_HORIZONTAL_PADDING.dp, bottom = BODY_VERTICAL_PADDING.dp),
+            )
         }
-
-        tabSwitcher()
 
         BottomBar(onBack = onBack, send = state.sendButton)
     }
@@ -376,6 +384,7 @@ private fun PreviewEmpty() {
                     errorText = null,
                     sendButton = ButtonState(stringRes("Send")),
                     onScanQr = {},
+                    onHistoryClick = {},
                 ),
         )
     }
@@ -406,6 +415,7 @@ private fun PreviewFilled() {
                     errorText = null,
                     sendButton = ButtonState(stringRes("Send"), isEnabled = true),
                     onScanQr = {},
+                    onHistoryClick = {},
                     baseBalanceText = stringRes("Available: 0.85 USDC"),
                     fundingPlanText = stringRes("Will bridge 5.88 USDC from your ZEC via NEAR"),
                 ),

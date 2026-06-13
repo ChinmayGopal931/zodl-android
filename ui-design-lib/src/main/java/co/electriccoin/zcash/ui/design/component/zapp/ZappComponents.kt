@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -428,13 +430,18 @@ fun ZappFab(
  * [primaryAction] — typically a [ZappButton] — sits on the RIGHT, horizontally
  * aligned with the back button. Respects system navigation bar insets.
  *
+ * The content row holds a 52dp min height (the [ZappButton] height) so the bar
+ * measures the same with or without a primary action. The surface/border panel
+ * chrome only appears when there is a primary action; a lone back button
+ * renders chrome-free.
+ *
  * Usage: pass this as the `bottomBar` slot of a [androidx.compose.material3.Scaffold].
  */
 @Composable
 fun ZappBottomActionBar(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    primaryAction: (@Composable () -> Unit)? = null,
+    primaryAction: (@Composable RowScope.() -> Unit)? = null,
 ) {
     val c = ZappTheme.colors
     Row(
@@ -444,9 +451,16 @@ fun ZappBottomActionBar(
                 .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(horizontal = 18.dp)
                 .padding(bottom = 8.dp)
-                .background(c.surface)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .padding(12.dp),
+                .then(
+                    if (primaryAction != null) {
+                        Modifier
+                            .background(c.surface)
+                            .border(BorderStroke(1.dp, c.border), RectangleShape)
+                    } else {
+                        Modifier
+                    },
+                ).padding(12.dp)
+                .heightIn(min = 52.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {

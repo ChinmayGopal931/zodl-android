@@ -16,8 +16,8 @@ data class ChatListState(
     val networkSheet: ChatListNetworkSheetState?,
     val tosDialog: ChatListTosDialogState?,
     val leaveDialog: ChatListLeaveDialogState?,
-    /** Pinned "Zapp Support" row; null when the user has no open support tickets. */
-    val supportRow: ChatListSupportRowState?,
+    /** Pinned "Zapp Support" row; always present so support is reachable from Chats. */
+    val supportRow: ChatListSupportRowState,
 )
 
 data class ChatListItemState(
@@ -60,12 +60,11 @@ data class ChatListLeaveDialogState(
 
 /**
  * Aggregate state for the pinned "Zapp Support" parent row. Tapping opens the ticket list,
- * not an individual chat. The row exists only when there is at least one open ticket — its
- * absence from [ChatListState.supportRow] is the "no tickets" signal.
+ * not an individual chat. The row is permanent; [subtitle] carries the latest ticket
+ * message, the open-ticket count, or an invitation to get help when there are no tickets.
  */
 data class ChatListSupportRowState(
-    val ticketCount: Int,
-    val lastMessage: StringResource?,
+    val subtitle: StringResource,
     val totalUnreadCount: Int,
     val onClick: () -> Unit,
 )

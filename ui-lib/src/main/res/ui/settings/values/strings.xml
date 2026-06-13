@@ -31,7 +31,6 @@
     <string name="settings_swap_title">Swap</string>
     <string name="settings_swap_subtitle">Exchange crypto assets</string>
     <string name="settings_server_subtitle">Choose a lightwalletd server</string>
-    <string name="settings_p2p_transactions_subtitle">Balance and order history</string>
 
     <!-- P2P transactions (Settings → Wallet entry). Reached from SettingsTabContent → "P2P
          transactions"; the file lives under settings/ rather than swap/ because the screen is a

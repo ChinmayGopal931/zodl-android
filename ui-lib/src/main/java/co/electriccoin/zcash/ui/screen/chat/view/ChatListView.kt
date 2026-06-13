@@ -1,5 +1,6 @@
 package co.electriccoin.zcash.ui.screen.chat.view
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -22,9 +23,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.Chat
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,11 +81,9 @@ internal fun ChatListView(
                                 bottom = navBarBottom + ZappNavBar.CLEARANCE_DP.dp,
                             ),
                     ) {
-                        state.supportRow?.let { row ->
-                            item(key = "support_row") {
-                                SupportContactRow(state = row)
-                                ZappRowDivider(inset = true)
-                            }
+                        item(key = "support_row") {
+                            SupportContactRow(state = state.supportRow)
+                            ZappRowDivider(inset = true)
                         }
 
                         items(items = state.items, key = { it.id }) { item ->
@@ -102,8 +100,14 @@ internal fun ChatListView(
             }
         }
 
+        val floatingBottom =
+            if (showBackButton) {
+                ZappNavBar.PUSHED_FLOATING_MARGIN_DP.dp
+            } else {
+                ZappNavBar.FAB_BOTTOM_PADDING_DP.dp
+            }
         ZappFab(
-            icon = Icons.Default.Add,
+            icon = Icons.AutoMirrored.Filled.Chat,
             contentDescription = state.newConversationContentDescription.getValue(),
             onClick = state.onNewConversationClick,
             modifier =
@@ -112,7 +116,7 @@ internal fun ChatListView(
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(
                         end = 20.dp,
-                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                        bottom = floatingBottom,
                     ),
         )
 
@@ -125,7 +129,7 @@ internal fun ChatListView(
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(
                             start = 20.dp,
-                            bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                            bottom = floatingBottom,
                         ),
             )
         }
@@ -164,20 +168,11 @@ private fun SupportContactRow(state: ChatListSupportRowState) {
                 .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(44.dp)
-                    .background(c.accent, RectangleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_launcher_foreground),
-                contentDescription = null,
-                tint = c.onAccent,
-                modifier = Modifier.size(28.dp),
-            )
-        }
+        Image(
+            painter = painterResource(R.drawable.img_zapp_logo),
+            contentDescription = null,
+            modifier = Modifier.size(44.dp),
+        )
 
         Spacer(Modifier.size(12.dp))
 
@@ -189,9 +184,7 @@ private fun SupportContactRow(state: ChatListSupportRowState) {
             )
             Spacer(Modifier.height(2.dp))
             BasicText(
-                text =
-                    state.lastMessage?.getValue()
-                        ?: stringRes(R.string.chat_list_support_tickets_fmt, state.ticketCount).getValue(),
+                text = state.subtitle.getValue(),
                 style = ZappTheme.typography.rowSubtitle.copy(color = c.textMuted),
                 maxLines = 1,
             )

@@ -30,16 +30,8 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 
 @Composable
-fun SwapScreen(initialTab: SwapTab = SwapTab.SWAP) {
+fun SwapScreen(tab: SwapTab = SwapTab.SWAP) {
     val navigationRouter = koinInject<NavigationRouter>()
-    var selectedTab by rememberSaveable { mutableStateOf(initialTab) }
-
-    val tabSwitcher: @Composable () -> Unit = {
-        SwapTabSwitcher(
-            selected = selectedTab,
-            onSelect = { selectedTab = it },
-        )
-    }
 
     Column(
         modifier =
@@ -51,24 +43,21 @@ fun SwapScreen(initialTab: SwapTab = SwapTab.SWAP) {
         ZappScreenHeader(
             title =
                 stringResource(
-                    when (selectedTab) {
+                    when (tab) {
                         SwapTab.SWAP -> R.string.swap_title
                         SwapTab.OFFRAMP -> R.string.swap_tab_offramp
                     },
                 ),
         )
 
-        when (selectedTab) {
+        when (tab) {
             SwapTab.SWAP -> {
-                SwapBody(
-                    tabSwitcher = tabSwitcher,
-                )
+                SwapBody()
             }
 
             SwapTab.OFFRAMP -> {
                 UpiOfframpBody(
                     onBack = { navigationRouter.back() },
-                    tabSwitcher = tabSwitcher,
                 )
             }
         }
@@ -76,7 +65,7 @@ fun SwapScreen(initialTab: SwapTab = SwapTab.SWAP) {
 }
 
 @Composable
-private fun SwapBody(tabSwitcher: @Composable () -> Unit = {}) {
+private fun SwapBody() {
     val vm = koinViewModel<SwapVM>()
     val appBarVM = koinViewModel<ZashiTopAppBarVM>()
     val state by vm.state.collectAsStateWithLifecycle()
@@ -101,7 +90,6 @@ private fun SwapBody(tabSwitcher: @Composable () -> Unit = {}) {
                 }
             },
             embeddedInTabHost = true,
-            tabSwitcher = tabSwitcher,
         )
     }
     BackHandler(state != null) { state?.onBack?.invoke() }

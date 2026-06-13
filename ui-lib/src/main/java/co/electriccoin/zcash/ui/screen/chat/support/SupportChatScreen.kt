@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,23 +21,17 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -49,19 +42,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.chat.SupportChatArgs
+import co.electriccoin.zcash.ui.screen.chat.room.ChatRoomInputState
 import co.electriccoin.zcash.ui.screen.chat.view.ConfirmDialog
+import co.electriccoin.zcash.ui.screen.chat.view.InputRow
 import co.electriccoin.zcash.ui.screen.chat.view.MediaAttachmentSheet
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -87,7 +82,8 @@ private fun SupportChatView(state: SupportChatScreenState) {
             Modifier
                 .fillMaxSize()
                 .background(c.bg)
-                .windowInsetsPadding(WindowInsets.statusBars),
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.navigationBars),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             SupportTopBar(
@@ -120,11 +116,27 @@ private fun SupportChatView(state: SupportChatScreenState) {
                         messages = uiState.messages,
                         modifier = Modifier.weight(1f),
                     )
-                    SupportInputBar(
-                        input = uiState.input,
-                        onInputChange = state.onInputChange,
-                        onSend = state.onSend,
-                        onAttach = state.onAttach,
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(c.border),
+                    )
+                    InputRow(
+                        state =
+                            ChatRoomInputState(
+                                value = uiState.input,
+                                placeholder = stringRes(R.string.support_chat_input_placeholder),
+                                canSend = uiState.input.isNotBlank(),
+                                attachContentDescription =
+                                    stringRes(R.string.chat_room_attach_content_description),
+                                sendContentDescription =
+                                    stringRes(R.string.support_chat_send_content_description),
+                                onChange = state.onInputChange,
+                                onSendClick = state.onSend,
+                                onAttachClick = state.onAttach,
+                            ),
                     )
                 }
             }
@@ -158,26 +170,7 @@ private fun SupportTopBar(
 
     ZappScreenHeader(
         title = title,
-        left = {
-            Box(
-                modifier =
-                    Modifier
-                        .size(36.dp)
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = ripple(bounded = false),
-                            onClick = onBack,
-                        ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.support_chat_back_content_description),
-                    tint = ZappTheme.colors.text,
-                    modifier = Modifier.size(20.dp),
-                )
-            }
-        },
+        left = { ZappBackButton(onClick = onBack) },
         right = {
             if (showOverflow) {
                 Box {
@@ -346,103 +339,6 @@ private fun SupportMessageBubble(message: SupportUiMessage) {
                     ZappTheme.typography.body.copy(
                         color = if (isFromLocalUser) c.onAccent else c.text,
                     ),
-            )
-        }
-    }
-}
-
-// ── Input bar ─────────────────────────────────────────────────────────────────
-
-@Composable
-private fun SupportInputBar(
-    input: String,
-    onInputChange: (String) -> Unit,
-    onSend: () -> Unit,
-    onAttach: () -> Unit,
-) {
-    val c = ZappTheme.colors
-    val canSend = input.isNotBlank()
-
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(c.surface)
-                .padding(horizontal = 8.dp, vertical = 8.dp)
-                .windowInsetsPadding(WindowInsets.navigationBars),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier =
-                Modifier
-                    .size(36.dp)
-                    .background(c.surfaceAlt, RectangleShape)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = c.accent),
-                        onClick = onAttach,
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = stringRes(R.string.chat_room_attach_content_description).getValue(),
-                tint = c.accent,
-                modifier = Modifier.size(18.dp),
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        TextField(
-            value = input,
-            onValueChange = onInputChange,
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = 36.dp),
-            placeholder = {
-                BasicText(
-                    text = stringRes(R.string.support_chat_input_placeholder).getValue(),
-                    style = ZappTheme.typography.body.copy(color = c.textSubtle),
-                )
-            },
-            maxLines = 4,
-            shape = RectangleShape,
-            colors =
-                TextFieldDefaults.colors(
-                    focusedContainerColor = c.surfaceInput,
-                    unfocusedContainerColor = c.surfaceInput,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    focusedTextColor = c.text,
-                    unfocusedTextColor = c.text,
-                    cursorColor = c.accent,
-                ),
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        Box(
-            modifier =
-                Modifier
-                    .size(36.dp)
-                    .background(if (canSend) c.accent else c.surfaceAlt, RectangleShape)
-                    .border(BorderStroke(1.dp, c.border), RectangleShape)
-                    .clickable(
-                        enabled = canSend,
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = ripple(color = c.onAccent),
-                        onClick = onSend,
-                    ),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowUpward,
-                contentDescription = stringResource(R.string.support_chat_send_content_description),
-                tint = if (canSend) c.onAccent else c.textSubtle,
-                modifier = Modifier.size(18.dp),
             )
         }
     }

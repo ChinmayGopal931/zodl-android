@@ -71,7 +71,7 @@ import co.electriccoin.zcash.ui.design.component.ZashiImageButton
 import co.electriccoin.zcash.ui.design.component.ZashiInfoText
 import co.electriccoin.zcash.ui.design.component.listitem.SimpleListItemState
 import co.electriccoin.zcash.ui.design.component.listitem.ZashiSimpleListItem
-import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButtonVariant
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
@@ -97,7 +97,6 @@ internal fun SwapView(
     appBarState: ZashiMainTopAppBarState,
     onSideEffect: (amountFocusRequester: FocusRequester) -> Unit = { },
     embeddedInTabHost: Boolean = false,
-    tabSwitcher: @Composable () -> Unit = {},
 ) {
     val amountFocusRequester = remember { FocusRequester() }
     val c = ZappTheme.colors
@@ -196,9 +195,6 @@ internal fun SwapView(
                 }
             }
         }
-
-        // ── Tab switcher (when embedded in tab host) ────────────────────────
-        tabSwitcher()
 
         // ── Bottom action bar ────────────────────────────────────────────────
         SwapBottomBar(state)
@@ -345,55 +341,44 @@ private fun ReceivingToRow(state: SwapState) {
 
 @Composable
 private fun SwapBottomBar(state: SwapState) {
-    val c = ZappTheme.colors
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(horizontal = 18.dp)
-                .padding(bottom = 8.dp)
-                .background(c.surface)
-                .border(BorderStroke(1.dp, c.border), RectangleShape)
-                .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        ZappBackButton(onClick = state.onBack)
-        Row(
-            modifier = Modifier.padding(start = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            SwapSlippageButton(state.slippage)
-            // Top Up takes precedence when balance is zero
-            when {
-                state.topUpButton != null -> {
-                    ZappButton(
-                        text = state.topUpButton.text.getValue(),
-                        modifier = Modifier.weight(1f),
-                        variant = ZappButtonVariant.Primary,
-                        onClick = state.topUpButton.onClick,
-                    )
-                }
+    ZappBottomActionBar(
+        onBack = state.onBack,
+        primaryAction = {
+            Row(
+                modifier = Modifier.weight(1f).padding(start = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SwapSlippageButton(state.slippage)
+                // Top Up takes precedence when balance is zero
+                when {
+                    state.topUpButton != null -> {
+                        ZappButton(
+                            text = state.topUpButton.text.getValue(),
+                            modifier = Modifier.weight(1f),
+                            variant = ZappButtonVariant.Primary,
+                            onClick = state.topUpButton.onClick,
+                        )
+                    }
 
-                state.primaryButton != null -> {
-                    ZappButton(
-                        text = state.primaryButton.text.getValue(),
-                        enabled = state.primaryButton.isEnabled,
-                        variant =
-                            if (state.primaryButton.style == ButtonStyle.DESTRUCTIVE1) {
-                                ZappButtonVariant.Danger
-                            } else {
-                                ZappButtonVariant.Primary
-                            },
-                        modifier = Modifier.weight(1f),
-                        onClick = state.primaryButton.onClick,
-                    )
+                    state.primaryButton != null -> {
+                        ZappButton(
+                            text = state.primaryButton.text.getValue(),
+                            enabled = state.primaryButton.isEnabled,
+                            variant =
+                                if (state.primaryButton.style == ButtonStyle.DESTRUCTIVE1) {
+                                    ZappButtonVariant.Danger
+                                } else {
+                                    ZappButtonVariant.Primary
+                                },
+                            modifier = Modifier.weight(1f),
+                            onClick = state.primaryButton.onClick,
+                        )
+                    }
                 }
             }
-        }
-    }
+        },
+    )
 }
 
 @Composable

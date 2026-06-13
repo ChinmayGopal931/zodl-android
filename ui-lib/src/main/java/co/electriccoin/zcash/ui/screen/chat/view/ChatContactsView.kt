@@ -104,8 +104,8 @@ internal fun ChatContactsView(
                                 style = ZappTheme.typography.groupLabel.copy(color = c.textMuted),
                                 modifier =
                                     Modifier.padding(
-                                        start = 20.dp,
-                                        end = 20.dp,
+                                        start = 18.dp,
+                                        end = 18.dp,
                                         top = 14.dp,
                                         bottom = 4.dp,
                                     ),
@@ -126,6 +126,12 @@ internal fun ChatContactsView(
             }
         }
 
+        val floatingBottom =
+            if (showBackButton) {
+                ZappNavBar.PUSHED_FLOATING_MARGIN_DP.dp
+            } else {
+                ZappNavBar.FAB_BOTTOM_PADDING_DP.dp
+            }
         ZappFab(
             icon = Icons.Default.PersonAdd,
             contentDescription = stringResource(R.string.chat_contacts_add_content_description),
@@ -136,7 +142,7 @@ internal fun ChatContactsView(
                     .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(
                         end = 20.dp,
-                        bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                        bottom = floatingBottom,
                     ),
         )
 
@@ -149,7 +155,7 @@ internal fun ChatContactsView(
                         .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(
                             start = 20.dp,
-                            bottom = ZappNavBar.FAB_BOTTOM_PADDING_DP.dp,
+                            bottom = floatingBottom,
                         ),
             )
         }

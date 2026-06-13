@@ -15,6 +15,7 @@ import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
 import co.electriccoin.zcash.ui.design.component.TextFieldState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.screen.settings.p2p.P2pTransactionsArgs
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpProgressArgs
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -268,6 +269,7 @@ internal class UpiOfframpVM(
                     onClick = ::onSendClick,
                 ),
             onScanQr = ::onScanQr,
+            onHistoryClick = ::onHistoryClick,
             baseBalanceText =
                 balance?.let {
                     stringRes(R.string.upi_offramp_base_balance_label, it.toDisplayString(stripTrailingZeros = true))
@@ -300,6 +302,8 @@ internal class UpiOfframpVM(
     private fun onDiscardInFlight() {
         viewModelScope.launch { checkpointStorage.clear() }
     }
+
+    private fun onHistoryClick() = navigationRouter.forward(P2pTransactionsArgs)
 
     private fun validate(usdc: BigDecimal?, upi: String): StringResource? {
         if (usdc != null && usdc > USDC_CAP) return stringRes(R.string.upi_offramp_error_above_cap)
