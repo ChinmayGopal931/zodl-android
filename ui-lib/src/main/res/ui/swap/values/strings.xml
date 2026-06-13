@@ -88,13 +88,13 @@
     <string name="swap_tab_offramp">Pay a merchant</string>
 
     <!-- UPI Offramp / Scan & Pay form -->
-    <string name="upi_offramp_scan_and_pay">Scan &amp; Pay</string>
-    <string name="upi_offramp_scan_hint">Scan a merchant\'s QR code, or enter their UPI ID below.</string>
+    <string name="upi_offramp_scan_qr">Scan QR code</string>
+    <string name="upi_offramp_or">or</string>
     <string name="upi_offramp_token_inr">INR</string>
     <string name="upi_offramp_amount_label">Amount</string>
     <string name="upi_offramp_usdc_equivalent">≈ %1$s USDC</string>
     <string name="upi_offramp_rate_label">1 USDC ≈ ₹%1$s (estimated)</string>
-    <string name="upi_offramp_upi_id_label">Pay to</string>
+    <string name="upi_offramp_upi_id_label">Enter UPI ID</string>
     <string name="upi_offramp_upi_id_placeholder">merchant@upi</string>
     <string name="upi_offramp_powered_by">Powered by p2p.me</string>
     <string name="upi_offramp_estimate_disclaimer">Estimated. Final amount locks in when the merchant accepts.</string>

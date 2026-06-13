@@ -77,20 +77,18 @@ internal fun UpiOfframpView(
                         .verticalScroll(rememberScrollState())
                         .padding(horizontal = BODY_HORIZONTAL_PADDING.dp, vertical = BODY_VERTICAL_PADDING.dp),
             ) {
+                // Scan or type the merchant's UPI ID — alternatives, not two steps. The centered "or"
+                // divider makes the either/or explicit.
                 ZappButton(
-                    text = stringResource(R.string.upi_offramp_scan_and_pay),
+                    text = stringResource(R.string.upi_offramp_scan_qr),
                     leadingIcon = Icons.Default.QrCodeScanner,
                     variant = ZappButtonVariant.Primary,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = state.onScanQr,
                 )
-                Spacer(modifier = Modifier.height(GAP_SM.dp))
-                BasicText(
-                    text = stringResource(R.string.upi_offramp_scan_hint),
-                    style = ZappTheme.typography.caption.copy(color = c.textMuted),
-                    modifier = Modifier.fillMaxWidth(),
-                )
 
+                Spacer(modifier = Modifier.height(GAP_LG.dp))
+                OrDivider()
                 Spacer(modifier = Modifier.height(GAP_LG.dp))
 
                 OfframpFieldLabel(stringResource(R.string.upi_offramp_upi_id_label))
@@ -240,6 +238,23 @@ private fun UpiHandleField(field: TextFieldState) {
 }
 
 @Composable
+private fun OrDivider() {
+    val c = ZappTheme.colors
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(modifier = Modifier.weight(1f).height(DIVIDER_THICKNESS.dp).background(c.border))
+        BasicText(
+            text = stringResource(R.string.upi_offramp_or),
+            style = ZappTheme.typography.caption.copy(color = c.textMuted),
+            modifier = Modifier.padding(horizontal = GAP_MD.dp),
+        )
+        Box(modifier = Modifier.weight(1f).height(DIVIDER_THICKNESS.dp).background(c.border))
+    }
+}
+
+@Composable
 private fun PoweredByP2p() {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -266,6 +281,7 @@ private const val GAP_XS = 4
 private const val GAP_SM = 6
 private const val GAP_MD = 10
 private const val GAP_LG = 16
+private const val DIVIDER_THICKNESS = 1
 private const val POWERED_BY_LOGO_SIZE = 14
 
 @PreviewScreens
