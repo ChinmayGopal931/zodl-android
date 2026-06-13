@@ -108,10 +108,10 @@
 
     <!-- UPI Offramp progress screen -->
     <string name="upi_offramp_progress_title_in_progress">Sending to merchant</string>
-    <string name="upi_offramp_progress_title_completed">Payment sent</string>
+    <string name="upi_offramp_progress_title_completed">Payment complete</string>
     <string name="upi_offramp_progress_title_failed">Something went wrong</string>
     <string name="upi_offramp_progress_subtitle_recipient">Recipient: %1$s</string>
-    <string name="upi_offramp_progress_subtitle_completed">The merchant has confirmed the UPI transfer.</string>
+    <string name="upi_offramp_progress_subtitle_completed">Your payment is complete and the recipient has been paid.</string>
     <string name="upi_offramp_progress_done_button">Done</string>
     <string name="upi_offramp_progress_close_button">Close</string>
     <string name="upi_offramp_step_init">Setup</string>
@@ -121,13 +121,13 @@
     <string name="upi_offramp_step_approve">Approving USDC</string>
     <string name="upi_offramp_base_balance_label">Available on Base: %1$s USDC</string>
     <string name="upi_offramp_funding_from_base">✓ Using your Base balance, no bridge needed.</string>
-    <string name="upi_offramp_funding_via_near">Will bridge %1$s USDC from your ZEC via NEAR.</string>
     <string name="upi_offramp_funding_need_manual">Need %1$s USDC on Base. Bridge unavailable on this network.</string>
     <string name="upi_offramp_step_place_order">Placing the order</string>
     <string name="upi_offramp_step_wait_acceptance">Waiting for merchant to accept</string>
     <string name="upi_offramp_step_encrypting_upi">Encrypting UPI handle</string>
     <string name="upi_offramp_step_send_upi">Sending encrypted UPI</string>
     <string name="upi_offramp_step_wait_completion">Waiting for merchant payment</string>
+    <string name="upi_offramp_step_completed">Payment complete</string>
 
     <!-- UPI Offramp progress: summary + detail lines + failure card -->
     <string name="upi_offramp_progress_amount_usdc">%1$s USDC</string>
@@ -208,4 +208,33 @@
     <string name="upi_offramp_cancelled_returned_zec">%1$s USDC is in your offramp account, ready to spend or bridge back to ZEC</string>
     <string name="upi_offramp_cancelled_at">Cancelled at %1$s</string>
     <string name="upi_offramp_cancelled_tip">Tip: ask the merchant to generate the UPI QR only after this screen opens, so the order completes before it expires.</string>
+
+    <!-- Reusable Base balance + two-step funding (pay screen additions) -->
+    <string name="upi_offramp_token_usdc">USDC</string>
+    <string name="upi_offramp_add_funds_button">Add funds to Base</string>
+    <string name="upi_offramp_funding_topup_first">You\'ll add about %1$s USDC to Base first (a few minutes), then pay.</string>
+    <string name="upi_offramp_pay_button_add_funds">Add funds to pay</string>
+    <string name="upi_offramp_confirm_title">Confirm payment</string>
+    <string name="upi_offramp_confirm_message">Pay ₹%1$s using about %2$s USDC at ₹%3$s per USDC.</string>
+    <string name="upi_offramp_confirm_pay">Pay now</string>
+    <string name="upi_offramp_confirm_cancel">Cancel</string>
+
+    <!-- Step 1: top up the reusable Base balance by bridging ZEC -->
+    <string name="bridge_to_base_title">Add funds to Base</string>
+    <string name="bridge_to_base_explainer">We bridge your ZEC to Base, where merchant payments settle. This takes a few minutes. After that, paying is instant and you can reuse the balance.</string>
+    <string name="bridge_to_base_amount_label">Amount to add</string>
+    <string name="bridge_to_base_inr_value">≈ ₹%1$s at the current rate</string>
+    <string name="bridge_to_base_eta">Estimated time: ~%1$d min</string>
+    <string name="bridge_to_base_eta_fallback">Estimated time: usually a few minutes</string>
+    <string name="bridge_to_base_merchants_available">Merchants are available now.</string>
+    <string name="bridge_to_base_merchants_unavailable">No merchant has fiat liquidity right now. Your funds will wait on Base, ready when one does.</string>
+    <string name="bridge_to_base_add_button">Add funds</string>
+    <string name="bridge_to_base_bridging_button">Bridging…</string>
+    <string name="bridge_to_base_pay_button">Pay a merchant</string>
+    <string name="bridge_to_base_try_again_button">Try again</string>
+    <string name="bridge_to_base_step_bridging">Bridging from ZEC via NEAR</string>
+    <string name="bridge_to_base_step_arrived">Funds arrived on Base</string>
+    <string name="bridge_to_base_failed_terminal">The bridge couldn\'t complete. If your ZEC was refunded, it will appear at your wallet shortly.</string>
+    <string name="bridge_to_base_failed_retry">The bridge hit a snag. You can try again; it will resume safely without re-sending your ZEC.</string>
+    <string name="bridge_to_base_failed_generic">Couldn\'t start the bridge. Check your connection and try again.</string>
 </resources>

@@ -107,10 +107,10 @@
     <string name="upi_offramp_discard_in_flight">Descartar orden local y empezar de nuevo</string>
 
     <string name="upi_offramp_progress_title_in_progress">Enviando al comerciante</string>
-    <string name="upi_offramp_progress_title_completed">Pago enviado</string>
+    <string name="upi_offramp_progress_title_completed">Pago completado</string>
     <string name="upi_offramp_progress_title_failed">Algo salió mal</string>
     <string name="upi_offramp_progress_subtitle_recipient">Destinatario: %1$s</string>
-    <string name="upi_offramp_progress_subtitle_completed">El comerciante confirmó la transferencia UPI.</string>
+    <string name="upi_offramp_progress_subtitle_completed">Tu pago se completó y el destinatario recibió los fondos.</string>
     <string name="upi_offramp_progress_done_button">Listo</string>
     <string name="upi_offramp_progress_close_button">Cerrar</string>
     <string name="upi_offramp_step_init">Preparación</string>
@@ -120,13 +120,13 @@
     <string name="upi_offramp_step_approve">Aprobando USDC</string>
     <string name="upi_offramp_base_balance_label">Disponible en Base: %1$s USDC</string>
     <string name="upi_offramp_funding_from_base">✓ Usando tu saldo en Base, no se necesita puente.</string>
-    <string name="upi_offramp_funding_via_near">Se transferirán %1$s USDC desde tu ZEC vía NEAR.</string>
     <string name="upi_offramp_funding_need_manual">Necesitas %1$s USDC en Base. El puente no está disponible en esta red.</string>
     <string name="upi_offramp_step_place_order">Creando la orden</string>
     <string name="upi_offramp_step_wait_acceptance">Esperando que el comerciante acepte</string>
     <string name="upi_offramp_step_encrypting_upi">Cifrando UPI</string>
     <string name="upi_offramp_step_send_upi">Enviando UPI cifrado</string>
     <string name="upi_offramp_step_wait_completion">Esperando el pago del comerciante</string>
+    <string name="upi_offramp_step_completed">Pago completado</string>
 
     <string name="upi_offramp_progress_amount_usdc">%1$s USDC</string>
     <string name="upi_offramp_summary_amount">Cantidad</string>
@@ -196,4 +196,33 @@
     <string name="upi_offramp_cancelled_returned_zec">%1$s USDC está en tu cuenta de offramp, listo para gastar o convertir a ZEC</string>
     <string name="upi_offramp_cancelled_at">Cancelada a las %1$s</string>
     <string name="upi_offramp_cancelled_tip">Consejo: pide al comerciante que genere el QR UPI solo después de que esta pantalla se abra, para que la orden se complete antes de expirar.</string>
+
+    <!-- Saldo reutilizable en Base + financiación en dos pasos (pantalla de pago) -->
+    <string name="upi_offramp_token_usdc">USDC</string>
+    <string name="upi_offramp_add_funds_button">Agregar fondos a Base</string>
+    <string name="upi_offramp_funding_topup_first">Primero agregarás unos %1$s USDC a Base (unos minutos) y luego pagas.</string>
+    <string name="upi_offramp_pay_button_add_funds">Agregar fondos para pagar</string>
+    <string name="upi_offramp_confirm_title">Confirmar pago</string>
+    <string name="upi_offramp_confirm_message">Paga ₹%1$s con aproximadamente %2$s USDC a ₹%3$s por USDC.</string>
+    <string name="upi_offramp_confirm_pay">Pagar ahora</string>
+    <string name="upi_offramp_confirm_cancel">Cancelar</string>
+
+    <!-- Paso 1: recarga el saldo reutilizable en Base transfiriendo ZEC -->
+    <string name="bridge_to_base_title">Agregar fondos a Base</string>
+    <string name="bridge_to_base_explainer">Transferimos tus ZEC a Base, donde se liquidan los pagos a comercios. Esto tarda unos minutos. Después, pagar es instantáneo y puedes reutilizar el saldo.</string>
+    <string name="bridge_to_base_amount_label">Monto a agregar</string>
+    <string name="bridge_to_base_inr_value">≈ ₹%1$s al tipo de cambio actual</string>
+    <string name="bridge_to_base_eta">Tiempo estimado: ~%1$d min</string>
+    <string name="bridge_to_base_eta_fallback">Tiempo estimado: normalmente unos minutos</string>
+    <string name="bridge_to_base_merchants_available">Hay comercios disponibles ahora.</string>
+    <string name="bridge_to_base_merchants_unavailable">Ningún comercio tiene liquidez en fiat ahora mismo. Tus fondos quedarán en Base, listos cuando lo haya.</string>
+    <string name="bridge_to_base_add_button">Agregar fondos</string>
+    <string name="bridge_to_base_bridging_button">Transfiriendo…</string>
+    <string name="bridge_to_base_pay_button">Pagar a un comercio</string>
+    <string name="bridge_to_base_try_again_button">Reintentar</string>
+    <string name="bridge_to_base_step_bridging">Transfiriendo desde ZEC vía NEAR</string>
+    <string name="bridge_to_base_step_arrived">Fondos recibidos en Base</string>
+    <string name="bridge_to_base_failed_terminal">La transferencia no pudo completarse. Si tus ZEC fueron reembolsados, aparecerán en tu billetera en breve.</string>
+    <string name="bridge_to_base_failed_retry">La transferencia tuvo un problema. Puedes reintentar; se reanudará de forma segura sin reenviar tus ZEC.</string>
+    <string name="bridge_to_base_failed_generic">No se pudo iniciar la transferencia. Revisa tu conexión e inténtalo de nuevo.</string>
 </resources>
