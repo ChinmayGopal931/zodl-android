@@ -185,11 +185,14 @@ internal class UpiOfframpVM(
         inFlightCheckpoint: OfframpCheckpoint?,
         balance: Usdc6?,
     ): UpiOfframpState {
-        // INR is the source of truth; USDC re-derives from the live rate at the placed precision.
+        // INR is the source of truth; USDC re-derives at the placed precision (2dp-snapped INR,
+        // matching onSendClick) and nulls out a sub-micro amount that floors to 0 USDC.
         val usdcAmount: BigDecimal? =
             inr.amount
                 ?.takeIf { it > BigDecimal.ZERO }
+                ?.setScale(INR_INPUT_SCALE, RoundingMode.FLOOR)
                 ?.divide(currentRate, USDC_INPUT_SCALE, RoundingMode.FLOOR)
+                ?.takeIf { it > BigDecimal.ZERO }
         val validationError =
             if (inFlightCheckpoint != null) {
                 stringRes(R.string.upi_offramp_error_in_flight)

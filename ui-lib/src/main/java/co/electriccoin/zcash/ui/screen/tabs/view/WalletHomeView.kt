@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.repository.SwapRepository
+import co.electriccoin.zcash.ui.common.usecase.EnsureSwapAssetsLoadedUseCase
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.component.zapp.ZappSectionLabel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -66,8 +67,9 @@ internal fun WalletHomeView() {
     // The send screen sources its USD figure from the 1-Click swap asset list (always on, no opt-in),
     // so the balance card reuses it for parity. Ensure the catalog is loaded even if swap was never opened.
     val swapRepository = koinInject<SwapRepository>()
+    val ensureSwapAssetsLoaded = koinInject<EnsureSwapAssetsLoadedUseCase>()
     val swapAssets by swapRepository.assets.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) { swapRepository.requestRefreshAssetsOnce() }
+    LaunchedEffect(Unit) { ensureSwapAssetsLoaded() }
 
     val c = ZappTheme.colors
 
