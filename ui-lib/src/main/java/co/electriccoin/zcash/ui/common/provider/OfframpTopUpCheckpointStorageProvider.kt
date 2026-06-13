@@ -20,8 +20,8 @@ data class OfframpTopUpCheckpoint(
 ) {
     init {
         require(bridgeDepositAddress.isNotBlank()) { "bridgeDepositAddress must not be blank" }
-        require(runCatching { BigInteger(addUsdcMicroDecimal) }.isSuccess) {
-            "OfframpTopUpCheckpoint.addUsdcMicroDecimal must be a decimal integer, got '$addUsdcMicroDecimal'"
+        require(runCatching { BigInteger(addUsdcMicroDecimal) > BigInteger.ZERO }.getOrDefault(false)) {
+            "OfframpTopUpCheckpoint.addUsdcMicroDecimal must be a positive micro amount, got '$addUsdcMicroDecimal'"
         }
     }
 }

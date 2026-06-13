@@ -14,17 +14,23 @@ import co.electriccoin.zcash.ui.common.provider.StoreCorruptedException
 import co.electriccoin.zcash.ui.design.component.ButtonState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
+import co.electriccoin.zcash.ui.design.component.zapp.ZappConfirmationState
 import co.electriccoin.zcash.ui.design.util.StringResource
 import co.electriccoin.zcash.ui.design.util.ellipsizeMiddle
 import co.electriccoin.zcash.ui.design.util.stringRes
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpStep
 import co.electriccoin.zcash.ui.screen.swap.upi.progress.UpiOfframpStepStatus
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -77,12 +83,30 @@ internal class BridgeToBaseVM(
     private val phase = MutableStateFlow<Phase>(Phase.Input)
     private val priming = MutableStateFlow(Priming())
 
+    // Confirmation shown when the user backs out mid-bridge, so an in-flight bridge isn't silently
+    // abandoned. Surfaced separately from [state]. Null = hidden.
+    private val leaveConfirmation = MutableStateFlow<ZappConfirmationState?>(null)
+    val leaveConfirmationState: StateFlow<ZappConfirmationState?> = leaveConfirmation.asStateFlow()
+
     private var smartAccountAddress: Address? = null
     private var bridgeJob: Job? = null
 
     init {
         viewModelScope.launch { resolveAndPrime() }
         viewModelScope.launch { resumeIfInFlight() }
+        // Re-probe the amount-sensitive hints (merchant availability, ETA) when the entered amount
+        // changes; collectLatest cancels the prior probe so rapid typing doesn't pile up RPCs.
+        viewModelScope.launch {
+            amount
+                .map { parseUsdc(it) }
+                .distinctUntilChanged()
+                .collectLatest {
+                    if (phase.value is Phase.Input) {
+                        refreshAvailability()
+                        refreshEta()
+                    }
+                }
+        }
     }
 
     val state: StateFlow<BridgeToBaseState> =
@@ -148,18 +172,33 @@ internal class BridgeToBaseVM(
     }
 
     private suspend fun resumeIfInFlight() {
-        val existing =
-            try {
-                checkpointStorage.get()
-            } catch (e: StoreCorruptedException) {
-                Twig.warn(e) { "BridgeToBaseVM: corrupted top-up checkpoint, discarding" }
-                checkpointStorage.clear()
-                null
-            } ?: return
-        val addUsdc = runCatching { Usdc6(BigInteger(existing.addUsdcMicroDecimal)) }.getOrNull() ?: return
-        amount.update { NumberTextFieldInnerState.fromAmount(addUsdc.whole.setScale(DISPLAY_SCALE, RoundingMode.FLOOR)) }
+        // A read failure here just skips auto-resume; onAddFunds re-checks before starting, so a missed
+        // resume can't cause a double-send.
+        val existing = (readCheckpoint() as? CheckpointRead.Ok)?.checkpoint ?: return
+        val addUsdc = existing.addUsdc() ?: return
+        amount.update { amountField(addUsdc) }
         startBridge(addUsdc, resumeHandle = existing.bridgeDepositAddress)
     }
+
+    private sealed interface CheckpointRead {
+        data class Ok(val checkpoint: OfframpTopUpCheckpoint?) : CheckpointRead
+
+        data object Failed : CheckpointRead
+    }
+
+    private suspend fun readCheckpoint(): CheckpointRead =
+        try {
+            CheckpointRead.Ok(checkpointStorage.get())
+        } catch (e: StoreCorruptedException) {
+            Twig.warn(e) { "BridgeToBaseVM: corrupted top-up checkpoint, discarding" }
+            checkpointStorage.clear()
+            CheckpointRead.Ok(null)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (@Suppress("TooGenericExceptionCaught") e: Exception) {
+            Twig.warn(e) { "BridgeToBaseVM: top-up checkpoint read failed" }
+            CheckpointRead.Failed
+        }
 
     private fun startBridge(addUsdc: Usdc6, resumeHandle: String?) {
         if (bridgeJob?.isActive == true) return
@@ -167,7 +206,7 @@ internal class BridgeToBaseVM(
         bridgeJob =
             viewModelScope.launch {
                 orchestrator.bridgeToBase(addUsdc, resumeHandle).collect { status ->
-                    Twig.info { "BridgeToBase status=$status" }
+                    Twig.info { "BridgeToBase status=${status::class.simpleName}" }
                     onBridgeStatus(addUsdc, status)
                 }
             }
@@ -241,9 +280,38 @@ internal class BridgeToBaseVM(
             steps = stepsFor(currentPhase),
             isInputVisible = isInput,
             primaryButton = primaryButtonFor(currentPhase, entered),
-            onBack = { navigationRouter.back() },
+            onBack = ::onBackRequested,
         )
     }
+
+    // Confirm before abandoning an in-flight bridge; otherwise just leave.
+    private fun onBackRequested() {
+        if (phase.value is Phase.Bridging) {
+            leaveConfirmation.update { leaveConfirmationSheet() }
+        } else {
+            navigationRouter.back()
+        }
+    }
+
+    private fun leaveConfirmationSheet() =
+        ZappConfirmationState(
+            title = stringRes(R.string.bridge_to_base_leave_title),
+            message = stringRes(R.string.bridge_to_base_leave_message),
+            primaryButton =
+                ButtonState(
+                    text = stringRes(R.string.bridge_to_base_leave_confirm),
+                    onClick = {
+                        leaveConfirmation.update { null }
+                        navigationRouter.back()
+                    },
+                ),
+            secondaryButton =
+                ButtonState(
+                    text = stringRes(R.string.bridge_to_base_leave_stay),
+                    onClick = { leaveConfirmation.update { null } },
+                ),
+            onBack = { leaveConfirmation.update { null } },
+        )
 
     private fun inrValueText(usdc: Usdc6, sellRate: BigDecimal): StringResource {
         val inr = usdc.whole.multiply(sellRate).setScale(INR_DISPLAY_SCALE, RoundingMode.FLOOR)
@@ -328,7 +396,22 @@ internal class BridgeToBaseVM(
 
     private fun onAddFunds() {
         val usdc = enteredUsdc() ?: return
-        startBridge(usdc, resumeHandle = null)
+        viewModelScope.launch {
+            // Never open a fresh bridge while a persisted one exists — a tap during the init checkpoint
+            // read (before resumeIfInFlight starts its job) would otherwise open a second bridge and
+            // double-send ZEC. On a read failure, refuse to start rather than risk it.
+            when (val read = readCheckpoint()) {
+                is CheckpointRead.Failed -> failGeneric()
+                is CheckpointRead.Ok -> {
+                    val existing = read.checkpoint
+                    if (existing == null) {
+                        startBridge(usdc, resumeHandle = null)
+                    } else {
+                        startBridge(existing.addUsdc() ?: usdc, resumeHandle = existing.bridgeDepositAddress)
+                    }
+                }
+            }
+        }
     }
 
     private fun onTryAgain() {
@@ -344,6 +427,12 @@ internal class BridgeToBaseVM(
         }
     }
 
+    private fun failGeneric() {
+        phase.update {
+            Phase.Failed(stringRes(R.string.bridge_to_base_failed_generic), resumeHandle = null)
+        }
+    }
+
     private fun enteredUsdc(): Usdc6? = parseUsdc(amount.value)
 
     private fun parseUsdc(state: NumberTextFieldInnerState): Usdc6? =
@@ -354,11 +443,17 @@ internal class BridgeToBaseVM(
             ?.let { Usdc6.ofWhole(it) }
             ?.takeIf { it > Usdc6.ZERO }
 
+    private fun OfframpTopUpCheckpoint.addUsdc(): Usdc6? =
+        runCatching { Usdc6(BigInteger(addUsdcMicroDecimal)) }.getOrNull()?.takeIf { it > Usdc6.ZERO }
+
+    private fun amountField(usdc: Usdc6): NumberTextFieldInnerState =
+        NumberTextFieldInnerState.fromAmount(usdc.whole.setScale(DISPLAY_SCALE, RoundingMode.FLOOR))
+
     private fun initialAmount(): NumberTextFieldInnerState =
         args.prefillUsdcMicro
             ?.let { runCatching { Usdc6(BigInteger(it)) }.getOrNull() }
             ?.takeIf { it > Usdc6.ZERO }
-            ?.let { NumberTextFieldInnerState.fromAmount(it.whole.setScale(DISPLAY_SCALE, RoundingMode.FLOOR)) }
+            ?.let { amountField(it) }
             ?: NumberTextFieldInnerState()
 
     companion object {

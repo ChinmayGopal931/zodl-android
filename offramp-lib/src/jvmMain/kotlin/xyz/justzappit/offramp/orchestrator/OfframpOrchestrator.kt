@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import xyz.justzappit.evm.abi.AbiDecoder
 import xyz.justzappit.evm.abi.AbiEncoder
 import xyz.justzappit.evm.abi.keccak256
 import xyz.justzappit.evm.crypto.Ecies
@@ -48,6 +47,7 @@ import xyz.justzappit.offramp.p2p.SubgraphClient
 import xyz.justzappit.offramp.p2p.UpiPayUri
 import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.getOrCreate
+import xyz.justzappit.offramp.p2p.getSmallOrderFixedFeePay
 import xyz.justzappit.offramp.p2p.getUsdcBalance
 import java.math.BigInteger
 
@@ -277,7 +277,10 @@ class OfframpOrchestrator(
                     depositAddress = addr
                     emit(BridgeToBaseStatus.Bridging(amount = addUsdc, depositAddress = addr))
                 }
-                val newBalance = Usdc6(usdcBalanceOf(accountAddress))
+                // The bridge has settled (1-Click SUCCESS); the balance read is display-only. Don't let
+                // its RPC blip collapse a completed, irreversible bridge into Failed — fall back to the
+                // added amount, which the screen's own balance poll corrects on the next refresh.
+                val newBalance = runCatching { Usdc6(usdcBalanceOf(accountAddress)) }.getOrDefault(addUsdc)
                 emit(BridgeToBaseStatus.Complete(addedAmount = addUsdc, baseBalance = newBalance))
             } catch (e: CancellationException) {
                 throw e
@@ -503,20 +506,8 @@ class OfframpOrchestrator(
         return PriceConfigDecoder.decode(ret).sellPriceAsRate()
     }
 
-    // The Diamond pulls `smallOrderFixedFeePay` as a separate transferFrom inside setSellOrderUpi
-    // (on top of `placed`). If allowance is short of `placed + fee`, the contract atomic-emits
-    // `CancelledOrders` from inside the user's own setUpi call — visually indistinguishable from
-    // a merchant decline but actually a silent allowance underflow. Verified mainnet 2026-05-24:
-    // 0.99 USDC orders cancelled atomically with allowance == placed; same orders completed once
-    // we approved `placed + fee`. user-app-client sidesteps this by approving `MAX_UINT256` once.
-    private suspend fun readSmallOrderFixedFeePay(currency: CurrencyCode): Usdc6 {
-        val ret =
-            rpc.ethCall(
-                to = network.diamondAddress,
-                data = DiamondCalls.getSmallOrderFixedFeePayCalldata(currency),
-            )
-        return Usdc6(AbiDecoder(ret).also { it.requireWords(1) }.uint(0))
-    }
+    private suspend fun readSmallOrderFixedFeePay(currency: CurrencyCode): Usdc6 =
+        rpc.getSmallOrderFixedFeePay(network.diamondAddress, currency)
 
     private suspend fun resolveFallbackFiat(checkpoint: OfframpCheckpoint): Usdc6 {
         val rate = runCatching { readSellPriceInrPerUsdc(checkpoint.currency) }.getOrNull()

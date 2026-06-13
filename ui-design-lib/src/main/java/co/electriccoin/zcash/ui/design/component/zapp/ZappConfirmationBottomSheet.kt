@@ -33,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.design.component.ButtonState
+import co.electriccoin.zcash.ui.design.component.ModalBottomSheetState
 import co.electriccoin.zcash.ui.design.component.rememberInScreenModalBottomSheetState
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.StringResource
@@ -62,7 +63,9 @@ fun ZappConfirmationBottomSheet(state: ZappConfirmationState?) {
             contentWindowInsets = { WindowInsets(0, 0, 0, 0) },
         ) {
             BackHandler { active.onBack() }
-            ZappConfirmationContent(active)
+            // weight(1f, false): the scroll column yields space to the bottom-inset Spacer below so tall
+            // content scrolls internally instead of running under the navigation bar (upstream idiom).
+            ZappConfirmationContent(active, Modifier.weight(1f, false))
             Spacer(modifier = Modifier.windowInsetsBottomHeight(WindowInsets.systemBars))
             LaunchedEffect(Unit) { sheetState.show() }
         }
@@ -79,15 +82,15 @@ data class ZappConfirmationState(
     val message: StringResource,
     val primaryButton: ButtonState,
     val secondaryButton: ButtonState? = null,
-    val onBack: () -> Unit,
-)
+    override val onBack: () -> Unit,
+) : ModalBottomSheetState
 
 @Composable
-private fun ZappConfirmationContent(state: ZappConfirmationState) {
+private fun ZappConfirmationContent(state: ZappConfirmationState, modifier: Modifier = Modifier) {
     val c = ZappTheme.colors
     Column(
         modifier =
-            Modifier
+            modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = HORIZONTAL_PADDING.dp),

@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cash.z.ecc.android.sdk.model.Zatoshi
@@ -117,10 +118,11 @@ private fun BalanceAmount(balanceState: BalanceWidgetState, zecUsdPrice: BigDeci
             style = ZappTheme.typography.caption.copy(color = c.textMuted),
         )
     } else {
-        // Auto-shrink so a long balance can't clip the "ZEC" suffix off the right edge.
+        // Auto-shrink so a long balance can't clip the "ZEC" suffix off the right edge. Drop the absolute
+        // lineHeight/letterSpacing so the line box and tracking scale with the chosen font size.
         BasicText(
             text = "$zec ZEC",
-            style = wholeStyle,
+            style = wholeStyle.copy(lineHeight = TextUnit.Unspecified, letterSpacing = TextUnit.Unspecified),
             maxLines = 1,
             softWrap = false,
             autoSize = TextAutoSize.StepBased(minFontSize = 22.sp, maxFontSize = 52.sp),
@@ -239,22 +241,19 @@ private data class FormattedFiat(
 
 @Composable
 private fun BalanceWidgetState.formattedFiat(zecUsdPrice: BigDecimal?): FormattedFiat? {
-    // Prefer the always-on swap USD price (the same source the send screen uses) so the balance
-    // shows a fiat value even when the opt-in exchange rate is off; fall back to the exchange rate,
-    // which respects the user's chosen fiat currency.
-    if (zecUsdPrice != null && zecUsdPrice.signum() > 0) {
-        return remember(totalBalance, zecUsdPrice) {
-            formatFiat(totalBalance.convertZatoshiToZec().multiply(zecUsdPrice, MathContext.DECIMAL128), "$")
+    // Prefer the opt-in exchange rate, which respects the user's chosen fiat currency; fall back to the
+    // always-on swap USD price so a fiat value still shows when the exchange rate is off (USD-labelled).
+    val exchangeData = exchangeRate as? ExchangeRateState.Data
+    val conversion = exchangeData?.currencyConversion
+    val (price, symbol) =
+        when {
+            exchangeData != null && conversion != null ->
+                BigDecimal(conversion.priceOfZec) to exchangeData.fiatCurrency.symbol
+            zecUsdPrice != null && zecUsdPrice.signum() > 0 -> zecUsdPrice to "$"
+            else -> return null
         }
-    }
-    val exchange = exchangeRate
-    if (exchange !is ExchangeRateState.Data) return null
-    val conversion = exchange.currencyConversion ?: return null
-    return remember(totalBalance, conversion.priceOfZec, exchange.fiatCurrency.symbol) {
-        formatFiat(
-            totalBalance.convertZatoshiToZec().multiply(BigDecimal(conversion.priceOfZec), MathContext.DECIMAL128),
-            exchange.fiatCurrency.symbol,
-        )
+    return remember(totalBalance, price, symbol) {
+        formatFiat(totalBalance.convertZatoshiToZec().multiply(price, MathContext.DECIMAL128), symbol)
     }
 }
 

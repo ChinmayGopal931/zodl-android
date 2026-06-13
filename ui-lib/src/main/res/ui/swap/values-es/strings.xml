@@ -225,4 +225,8 @@
     <string name="bridge_to_base_failed_terminal">La transferencia no pudo completarse. Si tus ZEC fueron reembolsados, aparecerán en tu billetera en breve.</string>
     <string name="bridge_to_base_failed_retry">La transferencia tuvo un problema. Puedes reintentar; se reanudará de forma segura sin reenviar tus ZEC.</string>
     <string name="bridge_to_base_failed_generic">No se pudo iniciar la transferencia. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="bridge_to_base_leave_title">Transferencia en curso</string>
+    <string name="bridge_to_base_leave_message">Tus ZEC ya van camino a Base y llegarán por sí solos. Puedes salir. Vuelve a abrir "Agregar fondos a Base" cuando quieras para revisarla.</string>
+    <string name="bridge_to_base_leave_confirm">Salir</string>
+    <string name="bridge_to_base_leave_stay">Seguir viendo</string>
 </resources>

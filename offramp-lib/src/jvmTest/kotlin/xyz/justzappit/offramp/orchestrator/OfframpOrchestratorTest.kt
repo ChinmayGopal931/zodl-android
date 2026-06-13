@@ -487,6 +487,37 @@ class OfframpOrchestratorTest {
         }
 
     @Test
+    fun `bridgeToBase resume forwards the persisted handle so the top-up re-polls instead of re-quoting`() =
+        runTest {
+            // The double-send fix for the standalone top-up: a non-null resumeBridgeHandle MUST be handed
+            // to topUp.bridge so it re-polls the already-opened 1-Click deposit, never opening a second
+            // bridge and re-sending the user's ZEC.
+            nextUsdcBalance = ENCODED_FIVE_USDC
+            val seenResumeHandles = mutableListOf<String?>()
+            val orchestrator =
+                orchestratorWith(
+                    funding = OfframpFunding { _, _, _, _ -> FundingOutcome.AlreadyFunded(Usdc6.ZERO) },
+                    topUp = OfframpTopUp { _, _, resumeHandle, onBridgeStarted ->
+                        seenResumeHandles += resumeHandle
+                        resumeHandle?.let { onBridgeStarted(it) }
+                        FundingOutcome.Bridged(depositAddress = resumeHandle ?: "near-deposit-fresh")
+                    },
+                )
+
+            val statuses =
+                orchestrator.bridgeToBase(Usdc6.ofMicros(2_000_000), resumeBridgeHandle = "near-deposit-abc").toList()
+
+            assertEquals(
+                listOf<String?>("near-deposit-abc"),
+                seenResumeHandles,
+                "resume must forward the persisted handle (re-poll, not re-quote)",
+            )
+            val bridging = statuses.filterIsInstance<BridgeToBaseStatus.Bridging>().single()
+            assertEquals("near-deposit-abc", bridging.depositAddress)
+            assertIs<BridgeToBaseStatus.Complete>(statuses.last())
+        }
+
+    @Test
     fun `bridgeToBase surfaces Failed carrying the deposit address when the bridge throws`() =
         runTest {
             val orchestrator =

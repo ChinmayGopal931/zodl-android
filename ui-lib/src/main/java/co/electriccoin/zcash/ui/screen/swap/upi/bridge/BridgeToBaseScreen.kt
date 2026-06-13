@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import co.electriccoin.zcash.ui.design.component.zapp.ZappConfirmationBottomSheet
 import kotlinx.serialization.Serializable
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -22,6 +23,8 @@ data class BridgeToBaseArgs(
 fun BridgeToBaseScreen(args: BridgeToBaseArgs) {
     val vm = koinViewModel<BridgeToBaseVM> { parametersOf(args) }
     val state by vm.state.collectAsStateWithLifecycle()
+    val leaveConfirmation by vm.leaveConfirmationState.collectAsStateWithLifecycle()
     BridgeToBaseView(state = state)
+    ZappConfirmationBottomSheet(leaveConfirmation)
     BackHandler { state.onBack() }
 }

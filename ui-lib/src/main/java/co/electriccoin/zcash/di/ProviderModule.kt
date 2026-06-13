@@ -233,9 +233,8 @@ val providerModule =
                 synchronizerProvider = get(),
             )
         }
-        // One stateless NearBridge instance backs the funding, top-up, and preview capabilities on
-        // mainnet. Lazily realized — never constructed on testnet, where the bindings below pick the
-        // no-route alternatives instead.
+        // One NearBridge instance backs funding, top-up, and preview on mainnet; testnet picks the
+        // no-route alternatives below (only mainnet has a NEAR ZEC↔USDC route).
         single {
             NearBridgeOfframpFunding(
                 rpc = get(),
@@ -245,7 +244,6 @@ val providerModule =
             )
         }
         single<OfframpFunding> {
-            // Network toggle: mainnet bridges ZEC→USDC via NEAR; testnet expects a pre-funded account.
             if (get<P2pNetworkConfig>().chainId == P2pNetworks.MAINNET_CHAIN_ID) {
                 get<NearBridgeOfframpFunding>()
             } else {
@@ -254,7 +252,6 @@ val providerModule =
         }
         single<OfframpRefund> {
             val cfg = get<P2pNetworkConfig>()
-            // Network toggle: mainnet pulls USDC→ZEC via NEAR; testnet keeps the USDC in the account.
             if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
                 NearPullbackOfframpRefund(usdc = cfg.usdcAddress, swapDataSource = get(), wallet = get())
             } else {
@@ -262,7 +259,6 @@ val providerModule =
             }
         }
         single<OfframpTopUp> {
-            // Network toggle: only mainnet has a NEAR route to add funds to Base.
             if (get<P2pNetworkConfig>().chainId == P2pNetworks.MAINNET_CHAIN_ID) {
                 get<NearBridgeOfframpFunding>()
             } else {
@@ -270,7 +266,6 @@ val providerModule =
             }
         }
         single<OfframpTopUpPreview> {
-            // Read-only ETA estimate for the top-up screen; no route on testnet → no estimate.
             if (get<P2pNetworkConfig>().chainId == P2pNetworks.MAINNET_CHAIN_ID) {
                 get<NearBridgeOfframpFunding>()
             } else {

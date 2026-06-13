@@ -184,7 +184,10 @@ class NearBridgeOfframpFunding(
     /**
      * Top-up path: bridge exactly [usdc] onto [account] with no AlreadyFunded short-circuit — the user
      * has deliberately chosen to add this much to their reusable Base balance even if it already holds
-     * some. Verifies the balance grew before reporting success.
+     * some. Reports success on 1-Click SUCCESS without asserting a balance increase: on a resume the
+     * USDC may have landed in a prior session, so an increase check would false-fail a completed bridge.
+     * The fail-closed guards are the quote-echo + destination-address checks in [openBridge], asserted
+     * before any ZEC is sent.
      */
     override suspend fun bridge(
         account: Address,

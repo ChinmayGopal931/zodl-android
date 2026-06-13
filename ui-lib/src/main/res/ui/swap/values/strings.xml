@@ -237,4 +237,8 @@
     <string name="bridge_to_base_failed_terminal">The bridge couldn\'t complete. If your ZEC was refunded, it will appear at your wallet shortly.</string>
     <string name="bridge_to_base_failed_retry">The bridge hit a snag. You can try again; it will resume safely without re-sending your ZEC.</string>
     <string name="bridge_to_base_failed_generic">Couldn\'t start the bridge. Check your connection and try again.</string>
+    <string name="bridge_to_base_leave_title">Bridge in progress</string>
+    <string name="bridge_to_base_leave_message">Your ZEC is already on its way to Base and will arrive on its own. You can leave. Reopen "Add funds to Base" anytime to check on it.</string>
+    <string name="bridge_to_base_leave_confirm">Leave</string>
+    <string name="bridge_to_base_leave_stay">Keep watching</string>
 </resources>
