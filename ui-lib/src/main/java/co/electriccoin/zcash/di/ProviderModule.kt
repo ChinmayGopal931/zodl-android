@@ -33,6 +33,9 @@ import co.electriccoin.zcash.ui.common.provider.NearPullbackOfframpRefund
 import co.electriccoin.zcash.ui.common.provider.OfframpBridgeWallet
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProvider
 import co.electriccoin.zcash.ui.common.provider.OfframpCheckpointStorageProviderImpl
+import co.electriccoin.zcash.ui.common.provider.OfframpTopUpCheckpointStorageProvider
+import co.electriccoin.zcash.ui.common.provider.OfframpTopUpCheckpointStorageProviderImpl
+import co.electriccoin.zcash.ui.common.provider.OfframpTopUpPreview
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProvider
 import co.electriccoin.zcash.ui.common.provider.PersistableWalletProviderImpl
 import co.electriccoin.zcash.ui.common.provider.RealOfframpBridgeWallet
@@ -82,8 +85,10 @@ import xyz.justzappit.offramp.config.P2pConfigProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.funding.NoRouteOfframpRefund
+import xyz.justzappit.offramp.funding.NoRouteOfframpTopUp
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
+import xyz.justzappit.offramp.funding.OfframpTopUp
 import xyz.justzappit.offramp.funding.PreFundedOfframpFunding
 import xyz.justzappit.offramp.p2p.SubgraphClient
 import java.util.Locale
@@ -126,6 +131,7 @@ val providerModule =
 
         // UPI offramp infrastructure (evm-lib + offramp-lib config wiring).
         singleOf(::OfframpCheckpointStorageProviderImpl) bind OfframpCheckpointStorageProvider::class
+        singleOf(::OfframpTopUpCheckpointStorageProviderImpl) bind OfframpTopUpCheckpointStorageProvider::class
         single<HttpClient>(named(OFFRAMP_HTTP_CLIENT_QUALIFIER)) {
             // Pipe ktor's Logging plugin output through Twig so subgraph + RPC errors land in
             // logcat under our "Twig" tag with the OfframpHttp prefix. Without this, transport
@@ -227,19 +233,23 @@ val providerModule =
                 synchronizerProvider = get(),
             )
         }
+        // One stateless NearBridge instance backs the funding, top-up, and preview capabilities on
+        // mainnet. Lazily realized — never constructed on testnet, where the bindings below pick the
+        // no-route alternatives instead.
+        single {
+            NearBridgeOfframpFunding(
+                rpc = get(),
+                usdc = get<P2pNetworkConfig>().usdcAddress,
+                swapDataSource = get(),
+                wallet = get(),
+            )
+        }
         single<OfframpFunding> {
-            val cfg = get<P2pNetworkConfig>()
-            // Network toggle: mainnet bridges ZEC→USDC via NEAR (reusing the swap SwapDataSource);
-            // testnet expects a pre-funded account.
-            if (cfg.chainId == P2pNetworks.MAINNET_CHAIN_ID) {
-                NearBridgeOfframpFunding(
-                    rpc = get(),
-                    usdc = cfg.usdcAddress,
-                    swapDataSource = get(),
-                    wallet = get(),
-                )
+            // Network toggle: mainnet bridges ZEC→USDC via NEAR; testnet expects a pre-funded account.
+            if (get<P2pNetworkConfig>().chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+                get<NearBridgeOfframpFunding>()
             } else {
-                PreFundedOfframpFunding(rpc = get(), usdc = cfg.usdcAddress)
+                PreFundedOfframpFunding(rpc = get(), usdc = get<P2pNetworkConfig>().usdcAddress)
             }
         }
         single<OfframpRefund> {
@@ -249,6 +259,22 @@ val providerModule =
                 NearPullbackOfframpRefund(usdc = cfg.usdcAddress, swapDataSource = get(), wallet = get())
             } else {
                 NoRouteOfframpRefund()
+            }
+        }
+        single<OfframpTopUp> {
+            // Network toggle: only mainnet has a NEAR route to add funds to Base.
+            if (get<P2pNetworkConfig>().chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+                get<NearBridgeOfframpFunding>()
+            } else {
+                NoRouteOfframpTopUp()
+            }
+        }
+        single<OfframpTopUpPreview> {
+            // Read-only ETA estimate for the top-up screen; no route on testnet → no estimate.
+            if (get<P2pNetworkConfig>().chainId == P2pNetworks.MAINNET_CHAIN_ID) {
+                get<NearBridgeOfframpFunding>()
+            } else {
+                OfframpTopUpPreview { _, _ -> null }
             }
         }
         single {

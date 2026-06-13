@@ -97,6 +97,7 @@ val repositoryModule =
                 orderReader = get(),
                 funding = get(),
                 refund = get(),
+                topUp = get(),
                 router = get(),
                 relayIdentityStore = get(),
                 orderRecipientUpiCache = get(),
