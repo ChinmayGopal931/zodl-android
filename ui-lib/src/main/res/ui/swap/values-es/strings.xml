@@ -85,22 +85,23 @@
     <string name="swap_deposit_info_step_4">Es mejor enviar desde una wallet que sea tuya. Enviar desde un exchange puede causar demoras o reembolsos.</string>
 
     <!-- Swap / Offramp tab toggle -->
-    <string name="swap_tab_offramp">Offramp</string>
+    <string name="swap_tab_offramp">Pagar a un comercio</string>
 
-    <!-- UPI Offramp -->
-    <string name="upi_offramp_you_send">Envías</string>
-    <string name="upi_offramp_recipient_gets">El destinatario recibe</string>
-    <string name="upi_offramp_token_usdc">USDC</string>
+    <!-- UPI Offramp / Escanear y pagar -->
+    <string name="upi_offramp_scan_and_pay">Escanear y pagar</string>
+    <string name="upi_offramp_scan_hint">Escanea el código QR de un comercio o ingresa su UPI ID abajo.</string>
     <string name="upi_offramp_token_inr">INR</string>
+    <string name="upi_offramp_amount_label">Monto</string>
+    <string name="upi_offramp_usdc_equivalent">≈ %1$s USDC</string>
     <string name="upi_offramp_rate_label">1 USDC ≈ ₹%1$s (estimado)</string>
-    <string name="upi_offramp_upi_id_label">UPI ID</string>
+    <string name="upi_offramp_upi_id_label">Pagar a</string>
     <string name="upi_offramp_upi_id_placeholder">comercio@banco</string>
-    <string name="upi_offramp_scan_qr_cd">Escanear código QR UPI</string>
+    <string name="upi_offramp_powered_by">Con tecnología de p2p.me</string>
     <string name="upi_offramp_estimate_disclaimer">Estimado. El monto final se fija cuando el comerciante acepta.</string>
     <string name="upi_offramp_limit_hint">Máximo 100 USDC por retiro.</string>
     <string name="upi_offramp_error_above_cap">Los montos superiores a 100 USDC no son compatibles para el retiro.</string>
     <string name="upi_offramp_error_invalid_upi">Eso no parece un identificador UPI (esperaba algo como nombre@banco).</string>
-    <string name="upi_offramp_send_button">Enviar</string>
+    <string name="upi_offramp_send_button">Pagar</string>
     <string name="upi_offramp_resume_button">Reanudar offramp en curso</string>
     <string name="upi_offramp_error_in_flight">Ya hay un offramp en curso. Reanúdalo antes de iniciar otro.</string>
     <string name="upi_offramp_discard_in_flight">Descartar orden local y empezar de nuevo</string>
