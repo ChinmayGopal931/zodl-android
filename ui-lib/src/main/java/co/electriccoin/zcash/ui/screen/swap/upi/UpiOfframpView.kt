@@ -1,14 +1,11 @@
 package co.electriccoin.zcash.ui.screen.swap.upi
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,17 +30,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.component.ButtonState
+import co.electriccoin.zcash.ui.design.component.zapp.ZappConfirmationBottomSheet
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldInnerState
 import co.electriccoin.zcash.ui.design.component.NumberTextFieldState
 import co.electriccoin.zcash.ui.design.component.TextFieldState
-import co.electriccoin.zcash.ui.design.component.ZashiNumberTextField
-import co.electriccoin.zcash.ui.design.component.ZashiNumberTextFieldDefaults
 import co.electriccoin.zcash.ui.design.component.ZashiTextField
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappButton
@@ -61,7 +56,9 @@ import java.math.BigDecimal
 internal fun UpiOfframpBody(onBack: () -> Unit = {}) {
     val vm = koinViewModel<UpiOfframpVM>()
     val state by vm.state.collectAsStateWithLifecycle()
+    val payConfirmation by vm.payConfirmation.collectAsStateWithLifecycle()
     UpiOfframpView(state = state, onBack = onBack)
+    ZappConfirmationBottomSheet(state = payConfirmation)
 }
 
 @Composable
@@ -96,15 +93,15 @@ internal fun UpiOfframpView(
 
                 Spacer(modifier = Modifier.height(GAP_LG.dp))
 
-                FieldLabel(stringResource(R.string.upi_offramp_upi_id_label))
+                OfframpFieldLabel(stringResource(R.string.upi_offramp_upi_id_label))
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
                 UpiHandleField(state.upiField)
 
                 Spacer(modifier = Modifier.height(GAP_LG.dp))
 
-                FieldLabel(stringResource(R.string.upi_offramp_amount_label))
+                OfframpFieldLabel(stringResource(R.string.upi_offramp_amount_label))
                 Spacer(modifier = Modifier.height(GAP_SM.dp))
-                AmountField(
+                OfframpAmountField(
                     tokenLabel = stringResource(R.string.upi_offramp_token_inr),
                     state = state.inrInput,
                 )
@@ -166,6 +163,14 @@ internal fun UpiOfframpView(
                     )
                 }
 
+                Spacer(modifier = Modifier.height(GAP_LG.dp))
+                ZappButton(
+                    text = stringResource(R.string.upi_offramp_add_funds_button),
+                    variant = ZappButtonVariant.Ghost,
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = state.onAddFunds,
+                )
+
                 state.onDiscardInFlight?.let { onDiscard ->
                     Spacer(modifier = Modifier.height(GAP_SM.dp))
                     BasicText(
@@ -204,64 +209,6 @@ internal fun UpiOfframpView(
                     variant = ZappButtonVariant.Primary,
                     modifier = Modifier.weight(1f).padding(start = BOTTOM_BAR_GAP.dp),
                     onClick = state.sendButton.onClick,
-                )
-            },
-        )
-    }
-}
-
-@Composable
-private fun FieldLabel(text: String) {
-    BasicText(
-        text = text,
-        style = ZappTheme.typography.eyebrow.copy(color = ZappTheme.colors.textMuted),
-    )
-}
-
-@Composable
-private fun AmountField(
-    tokenLabel: String,
-    state: NumberTextFieldState,
-) {
-    val c = ZappTheme.colors
-    Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .background(c.surface)
-                .border(BorderStroke(1.dp, c.accent))
-                .padding(AMOUNT_PADDING.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier =
-                Modifier
-                    .background(c.surfaceAlt)
-                    .padding(horizontal = TOKEN_PADDING_H.dp, vertical = TOKEN_PADDING_V.dp),
-        ) {
-            BasicText(
-                text = tokenLabel,
-                style = ZappTheme.typography.button.copy(color = c.text, fontWeight = FontWeight.SemiBold),
-            )
-        }
-        Spacer(modifier = Modifier.width(GAP_MD.dp))
-        ZashiNumberTextField(
-            state = state,
-            modifier = Modifier.fillMaxWidth(),
-            textStyle =
-                ZappTheme.typography.display.copy(
-                    color = c.text,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.End,
-                ),
-            contentPadding = PaddingValues(horizontal = INNER_FIELD_PADDING.dp, vertical = INNER_FIELD_PADDING.dp),
-            placeholder = {
-                ZashiNumberTextFieldDefaults.Placeholder(
-                    modifier = Modifier.fillMaxWidth(),
-                    style = ZappTheme.typography.display,
-                    fontWeight = FontWeight.SemiBold,
-                    textAlign = TextAlign.End,
-                    contentAlignment = Alignment.CenterEnd,
                 )
             },
         )
@@ -319,10 +266,6 @@ private const val GAP_XS = 4
 private const val GAP_SM = 6
 private const val GAP_MD = 10
 private const val GAP_LG = 16
-private const val AMOUNT_PADDING = 12
-private const val TOKEN_PADDING_H = 12
-private const val TOKEN_PADDING_V = 8
-private const val INNER_FIELD_PADDING = 4
 private const val POWERED_BY_LOGO_SIZE = 14
 
 @PreviewScreens
@@ -341,6 +284,7 @@ private fun PreviewEmpty() {
                     errorText = null,
                     sendButton = ButtonState(stringRes("Pay")),
                     onHistoryClick = {},
+                    onAddFunds = {},
                 ),
         )
     }
@@ -366,8 +310,9 @@ private fun PreviewFilled() {
                     errorText = null,
                     sendButton = ButtonState(stringRes("Pay"), isEnabled = true),
                     onHistoryClick = {},
+                    onAddFunds = {},
                     baseBalanceText = stringRes("Available on Base: 0.85 USDC"),
-                    fundingPlanText = stringRes("Will bridge 5.88 USDC from your ZEC via NEAR."),
+                    fundingPlanText = stringRes("You'll add about 5.04 USDC to Base first, then pay."),
                 ),
         )
     }

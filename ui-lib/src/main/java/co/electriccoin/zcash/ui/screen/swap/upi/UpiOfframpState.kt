@@ -15,6 +15,7 @@ internal data class UpiOfframpState(
     val errorText: StringResource?,
     val sendButton: ButtonState,
     val onHistoryClick: () -> Unit,
+    val onAddFunds: () -> Unit,
     val baseBalanceText: StringResource? = null,
     val fundingPlanText: StringResource? = null,
     /** Forgets an in-flight checkpoint locally, without touching the on-chain order. */
