@@ -119,9 +119,9 @@
     <string name="upi_offramp_step_funding_from_base">Usando tu saldo en Base</string>
     <string name="upi_offramp_step_approve">Aprobando USDC</string>
     <string name="upi_offramp_base_balance_label">Disponible en Base: %1$s USDC</string>
-    <string name="upi_offramp_funding_from_base">✓ Usando tu saldo en Base — no se necesita puente.</string>
+    <string name="upi_offramp_funding_from_base">✓ Usando tu saldo en Base, no se necesita puente.</string>
     <string name="upi_offramp_funding_via_near">Se transferirán %1$s USDC desde tu ZEC vía NEAR.</string>
-    <string name="upi_offramp_funding_need_manual">Necesitas %1$s USDC en Base — el puente no está disponible en esta red.</string>
+    <string name="upi_offramp_funding_need_manual">Necesitas %1$s USDC en Base. El puente no está disponible en esta red.</string>
     <string name="upi_offramp_step_place_order">Creando la orden</string>
     <string name="upi_offramp_step_wait_acceptance">Esperando que el comerciante acepte</string>
     <string name="upi_offramp_step_encrypting_upi">Cifrando UPI</string>
@@ -147,7 +147,7 @@
     <string name="upi_offramp_failure_header">Falló en: %1$s</string>
     <string name="upi_offramp_failure_selector">Selector de revert %1$s</string>
 
-    <string name="upi_offramp_revert_buy_order_amount_exceeds_limit">El monto excede tu límite por transacción. El límite crece con los puntos de reputación — completa la verificación en app.p2p.me/limits.</string>
+    <string name="upi_offramp_revert_buy_order_amount_exceeds_limit">El monto excede tu límite por transacción. El límite crece con los puntos de reputación. Completa la verificación en app.p2p.me/limits.</string>
     <string name="upi_offramp_revert_insufficient_reputation">Tu cuenta aún no tiene puntos de reputación. Completa la verificación social o KYC en app.p2p.me/limits antes de realizar órdenes.</string>
     <string name="upi_offramp_revert_order_amount_exceeds_limit">El monto excede el tope global por orden.</string>
     <string name="upi_offramp_revert_sell_amount_exceeds_fiat_limit">El monto excede tu límite fiat diario.</string>
@@ -156,18 +156,18 @@
     <string name="upi_offramp_revert_exchange_not_operational">p2p.me está temporalmente pausado. Inténtalo más tarde.</string>
     <string name="upi_offramp_revert_not_enough_eligible_merchants">Ningún comerciante tiene liquidez fiat para esta orden ahora. Prueba un monto menor, espera a que los comerciantes carguen liquidez, o reintenta.</string>
     <string name="upi_offramp_revert_order_expired">El comerciante no actuó a tiempo. Tus USDC han sido reembolsados.</string>
-    <string name="upi_offramp_revert_upi_already_sent">Esta orden ya tiene una dirección de pago UPI. Esto es un bug — por favor repórtalo.</string>
-    <string name="upi_offramp_revert_invalid_order_upi">El comerciante rechazó el UPI cifrado. Esto puede indicar un problema de formato — por favor repórtalo.</string>
+    <string name="upi_offramp_revert_upi_already_sent">Esta orden ya tiene una dirección de pago UPI. Esto es un bug. Por favor repórtalo.</string>
+    <string name="upi_offramp_revert_invalid_order_upi">El comerciante rechazó el UPI cifrado. Esto puede indicar un problema de formato. Por favor repórtalo.</string>
     <string name="upi_offramp_revert_order_not_accepted">La orden aún no está aceptada. Inténtalo en un momento.</string>
     <string name="upi_offramp_revert_usdc_transfer_failed">La transferencia de USDC falló. Verifica tu saldo y autorización.</string>
-    <string name="upi_offramp_revert_not_authorized">El contrato rechazó la cancelación — es posible que la orden ya esté completada o cancelada.</string>
+    <string name="upi_offramp_revert_not_authorized">El contrato rechazó la cancelación. Es posible que la orden ya esté completada o cancelada.</string>
     <string name="upi_offramp_revert_sdk_long_tail">Error del contrato: %1$s</string>
 
     <string name="upi_offramp_detail_stalled">Conectándote con un comerciante. Tus USDC siguen en tu cuenta; si nadie acepta, la orden se autocancela on-chain.</string>
 
     <string name="upi_offramp_recover_button">Puentear USDC a ZEC</string>
     <string name="upi_offramp_recovery_in_progress_title">Puenteando USDC a ZEC</string>
-    <string name="upi_offramp_recovery_in_progress_subtitle">Enviando tus USDC reembolsados a ZEC mediante NEAR Intents — puede tardar un par de minutos.</string>
+    <string name="upi_offramp_recovery_in_progress_subtitle">Enviando tus USDC reembolsados a ZEC mediante NEAR Intents. Puede tardar un par de minutos.</string>
     <string name="upi_offramp_recovery_in_progress_button">Puenteando…</string>
     <string name="upi_offramp_recovery_done_title">USDC enviado a ZEC</string>
     <string name="upi_offramp_recovery_amount">%1$s USDC enviado al puente</string>
@@ -193,7 +193,7 @@
     <string name="upi_offramp_progress_title_cancelled">Orden cancelada</string>
     <string name="upi_offramp_progress_subtitle_cancelled">Ningún comerciante completó esta orden a tiempo. Tus USDC están en tu cuenta de offramp, listos para puentear.</string>
     <string name="upi_offramp_cancelled_refunded">%1$s USDC devueltos a tu billetera</string>
-    <string name="upi_offramp_cancelled_returned_zec">%1$s USDC están regresando a ZEC — llegarán a tu billetera en breve</string>
+    <string name="upi_offramp_cancelled_returned_zec">%1$s USDC está en tu cuenta de offramp, listo para gastar o convertir a ZEC</string>
     <string name="upi_offramp_cancelled_at">Cancelada a las %1$s</string>
     <string name="upi_offramp_cancelled_tip">Consejo: pide al comerciante que genere el QR UPI solo después de que esta pantalla se abra, para que la orden se complete antes de expirar.</string>
 </resources>
