@@ -14,12 +14,14 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.common.repository.SwapRepository
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.component.zapp.ZappSectionLabel
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -31,6 +33,7 @@ import co.electriccoin.zcash.ui.screen.home.balancechart.BalanceChartVM
 import co.electriccoin.zcash.ui.screen.tabs.viewmodel.WalletSyncStateVM
 import co.electriccoin.zcash.ui.screen.transactionhistory.widget.ActivityWidgetVM
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 import org.koin.core.parameter.parametersOf
 
 @Composable
@@ -60,6 +63,12 @@ internal fun WalletHomeView() {
     val chartState by chartVM.state.collectAsStateWithLifecycle()
     val syncChip by syncVM.state.collectAsStateWithLifecycle()
 
+    // The send screen sources its USD figure from the 1-Click swap asset list (always on, no opt-in),
+    // so the balance card reuses it for parity. Ensure the catalog is loaded even if swap was never opened.
+    val swapRepository = koinInject<SwapRepository>()
+    val swapAssets by swapRepository.assets.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { swapRepository.requestRefreshAssetsOnce() }
+
     val c = ZappTheme.colors
 
     Box(
@@ -88,6 +97,7 @@ internal fun WalletHomeView() {
                 BalanceCard(
                     balanceState = balanceState,
                     chartState = chartState,
+                    zecUsdPrice = swapAssets.zecAsset?.usdPrice,
                     modifier = Modifier.padding(horizontal = 18.dp),
                 )
                 Spacer(Modifier.height(20.dp))
