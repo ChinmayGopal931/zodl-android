@@ -28,7 +28,7 @@ This branch pins `ZCASH_NETWORK=testnet` in `gradle.properties`, so only `Zcasht
 
 ## Release signing & Play Store
 
-The app ships on Google Play as **Zapp for Android** (`xyz.justzappit.zapp`) with Play App Signing enabled. The current upload key lives at `~/keys/justzappit/zapp-upload-v2.keystore` (rotated 2026-06-08); its password is in git-ignored `local.properties` and the team password manager — **never** in git. Full details — key fingerprints, the four `ZCASH_RELEASE_*` build props, retired keys, and the release procedure — are in [`docs/RELEASE_SIGNING.md`](docs/RELEASE_SIGNING.md). **Back up the keystore file and its password**; losing them forces a ~48h upload-key reset.
+The app ships on Google Play as **Zapp for Android** (`xyz.justzappit.zapp`) with Play App Signing enabled. The build reads four git-ignored props from `local.properties` — `ZCASH_RELEASE_KEYSTORE_PATH`, `ZCASH_RELEASE_KEYSTORE_PASSWORD`, `ZCASH_RELEASE_KEY_ALIAS`, `ZCASH_RELEASE_KEY_ALIAS_PASSWORD` (committed **blank** in `gradle.properties`; blank ⇒ unsigned release). The current upload key lives at `~/keys/justzappit/zapp-upload-v2.keystore` (rotated 2026-06-08); its password is in `local.properties` and the team password manager — **never** in git. Full details — key fingerprints, those four build props, retired keys, the release procedure, and **how to onboard another developer to upload** ([Onboarding another uploader](docs/RELEASE_SIGNING.md#onboarding-another-uploader-collaborator)) — are in [`docs/RELEASE_SIGNING.md`](docs/RELEASE_SIGNING.md). **Back up the keystore file and its password**; losing them forces a ~48h upload-key reset.
 
 ## peer.xyz Integration
 

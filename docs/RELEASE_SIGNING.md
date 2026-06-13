@@ -103,6 +103,34 @@ these can be re-registered. Listed here so nobody wastes time on them again:
 | `3F:D5:DE:55:…` | CN=JustZappIt Zapp Upload | 2nd upload key (signed Internal 0.1) | **private key LOST** — the reason for the 2026-06-08 reset |
 | `BE:F1:37:A7:…` | CN=renee chiu | Renee's personal keystore | never registered for this app; not used |
 
+## Onboarding another uploader (collaborator)
+
+Play App Signing keeps the distribution key Google-managed, but **every upload must be signed by the one
+registered upload key** (`1F:D6:DC…` above). There is no "add a second upload key" — a different cert is
+rejected as "same as a previous upload certificate," and swapping keys needs the ~48h reset. So a second
+developer uploads with the **same** keystore. To enable one:
+
+1. **Grant Play Console access.** In Play Console → **Users and permissions**, invite their Google account
+   and grant a permission covering the tracks they need (e.g. *Release to testing tracks* for internal/closed,
+   or *Release to production*). This lets them sign in and upload; it does **not** hand over the upload key.
+2. **Share the upload keystore — securely.** Give them a copy of `zapp-upload-v2.keystore` and its password
+   via the team password manager (or another end-to-end-encrypted channel). **Never** email/Slack/commit the
+   file or password in plaintext. They must use this exact keystore, not generate their own.
+3. **Configure their machine.** They put the keystore anywhere local (e.g. `~/keys/justzappit/`) and set the
+   four props in their own git-ignored `local.properties`, with `ZCASH_RELEASE_KEYSTORE_PATH` pointing at
+   *their* copy:
+
+   ```
+   ZCASH_RELEASE_KEYSTORE_PATH=/Users/<them>/keys/justzappit/zapp-upload-v2.keystore
+   ZCASH_RELEASE_KEYSTORE_PASSWORD=<secret>
+   ZCASH_RELEASE_KEY_ALIAS=zapp-upload
+   ZCASH_RELEASE_KEY_ALIAS_PASSWORD=<secret>
+   ```
+
+4. **Verify before the first upload.** Build per the procedure below, then confirm the bundle is signed by the
+   right key — `keytool -printcert -jarfile <app>.aab` — and that the SHA-1 matches `1F:D6:DC…` above. A
+   mismatch (or an unsigned bundle, i.e. one or more props blank) will be rejected by Play.
+
 ## Release procedure
 
 1. Confirm `local.properties` has the four `ZCASH_RELEASE_*` props set, and `ZCASH_NETWORK` / `P2P_NETWORK`
