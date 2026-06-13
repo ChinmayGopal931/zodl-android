@@ -52,10 +52,16 @@ private fun labelResFor(
     status: OfframpStatus,
     fundedFromBaseObserved: Boolean,
 ): Int =
-    if (step == OfframpStep.FUNDING && (status is OfframpStatus.FundedFromBase || fundedFromBaseObserved)) {
-        R.string.upi_offramp_step_funding_from_base
-    } else {
-        stepLabelRes(step)
+    when {
+        step == OfframpStep.FUNDING && (status is OfframpStatus.FundedFromBase || fundedFromBaseObserved) ->
+            R.string.upi_offramp_step_funding_from_base
+
+        // The final row reads "Waiting for merchant payment" while polling; once COMPLETED it would
+        // misleadingly still say "waiting", so flip it to a done label.
+        step == OfframpStep.WAITING_FOR_COMPLETION && status is OfframpStatus.Completed ->
+            R.string.upi_offramp_step_completed
+
+        else -> stepLabelRes(step)
     }
 
 private fun computeStepStatus(
@@ -83,6 +89,9 @@ private fun computeStepStatus(
             else -> UpiOfframpStepStatus.Pending
         }
     }
+    // Completed is terminal success: every row is done, including the final completion row (which the
+    // status->step mapping otherwise reports as the "current" step and would paint InProgress).
+    if (status is OfframpStatus.Completed) return UpiOfframpStepStatus.Completed
     if (currentStep == null) return UpiOfframpStepStatus.Pending
     val currentIndex = uiIndexFor(currentStep, order)
     return when {
