@@ -21,6 +21,7 @@ import xyz.justzappit.offramp.config.P2pNetworks
 import xyz.justzappit.offramp.funding.FundingOutcome
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
+import xyz.justzappit.offramp.funding.OfframpTopUp
 import xyz.justzappit.offramp.p2p.CircleRouter
 import xyz.justzappit.offramp.p2p.CurrencyCode
 import xyz.justzappit.offramp.p2p.OrderEvents
@@ -461,6 +462,59 @@ class OfframpOrchestratorTest {
             assertTrue(statuses.none { it is OfframpStatus.SendingEncryptedUpi })
         }
 
+    @Test
+    fun `bridgeToBase bridges then completes with the post-bridge Base balance`() =
+        runTest {
+            nextUsdcBalance = ENCODED_FIVE_USDC // balance read after the bridge settles
+            val orchestrator =
+                orchestratorWith(
+                    funding = OfframpFunding { _, _, _, _ -> FundingOutcome.AlreadyFunded(Usdc6.ZERO) },
+                    topUp = OfframpTopUp { _, _, _, onBridgeStarted ->
+                        onBridgeStarted("near-deposit-xyz")
+                        FundingOutcome.Bridged(depositAddress = "near-deposit-xyz")
+                    },
+                )
+
+            val statuses =
+                orchestrator.bridgeToBase(Usdc6.ofMicros(2_000_000), resumeBridgeHandle = null).toList()
+
+            assertIs<BridgeToBaseStatus.Idle>(statuses.first())
+            val bridging = statuses.filterIsInstance<BridgeToBaseStatus.Bridging>().single()
+            assertEquals("near-deposit-xyz", bridging.depositAddress)
+            val complete = assertIs<BridgeToBaseStatus.Complete>(statuses.last())
+            assertEquals(Usdc6.ofMicros(2_000_000), complete.addedAmount)
+            assertEquals(Usdc6.ofMicros(5_000_000), complete.baseBalance)
+        }
+
+    @Test
+    fun `bridgeToBase surfaces Failed carrying the deposit address when the bridge throws`() =
+        runTest {
+            val orchestrator =
+                orchestratorWith(
+                    funding = OfframpFunding { _, _, _, _ -> FundingOutcome.AlreadyFunded(Usdc6.ZERO) },
+                    topUp = OfframpTopUp { _, _, _, onBridgeStarted ->
+                        onBridgeStarted("near-deposit-zzz")
+                        error("bridge blew up")
+                    },
+                )
+
+            val statuses =
+                orchestrator.bridgeToBase(Usdc6.ofMicros(2_000_000), resumeBridgeHandle = null).toList()
+
+            val failed = assertIs<BridgeToBaseStatus.Failed>(statuses.last())
+            assertEquals("near-deposit-zzz", failed.depositAddress)
+        }
+
+    @Test
+    fun `isMerchantAvailable is true with an assignable merchant and false without`() =
+        runTest {
+            getAssignableResponse = ENCODED_ADDRESS_ARRAY_OF_ONE
+            assertTrue(orchestrator.isMerchantAvailable(Usdc6.ofMicros(5_000_000), CurrencyCode.Inr))
+
+            getAssignableResponse = ENCODED_EMPTY_ADDRESS_ARRAY
+            assertTrue(!orchestrator.isMerchantAvailable(Usdc6.ofMicros(5_000_000), CurrencyCode.Inr))
+        }
+
     private fun payRequest() =
         OfframpRequest(
             recipientUpi = "merchant@upi",
@@ -472,6 +526,7 @@ class OfframpOrchestratorTest {
     private fun orchestratorWith(
         funding: OfframpFunding,
         refund: OfframpRefund = OfframpRefund { _, _ -> null },
+        topUp: OfframpTopUp = OfframpTopUp { _, _, _, _ -> error("no top-up configured") },
     ) = OfframpOrchestrator(
         rpc = rpc,
         submitter = signer,
@@ -481,6 +536,7 @@ class OfframpOrchestratorTest {
         orderReader = orderReader,
         funding = funding,
         refund = refund,
+        topUp = topUp,
         router = CircleRouter(random = Random(0), epsilon = 0.0),
         pollIntervalMs = 0,
         stalledAfterMs = 50,

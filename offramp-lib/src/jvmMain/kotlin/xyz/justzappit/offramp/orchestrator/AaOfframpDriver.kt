@@ -10,7 +10,10 @@ import xyz.justzappit.offramp.account.SmartOfframpAccountProvider
 import xyz.justzappit.offramp.config.P2pNetworkConfig
 import xyz.justzappit.offramp.funding.OfframpFunding
 import xyz.justzappit.offramp.funding.OfframpRefund
+import xyz.justzappit.offramp.funding.OfframpTopUp
 import xyz.justzappit.offramp.p2p.CircleRouter
+import xyz.justzappit.offramp.p2p.CurrencyCode
+import xyz.justzappit.offramp.p2p.Usdc6
 import xyz.justzappit.offramp.p2p.InMemoryOrderRecipientUpiCache
 import xyz.justzappit.offramp.p2p.InMemoryRelayIdentityStore
 import xyz.justzappit.offramp.p2p.OrderReadSource
@@ -34,6 +37,7 @@ class AaOfframpDriver(
     private val orderReader: OrderReadSource,
     private val funding: OfframpFunding,
     private val refund: OfframpRefund,
+    private val topUp: OfframpTopUp,
     private val router: CircleRouter = CircleRouter(),
     private val relayIdentityStore: RelayIdentityStore = InMemoryRelayIdentityStore(),
     private val orderRecipientUpiCache: OrderRecipientUpiCache = InMemoryOrderRecipientUpiCache(),
@@ -47,6 +51,14 @@ class AaOfframpDriver(
         flow {
             emitAll(buildOrchestrator().resume(checkpoint))
         }
+
+    override fun bridgeToBase(addUsdc: Usdc6, resumeBridgeHandle: String?): Flow<BridgeToBaseStatus> =
+        flow {
+            emitAll(buildOrchestrator().bridgeToBase(addUsdc, resumeBridgeHandle))
+        }
+
+    override suspend fun isMerchantAvailable(usdc: Usdc6, currency: CurrencyCode): Boolean =
+        buildOrchestrator().isMerchantAvailable(usdc, currency)
 
     override fun bridgeFundsBackToZec(orderId: BigInteger?): Flow<OfframpStatus> =
         flow {
@@ -74,6 +86,7 @@ class AaOfframpDriver(
             orderReader = orderReader,
             funding = funding,
             refund = refund,
+            topUp = topUp,
             router = router,
             relayIdentityStore = relayIdentityStore,
             orderRecipientUpiCache = orderRecipientUpiCache,

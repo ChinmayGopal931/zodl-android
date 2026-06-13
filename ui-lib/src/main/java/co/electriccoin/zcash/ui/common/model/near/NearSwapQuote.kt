@@ -143,6 +143,8 @@ data class NearSwapQuote(
 
     override val deadline: Instant = response.quote.deadline
 
+    override val estimatedDurationSeconds: Int? = response.quote.timeEstimate
+
     override fun getTotal(proposal: Proposal?) = amountInFormatted + (getZecFee(proposal) ?: BigDecimal.ZERO)
 
     override fun getTotalUsd(proposal: Proposal?) = amountInUsd + getZecFeeUsd(proposal)
