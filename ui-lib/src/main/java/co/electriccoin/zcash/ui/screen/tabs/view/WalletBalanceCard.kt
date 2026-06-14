@@ -1,6 +1,8 @@
 package co.electriccoin.zcash.ui.screen.tabs.view
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -107,26 +113,58 @@ private fun BalanceAmount(balanceState: BalanceWidgetState, zecUsdPrice: BigDeci
             letterSpacing = (-1).sp,
         )
 
-    if (fiat != null) {
+    val captionStyle = ZappTheme.typography.caption.copy(color = c.textMuted)
+    val tickerStyle =
+        ZappTheme.typography.displaySecondary.copy(
+            color = c.textMuted,
+            fontSize = 22.sp,
+            lineHeight = 28.sp,
+            fontWeight = FontWeight.Light,
+        )
+
+    // Null the absolute lineHeight/letterSpacing so the line box and tracking scale with autoSize.
+    val zecHero = @Composable {
         Row {
-            BasicText(text = fiat.whole, style = wholeStyle, modifier = Modifier.alignByBaseline())
-            BasicText(text = fiat.fraction, style = fractionStyle, modifier = Modifier.alignByBaseline())
+            BasicText(
+                text = zec,
+                style = wholeStyle.copy(lineHeight = TextUnit.Unspecified, letterSpacing = TextUnit.Unspecified),
+                maxLines = 1,
+                softWrap = false,
+                autoSize = TextAutoSize.StepBased(minFontSize = 22.sp, maxFontSize = 52.sp),
+                modifier = Modifier.weight(1f, fill = false).alignByBaseline(),
+            )
+            BasicText(
+                text = "ZEC",
+                style = tickerStyle,
+                modifier = Modifier.alignByBaseline().padding(start = 6.dp),
+            )
         }
-        Spacer(Modifier.height(2.dp))
-        BasicText(
-            text = "$zec ZEC",
-            style = ZappTheme.typography.caption.copy(color = c.textMuted),
-        )
+    }
+
+    if (fiat != null) {
+        var showZecAsPrimary by rememberSaveable { mutableStateOf(false) }
+        Column(
+            modifier =
+                Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { showZecAsPrimary = !showZecAsPrimary },
+        ) {
+            if (showZecAsPrimary) {
+                zecHero()
+                Spacer(Modifier.height(2.dp))
+                BasicText(text = "${fiat.whole}${fiat.fraction}", style = captionStyle)
+            } else {
+                Row {
+                    BasicText(text = fiat.whole, style = wholeStyle, modifier = Modifier.alignByBaseline())
+                    BasicText(text = fiat.fraction, style = fractionStyle, modifier = Modifier.alignByBaseline())
+                }
+                Spacer(Modifier.height(2.dp))
+                BasicText(text = "$zec ZEC", style = captionStyle)
+            }
+        }
     } else {
-        // Auto-shrink so a long balance can't clip the "ZEC" suffix off the right edge. Drop the absolute
-        // lineHeight/letterSpacing so the line box and tracking scale with the chosen font size.
-        BasicText(
-            text = "$zec ZEC",
-            style = wholeStyle.copy(lineHeight = TextUnit.Unspecified, letterSpacing = TextUnit.Unspecified),
-            maxLines = 1,
-            softWrap = false,
-            autoSize = TextAutoSize.StepBased(minFontSize = 22.sp, maxFontSize = 52.sp),
-        )
+        zecHero()
     }
 }
 

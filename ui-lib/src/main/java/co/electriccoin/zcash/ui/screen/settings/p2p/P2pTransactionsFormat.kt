@@ -79,7 +79,6 @@ internal fun P2pOrderHistoryItem.toRow(network: P2pNetworkConfig): P2pTransactio
         explorerUrl = null,
         detail =
             TransactionDetail(
-                recipientUpiPlain = recipientUpiPlain?.let(::extractUpiVpa),
                 merchantUpiPlain = merchantUpiPlain?.let(::extractUpiVpa),
                 merchantAddressShort =
                     acceptedMerchantAddress
@@ -87,8 +86,6 @@ internal fun P2pOrderHistoryItem.toRow(network: P2pNetworkConfig): P2pTransactio
                         ?.ellipsizeMiddle(prefix = ADDRESS_ELLIPSIS_PREFIX, suffix = ADDRESS_ELLIPSIS_SUFFIX),
                 merchantExplorerUrl = acceptedMerchantAddress?.let { network.addressUrl(it.checksumHex) },
                 placedAt = placedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
-                completedAt = completedAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
-                cancelledAt = cancelledAtEpochSeconds?.let { stringRes(P2pTransactionsFormat.timestamp(it)) },
                 duration =
                     P2pTransactionsFormat
                         .duration(

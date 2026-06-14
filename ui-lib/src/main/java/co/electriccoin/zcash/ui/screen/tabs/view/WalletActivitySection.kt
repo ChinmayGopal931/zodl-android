@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -65,6 +66,12 @@ internal fun LazyListScope.activitySection(state: ActivityWidgetState) {
 @Composable
 private fun ActivityRow(state: ActivityState) {
     val c = ZappTheme.colors
+
+    // Seeds the background swap-status poll for this row; without it the list shows stale status.
+    LaunchedEffect(state.key) {
+        state.onDisplayed()
+    }
+
     Row(
         modifier =
             Modifier

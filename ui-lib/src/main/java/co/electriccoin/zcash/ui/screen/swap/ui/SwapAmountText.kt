@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,65 +31,61 @@ internal fun SwapAmountText(
     state: SwapAmountTextState,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier
-    ) {
-        Column {
-            Row {
-                Text(
-                    text = state.title.getValue(),
-                    style = ZashiTypography.textSm,
-                    fontWeight = FontWeight.Medium,
-                    color = ZashiColors.Text.textPrimary
-                )
-                if (state.subtitle != null) {
-                    Spacer(1f)
-                    SelectionContainer {
-                        ZashiAutoSizeText(
-                            text = state.subtitle.getValue(),
-                            style = ZashiTypography.textSm,
-                            fontWeight = FontWeight.Medium,
-                            color = ZashiColors.Text.textTertiary,
-                            maxLines = 1
-                        )
-                    }
-                }
-            }
-            Spacer(8.dp)
-            Row(
-                verticalAlignment = CenterVertically
-            ) {
-                ZashiAssetCard(
-                    state = state.token
-                )
+    Column(modifier = modifier) {
+        Row {
+            Text(
+                text = state.title.getValue(),
+                style = ZashiTypography.textSm,
+                fontWeight = FontWeight.Medium,
+                color = ZashiColors.Text.textPrimary
+            )
+            if (state.subtitle != null) {
                 Spacer(1f)
-                Spacer(4.dp)
                 SelectionContainer {
                     ZashiAutoSizeText(
-                        text = state.text.getValue(),
-                        style = ZashiTypography.header4,
-                        fontWeight = FontWeight.SemiBold,
+                        text = state.subtitle.getValue(),
+                        style = ZashiTypography.textSm,
+                        fontWeight = FontWeight.Medium,
                         color = ZashiColors.Text.textTertiary,
                         maxLines = 1
                     )
                 }
             }
-            Spacer(8.dp)
-            Row {
-                SelectionContainer(
-                    modifier = Modifier.weight(1f),
-                ) {
-                    ZashiAutoSizeText(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = state.secondaryText?.getValue().orEmpty(),
-                        style = ZashiTypography.textSm,
-                        fontWeight = FontWeight.Medium,
-                        color = ZashiColors.Text.textTertiary,
-                        maxLines = 1,
-                        contentAlignment = Alignment.CenterEnd,
-                        textAlign = TextAlign.End
-                    )
-                }
+        }
+        Spacer(8.dp)
+        Row(
+            verticalAlignment = CenterVertically
+        ) {
+            ZashiAssetCard(
+                state = state.token
+            )
+            Spacer(1f)
+            Spacer(4.dp)
+            SelectionContainer {
+                ZashiAutoSizeText(
+                    text = state.text.getValue(),
+                    style = ZashiTypography.header4,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ZashiColors.Text.textTertiary,
+                    maxLines = 1
+                )
+            }
+        }
+        Spacer(8.dp)
+        Row {
+            SelectionContainer(
+                modifier = Modifier.weight(1f),
+            ) {
+                ZashiAutoSizeText(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = state.secondaryText?.getValue().orEmpty(),
+                    style = ZashiTypography.textSm,
+                    fontWeight = FontWeight.Medium,
+                    color = ZashiColors.Text.textTertiary,
+                    maxLines = 1,
+                    contentAlignment = Alignment.CenterEnd,
+                    textAlign = TextAlign.End
+                )
             }
         }
     }

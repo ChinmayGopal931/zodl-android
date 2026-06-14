@@ -69,16 +69,13 @@ data class P2pTransactionRow(
 
 /**
  * Extra fields revealed when the user expands a transaction row. Sourced from the same
- * [xyz.justzappit.offramp.p2p.P2pOrderHistoryItem] — recipient/merchant UPIs are already
- * decrypted via the relay private key in [xyz.justzappit.offramp.p2p.P2pOrderHistorySource].
+ * [xyz.justzappit.offramp.p2p.P2pOrderHistoryItem]; the merchant UPI is already decrypted via
+ * the relay private key in [xyz.justzappit.offramp.p2p.P2pOrderHistorySource].
  */
 data class TransactionDetail(
-    val recipientUpiPlain: String?,
     val merchantUpiPlain: String?,
     val merchantAddressShort: String?,
     val merchantExplorerUrl: String?,
     val placedAt: StringResource?,
-    val completedAt: StringResource?,
-    val cancelledAt: StringResource?,
     val duration: StringResource?,
 )

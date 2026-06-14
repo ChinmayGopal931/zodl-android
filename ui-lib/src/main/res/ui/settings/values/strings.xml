@@ -66,12 +66,9 @@
     <string name="p2p_transactions_status_cancelled">Cancelled</string>
 
     <!-- Detail panel (expanded transaction row) -->
-    <string name="p2p_transactions_detail_recipient_upi">Recipient UPI</string>
     <string name="p2p_transactions_detail_merchant_upi">Merchant UPI</string>
     <string name="p2p_transactions_detail_merchant_address">Merchant address</string>
     <string name="p2p_transactions_detail_placed">Placed</string>
-    <string name="p2p_transactions_detail_completed">Completed</string>
-    <string name="p2p_transactions_detail_cancelled">Cancelled</string>
     <string name="p2p_transactions_detail_duration">Duration</string>
     <string name="p2p_transactions_detail_expand_content_description">Show details</string>
     <string name="p2p_transactions_detail_collapse_content_description">Hide details</string>

@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -90,130 +89,125 @@ private fun SwapTextFieldCard(
     val textFieldInteractionSource = remember { MutableInteractionSource() }
     val isTextFieldFocused by textFieldInteractionSource.collectIsFocusedAsState()
 
-    Surface(
-        modifier = modifier,
-        color = ZashiColors.Surfaces.bgPrimary
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth()
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = state.title.getValue(),
+                style = ZashiTypography.textSm,
+                fontWeight = FontWeight.Medium,
+                color = ZashiColors.Text.textPrimary
+            )
+            Spacer(1f)
+            SpendableBalanceButton(state)
+        }
+
+        Spacer(8.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = CenterVertically
+        ) {
+            Box(
+                modifier = Modifier.weight(.425f)
             ) {
-                Text(
-                    text = state.title.getValue(),
+                ZashiAssetCard(
+                    state = state.token
+                )
+            }
+            Spacer(modifier = Modifier.weight(.025f))
+            ZashiNumberTextField(
+                state = state.textField,
+                interactionSource = textFieldInteractionSource,
+                modifier =
+                    Modifier
+                        .weight(.55f)
+                        .focusRequester(focusRequester),
+                textStyle =
+                    ZashiTypography.header4.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.End
+                    ),
+                contentPadding =
+                    if (state.textFieldPrefix == null) {
+                        PaddingValues(horizontal = 12.dp, vertical = 4.6.dp)
+                    } else {
+                        PaddingValues(start = 8.dp, top = 4.dp, end = 12.dp, bottom = 4.dp)
+                    },
+                placeholder =
+                    if (!isTextFieldFocused) {
+                        {
+                            ZashiNumberTextFieldDefaults.Placeholder(
+                                modifier = Modifier.fillMaxWidth(),
+                                style = ZashiTypography.header4,
+                                fontWeight = FontWeight.SemiBold,
+                                textAlign = TextAlign.End,
+                                contentAlignment = CenterEnd
+                            )
+                        }
+                    } else {
+                        null
+                    },
+                leadingIcon =
+                    if (state.textFieldPrefix is ImageResource.ByDrawable) {
+                        {
+                            Image(
+                                modifier = Modifier.size(24.dp),
+                                painter = painterResource(state.textFieldPrefix.resource),
+                                contentDescription = null,
+                                colorFilter =
+                                    ColorFilter.tint(
+                                        if (
+                                            state.textField.innerState.innerTextFieldState.value
+                                                .getValue()
+                                                .isNotEmpty()
+                                        ) {
+                                            ZashiColors.Text.textPrimary
+                                        } else {
+                                            ZashiColors.Text.textTertiary
+                                        }
+                                    )
+                            )
+                        }
+                    } else {
+                        null
+                    },
+            )
+        }
+        Spacer(8.dp)
+        Row(
+            verticalAlignment = CenterVertically
+        ) {
+            SelectionContainer(
+                modifier = Modifier.weight(1f),
+            ) {
+                ZashiAutoSizeText(
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.End,
+                    contentAlignment = CenterEnd,
+                    text = state.secondaryText.getValue(),
                     style = ZashiTypography.textSm,
                     fontWeight = FontWeight.Medium,
-                    color = ZashiColors.Text.textPrimary
+                    color = ZashiColors.Text.textTertiary,
+                    maxLines = 1
                 )
-                Spacer(1f)
-                SpendableBalanceButton(state)
             }
-
-            Spacer(8.dp)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier.weight(.425f)
-                ) {
-                    ZashiAssetCard(
-                        state = state.token
-                    )
-                }
-                Spacer(modifier = Modifier.weight(.025f))
-                ZashiNumberTextField(
-                    state = state.textField,
-                    interactionSource = textFieldInteractionSource,
-                    modifier =
+            Spacer(4.dp)
+            Image(
+                modifier =
+                    if (state.isSwapChangeEnabled) {
                         Modifier
-                            .weight(.55f)
-                            .focusRequester(focusRequester),
-                    textStyle =
-                        ZashiTypography.header4.copy(
-                            fontWeight = FontWeight.SemiBold,
-                            textAlign = TextAlign.End
-                        ),
-                    contentPadding =
-                        if (state.textFieldPrefix == null) {
-                            PaddingValues(horizontal = 12.dp, vertical = 4.6.dp)
-                        } else {
-                            PaddingValues(start = 8.dp, top = 4.dp, end = 12.dp, bottom = 4.dp)
-                        },
-                    placeholder =
-                        if (!isTextFieldFocused) {
-                            {
-                                ZashiNumberTextFieldDefaults.Placeholder(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    style = ZashiTypography.header4,
-                                    fontWeight = FontWeight.SemiBold,
-                                    textAlign = TextAlign.End,
-                                    contentAlignment = CenterEnd
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                    leadingIcon =
-                        if (state.textFieldPrefix is ImageResource.ByDrawable) {
-                            {
-                                Image(
-                                    modifier = Modifier.size(24.dp),
-                                    painter = painterResource(state.textFieldPrefix.resource),
-                                    contentDescription = null,
-                                    colorFilter =
-                                        ColorFilter.tint(
-                                            if (
-                                                state.textField.innerState.innerTextFieldState.value
-                                                    .getValue()
-                                                    .isNotEmpty()
-                                            ) {
-                                                ZashiColors.Text.textPrimary
-                                            } else {
-                                                ZashiColors.Text.textTertiary
-                                            }
-                                        )
-                                )
-                            }
-                        } else {
-                            null
-                        },
-                )
-            }
-            Spacer(8.dp)
-            Row(
-                verticalAlignment = CenterVertically
-            ) {
-                SelectionContainer(
-                    modifier = Modifier.weight(1f),
-                ) {
-                    ZashiAutoSizeText(
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.End,
-                        contentAlignment = CenterEnd,
-                        text = state.secondaryText.getValue(),
-                        style = ZashiTypography.textSm,
-                        fontWeight = FontWeight.Medium,
-                        color = ZashiColors.Text.textTertiary,
-                        maxLines = 1
-                    )
-                }
-                Spacer(4.dp)
-                Image(
-                    modifier =
-                        if (state.isSwapChangeEnabled) {
-                            Modifier
-                                .clickable(
-                                    onClick = state.onSwapChange,
-                                    indication = null,
-                                    interactionSource = remember { MutableInteractionSource() }
-                                )
-                        } else {
-                            Modifier
-                        },
-                    painter = painterResource(R.drawable.ic_swap_recipient),
-                    contentDescription = null
-                )
-            }
+                            .clickable(
+                                onClick = state.onSwapChange,
+                                indication = null,
+                                interactionSource = remember { MutableInteractionSource() }
+                            )
+                    } else {
+                        Modifier
+                    },
+                painter = painterResource(R.drawable.ic_swap_recipient),
+                contentDescription = null
+            )
         }
     }
 }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -43,8 +44,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import co.electriccoin.zcash.ui.R
+import co.electriccoin.zcash.ui.design.component.zapp.ZappBackButton
 import co.electriccoin.zcash.ui.design.component.zapp.ZappBorderedCard
-import co.electriccoin.zcash.ui.design.component.zapp.ZappBottomActionBar
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
 import co.electriccoin.zcash.ui.design.newcomponent.PreviewScreens
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
@@ -55,62 +56,80 @@ import co.electriccoin.zcash.ui.design.util.stringRes
 @Composable
 internal fun P2pTransactionsView(state: P2pTransactionsState) {
     val c = ZappTheme.colors
-    Column(
+    Box(
         modifier =
             Modifier
                 .fillMaxSize()
                 .background(c.bg)
                 .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout)),
     ) {
-        ZappScreenHeader(title = stringResource(R.string.p2p_transactions_title))
+        Column(modifier = Modifier.fillMaxSize()) {
+            ZappScreenHeader(title = stringResource(R.string.p2p_transactions_title))
 
-        LazyColumn(
-            modifier =
-                Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = HORIZONTAL_PADDING.dp, vertical = SECTION_GAP.dp),
-            verticalArrangement = Arrangement.spacedBy(GAP_MD.dp),
-        ) {
-            item {
-                BalanceCard(
-                    state = state.balance,
-                    refund = state.refund,
-                    isRefreshing = state.isRefreshing,
-                )
-            }
-
-            state.errorMessage?.let { msg ->
+            LazyColumn(
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                contentPadding =
+                    PaddingValues(
+                        start = HORIZONTAL_PADDING.dp,
+                        end = HORIZONTAL_PADDING.dp,
+                        top = SECTION_GAP.dp,
+                        bottom = BACK_DOCK_CLEARANCE.dp,
+                    ),
+                verticalArrangement = Arrangement.spacedBy(GAP_MD.dp),
+            ) {
                 item {
-                    BasicText(
-                        text = msg.getValue(),
-                        style = ZappTheme.typography.body.copy(color = c.danger),
-                        modifier = Modifier.fillMaxWidth(),
+                    BalanceCard(
+                        state = state.balance,
+                        refund = state.refund,
+                        isRefreshing = state.isRefreshing,
                     )
                 }
-            }
 
-            state.emptyMessage?.let { msg ->
-                item {
-                    Box(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = EMPTY_PADDING_V.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
+                state.errorMessage?.let { msg ->
+                    item {
                         BasicText(
                             text = msg.getValue(),
-                            style = ZappTheme.typography.body.copy(color = c.textMuted),
+                            style = ZappTheme.typography.body.copy(color = c.danger),
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }
-            }
 
-            items(state.rows, key = { it.orderId }) { row -> TransactionCard(row) }
+                state.emptyMessage?.let { msg ->
+                    item {
+                        Box(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = EMPTY_PADDING_V.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            BasicText(
+                                text = msg.getValue(),
+                                style = ZappTheme.typography.body.copy(color = c.textMuted),
+                            )
+                        }
+                    }
+                }
+
+                items(state.rows, key = { it.orderId }) { row -> TransactionCard(row) }
+            }
         }
 
-        ZappBottomActionBar(onBack = state.onBack)
+        Box(
+            modifier =
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+                    .padding(start = HORIZONTAL_PADDING.dp, bottom = GAP_MD.dp)
+                    .background(c.surface, RectangleShape)
+                    .border(BorderStroke(1.dp, c.accent), RectangleShape),
+        ) {
+            ZappBackButton(onClick = state.onBack)
+        }
     }
     state.confirmRefund?.let { RefundConfirmDialog(dialog = it) }
 }
@@ -402,12 +421,6 @@ private fun TransactionDetailPanel(detail: TransactionDetail) {
                     .background(c.border),
         )
 
-        detail.recipientUpiPlain?.let { vpa ->
-            DetailRow(
-                label = stringResource(R.string.p2p_transactions_detail_recipient_upi),
-                value = vpa,
-            )
-        }
         detail.merchantUpiPlain?.let { vpa ->
             DetailRow(
                 label = stringResource(R.string.p2p_transactions_detail_merchant_upi),
@@ -423,12 +436,6 @@ private fun TransactionDetailPanel(detail: TransactionDetail) {
         }
         detail.placedAt?.let {
             DetailRow(label = stringResource(R.string.p2p_transactions_detail_placed), value = it.getValue())
-        }
-        detail.completedAt?.let {
-            DetailRow(label = stringResource(R.string.p2p_transactions_detail_completed), value = it.getValue())
-        }
-        detail.cancelledAt?.let {
-            DetailRow(label = stringResource(R.string.p2p_transactions_detail_cancelled), value = it.getValue())
         }
         detail.duration?.let {
             DetailRow(label = stringResource(R.string.p2p_transactions_detail_duration), value = it.getValue())
@@ -458,12 +465,9 @@ private fun DetailRow(label: String, value: String, onValueClick: (() -> Unit)? 
 }
 
 private fun TransactionDetail.hasAnything(): Boolean =
-    recipientUpiPlain != null ||
-        merchantUpiPlain != null ||
+    merchantUpiPlain != null ||
         merchantAddressShort != null ||
         placedAt != null ||
-        completedAt != null ||
-        cancelledAt != null ||
         duration != null
 
 @Composable
@@ -492,6 +496,7 @@ private fun StatusPill(label: String, tone: P2pTransactionRow.StatusTone) {
 
 private const val HORIZONTAL_PADDING = 14
 private const val SECTION_GAP = 16
+private const val BACK_DOCK_CLEARANCE = 72
 private const val GAP_SM = 6
 private const val GAP_MD = 12
 private const val SPINNER_SIZE = 18
@@ -537,13 +542,10 @@ private fun PreviewLoaded() =
                                 explorerUrl = null,
                                 detail =
                                     TransactionDetail(
-                                        recipientUpiPlain = "friend@ybl",
                                         merchantUpiPlain = "merchant@okhdfc",
                                         merchantAddressShort = "0xa8e6…fab2",
                                         merchantExplorerUrl = null,
                                         placedAt = stringRes("23 May 2026, 14:21"),
-                                        completedAt = stringRes("23 May 2026, 14:23"),
-                                        cancelledAt = null,
                                         duration = stringRes("1m 32s"),
                                     ),
                             ),

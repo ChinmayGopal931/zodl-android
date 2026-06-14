@@ -64,12 +64,9 @@
     <string name="p2p_transactions_status_cancelled">Cancelada</string>
 
     <!-- Panel de detalle (fila de transacción expandida) -->
-    <string name="p2p_transactions_detail_recipient_upi">UPI del destinatario</string>
     <string name="p2p_transactions_detail_merchant_upi">UPI del comerciante</string>
     <string name="p2p_transactions_detail_merchant_address">Dirección del comerciante</string>
     <string name="p2p_transactions_detail_placed">Realizada</string>
-    <string name="p2p_transactions_detail_completed">Completada</string>
-    <string name="p2p_transactions_detail_cancelled">Cancelada</string>
     <string name="p2p_transactions_detail_duration">Duración</string>
     <string name="p2p_transactions_detail_expand_content_description">Mostrar detalles</string>
     <string name="p2p_transactions_detail_collapse_content_description">Ocultar detalles</string>
