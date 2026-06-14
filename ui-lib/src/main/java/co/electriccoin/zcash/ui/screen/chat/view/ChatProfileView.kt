@@ -56,7 +56,11 @@ internal fun ChatProfileView(state: ChatProfileState, modifier: Modifier = Modif
             }
         }
 
-        KeyExportRows(onSeedPhraseClick = state.onSeedPhraseClick, onP2pKeyClick = state.onP2pKeyClick)
+        KeyExportRows(
+            onSeedPhraseClick = state.onSeedPhraseClick,
+            onP2pKeyClick = state.onP2pKeyClick,
+            showP2pKey = state.activeTab == ChatProfileTab.WALLET_ADDRESS,
+        )
 
         Spacer(Modifier.height(4.dp))
 

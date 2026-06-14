@@ -39,7 +39,7 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappRowDivider
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 
 @Composable
-internal fun KeyExportRows(onSeedPhraseClick: () -> Unit, onP2pKeyClick: () -> Unit) {
+internal fun KeyExportRows(onSeedPhraseClick: () -> Unit, onP2pKeyClick: () -> Unit, showP2pKey: Boolean) {
     val c = ZappTheme.colors
     Column(
         modifier =
@@ -57,15 +57,17 @@ internal fun KeyExportRows(onSeedPhraseClick: () -> Unit, onP2pKeyClick: () -> U
             iconTint = c.accentText,
             onClick = onSeedPhraseClick,
         )
-        ZappRowDivider(inset = true)
-        ZappRow(
-            title = stringResource(R.string.chat_profile_p2p_key_title),
-            subtitle = stringResource(R.string.chat_profile_p2p_key_subtitle),
-            icon = Icons.Default.AccountBalanceWallet,
-            iconBackground = c.accentSoft,
-            iconTint = c.accentText,
-            onClick = onP2pKeyClick,
-        )
+        if (showP2pKey) {
+            ZappRowDivider(inset = true)
+            ZappRow(
+                title = stringResource(R.string.chat_profile_p2p_key_title),
+                subtitle = stringResource(R.string.chat_profile_p2p_key_subtitle),
+                icon = Icons.Default.AccountBalanceWallet,
+                iconBackground = c.accentSoft,
+                iconTint = c.accentText,
+                onClick = onP2pKeyClick,
+            )
+        }
     }
 }
 
