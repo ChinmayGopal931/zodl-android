@@ -97,6 +97,10 @@
     <string name="upi_offramp_upi_id_label">Ingresar UPI ID</string>
     <string name="upi_offramp_upi_id_placeholder">comercio@banco</string>
     <string name="upi_offramp_powered_by">Con tecnología de p2p.me</string>
+    <string name="upi_offramp_info_content_description">Cómo funciona</string>
+    <string name="upi_offramp_info_title">Cómo funciona</string>
+    <string name="upi_offramp_info_body_flow">Paga cualquier UPI ID con tu Zcash. Tu ZEC se cambia a USDC en Base mediante NEAR intents, luego un comerciante recibe el USDC y realiza el pago UPI al ID que elegiste.</string>
+    <string name="upi_offramp_info_body_privacy">No se requiere KYC, y tus fondos salen de tu saldo blindado, por lo que el comerciante solo ve la cuenta de Base que le paga, no tu dirección de Zcash.</string>
     <string name="upi_offramp_estimate_disclaimer">Estimado. El monto final se fija cuando el comerciante acepta.</string>
     <string name="upi_offramp_limit_hint">Máximo 100 USDC por retiro.</string>
     <string name="upi_offramp_error_above_cap">Los montos superiores a 100 USDC no son compatibles para el retiro.</string>
