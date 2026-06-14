@@ -218,7 +218,7 @@ internal fun MediaBubble(
                     Spacer(modifier = Modifier.height(2.dp))
                 }
                 Text(
-                    text = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(message.timestamp)),
+                    text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp)),
                     style = MaterialTheme.typography.labelSmall,
                     color =
                         if (isFromMe) {

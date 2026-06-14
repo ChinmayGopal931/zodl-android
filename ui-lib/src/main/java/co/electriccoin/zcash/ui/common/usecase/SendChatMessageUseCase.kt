@@ -11,12 +11,18 @@ class SendChatMessageUseCase(
         conversationId: String,
         content: String,
         contentType: String? = null,
+        replyToId: String? = null,
+        replyToSenderName: String? = null,
+        replyToContent: String? = null,
     ): Result<ZMMessage> =
         runChatCallResult("SendChatMessageUseCase: sendMessage failed") {
-            if (contentType == null) {
-                sdk.sendMessage(conversationId = conversationId, content = content)
-            } else {
-                sdk.sendMessage(conversationId, content, contentType)
-            }
+            sdk.sendMessage(
+                conversationId = conversationId,
+                content = content,
+                contentType = contentType ?: "text/plain",
+                replyToId = replyToId,
+                replyToSenderName = replyToSenderName,
+                replyToContent = replyToContent,
+            )
         }
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,6 +34,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.screen.chat.model.ChatMessage
@@ -118,53 +120,71 @@ internal fun MessageBubble(
                 )
             }
 
-            if (message.replyToId != null) {
-                Box(
-                    modifier =
+            val hasReply = message.replyToId != null
+            // When quoting, size the group to its widest row so the quoted block and the message
+            // share one width.
+            Column(
+                horizontalAlignment = if (isFromMe) Alignment.End else Alignment.Start,
+                modifier =
+                    if (hasReply) {
+                        Modifier.widthIn(max = MAX_BUBBLE_WIDTH.dp).width(IntrinsicSize.Max)
+                    } else {
                         Modifier
-                            .widthIn(max = 280.dp)
-                            .background(if (isFromMe) c.accent else c.surfaceAlt, RectangleShape)
-                            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 4.dp),
-                ) {
-                    QuotedReplyBlock(
-                        senderName = message.replyToSenderName,
-                        content = message.replyToContent,
-                        isFromMe = isFromMe,
-                    )
-                }
-            }
-
-            when {
-                contentType == CONTENT_TYPE_PAYMENT_REQUEST -> {
-                    PaymentRequestBubble(message = message, isFromMe = isFromMe)
-                }
-
-                contentType == CONTENT_TYPE_WALLET_ADDRESS -> {
-                    WalletAddressBubble(message = message, isFromMe = isFromMe)
+                    },
+            ) {
+                if (hasReply) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .background(c.surfaceInput, RectangleShape)
+                                .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 6.dp),
+                    ) {
+                        QuotedReplyBlock(
+                            senderName = message.replyToSenderName,
+                            content = message.replyToContent,
+                        )
+                    }
                 }
 
-                contentType == CONTENT_TYPE_ZEC_TRANSACTION -> {
-                    TransactionBubble(message = message, isFromMe = isFromMe)
-                }
+                val contentModifier = if (hasReply) Modifier.fillMaxWidth() else Modifier
+                when {
+                    contentType == CONTENT_TYPE_PAYMENT_REQUEST -> {
+                        PaymentRequestBubble(message = message, isFromMe = isFromMe)
+                    }
 
-                contentType == CONTENT_TYPE_LOCATION -> {
-                    LocationBubble(message = message, isFromMe = isFromMe)
-                }
+                    contentType == CONTENT_TYPE_WALLET_ADDRESS -> {
+                        WalletAddressBubble(message = message, isFromMe = isFromMe)
+                    }
 
-                contentType.startsWith(IMAGE_MIME_PREFIX) -> {
-                    MediaBubble(message = message, isFromMe = isFromMe, onImageClick = onImageClick)
-                }
+                    contentType == CONTENT_TYPE_ZEC_TRANSACTION -> {
+                        TransactionBubble(message = message, isFromMe = isFromMe)
+                    }
 
-                contentType.startsWith(VIDEO_MIME_PREFIX) -> {
-                    MediaBubble(message = message, isFromMe = isFromMe)
-                }
+                    contentType == CONTENT_TYPE_LOCATION -> {
+                        LocationBubble(message = message, isFromMe = isFromMe)
+                    }
 
-                message.mediaId != null -> {
-                    FileBubble(message = message, isFromMe = isFromMe)
-                }
+                    contentType.startsWith(IMAGE_MIME_PREFIX) -> {
+                        MediaBubble(message = message, isFromMe = isFromMe, onImageClick = onImageClick)
+                    }
 
-                else -> {
-                    TextMessageBubble(message = message, isFromMe = isFromMe)
+                    contentType.startsWith(VIDEO_MIME_PREFIX) -> {
+                        MediaBubble(message = message, isFromMe = isFromMe)
+                    }
+
+                    message.mediaId != null -> {
+                        FileBubble(message = message, isFromMe = isFromMe)
+                    }
+
+                    else -> {
+                        TextMessageBubble(
+                            message = message,
+                            isFromMe = isFromMe,
+                            fillWidth = hasReply,
+                            modifier = contentModifier,
+                        )
+                    }
                 }
             }
         }
@@ -182,28 +202,38 @@ private fun resolveContentType(message: ChatMessage): String {
 }
 
 @Composable
-private fun TextMessageBubble(message: ChatMessage, isFromMe: Boolean) {
+private fun TextMessageBubble(
+    message: ChatMessage,
+    isFromMe: Boolean,
+    fillWidth: Boolean = false,
+    modifier: Modifier = Modifier,
+) {
     val c = ZappTheme.colors
     Box(
         modifier =
-            Modifier
-                .widthIn(max = 280.dp)
+            modifier
+                .widthIn(max = MAX_BUBBLE_WIDTH.dp)
                 .background(if (isFromMe) c.accent else c.surfaceAlt, RectangleShape)
                 .padding(12.dp),
     ) {
-        Column {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            modifier = if (fillWidth) Modifier.fillMaxWidth() else Modifier,
+        ) {
             BasicText(
                 text = message.content,
                 style =
                     ZappTheme.typography.body.copy(
                         color = if (isFromMe) c.onAccent else c.text,
                     ),
+                modifier = Modifier.weight(1f, fill = fillWidth),
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             BasicText(
                 text = formatMessageTime(message.timestamp),
                 style =
                     ZappTheme.typography.caption.copy(
+                        fontSize = 10.sp,
                         color = if (isFromMe) c.onAccent.copy(alpha = OUTGOING_META_ALPHA) else c.textMuted,
                     ),
             )
@@ -212,36 +242,28 @@ private fun TextMessageBubble(message: ChatMessage, isFromMe: Boolean) {
 }
 
 private fun formatMessageTime(epochMillis: Long): String =
-    SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(epochMillis))
+    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(epochMillis))
 
 @Composable
-private fun QuotedReplyBlock(
-    senderName: String?,
-    content: String?,
-    isFromMe: Boolean,
-) {
+private fun QuotedReplyBlock(senderName: String?, content: String?) {
     val c = ZappTheme.colors
-    val barColor = if (isFromMe) c.onAccent.copy(alpha = 0.5f) else c.accent
-    val nameColor = if (isFromMe) c.onAccent else c.accent
-    val textColor = if (isFromMe) c.onAccent.copy(alpha = OUTGOING_META_ALPHA) else c.textMuted
-
-    Row {
+    Row(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier =
                 Modifier
                     .width(3.dp)
                     .height(36.dp)
-                    .background(barColor),
+                    .background(c.accent),
         )
         Column(modifier = Modifier.padding(start = 8.dp)) {
             BasicText(
                 text = senderName ?: stringResource(R.string.chat_room_reply_unknown_sender),
-                style = ZappTheme.typography.chip.copy(color = nameColor),
+                style = ZappTheme.typography.chip.copy(color = c.accent),
                 maxLines = 1,
             )
             BasicText(
                 text = content ?: "",
-                style = ZappTheme.typography.caption.copy(color = textColor),
+                style = ZappTheme.typography.caption.copy(color = c.textMuted),
                 maxLines = 1,
             )
         }
@@ -256,5 +278,6 @@ private const val CONTENT_TYPE_LOCATION = "application/location"
 private const val IMAGE_MIME_PREFIX = "image/"
 private const val VIDEO_MIME_PREFIX = "video/"
 private const val OUTGOING_META_ALPHA = 0.7f
+private const val MAX_BUBBLE_WIDTH = 280
 private const val SWIPE_MAX_OFFSET = 120f
 private const val SWIPE_ICON_APPEAR_THRESHOLD = 20f

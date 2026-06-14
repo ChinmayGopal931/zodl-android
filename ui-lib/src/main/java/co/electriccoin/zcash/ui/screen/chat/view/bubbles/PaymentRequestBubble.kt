@@ -81,7 +81,7 @@ internal fun PaymentRequestBubble(message: ChatMessage, isFromMe: Boolean) {
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(message.timestamp)),
+                text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp)),
                 style = MaterialTheme.typography.labelSmall,
                 color = ZappTheme.colors.textMuted
             )

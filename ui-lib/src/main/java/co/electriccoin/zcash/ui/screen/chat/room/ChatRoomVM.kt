@@ -230,14 +230,8 @@ class ChatRoomVM(
                     onAttachClick = ::onAttachClick,
                     replyPreview =
                         replyingTo?.let { msg ->
-                            val fallbackRes =
-                                if (msg.isFromMe) {
-                                    R.string.chat_room_reply_sender_self
-                                } else {
-                                    R.string.chat_room_reply_sender_unknown
-                                }
                             ChatRoomReplyPreviewState(
-                                senderName = msg.senderName ?: application.getString(fallbackRes),
+                                senderName = replySenderName(msg),
                                 content = msg.content.take(REPLY_PREVIEW_MAX_LENGTH),
                                 onDismiss = ::dismissReply,
                             )
@@ -536,6 +530,13 @@ class ChatRoomVM(
         replyingTo.value = null
     }
 
+    private fun replySenderName(message: ChatMessage): String =
+        if (message.isFromMe) {
+            application.getString(R.string.chat_room_reply_sender_self)
+        } else {
+            message.senderName ?: application.getString(R.string.chat_room_reply_sender_unknown)
+        }
+
     private fun onSendTextClick() {
         val text = messageInput.value.trim()
         if (text.isEmpty()) return
@@ -678,9 +679,13 @@ class ChatRoomVM(
     // ── SDK calls ────────────────────────────────────────────────────────────
 
     private suspend fun sendTextMessage(text: String, replyTo: ChatMessage? = null) {
-        // TODO: thread replyTo through once zappMessaging sdk.sendMessage accepts replyTo*
-        // params (not in the currently-pinned SHA in .zapp-deps). Local-only echo for now.
-        sendChatMessage(conversationId = conversationId, content = text)
+        sendChatMessage(
+            conversationId = conversationId,
+            content = text,
+            replyToId = replyTo?.id,
+            replyToSenderName = replyTo?.let { replySenderName(it) },
+            replyToContent = replyTo?.content?.take(REPLY_PREVIEW_MAX_LENGTH),
+        )
             .onSuccess { zmMessage -> messages.update { it + ChatMessage.from(zmMessage) } }
             .onFailure {
                 // Send failed (logged by runChatCallResult); restore the draft that the optimistic

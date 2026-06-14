@@ -22,7 +22,7 @@ internal fun formatRelativeTime(epochMillis: Long): StringResource {
         }
 
         diff < ONE_DAY_MS -> {
-            stringRes(SimpleDateFormat("h:mm a", Locale.getDefault()).format(Date(epochMillis)))
+            stringRes(SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(epochMillis)))
         }
 
         diff < ONE_WEEK_MS -> {
