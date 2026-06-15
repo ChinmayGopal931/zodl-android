@@ -180,6 +180,16 @@
     <string name="chat_settings_delete_dialog_message">Esto eliminará permanentemente tu identidad de mensajería. Respalda primero tu frase de recuperación.</string>
     <string name="chat_settings_delete_dialog_confirm">Eliminar</string>
     <string name="chat_settings_delete_dialog_cancel">Cancelar</string>
+    <string name="chat_settings_section_notifications">Notificaciones</string>
+    <string name="chat_settings_notifications_toggle_title">Notificaciones de mensajes</string>
+    <string name="chat_settings_notifications_toggle_subtitle">Recibe un aviso cuando llegue un mensaje nuevo</string>
+
+    <!-- Chat notifications -->
+    <string name="chat_notifications_channel_name">Mensajes</string>
+    <string name="chat_notifications_channel_description">Avisos de mensajes nuevos</string>
+    <string name="chat_notifications_fallback_title">Mensaje nuevo</string>
+    <string name="chat_notifications_media_body">Envió un archivo adjunto</string>
+    <string name="chat_notifications_permission_required">Activa las notificaciones para recibir avisos de mensajes nuevos</string>
 
     <!-- New conversation screen -->
     <string name="chat_new_conversation_title">Nueva conversación</string>

@@ -1,5 +1,8 @@
 package co.electriccoin.zcash.ui.screen.chat.repository
 
+import co.electriccoin.zcash.preference.StandardPreferenceProvider
+import co.electriccoin.zcash.ui.common.provider.ChatNotifier
+import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCallResult
 import co.electriccoin.zcash.ui.screen.chat.model.ChatConversation
@@ -14,15 +17,20 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import xyz.justzappit.zappmessaging.ZappMessagingSDK
+import xyz.justzappit.zappmessaging.models.ZMMessage
 
 class ChatConversationsRepositoryImpl(
     private val sdk: ZappMessagingSDK,
     private val moderationRepository: ChatModerationRepository,
+    private val chatNotifier: ChatNotifier,
+    standardPreferenceProvider: StandardPreferenceProvider,
 ) : ChatConversationsRepository {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -41,6 +49,14 @@ class ChatConversationsRepositoryImpl(
 
     private val activeConversationId = MutableStateFlow<String?>(null)
     private var refreshJob: Job? = null
+
+    // Nullable until the persisted value loads; maybeNotify treats "not yet known" as
+    // "don't notify" so a message in the cold-start window can't fire against a setting
+    // the user previously turned off.
+    private val notificationsEnabled: StateFlow<Boolean?> =
+        flow {
+            emitAll(StandardPreferenceKeys.IS_CHAT_NOTIFICATIONS_ENABLED.observe(standardPreferenceProvider()))
+        }.stateIn(scope, SharingStarted.Eagerly, null)
 
     init {
         scope.launch { observeIdentityAndRefresh() }
@@ -103,6 +119,7 @@ class ChatConversationsRepositoryImpl(
             sdk.messageReceived.collect { (conversationId, msg) ->
                 if (moderationRepository.isBlocked(msg.senderId)) return@collect
                 val isViewingConversation = conversationId == activeConversationId.value
+                maybeNotify(conversationId, msg, isViewingConversation)
                 _conversations.update { current ->
                     current?.map { conv ->
                         if (conv.id == conversationId) {
@@ -168,6 +185,21 @@ class ChatConversationsRepositoryImpl(
                 }
             }
         }
+    }
+
+    private fun maybeNotify(
+        conversationId: String,
+        msg: ZMMessage,
+        isViewingConversation: Boolean,
+    ) {
+        if (msg.isFromMe || isViewingConversation || notificationsEnabled.value != true) return
+        val conversationName = _conversations.value?.firstOrNull { it.id == conversationId }?.displayName
+        chatNotifier.post(
+            conversationId = conversationId,
+            conversationName = conversationName,
+            senderName = msg.senderName,
+            content = msg.content,
+        )
     }
 
     companion object {

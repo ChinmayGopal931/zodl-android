@@ -44,6 +44,7 @@ import co.electriccoin.zcash.ui.design.component.zapp.ZappGroupHeader
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRow
 import co.electriccoin.zcash.ui.design.component.zapp.ZappRowDivider
 import co.electriccoin.zcash.ui.design.component.zapp.ZappScreenHeader
+import co.electriccoin.zcash.ui.design.component.zapp.ZappToggle
 import co.electriccoin.zcash.ui.design.component.zapp.initialsOf
 import co.electriccoin.zcash.ui.design.theme.ZappTheme
 import co.electriccoin.zcash.ui.design.util.getValue
@@ -113,6 +114,20 @@ internal fun ChatSettingsView(state: ChatSettingsState, modifier: Modifier = Mod
                 connectionStatus = state.connectionStatus,
                 dhtHealth = state.dhtHealth,
                 peerCount = state.peerCount,
+            )
+            ZappRowDivider()
+
+            ZappGroupHeader(text = stringResource(R.string.chat_settings_section_notifications))
+            ZappRow(
+                title = stringResource(R.string.chat_settings_notifications_toggle_title),
+                subtitle = stringResource(R.string.chat_settings_notifications_toggle_subtitle),
+                trailing = {
+                    ZappToggle(
+                        checked = state.notificationsEnabled,
+                        onClick = state.onNotificationsToggle,
+                    )
+                },
+                onClick = state.onNotificationsToggle,
             )
             ZappRowDivider()
 

@@ -27,6 +27,7 @@ import co.electriccoin.zcash.spackle.Twig
 import co.electriccoin.zcash.ui.common.compose.BindCompLocalProvider
 import co.electriccoin.zcash.ui.common.compose.DisableScreenTimeout
 import co.electriccoin.zcash.ui.common.extension.setContentCompat
+import co.electriccoin.zcash.ui.common.provider.CHAT_CONVERSATION_ID_EXTRA
 import co.electriccoin.zcash.ui.common.viewmodel.AuthenticationUIState
 import co.electriccoin.zcash.ui.common.viewmodel.AuthenticationViewModel
 import co.electriccoin.zcash.ui.common.viewmodel.OldHomeViewModel
@@ -43,6 +44,7 @@ import co.electriccoin.zcash.ui.screen.authentication.RETRY_TRIGGER_DELAY
 import co.electriccoin.zcash.ui.screen.authentication.WrapAuthentication
 import co.electriccoin.zcash.ui.screen.authentication.view.AnimationConstants
 import co.electriccoin.zcash.ui.screen.authentication.view.WelcomeAnimationAutostart
+import co.electriccoin.zcash.ui.screen.chat.ChatRoomArgs
 import co.electriccoin.zcash.ui.screen.scan.thirdparty.ThirdPartyScan
 import co.electriccoin.zcash.ui.screen.warning.viewmodel.StorageCheckViewModel
 import co.electriccoin.zcash.work.WorkIds
@@ -90,13 +92,24 @@ class MainActivity : FragmentActivity() {
         if (intent.data != null) {
             navigationRouter.forward(ThirdPartyScan)
         }
+
+        forwardChatNotificationIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
 
         if (intent.data != null) {
             navigationRouter.forward(ThirdPartyScan)
+        }
+
+        forwardChatNotificationIntent(intent)
+    }
+
+    private fun forwardChatNotificationIntent(intent: Intent) {
+        intent.getStringExtra(CHAT_CONVERSATION_ID_EXTRA)?.let { conversationId ->
+            navigationRouter.forward(ChatRoomArgs(conversationId = conversationId))
         }
     }
 

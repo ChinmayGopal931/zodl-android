@@ -180,6 +180,16 @@
     <string name="chat_settings_delete_dialog_message">This will permanently remove your messaging identity. Back up your seed phrase first.</string>
     <string name="chat_settings_delete_dialog_confirm">Delete</string>
     <string name="chat_settings_delete_dialog_cancel">Cancel</string>
+    <string name="chat_settings_section_notifications">Notifications</string>
+    <string name="chat_settings_notifications_toggle_title">Message notifications</string>
+    <string name="chat_settings_notifications_toggle_subtitle">Get notified when you receive a new message</string>
+
+    <!-- Chat notifications -->
+    <string name="chat_notifications_channel_name">Messages</string>
+    <string name="chat_notifications_channel_description">New chat message alerts</string>
+    <string name="chat_notifications_fallback_title">New message</string>
+    <string name="chat_notifications_media_body">Sent an attachment</string>
+    <string name="chat_notifications_permission_required">Enable notifications to be alerted of new messages</string>
 
     <!-- New conversation screen -->
     <string name="chat_new_conversation_title">New Conversation</string>

@@ -123,4 +123,14 @@ object StandardPreferenceKeys {
             PreferenceKey("is_chat_tos_accepted"),
             false
         )
+
+    /**
+     * True when local chat message notifications are enabled. Default on; toggled
+     * from Chat Settings and read by the conversations repository before posting.
+     */
+    val IS_CHAT_NOTIFICATIONS_ENABLED =
+        BooleanPreferenceDefault(
+            PreferenceKey("is_chat_notifications_enabled"),
+            true
+        )
 }

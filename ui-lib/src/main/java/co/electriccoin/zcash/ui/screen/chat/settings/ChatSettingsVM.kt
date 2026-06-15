@@ -3,10 +3,12 @@ package co.electriccoin.zcash.ui.screen.chat.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cash.z.ecc.sdk.ANDROID_STATE_FLOW_TIMEOUT
+import co.electriccoin.zcash.preference.StandardPreferenceProvider
 import co.electriccoin.zcash.ui.NavigationRouter
 import co.electriccoin.zcash.ui.R
 import co.electriccoin.zcash.ui.common.usecase.CopyToClipboardUseCase
 import co.electriccoin.zcash.ui.design.util.stringRes
+import co.electriccoin.zcash.ui.preference.StandardPreferenceKeys
 import co.electriccoin.zcash.ui.screen.chat.ChatContactsArgs
 import co.electriccoin.zcash.ui.screen.chat.ChatProfileArgs
 import co.electriccoin.zcash.ui.screen.chat.common.runChatCall
@@ -20,6 +22,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -30,6 +34,7 @@ class ChatSettingsVM(
     private val copyToClipboard: CopyToClipboardUseCase,
     private val sdk: ZappMessagingSDK,
     private val navigationRouter: NavigationRouter,
+    private val standardPreferenceProvider: StandardPreferenceProvider,
 ) : ViewModel() {
     private val connectionStatus = MutableStateFlow(ChatListConnectionStatus.CONNECTING)
     private val peerCount = MutableStateFlow(0)
@@ -50,6 +55,15 @@ class ChatSettingsVM(
                 initialValue = null,
             )
 
+    private val notificationsEnabled: StateFlow<Boolean> =
+        flow {
+            emitAll(StandardPreferenceKeys.IS_CHAT_NOTIFICATIONS_ENABLED.observe(standardPreferenceProvider()))
+        }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
+            initialValue = true,
+        )
+
     init {
         observeConnection()
     }
@@ -61,8 +75,9 @@ class ChatSettingsVM(
             combine(showEditNameDialog, editNameInput, showDeleteConfirm) { edit, input, del ->
                 Triple(edit, input, del)
             },
-        ) { (id, copied), (cs, pc, dh), (editDlg, editInput, delDlg) ->
-            createState(id, copied, cs, pc, dh, editDlg, editInput, delDlg)
+            notificationsEnabled,
+        ) { (id, copied), (cs, pc, dh), (editDlg, editInput, delDlg), notifEnabled ->
+            createState(id, copied, cs, pc, dh, editDlg, editInput, delDlg, notifEnabled)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(ANDROID_STATE_FLOW_TIMEOUT),
@@ -76,6 +91,7 @@ class ChatSettingsVM(
                     editDlg = false,
                     editInput = "",
                     delDlg = false,
+                    notifEnabled = true,
                 ),
         )
 
@@ -88,6 +104,7 @@ class ChatSettingsVM(
         editDlg: Boolean,
         editInput: String,
         delDlg: Boolean,
+        notifEnabled: Boolean,
     ): ChatSettingsState =
         ChatSettingsState(
             title = stringRes(R.string.chat_settings_title),
@@ -98,11 +115,13 @@ class ChatSettingsVM(
             connectionStatus = cs,
             dhtHealth = dh,
             peerCount = pc,
+            notificationsEnabled = notifEnabled,
             onProfileClick = ::onProfileClick,
             onContactsClick = ::onContactsClick,
             onEditDisplayNameClick = ::onEditDisplayNameClick,
             onCopyPublicKeyClick = ::onCopyPublicKeyClick,
             onDeleteClick = ::onDeleteClick,
+            onNotificationsToggle = ::onNotificationsToggle,
             onBack = ::onBack,
             editNameDialog =
                 if (editDlg) {
@@ -204,6 +223,15 @@ class ChatSettingsVM(
                 delay(COPY_FEEDBACK_MS)
                 isPublicKeyCopied.value = false
             }
+    }
+
+    private fun onNotificationsToggle() {
+        viewModelScope.launch {
+            StandardPreferenceKeys.IS_CHAT_NOTIFICATIONS_ENABLED.putValue(
+                preferenceProvider = standardPreferenceProvider(),
+                newValue = !notificationsEnabled.value,
+            )
+        }
     }
 
     override fun onCleared() {

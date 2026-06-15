@@ -8,6 +8,8 @@ import co.electriccoin.zcash.ui.common.provider.BlockchainProvider
 import co.electriccoin.zcash.ui.common.provider.BlockchainProviderImpl
 import co.electriccoin.zcash.ui.common.provider.CMCApiProvider
 import co.electriccoin.zcash.ui.common.provider.CMCApiProviderImpl
+import co.electriccoin.zcash.ui.common.provider.ChatNotifier
+import co.electriccoin.zcash.ui.common.provider.ChatNotifierImpl
 import co.electriccoin.zcash.ui.common.provider.ChatSendContextProvider
 import co.electriccoin.zcash.ui.common.provider.CrashReportingStorageProvider
 import co.electriccoin.zcash.ui.common.provider.CrashReportingStorageProviderImpl
@@ -128,6 +130,7 @@ val providerModule =
         singleOf(::CMCApiProviderImpl) bind CMCApiProvider::class
         factoryOf(::KeystoneSDKProviderImpl) bind KeystoneSDKProvider::class
         singleOf(::ChatSendContextProvider)
+        singleOf(::ChatNotifierImpl) bind ChatNotifier::class
 
         // UPI offramp infrastructure (evm-lib + offramp-lib config wiring).
         singleOf(::OfframpCheckpointStorageProviderImpl) bind OfframpCheckpointStorageProvider::class
